@@ -4,13 +4,18 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const http = require('http');
+const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
 
+// Google OAuth2 Client
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 // Middleware
 const corsOptions = {
-  origin: 'https://delicute.onrender.com',
+  origin: ['https://delicute.onrender.com', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -18,21 +23,27 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use(express.static('public')); // Serve static files (index.html)
+app.use(express.static('public')); // Serve static files
 
-// In-memory "database"
+// Request logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${JSON.stringify(req.body)}`);
+  next();
+});
+
+// In-memory storage
 let users = [];
 let cart = [];
+const otpStore = {};
 
-// Seed Admin User
-const initializeDatabase = async () => {
+// Seed admin user
+async function initializeDatabase() {
   try {
     const adminEmail = 'svasudevareddy18604@gmail.com';
     const adminPassword = 'vasudev';
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    const adminExists = users.some(user => user.email === adminEmail);
-    if (!adminExists) {
+    if (!users.some(user => user.email === adminEmail)) {
       users.push({
         id: 1,
         name: 'Admin',
@@ -41,66 +52,74 @@ const initializeDatabase = async () => {
         password: hashedPassword,
         address: 'Admin Address',
         role: 'admin',
-        created_at: new Date()
+        created_at: new Date(),
       });
-      console.log('Admin user created');
+      console.log('Admin user seeded');
     }
   } catch (err) {
-    console.error('Initialization error:', err.message);
+    console.error('Database initialization error:', err.message);
     throw err;
   }
-};
+}
 
-// Email Transporter for OTP
+// Email transporter
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
-// Authentication Middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Access denied' });
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    console.log('No token provided');
+    return res.status(401).json({ message: 'No token provided' });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid token' });
+    if (err) {
+      console.log('Token verification failed:', err.message);
+      return res.status(403).json({ message: 'Invalid token' });
+    }
     req.user = user;
     next();
   });
-};
+}
 
 // Generate OTP
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-// Store OTPs temporarily (in production, use Redis or similar)
-const otpStore = {};
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // Routes
 
 // Request OTP
 app.post('/api/users/request-otp', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ message: 'Email required' });
+  if (!email) {
+    console.log('No email provided');
+    return res.status(400).json({ message: 'Email required' });
+  }
 
   const otp = generateOTP();
-  otpStore[email] = otp;
+  otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5-minute expiry
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'DELICUTE OTP for Verification',
-    text: `Your OTP is ${otp}. It is valid for 5 minutes.`
+    subject: 'DELICUTE OTP Verification',
+    text: `Your OTP is ${otp}. Valid for 5 minutes.`,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: 'OTP sent' });
+    console.log(`OTP sent to ${email}`);
+    res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Email sending error:', err.message);
+    console.error('Email error:', err.message);
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 });
@@ -108,14 +127,21 @@ app.post('/api/users/request-otp', async (req, res) => {
 // Signup
 app.post('/api/users/signup', async (req, res) => {
   const { name, email, phone, password, address, otp } = req.body;
+  console.log(`Signup attempt: ${email}, OTP: ${otp}`);
 
-  if (otp !== otpStore[email]) {
-    return res.status(400).json({ message: 'Invalid OTP' });
+  if (!otpStore[email] || otpStore[email].otp !== otp || Date.now() > otpStore[email].expires) {
+    console.log(`Invalid or expired OTP for ${email}`);
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
 
   try {
+    if (users.some(user => user.email === email)) {
+      console.log(`User already exists: ${email}`);
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
+    const user = {
       id: users.length + 1,
       name,
       email,
@@ -123,11 +149,12 @@ app.post('/api/users/signup', async (req, res) => {
       password: hashedPassword,
       address,
       role: 'user',
-      created_at: new Date()
+      created_at: new Date(),
     };
-    users.push(newUser);
-    const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    users.push(user);
+    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     delete otpStore[email];
+    console.log(`Signup successful: ${email}`);
     res.status(201).json({ token });
   } catch (err) {
     console.error('Signup error:', err.message);
@@ -138,45 +165,62 @@ app.post('/api/users/signup', async (req, res) => {
 // Login
 app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`Login attempt: ${email}`);
 
   try {
     const user = users.find(u => u.email === email);
     if (!user || !(await bcrypt.compare(password, user.password))) {
+      console.log(`Invalid credentials for ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token });
+    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log(`Login successful: ${email}`);
+    res.json({ token });
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ message: 'Login failed' });
   }
 });
 
-// Google Login (mocked for simplicity)
+// Google Login
 app.post('/api/users/google', async (req, res) => {
   const { id_token } = req.body;
-  try {
-    const email = `googleuser_${Date.now()}@example.com`;
-    let user = users.find(u => u.email === email);
+  console.log('Google login attempt');
 
+  if (!id_token) {
+    console.log('No id_token provided');
+    return res.status(400).json({ message: 'id_token required' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: id_token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    let user = users.find(u => u.email === email);
     if (!user) {
-      const hashedPassword = await bcrypt.hash('google_dummy_password', 10);
+      const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
       user = {
         id: users.length + 1,
-        name: 'Google User',
+        name: name || 'Google User',
         email,
         phone: '1234567890',
         password: hashedPassword,
         address: 'Google Address',
         role: 'user',
-        created_at: new Date()
+        created_at: new Date(),
       };
       users.push(user);
+      console.log(`New Google user created: ${email}`);
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token });
+    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log(`Google login successful: ${email}`);
+    res.json({ token });
   } catch (err) {
     console.error('Google login error:', err.message);
     res.status(500).json({ message: 'Google login failed' });
@@ -186,31 +230,36 @@ app.post('/api/users/google', async (req, res) => {
 // Reset Password
 app.post('/api/users/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
+  console.log(`Password reset attempt: ${email}`);
 
-  if (otp !== otpStore[email]) {
-    return res.status(400).json({ message: 'Invalid OTP' });
+  if (!otpStore[email] || otpStore[email].otp !== otp || Date.now() > otpStore[email].expires) {
+    console.log(`Invalid or expired OTP for ${email}`);
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
 
   try {
     const user = users.find(u => u.email === email);
     if (!user) {
+      console.log(`User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
+
     user.password = await bcrypt.hash(newPassword, 10);
     delete otpStore[email];
-    res.status(200).json({ message: 'Password reset successful' });
+    console.log(`Password reset successful: ${email}`);
+    res.json({ message: 'Password reset successful' });
   } catch (err) {
     console.error('Reset password error:', err.message);
     res.status(500).json({ message: 'Reset password failed' });
   }
 });
 
-// Menu (mocked data)
-app.get('/api/users/menu', authenticateToken, async (req, res) => {
+// Menu
+app.get('/api/users/menu', authenticateToken, (req, res) => {
   const menuItems = [
     { id: 1, name: 'Butter Chicken', price: 350, category: 'Non-Veg', image: 'https://images.unsplash.com/photo-1603894584373-5' },
     { id: 2, name: 'Paneer Tikka', price: 300, category: 'Vegetarian', image: 'https://images.unsplash.com/photo-1596797038530-2' },
-    { id: 3, name: 'Gulab Jamun', price: 150, category: 'Desserts', image: 'https://images.unsplash.com/photo-1623855344311-9' }
+    { id: 3, name: 'Gulab Jamun', price: 150, category: 'Desserts', image: 'https://images.unsplash.com/photo-1623855344311-9' },
   ];
 
   const { search, category } = req.query;
@@ -219,47 +268,72 @@ app.get('/api/users/menu', authenticateToken, async (req, res) => {
   if (search) {
     filteredItems = filteredItems.filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
   }
-
   if (category) {
     filteredItems = filteredItems.filter(item => item.category === category);
   }
 
-  res.status(200).json(filteredItems);
+  console.log(`Menu fetched for user ${req.user.email}`);
+  res.json(filteredItems);
 });
 
 // Add to Cart
-app.post('/api/users/cart/add', authenticateToken, async (req, res) => {
+app.post('/api/users/cart/add', authenticateToken, (req, res) => {
   const { item } = req.body;
-  const userId = req.user.id;
+  console.log(`Add to cart attempt for user ${req.user.email}`);
+
+  if (!item || !item.id) {
+    console.log('Invalid item data');
+    return res.status(400).json({ message: 'Invalid item data' });
+  }
 
   try {
     cart.push({
       id: cart.length + 1,
-      user_id: userId,
+      user_id: req.user.id,
       item_id: item.id,
       quantity: 1,
-      created_at: new Date()
+      created_at: new Date(),
     });
-    res.status(200).json({ message: 'Item added to cart' });
+    console.log(`Item ${item.id} added to cart for user ${req.user.email}`);
+    res.json({ message: 'Item added to cart' });
   } catch (err) {
-    console.error('Add to cart error:', err.message);
+    console.error('Cart error:', err.message);
     res.status(500).json({ message: 'Failed to add to cart' });
   }
 });
 
-// Admin Route (for redirection after login)
+// Admin Route
 app.get('/api/users/admin', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
+    console.log(`Admin access denied for ${req.user.email}`);
     return res.status(403).json({ message: 'Admin access required' });
   }
-  res.status(200).json({ message: 'Welcome Admin' });
+  console.log(`Admin accessed by ${req.user.email}`);
+  res.json({ message: 'Admin dashboard' });
 });
 
-// Start HTTP Server
+// Test Endpoint
+app.get('/api/users/test', (req, res) => {
+  console.log('Test endpoint accessed');
+  res.json({ message: 'Server is running' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.message);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
+// Start server
 const PORT = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
 
 httpServer.listen(PORT, async () => {
-  await initializeDatabase();
-  console.log(`HTTP Server running on http://localhost:${PORT}`);
+  try {
+    await initializeDatabase();
+    console.log(`HTTP Server running on http://localhost:${PORT}`);
+  } catch (err) {
+    console.error('Startup error:', err.message);
+    process.exit(1);
+  }
 });
