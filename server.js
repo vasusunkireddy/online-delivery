@@ -7,47 +7,45 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
-const https = require('https');
 const http = require('http');
+const https = require('https');
 
-require('dotenv').config({ path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env' });
-
-// Default to development if NODE_ENV is not set
-const NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.NODE_ENV = NODE_ENV;
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_KEY = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET || 'your-secure-random-secret'; // Fallback for safety
 
-// Log environment variables for debugging
+// Log environment variables for debugging (mask sensitive data)
 const maskedDbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/:[^@]+@/, ':****@') : 'Not set';
 console.log('Environment variables:', {
   DATABASE_URL: maskedDbUrl,
   JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set',
   CLIENT_URL: process.env.CLIENT_URL || 'Not set',
   PORT: process.env.PORT || 'Not set',
-  NODE_ENV: NODE_ENV
+  NODE_ENV: process.env.NODE_ENV || 'development'
 });
 
 // Database connection with pooling
-const pool = new Pool({
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Enable SSL for all environments
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000 // Increased timeout
-});
+  connectionTimeoutMillis: 15000
+};
+
+const pool = new Pool(poolConfig);
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
+app.use('/uploads', express.static('/tmp/Uploads'));
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, 'Uploads');
+    const uploadPath = path.join('/tmp', 'Uploads');
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -79,11 +77,14 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND role = $2', [decoded.email, 'admin']);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [decoded.email]);
     if (result.rows.length === 0) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
-    req.user = decoded;
+    req.user = result.rows[0];
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     next();
   } catch (err) {
     console.error('JWT verification error:', err);
@@ -96,7 +97,6 @@ async function initDb(retries = 7, delay = 15000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     console.log(`Attempting database connection: Attempt ${attempt}`);
     try {
-      // Test connection
       const client = await pool.connect();
       console.log('Database connection successful');
       try {
@@ -178,10 +178,10 @@ async function initDb(retries = 7, delay = 15000) {
         client.release();
       }
     } catch (err) {
-      console.error(`Database initialization attempt ${attempt} failed: ${err.message}`, {
-        error: err,
-        stack: err.stack
-      });
+      console.error(`Database initialization attempt ${attempt} failed: ${err.message}`);
+      if (err.code === '28P01') {
+        throw new Error('Database authentication failed. Check DATABASE_URL credentials.');
+      }
       if (attempt === retries) {
         throw new Error(`Failed to initialize database after ${retries} attempts: ${err.message}`);
       }
@@ -259,7 +259,8 @@ app.get('/api/users', authenticateToken, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching users:', err);
-    res.status(500).json({ message: 'Error fetching users' });
+    res.status(500).json({
+    message: 'Error fetching users' });
   }
 });
 
@@ -453,7 +454,7 @@ app.post('/api/chat-messages', authenticateToken, async (req, res) => {
       'INSERT INTO chat_messages (user_id, text, is_admin) VALUES ($1, $2, $3) RETURNING *',
       [user_id, text, is_admin]
     );
-    res.status(201).json(result.rows[0]);
+     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error sending chat message:', err);
     res.status(500).json({ message: 'Error sending chat message' });
@@ -534,9 +535,15 @@ app.get('/api/export/csv', authenticateToken, async (req, res) => {
   }
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
 // Start server
-if (NODE_ENV !== 'production') {
-  // Local development: Try HTTPS, fall back to HTTP if certificates are missing
+if (process.env.NODE_ENV !== 'production') {
+  // Local development: Use HTTPS
   const keyPath = path.join(__dirname, 'key.pem');
   const certPath = path.join(__dirname, 'cert.pem');
   if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
@@ -554,19 +561,12 @@ if (NODE_ENV !== 'production') {
       }
     });
   } else {
-    console.warn('SSL certificates missing, falling back to HTTP');
-    http.createServer(app).listen(PORT, async () => {
-      try {
-        await initDb();
-        console.log(`Server running on http://localhost:${PORT}`);
-      } catch (err) {
-        console.error('Failed to start server:', err);
-        process.exit(1);
-      }
-    });
+    console.error('SSL certificates (key.pem, cert.pem) not found. Run:');
+    console.error('openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"');
+    process.exit(1);
   }
 } else {
-  // Render.com: Use HTTP (Render handles HTTPS)
+  // Production (Render.com): Use HTTP
   http.createServer(app).listen(PORT, async () => {
     try {
       await initDb();
