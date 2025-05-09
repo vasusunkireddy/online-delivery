@@ -17,13 +17,37 @@ const port = process.env.PORT || 3000;
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }), // Capture stack traces
+    winston.format.printf(({ level, message, timestamp, stack, ...metadata }) => {
+      let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+      if (stack) {
+        log += `\nStack Trace:\n${stack}`;
+      }
+      if (Object.keys(metadata).length > 0) {
+        log += `\nMetadata: ${JSON.stringify(metadata, null, 2)}`;
+      }
+      return log;
+    })
   ),
   transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
-    new winston.transports.Console()
+    new winston.transports.File({ filename: 'error.log', level: 'error', format: winston.format.json() }), // JSON for file logs
+    new winston.transports.File({ filename: 'combined.log', format: winston.format.json() }), // JSON for file logs
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(), // Add colors for console
+        winston.format.printf(({ level, message, timestamp, stack, ...metadata }) => {
+          let log = `${timestamp} [${level}]: ${message}`;
+          if (stack) {
+            log += `\nStack Trace:\n${stack}`;
+          }
+          if (Object.keys(metadata).length > 0) {
+            log += `\nMetadata: ${JSON.stringify(metadata, null, 2)}`;
+          }
+          return log;
+        })
+      )
+    })
   ]
 });
 
@@ -31,7 +55,7 @@ const logger = winston.createLogger({
 const requiredEnv = ['DATABASE_URL', 'GOOGLE_CLIENT_ID', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
 requiredEnv.forEach(key => {
   if (!process.env[key]) {
-    logger.error(`Missing required env variable: ${key}`);
+    logger.error(`Missing required environment variable: ${key}`);
     process.exit(1);
   }
 });
@@ -55,7 +79,7 @@ app.get('/user.html', (req, res) => {
   logger.info(`Serving user.html from: ${filePath}`);
   res.sendFile(filePath, (err) => {
     if (err) {
-      logger.error(`Error serving user.html: ${err.message}`);
+      logger.error(`Error serving user.html: ${err.message}`, { error: err });
       res.status(404).json({ message: 'user.html not found' });
     }
   });
@@ -78,7 +102,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle PostgreSQL client:', err);
+  logger.error('Unexpected error on idle PostgreSQL client', { error: err });
   setTimeout(() => pool.connect(), 1000);
 });
 
@@ -342,7 +366,8 @@ async function initDb() {
 
     logger.info('Database initialized successfully');
   } catch (err) {
-    logger.error('Error initializing database:', err);
+    logger.error('Error initializing database', { error: err });
+    throw err;
   }
 }
 
@@ -362,7 +387,7 @@ async function sendOTP(email, otp) {
     await transporter.sendMail(mailOptions);
     logger.info(`OTP sent to ${email}: ${otp}`);
   } catch (err) {
-    logger.error('Error sending OTP:', err);
+    logger.error('Error sending OTP', { error: err });
     throw new Error('Failed to send OTP');
   }
 }
@@ -391,7 +416,7 @@ app.get('/api/test-email', async (req, res) => {
     });
     res.json({ message: 'Test email sent' });
   } catch (err) {
-    logger.error('Test email error:', err);
+    logger.error('Test email error', { error: err });
     res.status(500).json({ message: 'Failed to send test email', error: err.message });
   }
 });
@@ -412,7 +437,7 @@ app.post('/api/users/login', async (req, res) => {
     logger.info(`User logged in: ${email}, Role: ${user.role || 'user'}`);
     res.json({ token });
   } catch (err) {
-    logger.error('Login error:', err);
+    logger.error('Login error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -478,7 +503,7 @@ app.post('/api/users/signup', async (req, res) => {
     logger.info(`User signed up: ${email}`);
     res.json({ token });
   } catch (err) {
-    logger.error('Signup error:', err);
+    logger.error('Signup error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -512,7 +537,7 @@ app.post('/api/users/google', async (req, res) => {
     logger.info(`Google Sign-In: ${email}, Role: ${user.role}`);
     res.json({ token });
   } catch (err) {
-    logger.error('Google Sign-In error:', err);
+    logger.error('Google Sign-In error', { error: err });
     res.status(400).json({ message: `Google login failed: ${err.message}` });
   }
 });
@@ -535,7 +560,7 @@ app.post('/api/users/request-otp', async (req, res) => {
     await sendOTP(email, otp);
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    logger.error('Request OTP error:', err);
+    logger.error('Request OTP error', { error: err });
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 });
@@ -559,7 +584,7 @@ app.post('/api/users/reset-password', async (req, res) => {
     await pool.query('DELETE FROM otps WHERE email = $1', [email]);
     res.json({ message: 'Password reset successful' });
   } catch (err) {
-    logger.error('Reset password error:', err);
+    logger.error('Reset password error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -570,7 +595,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
     const result = await pool.query('SELECT id, name, email, phone, address FROM users WHERE id = $1', [req.user.id]);
     res.json(result.rows[0]);
   } catch (err) {
-    logger.error('Get profile error:', err);
+    logger.error('Get profile error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -582,7 +607,7 @@ app.post('/api/profile', authenticateToken, async (req, res) => {
     await pool.query('UPDATE users SET name = $1, phone = $2, address = $3 WHERE id = $4', [name, phone, address, req.user.id]);
     res.json({ message: 'Profile updated' });
   } catch (err) {
-    logger.error('Update profile error:', err);
+    logger.error('Update profile error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -613,7 +638,7 @@ app.get('/api/menu', async (req, res) => {
     const result = await pool.query(sql, params);
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get menu error:', err);
+    logger.error('Get menu error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -634,7 +659,7 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
     `, [userId, item.id, item.quantity]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Add to cart error:', err);
+    logger.error('Add to cart error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -657,7 +682,7 @@ app.post('/api/cart/update', authenticateToken, async (req, res) => {
     await pool.query('UPDATE carts SET quantity = $1 WHERE user_id = $2 AND item_id = $3', [quantity, userId, itemId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Update cart error:', err);
+    logger.error('Update cart error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -673,7 +698,7 @@ app.post('/api/cart/remove', authenticateToken, async (req, res) => {
     await pool.query('DELETE FROM carts WHERE user_id = $1 AND item_id = $2', [userId, itemId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Remove from cart error:', err);
+    logger.error('Remove from cart error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -689,7 +714,7 @@ app.get('/api/cart', authenticateToken, async (req, res) => {
     `, [req.user.id]);
     res.json({ items: result.rows });
   } catch (err) {
-    logger.error('Get cart error:', err);
+    logger.error('Get cart error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -708,7 +733,7 @@ app.post('/api/cart/apply-coupon', authenticateToken, async (req, res) => {
     const promotion = result.rows[0];
     res.json({ success: true, discount: promotion.discount });
   } catch (err) {
-    logger.error('Apply coupon error:', err);
+    logger.error('Apply coupon error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -752,7 +777,7 @@ app.post('/api/cart/checkout', authenticateToken, async (req, res) => {
     `, [userId, Math.floor(total / 10)]);
     res.json({ success: true, order: { id: orderId, date: new Date(), total, status: 'Placed', items } });
   } catch (err) {
-    logger.error('Checkout error:', err);
+    logger.error('Checkout error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -773,7 +798,7 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     }
     res.json(orders);
   } catch (err) {
-    logger.error('Get orders error:', err);
+    logger.error('Get orders error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -788,7 +813,7 @@ app.get('/api/orders/:orderId/track', authenticateToken, async (req, res) => {
     }
     res.json({ status: result.rows[0].status, deliveryPartner: { name: 'John Smith', contact: '+91 9876543210' } });
   } catch (err) {
-    logger.error('Track order error:', err);
+    logger.error('Track order error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -818,7 +843,7 @@ app.post('/api/orders/:orderId/reorder', authenticateToken, async (req, res) => 
     }
     res.json({ success: true });
   } catch (err) {
-    logger.error('Reorder error:', err);
+    logger.error('Reorder error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -838,7 +863,7 @@ app.post('/api/orders/:orderId/rate', authenticateToken, async (req, res) => {
     // Note: You may want to add a ratings table to store rating and comment
     res.json({ success: true });
   } catch (err) {
-    logger.error('Rate order error:', err);
+    logger.error('Rate order error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -854,7 +879,7 @@ app.get('/api/favourites', authenticateToken, async (req, res) => {
     `, [req.user.id]);
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get favourites error:', err);
+    logger.error('Get favourites error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -870,7 +895,7 @@ app.post('/api/favourites/add', authenticateToken, async (req, res) => {
     await pool.query('INSERT INTO favourites (user_id, item_id) VALUES ($1, $2)', [userId, itemId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Add to favourites error:', err);
+    logger.error('Add to favourites error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -886,7 +911,7 @@ app.post('/api/favourites/remove', authenticateToken, async (req, res) => {
     await pool.query('DELETE FROM favourites WHERE user_id = $1 AND item_id = $2', [userId, itemId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Remove from favourites error:', err);
+    logger.error('Remove from favourites error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -897,7 +922,7 @@ app.get('/api/addresses', authenticateToken, async (req, res) => {
     const result = await pool.query('SELECT * FROM addresses WHERE user_id = $1', [req.user.id]);
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get addresses error:', err);
+    logger.error('Get addresses error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -919,7 +944,7 @@ app.post('/api/addresses/add', authenticateToken, async (req, res) => {
     `, [userId, name, street, city, state, zip, mobile, isDefault || false]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Add address error:', err);
+    logger.error('Add address error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -932,7 +957,7 @@ app.post('/api/addresses/update', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: 'All address fields are required' });
   }
   try {
-    if (isDefault) {
+    if  (isDefault) {
       await pool.query('UPDATE addresses SET is_default = FALSE WHERE user_id = $1', [userId]);
     }
     await pool.query(`
@@ -942,7 +967,7 @@ app.post('/api/addresses/update', authenticateToken, async (req, res) => {
     `, [name, street, city, state, zip, mobile, isDefault || false, id, userId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Update address error:', err);
+    logger.error('Update address error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -958,7 +983,7 @@ app.post('/api/addresses/delete', authenticateToken, async (req, res) => {
     await pool.query('DELETE FROM addresses WHERE id = $1 AND user_id = $2', [id, userId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Delete address error:', err);
+    logger.error('Delete address error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -975,7 +1000,7 @@ app.post('/api/addresses/set-default', authenticateToken, async (req, res) => {
     await pool.query('UPDATE addresses SET is_default = TRUE WHERE id = $1 AND user_id = $2', [id, userId]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Set default address error:', err);
+    logger.error('Set default address error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -990,7 +1015,7 @@ app.get('/api/loyalty', authenticateToken, async (req, res) => {
       history: historyResult.rows
     });
   } catch (err) {
-    logger.error('Get loyalty error:', err);
+    logger.error('Get loyalty error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1004,7 +1029,7 @@ app.get('/api/referral', authenticateToken, async (req, res) => {
     }
     res.json(result.rows[0]);
   } catch (err) {
-    logger.error('Get referral error:', err);
+    logger.error('Get referral error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1015,7 +1040,7 @@ app.get('/api/support/tickets', authenticateToken, async (req, res) => {
     const result = await pool.query('SELECT id, subject, status, date FROM support_tickets WHERE user_id = $1 ORDER BY date DESC', [req.user.id]);
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get support tickets error:', err);
+    logger.error('Get support tickets error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1034,7 +1059,7 @@ app.post('/api/support/tickets', authenticateToken, async (req, res) => {
     `, [userId, subject, description]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Create support ticket error:', err);
+    logger.error('Create support ticket error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1050,7 +1075,7 @@ app.get('/api/support/chat', authenticateToken, async (req, res) => {
     `, [req.user.id]);
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get support chat error:', err);
+    logger.error('Get support chat error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1069,7 +1094,7 @@ app.post('/api/support/chat', authenticateToken, async (req, res) => {
     `, [userId, req.user.email, message]);
     res.json({ success: true });
   } catch (err) {
-    logger.error('Send support chat error:', err);
+    logger.error('Send support chat error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1080,7 +1105,7 @@ app.get('/api/faq', async (req, res) => {
     const result = await pool.query('SELECT question, answer FROM faqs');
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get FAQs error:', err);
+    logger.error('Get FAQs error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1091,7 +1116,7 @@ app.get('/api/offers', async (req, res) => {
     const result = await pool.query('SELECT id, title, description, code, discount, image FROM promotions');
     res.json(result.rows);
   } catch (err) {
-    logger.error('Get promotions error:', err);
+    logger.error('Get promotions error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1122,7 +1147,7 @@ app.post('/api/admin/menu', authenticateToken, async (req, res) => {
     `, [name, description, price, image, category, is_popular || false]);
     res.json({ message: 'Menu item added' });
   } catch (err) {
-    logger.error('Add menu item error:', err);
+    logger.error('Add menu item error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1142,7 +1167,7 @@ app.post('/api/admin/promotion', authenticateToken, async (req, res) => {
     `, [title, description, code, discount, image]);
     res.json({ message: 'Promotion added' });
   } catch (err) {
-    logger.error('Add promotion error:', err);
+    logger.error('Add promotion error', { error: err });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1161,7 +1186,7 @@ async function startServer() {
       logger.info(`Server running at http://localhost:${port}`);
     });
   } catch (err) {
-    logger.error('Failed to start server:', err);
+    logger.error('Failed to start server', { error: err });
     process.exit(1);
   }
 }
