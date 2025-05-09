@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-const http = require('http');
 const { OAuth2Client } = require('google-auth-library');
 const { Pool } = require('pg');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -21,12 +21,12 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 // PostgreSQL Pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Required for Render PostgreSQL
+  ssl: { rejectUnauthorized: false },
 });
 
 // Middleware
 const corsOptions = {
-  origin: ['https://delicute.onrender.com', 'http://localhost:3000'],
+  origin: ['http://localhost:3000', 'https://delicute.onrender.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -34,7 +34,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Request logging
 app.use((req, res, next) => {
@@ -74,7 +74,7 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Initialize database (seed admin user)
+// Initialize database
 async function initializeDatabase() {
   try {
     const adminEmail = 'svasudevareddy18604@gmail.com';
@@ -108,29 +108,49 @@ app.post('/api/users/request-otp', async (req, res) => {
   }
 
   const otp = generateOTP();
-  const expires = new Date(Date.now() + 5 * 60 * 1000); // 5-minute expiry
+  const expires = new Date(Date.now() + 10 * 60 * 1000); // 10-minute expiry
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
     subject: 'DELICUTE OTP Verification',
-    text: `Your OTP is ${otp}. Valid for 5 minutes.`,
+    text: `Your OTP is ${otp}. Valid for 10 minutes. Check your spam folder if not received.`,
   };
 
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS otps (
+        email VARCHAR(255) PRIMARY KEY,
+        otp VARCHAR(6) NOT NULL,
+        expires TIMESTAMP NOT NULL
+      )
+    `);
+    await client.query('DELETE FROM otps WHERE email = $1', [email]);
     await client.query(
-      'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET otp = $2, expires = $3',
+      'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3)',
       [email, otp, expires]
     );
-    client.release();
+  } catch (err) {
+    console.error('Database error in OTP request:', err.message);
+    return res.status(500).json({ message: 'Failed to store OTP: Database error' });
+  } finally {
+    if (client) client.release();
+  }
 
-    await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
+  try {
+    await transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Email sending error:', error.message);
+        return res.status(500).json({ message: 'Failed to send OTP: Email error' });
+      }
+      console.log(`OTP sent to ${email}: ${info.response}`);
+    });
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Email or database error:', err.message);
-    res.status(500).json({ message: 'Failed to send OTP' });
+    console.error('Email error in OTP request:', err.message);
+    return res.status(500).json({ message: 'Failed to send OTP: Email error' });
   }
 });
 
@@ -139,20 +159,44 @@ app.post('/api/users/signup', async (req, res) => {
   const { name, email, phone, password, address, otp } = req.body;
   console.log(`Signup attempt: ${email}, OTP: ${otp}`);
 
+  if (!name || name.length < 3) {
+    return res.status(400).json({ message: 'Name must be at least 3 characters' });
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+  if (!phone || !/^\d{10}$/.test(phone)) {
+    return res.status(400).json({ message: 'Phone must be 10 digits' });
+  }
+  if (!password || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
+  if (!address) {
+    return res.status(400).json({ message: 'Address is required' });
+  }
+  if (!otp || !/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ message: 'OTP must be 6 digits' });
+  }
+
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
-      client.release();
       console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const userExists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
-      client.release();
       console.log(`User already exists: ${email}`);
       return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const phoneExists = await client.query('SELECT * FROM users WHERE phone = $1', [phone]);
+    if (phoneExists.rows.length > 0) {
+      console.log(`Phone number already in use: ${phone}`);
+      return res.status(400).json({ message: 'Phone number already in use' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -164,13 +208,13 @@ app.post('/api/users/signup', async (req, res) => {
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
-    client.release();
-
-    console.log(`Signup successful: ${email}`);
     res.status(201).json({ token });
+    console.log(`Signup successful: ${email}`);
   } catch (err) {
     console.error('Signup error:', err.message);
-    res.status(500).json({ message: 'Signup failed' });
+    res.status(500).json({ message: 'Signup failed: ' + err.message });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -179,11 +223,11 @@ app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
   console.log(`Login attempt: ${email}`);
 
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
-    client.release();
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       console.log(`Invalid credentials for ${email}`);
@@ -196,51 +240,71 @@ app.post('/api/users/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ message: 'Login failed' });
+  } finally {
+    if (client) client.release();
   }
 });
 
-// Google Login
-app.post('/api/users/google', async (req, res) => {
-  const { id_token } = req.body;
-  console.log('Google login attempt');
+// Google Login - Redirect Initiation
+app.get('/api/users/google/redirect', (req, res) => {
+  const redirectUri = 'http://localhost:3000/api/users/google/callback';
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email%20profile`;
+  res.redirect(authUrl);
+});
 
-  if (!id_token) {
-    console.log('No id_token provided');
-    return res.status(400).json({ message: 'id_token required' });
+// Google Login - Callback Handler
+app.get('/api/users/google/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    console.log('No code provided in Google callback');
+    return res.status(400).json({ message: 'Authorization code required' });
   }
 
   try {
+    const { tokens } = await googleClient.getToken({
+      code,
+      redirect_uri: 'http://localhost:3000/api/users/google/callback',
+    });
+
     const ticket = await googleClient.verifyIdToken({
-      idToken: id_token,
+      idToken: tokens.id_token,
       audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     const { email, name, sub: google_id } = payload;
 
-    const client = await pool.connect();
-    let user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
+    let client;
+    try {
+      client = await pool.connect();
+      let user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
 
-    if (!user) {
-      const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
-      const result = await client.query(
-        'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
-        [name || 'Google User', email, '1234567890', hashedPassword, 'Google Address', 'user', google_id]
-      );
-      user = result.rows[0];
-      console.log(`New Google user created: ${email}`);
-    } else if (!user.google_id) {
-      await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
-      console.log(`Linked Google ID to existing user: ${email}`);
+      if (!user) {
+        const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
+        const result = await client.query(
+          'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
+          [name || 'Google User', email, null, hashedPassword, 'Google Address', 'user', google_id]
+        );
+        user = result.rows[0];
+        console.log(`New Google user created: ${email}`);
+      } else if (!user.google_id) {
+        await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
+        console.log(`Linked Google ID to existing user: ${email}`);
+      }
+
+      const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      console.log(`Google login successful: ${email}`);
+
+      // Redirect back to frontend with token
+      res.redirect(`http://localhost:3000/auth/callback?token=${token}`);
+    } catch (err) {
+      console.error('Database error in Google callback:', err.message);
+      res.status(500).json({ message: 'Google login failed: Database error' });
+    } finally {
+      if (client) client.release();
     }
-
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    client.release();
-
-    console.log(`Google login successful: ${email}`);
-    res.json({ token });
   } catch (err) {
-    console.error('Google login error:', err.message, err.stack);
-    res.status(500).json({ message: 'Google login failed', error: err.message });
+    console.error('Google callback error:', err.message);
+    res.status(500).json({ message: 'Google login failed: ' + err.message });
   }
 });
 
@@ -249,18 +313,17 @@ app.post('/api/users/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
   console.log(`Password reset attempt: ${email}`);
 
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
-      client.release();
       console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
     if (!user) {
-      client.release();
       console.log(`User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
@@ -268,13 +331,13 @@ app.post('/api/users/reset-password', async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await client.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
-    client.release();
-
     console.log(`Password reset successful: ${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (err) {
     console.error('Reset password error:', err.message);
     res.status(500).json({ message: 'Reset password failed' });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -282,7 +345,9 @@ app.post('/api/users/reset-password', async (req, res) => {
 app.get('/api/users/menu', authenticateToken, async (req, res) => {
   const { search, category } = req.query;
 
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM menu_items';
     const params = [];
     let conditions = [];
@@ -299,85 +364,70 @@ app.get('/api/users/menu', authenticateToken, async (req, res) => {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    const client = await pool.connect();
     const result = await client.query(query, params);
-    client.release();
-
     console.log(`Menu fetched for user ${req.user.email}`);
     res.json(result.rows);
   } catch (err) {
     console.error('Menu fetch error:', err.message);
     res.status(500).json({ message: 'Failed to fetch menu' });
+  } finally {
+    if (client) client.release();
   }
 });
 
 // Add to Cart
 app.post('/api/users/cart/add', authenticateToken, async (req, res) => {
   const { item } = req.body;
-  console.log(`Add to cart attempt for user ${req.user.email}`);
+  const userId = req.user.id;
 
   if (!item || !item.id) {
     console.log('Invalid item data');
     return res.status(400).json({ message: 'Invalid item data' });
   }
 
+  let client;
   try {
-    const client = await pool.connect();
-    await client.query(
-      'INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)',
-      [req.user.id, item.id, 1]
-    );
-    client.release();
+    client = await pool.connect();
+    const itemExists = await client.query('SELECT * FROM menu_items WHERE id = $1', [item.id]);
+    if (itemExists.rows.length === 0) {
+      console.log(`Item not found: ${item.id}`);
+      return res.status(404).json({ message: 'Item not found' });
+    }
 
-    console.log(`Item ${item.id} added to cart for user ${req.user.email}`);
+    const existingCartItem = await client.query(
+      'SELECT * FROM cart WHERE user_id = $1 AND item_id = $2',
+      [userId, item.id]
+    );
+    if (existingCartItem.rows.length > 0) {
+      await client.query(
+        'UPDATE cart SET quantity = quantity + 1 WHERE user_id = $1 AND item_id = $2',
+        [userId, item.id]
+      );
+    } else {
+      await client.query(
+        'INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)',
+        [userId, item.id, 1]
+      );
+    }
+    console.log(`Item added to cart for user ${req.user.email}: ${item.id}`);
     res.json({ message: 'Item added to cart' });
   } catch (err) {
-    console.error('Cart error:', err.message);
+    console.error('Add to cart error:', err.message);
     res.status(500).json({ message: 'Failed to add to cart' });
+  } finally {
+    if (client) client.release();
   }
-});
-
-// Admin Route
-app.get('/api/users/admin', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    console.log(`Admin access denied for ${req.user.email}`);
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-  console.log(`Admin accessed by ${req.user.email}`);
-  res.json({ message: 'Admin dashboard' });
-});
-
-// Razorpay Placeholder (for future integration)
-app.get('/api/payment/config', authenticateToken, (req, res) => {
-  res.json({
-    key_id: process.env.RAZORPAY_KEY_ID,
-  });
-});
-
-// Test Endpoint
-app.get('/api/users/test', (req, res) => {
-  console.log('Test endpoint accessed');
-  res.json({ message: 'Server is running' });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server error:', err.message, err.stack);
-  res.status(500).json({ message: 'Internal server error' });
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-const server = http.createServer(app);
-server.keepAliveTimeout = 120000; // 120 seconds
-server.headersTimeout = 120000; // 120 seconds
-
-server.listen(PORT, async () => {
-  try {
-    await initializeDatabase();
-    console.log(`HTTP Server running on http://localhost:${PORT}`);
-  } catch (err) {
-    console.error('Startup error:', err.message);
+const PORT = 3000;
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database:', err.message);
     process.exit(1);
-  }
-});
+  });

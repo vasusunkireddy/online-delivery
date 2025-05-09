@@ -217,7 +217,6 @@
               </div>
               <div>
                 <label for="newPassword" class="block text-gray-700 font-medium">New Password</label>
-                <input type="password" id="newPassword" class="form-input w-full px-3 py-2 border rounded-lg focus:outline-none" placeholder="Enter new password" required aria-required="true">
               </div>
               <div class="flex justify-between items-center">
                 <button id="resendResetOtp" class="text-sm text-orange-600 hover:underline focus:outline-none" disabled>Resend OTP (<span id="resendResetTimer">30</span>s)</button>
@@ -373,7 +372,7 @@
       const config = {
         method,
         headers,
-        credentials: 'include', // Required for CORS with credentials
+        credentials: 'include',
       };
       if (data) config.body = JSON.stringify(data);
       try {
@@ -635,13 +634,16 @@
       }
       emailError.classList.add('hidden');
       startOtpLoading();
-      const otpData = await fetchData('/request-otp', 'POST', { email }, false);
-      stopOtpLoading();
-      if (otpData) {
-        showToast(`A 6-digit OTP has been sent to ${email}. Please check your inbox or spam folder.`);
-        startOtpTimer();
-      } else {
-        showToast('Failed to send OTP. Please try again.', 'error');
+      try {
+        const otpData = await fetchData('/request-otp', 'POST', { email }, false);
+        stopOtpLoading();
+        if (otpData) {
+          showToast(`A 6-digit OTP has been sent to ${email}. Please check your inbox or spam folder.`);
+          startOtpTimer();
+        }
+      } catch (error) {
+        stopOtpLoading();
+        showToast(`Failed to send OTP: ${error.message}`, 'error');
       }
     });
     loginForm.addEventListener('submit', async (e) => {
@@ -722,7 +724,7 @@
       try {
         const data = await fetchData('/request-otp', 'POST', { email }, false);
         if (data) {
-          showToast('OTP sent to your email');
+          showToast('OTP sent to your email. Check your inbox or spam folder.');
           emailStep.classList.add('hidden');
           otpStep.classList.remove('hidden');
           startResendTimer('resendResetOtp', 'resendResetTimer');
@@ -736,7 +738,7 @@
       try {
         const data = await fetchData('/request-otp', 'POST', { email }, false);
         if (data) {
-          showToast('OTP resent to your email');
+          showToast('OTP resent to your email. Check your inbox or spam folder.');
           startResendTimer('resendResetOtp', 'resendResetTimer');
         }
       } catch (error) {
@@ -843,43 +845,37 @@
         showToast('Please login to place an order');
         showSection('login');
       } else {
-        showToast('Redirecting to order page...');
-        setTimeout(() => {
-          window.location.href = '/user.html';
-        }, 1000);
+                showToast('Redirecting to order page...');
+        showSection('home');
       }
     });
+
     document.addEventListener('click', async (e) => {
       if (e.target.classList.contains('add-to-cart')) {
         if (!isLoggedIn) {
-          showToast('Please login to add items to cart');
+          showToast('Please login to add items to cart', 'error');
           showSection('login');
-        } else {
-          const item = {
-            id: e.target.dataset.itemId,
-          };
-          try {
-            const data = await fetchData('/cart/add', 'POST', { item });
-            if (data) {
-              showToast('Item added to cart!');
-            }
-          } catch (error) {
-            showToast(`Failed to add to cart: ${error.message}`, 'error');
-          }
+          return;
+        }
+        const item = {
+          id: e.target.dataset.itemId,
+          name: e.target.dataset.itemName,
+          price: e.target.dataset.itemPrice,
+        };
+        try {
+          await fetchData('/cart/add', 'POST', { item });
+          showToast(`${item.name} added to cart!`);
+        } catch (error) {
+          showToast(`Failed to add to cart: ${error.message}`, 'error');
         }
       }
     });
-    document.querySelectorAll('.filter-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const category = button.dataset.category;
-        loadMenu(category);
-      });
-    });
-    document.getElementById('searchDishes').addEventListener('input', async (e) => {
-      const query = e.target.value.toLowerCase();
+
+    const searchDishes = document.getElementById('searchDishes');
+    searchDishes.addEventListener('input', async () => {
+      const searchTerm = searchDishes.value.trim();
       try {
-        const data = await fetchData(`/menu?search=${query}`);
-        if (!data) return;
+        const data = await fetchData(`/menu?search=${encodeURIComponent(searchTerm)}`);
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = data
           .map(item => `
@@ -891,18 +887,25 @@
             </div>
           `).join('');
       } catch (error) {
-        showToast(`Failed to search menu: ${error.message}`, 'error');
+        showToast(`Search failed: ${error.message}`, 'error');
       }
     });
-    window.onload = () => {
-      initializeGoogleSignIn();
-      if (isLoggedIn) {
-        showSection('home');
-        updateNav();
-      } else {
-        showSection('login');
-      }
-    };
+
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const category = button.dataset.category;
+        loadMenu(category);
+      });
+    });
+
+    // Initialize
+    updateNav();
+    showSection('login');
+    initializeGoogleSignIn();
+
+    // Ensure menu visibility on page load
+    updateMenuVisibility();
   </script>
 </body>
 </html>
