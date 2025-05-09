@@ -43,8 +43,7 @@
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       background: linear-gradient(180deg, var(--primary), var(--secondary));
       box-shadow: var(--shadow);
-      width: 80%;
-      max-width: 280px;
+      width: 280px;
       z-index: 2000;
       position: fixed;
       top: 0;
@@ -60,21 +59,36 @@
     }
     .nav-modal button {
       color: #ffffff;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       font-weight: 500;
       border-radius: 12px;
-      padding: 12px 16px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
       text-align: left;
-      font-size: 0.9rem;
+      font-size: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-modal button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.5s;
+    }
+    .nav-modal button:hover:before {
+      left: 100%;
     }
     .nav-modal button:hover {
       background: #ffffff;
       color: var(--primary);
-      transform: translateX(5px);
+      transform: translateX(8px);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
     .nav-modal button.active {
@@ -83,9 +97,8 @@
       box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
     }
     .nav-modal i { 
-      font-size: 1.2rem; 
-      min-width: 20px; 
-      display: inline-block; 
+      font-size: 1.3rem; 
+      min-width: 24px; 
     }
     .nav-modal .logout-btn {
       margin-top: auto;
@@ -108,15 +121,16 @@
       border-top: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: var(--shadow);
       z-index: 2000;
-      padding: 8px 0;
+      padding: 10px 0;
     }
     .bottom-nav .nav-item {
       flex: 1;
       text-align: center;
       color: #1a202c;
-      font-size: 0.75rem;
-      padding: 8px 0;
-      transition: all 0.2s ease;
+      font-size: 0.8rem;
+      padding: 10px 0;
+      transition: all 0.3s ease;
+      position: relative;
     }
     .bottom-nav .nav-item.active {
       color: var(--primary);
@@ -124,11 +138,15 @@
     }
     .bottom-nav .nav-item:hover {
       color: var(--primary);
-      background: rgba(255, 107, 0, 0.05);
+      transform: scale(1.1);
     }
     .bottom-nav i {
-      font-size: 1.3rem;
-      margin-bottom: 4px;
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+      transition: transform 0.3s ease;
+    }
+    .bottom-nav .nav-item:hover i {
+      transform: rotate(10deg);
     }
 
     .glass {
@@ -138,11 +156,42 @@
       border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: var(--shadow);
       border-radius: 16px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.3s ease;
     }
     .glass:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .stunning-btn {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stunning-btn:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: 0.5s;
+    }
+    .stunning-btn:hover:before {
+      left: 100%;
+    }
+    .stunning-btn:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 8px 20px rgba(255, 107, 0, 0.4);
     }
 
     .table-container {
@@ -159,40 +208,45 @@
       border-spacing: 0;
     }
     th, td {
-      padding: 12px;
+      padding: 14px;
       text-align: left;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
     }
     th {
-      background: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
       color: #ffffff;
       position: sticky;
       top: 0;
       z-index: 10;
       font-weight: 600;
     }
+    tbody tr {
+      transition: all 0.2s ease;
+    }
     tbody tr:hover {
       background: #fff7ed;
+      transform: scale(1.01);
     }
 
     .pagination {
       display: flex;
       justify-content: center;
-      gap: 8px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 20px;
     }
     .pagination button {
-      padding: 8px 14px;
+      padding: 10px 16px;
       background: var(--primary);
       color: #ffffff;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 500;
-      font-size: 0.85rem;
-      transition: all 0.2s ease;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
     }
     .pagination button:hover:not(:disabled) {
       background: var(--secondary);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .pagination button:disabled {
       background: #d1d5db;
@@ -201,20 +255,24 @@
 
     .toast {
       position: fixed;
-      top: 16px;
-      right: 16px;
+      top: 20px;
+      right: 20px;
       background: var(--primary);
       color: #ffffff;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border-radius: 12px;
       box-shadow: var(--shadow);
       z-index: 2000;
       display: none;
-      font-size: 0.9rem;
+      font-size: 1rem;
       max-width: 90%;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    .toast.show { display: block; opacity: 1; }
+    .toast.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
     .toast.error { background: #dc2626; }
     .toast.success { background: #16a34a; }
 
@@ -222,42 +280,48 @@
       max-height: 90vh;
       overflow-y: auto;
       border-radius: 16px;
-      padding: 16px;
+      padding: 20px;
       width: 90%;
-      max-width: 400px;
+      max-width: 450px;
+      background: var(--glass-bg);
     }
 
     .chat-container {
       background: #ffffff;
       border-radius: 16px;
-      padding: 12px;
+      padding: 14px;
       box-shadow: var(--shadow);
-      height: 400px;
+      height: 450px;
       display: flex;
       flex-direction: column;
     }
     .chat-window {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 14px;
       background: #f9fafb;
       border-radius: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       scrollbar-width: thin;
       scrollbar-color: var(--primary) #e5e7eb;
     }
     .chat-message {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       display: flex;
       flex-direction: column;
+      transition: all 0.2s ease;
+    }
+    .chat-message:hover {
+      transform: scale(1.02);
     }
     .chat-message.admin { align-items: flex-end; }
     .chat-message.user { align-items: flex-start; }
     .chat-message span {
       max-width: 70%;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 12px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .chat-message.admin span {
       background: var(--primary);
@@ -269,64 +333,89 @@
     }
     .chat-input-container {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
     }
     .chat-input-container input {
       flex: 1;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .chat-input-container input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 8px rgba(255, 107, 0, 0.3);
     }
     .chat-input-container button {
-      padding: 8px 16px;
+      padding: 10px 20px;
       background: var(--primary);
       color: #ffffff;
       border-radius: 12px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
     }
     .chat-input-container button:hover {
       background: var(--secondary);
+      transform: scale(1.05);
     }
     .chat-input-container i {
-      font-size: 1rem;
-      display: inline-block;
+      font-size: 1.1rem;
     }
 
     .profile-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      padding: 16px;
+      gap: 20px;
+      padding: 20px;
       background: var(--glass-bg);
       border-radius: 16px;
       box-shadow: var(--shadow);
     }
     .profile-image {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       object-fit: cover;
-      border: 3px solid var(--primary);
-      transition: transform 0.2s ease;
+      border: 4px solid var(--primary);
+      transition: all 0.3s ease;
     }
     .profile-image:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
     }
 
-    @media (min-width: 768px) {
-      .main-content { margin-left: 280px; }
-      .nav-modal { width: 250px; transform: translateX(0); }
-      th, td { font-size: 0.95rem; padding: 14px; }
-      .chat-container { height: 450px; }
+    .status-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+    .status-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .status-btn.confirmed { background: #16a34a; }
+    .status-btn.out-for-delivery { background: #3b82f6; }
+    .status-btn.accepted { background: #10b981; }
+    .status-btn.rejected { background: #dc2626; }
+
+    @media (min-width: 1024px) {
+      .main-content { margin-left: 0; transition: margin-left 0.3s ease; }
+      .main-content.nav-open { margin-left: 280px; }
+      .nav-modal { transform: translateX(-100%); }
+      .nav-modal.nav-open { transform: translateX(0); }
+      th, td { font-size: 1rem; padding: 16px; }
+      .chat-container { height: 500px; }
       .bottom-nav { display: none; }
     }
 
-    @media (max-width: 767px) {
-      .main-content { margin-left: 0; margin-bottom: 60px; }
-      .grid-cols-4 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    @media (max-width: 1023px) {
+      .main-content { margin-left: 0; margin-bottom: 70px; }
+      .grid-cols-4 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
       .table-container table { display: block; }
       .table-container thead, .table-container tbody, .table-container tr { display: block; }
       .table-container th { display: none; }
@@ -334,71 +423,71 @@
         display: flex;
         justify-content: space-between;
         border-bottom: 1px solid #e5e7eb;
-        padding: 10px;
+        padding: 12px;
       }
       .table-container td:before {
         content: attr(data-label);
         font-weight: 600;
         width: 40%;
-        min-width: 90px;
+        min-width: 100px;
       }
       .modal-content { width: 95%; }
-      .promo-card { padding: 12px; }
-      .promo-card img { height: 120px; }
-      button, input, select { font-size: 0.9rem; }
-      .chat-container { height: 350px; }
+      .promo-card { padding: 14px; }
+      .promo-card img { height: 140px; }
+      button, input, select { font-size: 0.95rem; }
+      .chat-container { height: 400px; }
       .chat-message span { max-width: 80%; }
-      .profile-container { padding: 12px; }
-      .profile-image { width: 80px; height: 80px; }
-      .nav-modal i { font-size: 1.2rem; }
-      .header i { font-size: 1.2rem; }
-      .glass i { font-size: 1.2rem; }
+      .profile-container { padding: 14px; }
+      .profile-image { width: 100px; height: 100px; }
+      .nav-modal i { font-size: 1.3rem; }
+      .header i { font-size: 1.3rem; }
+      .glass i { font-size: 1.3rem; }
       .bottom-nav { display: flex; }
-      .nav-modal { width: 70%; max-width: 240px; }
-      .nav-modal button { font-size: 0.85rem; padding: 10px 14px; }
+      .nav-modal { width: 80%; max-width: 260px; }
+      .nav-modal button { font-size: 0.9rem; padding: 12px 16px; }
     }
   </style>
 </head>
 <body>
-  <div id="preloader" class="fixed inset-0 bg-orange-600 flex items-center justify-center z-[3000] transition-opacity duration-500">
+  <div id="preloader" class="fixed inset-0 bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center z-[3000] transition-opacity duration-500">
     <div class="border-6 border-white border-t-orange-600 rounded-full w-12 h-12 animate-spin"></div>
-    <div class="ml-3 text-white text-xl font-bold animate-pulse">DELICUTE Admin</div>
+    <div class="ml-4 text-white text-2xl font-bold animate-pulse">DELICUTE Admin</div>
   </div>
 
   <div id="welcomeModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[4000]" role="dialog" aria-labelledby="welcomeModalTitle">
-    <div class="glass p-6 modal-content animate-slideUp">
-      <h2 class="text-2xl font-bold text-orange-600 mb-3" id="welcomeModalTitle">Welcome to DELICUTE!</h2>
-      <p class="text-base mb-4">Manage your restaurant with ease!</p>
-      <button id="closeWelcomeModal" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 w-full flex items-center justify-center gap-2" aria-label="Get Started">
+    <div class="glass p-8 modal-content animate-slideUp">
+      <h2 class="text-3xl font-bold text-orange-600 mb-4" id="welcomeModalTitle">Welcome to DELICUTE!</h2>
+      <p class="text-lg mb-6">Manage your restaurant with unparalleled ease!</p>
+      <button id="closeWelcomeModal" class="stunning-btn w-full" aria-label="Get Started">
         <i class="fas fa-rocket"></i> Get Started
       </button>
     </div>
   </div>
 
   <div id="adminDashboard" class="hidden">
-    <header class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-3 sticky top-0 z-30 shadow-md">
+    <header class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 sticky top-0 z-30 shadow-lg">
       <div class="container mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
           <button id="navToggle" class="text-white hover:text-orange-200 transition-colors" aria-label="Toggle navigation">
-            <i class="fas fa-bars text-lg"></i>
+            <i class="fas fa-bars text-xl"></i>
           </button>
-          <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8" loading="lazy">
-          <div class="text-xl font-bold">DELICUTE</div>
+          <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
+          <div class="text-2xl font-bold">DELICUTE</div>
         </div>
-        <div class="flex gap-4">
+        <div class="flex gap-6">
           <button id="profileQuick" class="text-white hover:text-orange-200 transition-colors" aria-label="View profile">
-            <i class="fas fa-user-circle text-lg"></i>
+            <i class="fas fa-user-circle text-xl"></i>
           </button>
         </div>
       </div>
     </header>
 
-    <div id="navModal" class="nav-modal p-4">
-      <div class="flex items-center gap-3 mb-6">
-        <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8" loading="lazy">
-        <div class="text-lg font-bold text-white">DELICUTE Admin</div>
+    <div id="navModal" class="nav-modal p-6">
+      <div class="flex items-center gap-4 mb-8">
+        <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
+        <div class="text-xl font-bold text-white">DELICUTE Admin</div>
       </div>
-      <nav class="space-y-2 flex-1">
+      <nav class="space-y-3 flex-1">
         <button data-section="dashboard" class="admin-nav active" aria-label="Home"><i class="fas fa-home"></i> Home</button>
         <button data-section="orders" class="admin-nav" aria-label="Orders"><i class="fas fa-shopping-cart"></i> Orders</button>
         <button data-section="customers" class="admin-nav" aria-label="Customers"><i class="fas fa-users"></i> Customers</button>
@@ -414,43 +503,43 @@
       </button>
     </div>
 
-    <div class="main-content p-4">
+    <div class="main-content p-6">
       <section id="admin-dashboard" class="admin-section animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Dashboard</h2>
-          <div id="countdownTimer" class="text-base font-semibold"></div>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Dashboard</h2>
+          <div id="countdownTimer" class="text-lg font-semibold text-gray-700"></div>
         </div>
-        <div class="glass p-6 mb-6">
-          <h2 class="text-2xl font-bold mb-3">Manage Seamlessly!</h2>
-          <p class="text-base mb-4">Run your restaurant from anywhere.</p>
-          <div class="flex gap-3">
-            <button data-section="orders" class="admin-nav bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="View orders">
+        <div class="glass p-8 mb-8">
+          <h2 class="text-3xl font-bold mb-4">Manage Seamlessly!</h2>
+          <p class="text-lg mb-6">Run your restaurant from anywhere with our powerful admin tools.</p>
+          <div class="flex gap-4">
+            <button data-section="orders" class="admin-nav stunning-btn" aria-label="View orders">
               <i class="fas fa-shopping-cart"></i> Orders
             </button>
-            <button data-section="menu" class="admin-nav bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2" aria-label="Manage menu">
+            <button data-section="menu" class="admin-nav stunning-btn bg-white text-orange-600 hover:bg-gray-100" aria-label="Manage menu">
               <i class="fas fa-utensils"></i> Menu
             </button>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div class="glass p-4" data-tilt data-tilt-max="8">
-            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-shopping-cart text-orange-600"></i> Total Orders</h3>
-            <p class="text-2xl text-orange-600 font-bold" id="totalOrders">0</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="glass p-6" data-tilt data-tilt-max="8">
+            <h3 class="text-lg font-semibold flex items-center gap-3"><i class="fas fa-shopping-cart text-orange-600"></i> Total Orders</h3>
+            <p class="text-3xl text-orange-600 font-bold" id="totalOrders">0</p>
           </div>
-          <div class="glass p-4" data-tilt data-tilt-max="8">
-            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-rupee-sign text-orange-600"></i> Total Sales</h3>
-            <p class="text-2xl text-orange-600 font-bold" id="totalSales">₹0</p>
+          <div class="glass p-6" data-tilt data-tilt-max="8">
+            <h3 class="text-lg font-semibold flex items-center gap-3"><i class="fas fa-rupee-sign text-orange-600"></i> Total Sales</h3>
+            <p class="text-3xl text-orange-600 font-bold" id="totalSales">₹0</p>
           </div>
-          <div class="glass p-4" data-tilt data-tilt-max="8">
-            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-users text-orange-600"></i> Active Customers</h3>
-            <p class="text-2xl text-orange-600 font-bold" id="activeCustomers">0</p>
+          <div class="glass p-6" data-tilt data-tilt-max="8">
+            <h3 class="text-lg font-semibold flex items-center gap-3"><i class="fas fa-users text-orange-600"></i> Active Customers</h3>
+            <p class="text-3xl text-orange-600 font-bold" id="activeCustomers">0</p>
           </div>
-          <div class="glass p-4" data-tilt data-tilt-max="8">
-            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-undo text-orange-600"></i> Pending Refunds</h3>
-            <p class="text-2xl text-orange-600 font-bold" id="pendingRefunds">0</p>
+          <div class="glass p-6" data-tilt data-tilt-max="8">
+            <h3 class="text-lg font-semibold flex items-center gap-3"><i class="fas fa-undo text-orange-600"></i> Pending Refunds</h3>
+            <p class="text-3xl text-orange-600 font-bold" id="pendingRefunds">0</p>
           </div>
         </div>
-        <h3 class="text-2xl font-bold mb-4">Recent Orders</h3>
+        <h3 class="text-3xl font-bold mb-6">Recent Orders</h3>
         <div class="table-container glass">
           <table>
             <thead>
@@ -466,25 +555,28 @@
           </table>
           <div class="pagination" id="recentOrdersPagination"></div>
         </div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Sales Overview</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Sales Overview</h3>
           <canvas id="salesChart"></canvas>
         </div>
       </section>
 
       <section id="admin-orders" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Orders</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Orders</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
-        <div class="flex flex-col gap-3 mb-4">
-          <input type="text" id="orderSearch" class="px-3 py-2 rounded-lg border" placeholder="Search by ID or customer" aria-label="Search orders">
-          <select id="orderFilter" class="px-3 py-2 rounded-lg border" aria-label="Filter by status">
+        <div class="flex flex-col gap-4 mb-6">
+          <input type="text" id="orderSearch" class="px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" placeholder="Search by ID or customer" aria-label="Search orders">
+          <select id="orderFilter" class="px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Filter by status">
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
+            <option value="out-for-delivery">Out for Delivery</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -504,20 +596,38 @@
           </table>
           <div class="pagination" id="ordersPagination"></div>
         </div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Order Status</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Order Status</h3>
           <canvas id="orderStatusChart"></canvas>
+        </div>
+        <div id="viewOrderModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="viewOrderModalTitle">
+          <div class="glass p-8 modal-content max-w-lg">
+            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="viewOrderModalTitle">Order Details</h2>
+            <div id="orderDetails" class="space-y-4">
+              <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+              <p><strong>Payment ID:</strong> <span id="paymentId"></span></p>
+              <p><strong>Customer:</strong> <span id="orderCustomer"></span></p>
+              <p><strong>Total:</strong> ₹<span id="orderTotal"></span></p>
+              <p><strong>Status:</strong> <span id="orderStatus"></span></p>
+              <p><strong>Created At:</strong> <span id="orderCreatedAt"></span></p>
+              <p><strong>Items:</strong></p>
+              <ul id="orderItems" class="list-disc pl-5"></ul>
+            </div>
+            <button id="closeViewOrderModal" class="stunning-btn w-full mt-6" aria-label="Close">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
         </div>
       </section>
 
       <section id="admin-customers" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Customers</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Customers</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
-        <input type="text" id="customerSearch" class="w-full px-3 py-2 rounded-lg border mb-4" placeholder="Search by name or email" aria-label="Search customers">
+        <input type="text" id="customerSearch" class="w-full px-4 py-3 rounded-lg border mb-6 focus:ring-2 focus:ring-orange-600" placeholder="Search by name or email" aria-label="Search customers">
         <div class="table-container glass">
           <table>
             <thead>
@@ -532,20 +642,20 @@
           </table>
           <div class="pagination" id="customersPagination"></div>
         </div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Customer Activity</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Customer Activity</h3>
           <canvas id="customerActivityChart"></canvas>
         </div>
       </section>
 
       <section id="admin-menu" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Menu</h2>
-          <div class="flex gap-3">
-            <button id="addMenuItem" class="bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Add new menu item">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Menu</h2>
+          <div class="flex gap-4">
+            <button id="addMenuItem" class="stunning-btn" aria-label="Add new menu item">
               <i class="fas fa-plus"></i> Add
             </button>
-            <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
               <i class="fas fa-arrow-left"></i> Back
             </button>
           </div>
@@ -565,21 +675,21 @@
           </table>
           <div class="pagination" id="menuPagination"></div>
         </div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Menu Categories</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Menu Categories</h3>
           <canvas id="menuCategoriesChart"></canvas>
         </div>
         <div id="addMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="menuModalTitle">
-          <div class="glass p-6 modal-content">
-            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="menuModalTitle">Add Menu Item</h2>
-            <form id="addMenuForm" class="space-y-4">
+          <div class="glass p-8 modal-content">
+            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="menuModalTitle">Add Menu Item</h2>
+            <form id="addMenuForm" class="space-y-6">
               <div>
-                <label for="menuName" class="block font-medium mb-1">Name</label>
-                <input type="text" id="menuName" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter item name">
+                <label for="menuName" class="block font-medium mb-2">Name</label>
+                <input type="text" id="menuName" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter item name">
               </div>
               <div>
-                <label for="menuCategory" class="block font-medium mb-1">Category</label>
-                <select id="menuCategory" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select category">
+                <label for="menuCategory" class="block font-medium mb-2">Category</label>
+                <select id="menuCategory" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select category">
                   <option value="Vegetarian">Vegetarian</option>
                   <option value="Non-Veg">Non-Veg</option>
                   <option value="Desserts">Desserts</option>
@@ -587,19 +697,19 @@
                 </select>
               </div>
               <div>
-                <label for="menuPrice" class="block font-medium mb-1">Price (₹)</label>
-                <input type="number" id="menuPrice" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter price">
+                <label for="menuPrice" class="block font-medium mb-2">Price (₹)</label>
+                <input type="number" id="menuPrice" min="0" step="0.01" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter price">
               </div>
               <div>
-                <label for="menuImage" class="block font-medium mb-1">Image (Required)</label>
-                <input type="file" id="menuImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" required aria-label="Upload image">
-                <img id="menuImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+                <label for="menuImage" class="block font-medium mb-2">Image (Required)</label>
+                <input type="file" id="menuImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Upload image">
+                <img id="menuImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
               </div>
-              <div class="flex gap-3">
-                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save menu item">
+              <div class="flex gap-4">
+                <button type="submit" class="stunning-btn flex-1" aria-label="Save menu item">
                   <i class="fas fa-save"></i> Save
                 </button>
-                <button type="button" id="closeMenuModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                <button type="button" id="closeMenuModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
                   <i class="fas fa-times"></i> Cancel
                 </button>
               </div>
@@ -609,72 +719,72 @@
       </section>
 
       <section id="admin-support" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Support</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Support</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
         <div class="chat-container glass">
-          <select id="chatUserSelect" class="w-full px-3 py-2 rounded-lg border mb-4" aria-label="Select customer to chat">
+          <select id="chatUserSelect" class="w-full px-4 py-3 rounded-lg border mb-6 focus:ring-2 focus:ring-orange-600" aria-label="Select customer to chat">
             <option value="">Select a customer</option>
           </select>
           <div id="chatWindow" class="chat-window"></div>
           <div class="chat-input-container">
             <input type="text" id="chatInput" placeholder="Type your response..." aria-label="Type your response">
-            <button id="sendChat" aria-label="Send message"><i class="fas fa-paper-plane"></i> Send</button>
+            <button id="sendChat" class="stunning-btn" aria-label="Send message"><i class="fas fa-paper-plane"></i> Send</button>
           </div>
         </div>
       </section>
 
       <section id="admin-promotions" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Promotions</h2>
-          <div class="flex gap-3">
-            <button id="addPromotion" class="bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Add new promotion">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Promotions</h2>
+          <div class="flex gap-4">
+            <button id="addPromotion" class="stunning-btn" aria-label="Add new promotion">
               <i class="fas fa-plus"></i> Add
             </button>
-            <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
               <i class="fas fa-arrow-left"></i> Back
             </button>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="promotionsGrid"></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="promotionsGrid"></div>
         <div class="pagination" id="promotionsPagination"></div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Promotion Performance</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Promotion Performance</h3>
           <canvas id="promotionPerformanceChart"></canvas>
         </div>
         <div id="addPromotionModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="promotionModalTitle">
-          <div class="glass p-6 modal-content">
-            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="promotionModalTitle">Add Promotion</h2>
-            <form id="addPromotionForm" class="space-y-4">
+          <div class="glass p-8 modal-content">
+            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="promotionModalTitle">Add Promotion</h2>
+            <form id="addPromotionForm" class="space-y-6">
               <div>
-                <label for="promoCode" class="block font-medium mb-1">Promo Code</label>
-                <input type="text" id="promoCode" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter promo code">
+                <label for="promoCode" class="block font-medium mb-2">Promo Code</label>
+                <input type="text" id="promoCode" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter promo code">
               </div>
               <div>
-                <label for="promoDiscount" class="block font-medium mb-1">Discount (%)</label>
-                <input type="number" id="promoDiscount" min="0" max="100" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter discount percentage">
+                <label for="promoDiscount" class="block font-medium mb-2">Discount (%)</label>
+                <input type="number" id="promoDiscount" min="0" max="100" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter discount percentage">
               </div>
               <div>
-                <label for="promoValidFrom" class="block font-medium mb-1">Valid From</label>
-                <input type="date" id="promoValidFrom" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select valid from date">
+                <label for="promoValidFrom" class="block font-medium mb-2">Valid From</label>
+                <input type="date" id="promoValidFrom" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select valid from date">
               </div>
               <div>
-                <label for="promoValidUntil" class="block font-medium mb-1">Valid Until</label>
-                <input type="date" id="promoValidUntil" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select valid until date">
+                <label for="promoValidUntil" class="block font-medium mb-2">Valid Until</label>
+                <input type="date" id="promoValidUntil" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select valid until date">
               </div>
               <div>
-                <label for="promoImage" class="block font-medium mb-1">Image (Required)</label>
-                <input type="file" id="promoImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" required aria-label="Upload promotion image">
-                <img id="promoImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+                <label for="promoImage" class="block font-medium mb-2">Image (Required)</label>
+                <input type="file" id="promoImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Upload promotion image">
+                <img id="promoImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
               </div>
-              <div class="flex gap-3">
-                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save promotion">
+              <div class="flex gap-4">
+                <button type="submit" class="stunning-btn flex-1" aria-label="Save promotion">
                   <i class="fas fa-save"></i> Save
                 </button>
-                <button type="button" id="closePromotionModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                <button type="button" id="closePromotionModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
                   <i class="fas fa-times"></i> Cancel
                 </button>
               </div>
@@ -684,13 +794,13 @@
       </section>
 
       <section id="admin-feedback" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Feedback</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Feedback</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
-        <div class="table-container glass mb-6">
+        <div class="table-container glass mb-8">
           <table>
             <thead>
               <tr>
@@ -706,54 +816,54 @@
           </table>
           <div class="pagination" id="feedbackPagination"></div>
         </div>
-        <div class="glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Feedback Analytics</h3>
+        <div class="glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Feedback Analytics</h3>
           <canvas id="feedbackChart"></canvas>
         </div>
       </section>
 
       <section id="admin-settings" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Settings</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Settings</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
-        <div class="glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Admin Profile</h3>
+        <div class="glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Admin Profile</h3>
           <div class="profile-container">
-            <img id="profileImage" src="" alt="Admin Profile" class="profile-image">
+            <img id="profileImage" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Admin Profile" class="profile-image" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
             <div class="text-center">
-              <h4 id="profileName" class="text-lg font-semibold"></h4>
-              <p id="profileEmail" class="text-gray-600"></p>
+              <h4 id="profileName" class="text-xl font-semibold">John Doe</h4>
+              <p id="profileEmail" class="text-gray-600">john.doe@example.com</p>
             </div>
-            <button id="editProfileBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Edit profile">
+            <button id="editProfileBtn" class="stunning-btn" aria-label="Edit profile">
               <i class="fas fa-edit"></i> Edit Profile
             </button>
           </div>
         </div>
         <div id="editProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="editProfileModalTitle">
-          <div class="glass p-6 modal-content">
-            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="editProfileModalTitle">Edit Profile</h2>
-            <form id="editProfileForm" class="space-y-4">
+          <div class="glass p-8 modal-content">
+            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="editProfileModalTitle">Edit Profile</h2>
+            <form id="editProfileForm" class="space-y-6">
               <div>
-                <label for="adminName" class="block font-medium mb-1">Name</label>
-                <input type="text" id="adminName" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter name">
+                <label for="adminName" class="block font-medium mb-2">Name</label>
+                <input type="text" id="adminName" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter name">
               </div>
               <div>
-                <label for="adminEmail" class="block font-medium mb-1">Email</label>
-                <input type="email" id="adminEmail" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter email">
+                <label for="adminEmail" class="block font-medium mb-2">Email</label>
+                <input type="email" id="adminEmail" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter email">
               </div>
               <div>
-                <label for="adminImage" class="block font-medium mb-1">Profile Image</label>
-                <input type="file" id="adminImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" aria-label="Upload profile image">
-                <img id="adminImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+                <label for="adminImage" class="block font-medium mb-2">Profile Image</label>
+                <input type="file" id="adminImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Upload profile image">
+                <img id="adminImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
               </div>
-              <div class="flex gap-3">
-                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save profile">
+              <div class="flex gap-4">
+                <button type="submit" class="stunning-btn flex-1" aria-label="Save profile">
                   <i class="fas fa-save"></i> Save
                 </button>
-                <button type="button" id="closeEditProfileModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                <button type="button" id="closeEditProfileModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
                   <i class="fas fa-times"></i> Cancel
                 </button>
               </div>
@@ -763,31 +873,31 @@
       </section>
 
       <section id="admin-reports" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Reports</h2>
-          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-3xl font-bold text-orange-600">Reports</h2>
+          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
             <i class="fas fa-arrow-left"></i> Back
           </button>
         </div>
-        <div class="glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Generate Reports</h3>
-          <div class="space-y-4">
+        <div class="glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Generate Reports</h3>
+          <div class="space-y-6">
             <div>
-              <label for="reportDate" class="block font-medium mb-1">Select Date</label>
-              <input type="date" id="reportDate" class="w-full px-3 py-2 rounded-lg border" aria-label="Select report date">
+              <label for="reportDate" class="block font-medium mb-2">Select Date</label>
+              <input type="date" id="reportDate" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Select report date">
             </div>
-            <div class="flex gap-3">
-              <button id="generateDailyReport" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Generate daily report">
+            <div class="flex gap-4">
+              <button id="generateDailyReport" class="stunning-btn" aria-label="Generate daily report">
                 <i class="fas fa-chart-line"></i> Daily Sales
               </button>
-              <button id="exportCsv" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Export to CSV">
+              <button id="exportCsv" class="stunning-btn" aria-label="Export to CSV">
                 <i class="fas fa-file-csv"></i> Export CSV
               </button>
             </div>
           </div>
         </div>
-        <div class="mt-6 glass p-6">
-          <h3 class="text-2xl font-bold mb-4">Sales Trends</h3>
+        <div class="mt-8 glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Sales Trends</h3>
           <canvas id="salesTrendsChart"></canvas>
         </div>
       </section>
@@ -821,14 +931,135 @@
 
   <script>
     // Configuration
-    const API_URL = 'http://localhost:3000/api';
     const CONFIG = {
       ITEMS_PER_PAGE: 8,
       API_TOKEN: localStorage.getItem('jwtToken') || null,
     };
 
-    // Fallback Image (Base64-encoded placeholder)
-    const FALLBACK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABYSURBVGhD7cEBDQAAAMKg909tDjtwAAAAAAAAAAAAAAAcO3YsxQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPCDY3gAAdL2ZwgAAAAASUVORK5CYII=';
+    // Mock Data with Enhanced Order Details
+    const MOCK_DATA = {
+      orders: [
+        {
+          id: 1,
+          userId: 1,
+          paymentId: 'pay_001',
+          total: 1500,
+          status: 'delivered',
+          createdAt: '2025-05-01T10:00:00Z',
+          items: [
+            { name: 'Margherita Pizza', quantity: 2, price: 499 },
+            { name: 'Mango Lassi', quantity: 1, price: 199 },
+          ],
+        },
+        {
+          id: 2,
+          userId: 2,
+          paymentId: 'pay_002',
+          total: 800,
+          status: 'pending',
+          createdAt: '2025-05-02T12:00:00Z',
+          items: [
+            { name: 'Chocolate Lava Cake', quantity: 2, price: 299 },
+            { name: 'Mango Lassi', quantity: 1, price: 199 },
+          ],
+        },
+        {
+          id: 3,
+          userId: 3,
+          paymentId: 'pay_003',
+          total: 2000,
+          status: 'confirmed',
+          createdAt: '2025-05-03T14:00:00Z',
+          items: [
+            { name: 'Chicken Biryani', quantity: 2, price: 699 },
+            { name: 'Mango Lassi', quantity: 2, price: 199 },
+          ],
+        },
+        {
+          id: 4,
+          userId: 1,
+          paymentId: 'pay_004',
+          total: 1200,
+          status: 'cancelled',
+          createdAt: '2025-05-04T16:00:00Z',
+          items: [
+            { name: 'Margherita Pizza', quantity: 1, price: 499 },
+            { name: 'Chocolate Lava Cake', quantity: 1, price: 299 },
+          ],
+        },
+      ],
+      users: [
+        { id: 1, name: 'Alice Smith', email: 'alice@example.com', phone: '9876543210' },
+        { id: 2, name: 'Bob Johnson', email: 'bob@example.com', phone: '8765432109' },
+        { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', phone: '7654321098' },
+      ],
+      menu: [
+        {
+          id: 1,
+          name: 'Margherita Pizza',
+          category: 'Vegetarian',
+          price: 499,
+          image: 'https://images.unsplash.com/photo-1571066811602-716837d330d1',
+        },
+        {
+          id: 2,
+          name: 'Chicken Biryani',
+          category: 'Non-Veg',
+          price: 699,
+          image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc',
+        },
+        {
+          id: 3,
+          name: 'Chocolate Lava Cake',
+          category: 'Desserts',
+          price: 299,
+          image: 'https://images.unsplash.com/photo-1611293388250-580b08c54a43',
+        },
+        {
+          id: 4,
+          name: 'Mango Lassi',
+          category: 'Beverages',
+          price: 199,
+          image: 'https://images.unsplash.com/photo-1603894584373-2d7c7b8f7417',
+        },
+      ],
+      promotions: [
+        {
+          id: 1,
+          code: 'SAVE20',
+          discount: 20,
+          validFrom: '2025-05-01',
+          validUntil: '2025-05-15',
+          image: 'https://images.unsplash.com/photo-1504672281656-e3e7b0aada58',
+          usageCount: 50,
+        },
+        {
+          id: 2,
+          code: 'FREEDISH',
+          discount: 100,
+          validFrom: '2025-05-10',
+          validUntil: '2025-05-20',
+          image: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbf7d8',
+          usageCount: 30,
+        },
+      ],
+      feedback: [
+        { id: 1, userId: 1, orderId: 1, rating: 5, comment: 'Amazing food!', createdAt: '2025-05-02T10:00:00Z' },
+        { id: 2, userId: 2, orderId: 2, rating: 3, comment: 'Good but slow delivery', createdAt: '2025-05-03T12:00:00Z' },
+      ],
+      chatMessages: [
+        { id: 1, userId: 1, text: 'When will my order arrive?', isAdmin: false, createdAt: '2025-05-01T10:00:00Z' },
+        { id: 2, userId: 1, text: 'It will arrive in 30 minutes.', isAdmin: true, createdAt: '2025-05-01T10:05:00Z' },
+      ],
+      profile: {
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        image: 'https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f',
+      },
+    };
+
+    // Fallback Image
+    const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e';
 
     // State Management
     const state = {
@@ -855,6 +1086,7 @@
         chatMessages: [],
         profile: { name: '', email: '', image: '' },
       },
+      isNavOpen: false,
     };
 
     // Utility Functions
@@ -867,8 +1099,8 @@
 
     function triggerConfetti() {
       confetti({
-        particleCount: 80,
-        spread: 60,
+        particleCount: 100,
+        spread: 70,
         origin: { y: 0.6 },
         colors: ['#ff6b00', '#ff8f33', '#34d399'],
       });
@@ -908,51 +1140,45 @@
       container.appendChild(nextButton);
     }
 
-    // API Integration
+    // Mock API
     const api = {
       async fetchData(endpoint, method = 'GET', data = null) {
         try {
-          const headers = {
-            'Authorization': `Bearer ${CONFIG.API_TOKEN}`,
-          };
-          const options = { method, headers };
-          if (data) {
-            if (data instanceof FormData) {
-              options.body = data;
-            } else {
-              headers['Content-Type'] = 'application/json';
-              options.body = JSON.stringify(data);
-            }
+          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+          if (endpoint === '/orders') return MOCK_DATA.orders;
+          if (endpoint === '/users') return MOCK_DATA.users;
+          if (endpoint === '/menu') return MOCK_DATA.menu;
+          if (endpoint === '/promotions') return MOCK_DATA.promotions;
+          if (endpoint === '/feedback') return MOCK_DATA.feedback;
+          if (endpoint === '/chat-messages') return MOCK_DATA.chatMessages;
+          if (endpoint === '/profile') return MOCK_DATA.profile;
+          if (endpoint.startsWith('/menu/')) {
+            const id = endpoint.split('/')[2];
+            return MOCK_DATA.menu.find(item => item.id == id);
           }
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
-          options.signal = controller.signal;
-
-          const response = await fetch(`${API_URL}${endpoint}`, options);
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            const contentType = response.headers.get('Content-Type');
-            let errorMessage = `HTTP ${response.status}`;
-            if (contentType && contentType.includes('application/json')) {
-              const errorData = await response.json();
-              errorMessage = errorData.message || errorMessage;
-            } else {
-              const text = await response.text();
-              errorMessage = `Unexpected response: ${text.substring(0, 50)}...`;
-            }
-            throw new Error(errorMessage);
+          if (method === 'POST' || method === 'PUT') {
+            return { success: true };
           }
-
-          const contentType = response.headers.get('Content-Type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response is not JSON');
+          if (method === 'DELETE') {
+            return { success: true };
           }
-
-          return await response.json();
+          throw new Error('Endpoint not found');
         } catch (err) {
-          console.error(`Fetch error for ${endpoint}:`, err);
+          console.error(`Mock API error for ${endpoint}:`, err);
+          showToast(`Error: ${err.message}`, 'error');
+          return null;
+        }
+      },
+      async updateOrderStatus(orderId, status) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const order = MOCK_DATA.orders.find(o => o.id == orderId);
+          if (order) {
+            order.status = status;
+            return { success: true };
+          }
+          throw new Error('Order not found');
+        } catch (err) {
           showToast(`Error: ${err.message}`, 'error');
           return null;
         }
@@ -982,7 +1208,7 @@
             <td data-label="Total">₹${order.total || 0}</td>
             <td data-label="Status">${sanitizeInput(order.status)}</td>
             <td data-label="Actions">
-              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
                 <i class="fas fa-eye"></i> View
               </button>
             </td>
@@ -1042,9 +1268,21 @@
             <td data-label="Customer">${sanitizeInput(customer.name)}</td>
             <td data-label="Total">₹${order.total || 0}</td>
             <td data-label="Status">${sanitizeInput(order.status)}</td>
-            <td data-label="Actions">
-              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
+            <td data-label="Actions" class="flex flex-wrap gap-2">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
                 <i class="fas fa-eye"></i> View
+              </button>
+              <button class="status-btn confirmed text-sm px-3 py-1" data-action="status" data-status="confirmed" data-id="${order.id}" aria-label="Mark order ${order.id} as confirmed">
+                <i class="fas fa-check"></i> Confirm
+              </button>
+              <button class="status-btn out-for-delivery text-sm px-3 py-1" data-action="status" data-status="out-for-delivery" data-id="${order.id}" aria-label="Mark order ${order.id} as out for delivery">
+                <i class="fas fa-truck"></i> Out for Delivery
+              </button>
+              <button class="status-btn accepted text-sm px-3 py-1" data-action="status" data-status="accepted" data-id="${order.id}" aria-label="Mark order ${order.id} as accepted">
+                <i class="fas fa-thumbs-up"></i> Accept
+              </button>
+              <button class="status-btn rejected text-sm px-3 py-1" data-action="status" data-status="rejected" data-id="${order.id}" aria-label="Mark order ${order.id} as rejected">
+                <i class="fas fa-thumbs-down"></i> Reject
               </button>
             </td>
           </tr>
@@ -1056,7 +1294,7 @@
         loadOrders();
       });
 
-      const statuses = ['pending', 'confirmed', 'delivered', 'cancelled'];
+      const statuses = ['pending', 'confirmed', 'out-for-delivery', 'accepted', 'rejected', 'delivered', 'cancelled'];
       const statusCounts = statuses.map(status => orders.filter(o => o.status === status).length);
       const ctx = document.getElementById('orderStatusChart').getContext('2d');
       if (state.orderStatusChart) state.orderStatusChart.destroy();
@@ -1067,7 +1305,7 @@
           datasets: [{
             label: 'Order Status',
             data: statusCounts.length ? statusCounts : [0],
-            backgroundColor: ['#ff6b00', '#ff8f33', '#16a34a', '#dc2626'],
+            backgroundColor: ['#ff6b00', '#ff8f33', '#3b82f6', '#10b981', '#dc2626', '#16a34a', '#9ca3af'],
           }],
         },
         options: { responsive: true },
@@ -1090,7 +1328,7 @@
           <td data-label="Email">${sanitizeInput(customer.email)}</td>
           <td data-label="Phone">${sanitizeInput(customer.phone)}</td>
           <td data-label="Actions">
-            <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${customer.id}" aria-label="View customer ${customer.name}">
+            <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${customer.id}" aria-label="View customer ${customer.name}">
               <i class="fas fa-eye"></i> View
             </button>
           </td>
@@ -1123,29 +1361,23 @@
     }
 
     async function loadMenu() {
-      const menu = await api.fetchData('/menu');
-      if (!menu || !Array.isArray(menu)) {
-        showToast('Failed to load menu items', 'error');
-        state.dataStore.menu = [];
-        document.getElementById('menuTable').innerHTML = '<tr><td colspan="5">No menu items available</td></tr>';
-        return;
-      }
+      const menu = await api.fetchData('/menu') || [];
       state.dataStore.menu = menu;
 
       const paginatedMenu = paginate(menu, state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('menuTable').innerHTML = paginatedMenu.map(item => {
-        const imageSrc = item.image && typeof item.image === 'string' && item.image.trim() !== '' ? item.image : FALLBACK_IMAGE;
+        const imageSrc = item.image || FALLBACK_IMAGE;
         return `
           <tr>
-            <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(item.name)}" class="w-12 h-12 object-cover rounded-lg"></td>
+            <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(item.name)}" class="w-16 h-16 object-cover rounded-lg"></td>
             <td data-label="Name">${sanitizeInput(item.name)}</td>
             <td data-label="Category">${sanitizeInput(item.category)}</td>
             <td data-label="Price">₹${item.price}</td>
             <td data-label="Actions">
-              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="edit" data-id="${item.id}" aria-label="Edit ${item.name}">
+              <button class="stunning-btn text-sm px-3 py-1 mr-2" data-action="edit" data-id="${item.id}" aria-label="Edit ${item.name}">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button class="bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 flex items-center gap-1" data-action="delete" data-id="${item.id}" aria-label="Delete ${item.name}">
+              <button class="stunning-btn bg-red-600 hover:bg-red-700 text-sm px-3 py-1" data-action="delete" data-id="${item.id}" aria-label="Delete ${item.name}">
                 <i class="fas fa-trash"></i> Delete
               </button>
             </td>
@@ -1197,33 +1429,27 @@
     }
 
     async function loadPromotions() {
-      const promotions = await api.fetchData('/promotions');
-      if (!promotions || !Array.isArray(promotions)) {
-        showToast('Failed to load promotions', 'error');
-        state.dataStore.promotions = [];
-        document.getElementById('promotionsGrid').innerHTML = '<div class="col-span-full text-center">No promotions available</div>';
-        return;
-      }
+      const promotions = await api.fetchData('/promotions') || [];
       state.dataStore.promotions = promotions;
 
       const paginatedPromos = paginate(promotions, state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('promotionsGrid').innerHTML = paginatedPromos.map(promo => {
-        const imageSrc = promo.image && typeof promo.image === 'string' && promo.image.trim() !== '' ? promo.image : FALLBACK_IMAGE;
+        const imageSrc = promo.image || FALLBACK_IMAGE;
         const now = new Date();
         const validUntil = new Date(promo.validUntil);
         const status = now > validUntil ? 'Expired' : 'Active';
         return `
-          <div class="promo-card glass p-4 rounded-lg">
-            <img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(promo.code)}" class="w-full h-32 object-cover rounded-lg mb-3">
-            <h3 class="text-base font-semibold">${sanitizeInput(promo.code)}</h3>
+          <div class="promo-card glass p-6 rounded-lg">
+            <img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(promo.code)}" class="w-full h-40 object-cover rounded-lg mb-4">
+            <h3 class="text-lg font-semibold">${sanitizeInput(promo.code)}</h3>
             <p>Discount: ${promo.discount}%</p>
             <p>Valid: ${promo.validFrom} to ${promo.validUntil}</p>
             <p>Status: ${status}</p>
-            <div class="mt-3 flex gap-2">
-              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="edit" data-id="${promo.id}" aria-label="Edit ${promo.code}">
+            <div class="mt-4 flex gap-3">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${promo.id}" aria-label="Edit ${promo.code}">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button class="bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 flex items-center gap-1" data-action="delete" data-id="${promo.id}" aria-label="Delete ${promo.code}">
+              <button class="stunning-btn bg-red-600 hover:bg-red-700 text-sm px-3 py-1" data-action="delete" data-id="${promo.id}" aria-label="Delete ${promo.code}">
                 <i class="fas fa-trash"></i> Delete
               </button>
             </div>
@@ -1270,8 +1496,8 @@
             <td data-label="Comment">${sanitizeInput(f.comment)}</td>
             <td data-label="Date">${new Date(f.createdAt).toLocaleDateString()}</td>
             <td data-label="Actions">
-              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="respond" data-id="${f.id}" aria-label="Respond to feedback ${f.id}">
-                <i class="fas fa-reply"></i> Respond
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f.id}" aria-label="View feedback ${f.id}">
+                <i class="fas fa-eye"></i> View
               </button>
             </td>
           </tr>
@@ -1283,51 +1509,36 @@
         loadFeedback();
       });
 
-      const ratings = [1, 2, 3, 4, 5].map(r => feedback.filter(f => f.rating === r).length);
+      const ratings = [1, 2, 3, 4, 5];
+      const ratingCounts = ratings.map(r => feedback.filter(f => f.rating === r).length);
       const ctx = document.getElementById('feedbackChart').getContext('2d');
       if (state.feedbackChart) state.feedbackChart.destroy();
       state.feedbackChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-          datasets: [{ label: 'Feedback Ratings', data: ratings.length ? ratings : [0], backgroundColor: '#ff6b00' }],
+          labels: ratings.length ? ratings : ['No Data'],
+          datasets: [{
+            label: 'Feedback Ratings',
+            data: ratingCounts.length ? ratingCounts : [0],
+            backgroundColor: '#ff6b00',
+          }],
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } },
       });
     }
 
     async function loadSettings() {
-      const profile = await api.fetchData('/profile') || { name: '', email: '', image: '' };
-      if (profile) {
-        state.dataStore.profile = profile;
-        document.getElementById('profileName').textContent = profile.name || 'Admin';
-        document.getElementById('profileEmail').textContent = profile.email || 'No email';
-        document.getElementById('profileImage').src = profile.image && profile.image.trim() !== '' ? profile.image : FALLBACK_IMAGE;
-      } else {
-        showToast('Failed to load admin profile', 'error');
-      }
+      const profile = await api.fetchData('/profile') || {};
+      state.dataStore.profile = profile;
+
+      document.getElementById('profileName').textContent = sanitizeInput(profile.name);
+      document.getElementById('profileEmail').textContent = sanitizeInput(profile.email);
+      document.getElementById('profileImage').src = profile.image || FALLBACK_IMAGE;
     }
 
     async function loadReports() {
       const orders = await api.fetchData('/orders') || [];
       state.dataStore.orders = orders;
-
-      document.getElementById('generateDailyReport').addEventListener('click', async () => {
-        const date = document.getElementById('reportDate').value;
-        if (date) {
-          const dailyReport = await api.fetchData(`/reports/daily?date=${date}`);
-          if (dailyReport) showToast(`Daily report for ${date} generated`, 'success');
-          else showToast('Failed to generate report', 'error');
-        } else {
-          showToast('Please select a date', 'error');
-        }
-      });
-
-      document.getElementById('exportCsv').addEventListener('click', async () => {
-        const csvData = await api.fetchData('/export/csv');
-        if (csvData) showToast('CSV export initiated', 'success');
-        else showToast('Failed to export CSV', 'error');
-      });
 
       const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
       const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
@@ -1338,7 +1549,7 @@
         data: {
           labels: dates.length ? dates : ['No Data'],
           datasets: [{
-            label: 'Sales Trends (₹)',
+            label: 'Sales (₹)',
             data: salesData.length ? salesData : [0],
             borderColor: '#ff6b00',
             backgroundColor: 'rgba(255, 107, 0, 0.2)',
@@ -1350,303 +1561,473 @@
       });
     }
 
-    // Event Handlers
-    function setupEventListeners() {
-      const navModal = document.getElementById('navModal');
-      const navToggle = document.getElementById('navToggle');
-      
-      navToggle.addEventListener('click', () => {
-        navModal.classList.toggle('nav-modal-open');
+    // Navigation and Section Switching
+    function switchSection(sectionId) {
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`admin-${sectionId}`).classList.remove('hidden');
+      document.querySelectorAll('.admin-nav').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll(`.admin-nav[data-section="${sectionId}"]`).forEach(btn => btn.classList.add('active'));
+
+      // Reset pagination for the section
+      state.currentPage[sectionId] = 1;
+
+      // Load section data
+      if (sectionId === 'dashboard') loadDashboard();
+      else if (sectionId === 'orders') loadOrders();
+      else if (sectionId === 'customers') loadCustomers();
+      else if (sectionId === 'menu') loadMenu();
+      else if (sectionId === 'support') loadSupport();
+      else if (sectionId === 'promotions') loadPromotions();
+      else if (sectionId === 'feedback') loadFeedback();
+      else if (sectionId === 'settings') loadSettings();
+      else if (sectionId === 'reports') loadReports();
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      // Preloader
+      setTimeout(() => {
+        document.getElementById('preloader').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('preloader').style.display = 'none';
+          document.getElementById('welcomeModal').classList.remove('hidden');
+          document.getElementById('welcomeModal').classList.add('animate-fadeIn');
+        }, 500);
+      }, 1500);
+
+      // Welcome Modal
+      document.getElementById('closeWelcomeModal').addEventListener('click', () => {
+        document.getElementById('welcomeModal').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        triggerConfetti();
+        loadDashboard();
       });
 
-      // Close sidebar when clicking outside on mobile
-      document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 767 && navModal.classList.contains('nav-modal-open')) {
-          if (!navModal.contains(e.target) && !navToggle.contains(e.target)) {
-            navModal.classList.remove('nav-modal-open');
+      // Navigation Toggle
+      document.getElementById('navToggle').addEventListener('click', () => {
+        state.isNavOpen = !state.isNavOpen;
+        document.getElementById('navModal').classList.toggle('nav-modal-open', state.isNavOpen);
+        document.querySelector('.main-content').classList.toggle('nav-open', state.isNavOpen);
+      });
+
+      // Section Navigation
+      document.querySelectorAll('.admin-nav').forEach(button => {
+        button.addEventListener('click', () => {
+          const section = button.getAttribute('data-section');
+          if (section) {
+            switchSection(section);
+            if (state.isNavOpen && window.innerWidth <= 1023) {
+              state.isNavOpen = false;
+              document.getElementById('navModal').classList.remove('nav-modal-open');
+              document.querySelector('.main-content').classList.remove('nav-open');
+            }
+          }
+        });
+      });
+
+      // Logout
+      document.getElementById('logout').addEventListener('click', () => {
+        localStorage.removeItem('jwtToken');
+        showToast('Logged out successfully', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+      });
+
+      // Profile Quick View
+      document.getElementById('profileQuick').addEventListener('click', () => switchSection('settings'));
+
+      // Order Search and Filter
+      document.getElementById('orderSearch').addEventListener('input', () => {
+        state.currentPage.orders = 1;
+        loadOrders();
+      });
+      document.getElementById('orderFilter').addEventListener('change', () => {
+        state.currentPage.orders = 1;
+        loadOrders();
+      });
+
+      // Customer Search
+      document.getElementById('customerSearch').addEventListener('input', () => {
+        state.currentPage.customers = 1;
+        loadCustomers();
+      });
+
+      // View Order Modal
+      document.getElementById('ordersTable').addEventListener('click', async (e) => {
+        const action = e.target.closest('button')?.getAttribute('data-action');
+        const orderId = e.target.closest('button')?.getAttribute('data-id');
+        const status = e.target.closest('button')?.getAttribute('data-status');
+
+        if (action === 'view' && orderId) {
+          const order = state.dataStore.orders.find(o => o.id == orderId);
+          const customer = state.dataStore.customers.find(c => c.id === order.userId) || { name: 'Unknown' };
+          if (order) {
+            document.getElementById('orderId').textContent = `#${order.id}`;
+            document.getElementById('paymentId').textContent = order.paymentId || 'N/A';
+            document.getElementById('orderCustomer').textContent = sanitizeInput(customer.name);
+            document.getElementById('orderTotal').textContent = order.total || 0;
+            document.getElementById('orderStatus').textContent = sanitizeInput(order.status);
+            document.getElementById('orderCreatedAt').textContent = new Date(order.createdAt).toLocaleString();
+            document.getElementById('orderItems').innerHTML = order.items.map(item => `
+              <li>${sanitizeInput(item.name)} - ${item.quantity} x ₹${item.price}</li>
+            `).join('');
+            document.getElementById('viewOrderModal').classList.remove('hidden');
+          }
+        } else if (action === 'status' && orderId && status) {
+          const result = await api.updateOrderStatus(orderId, status);
+          if (result?.success) {
+            showToast(`Order ${status} successfully`, 'success');
+            loadOrders();
           }
         }
       });
 
-      document.getElementById('closeWelcomeModal').addEventListener('click', () => {
-        document.getElementById('welcomeModal').classList.add('hidden');
-        triggerConfetti();
+      document.getElementById('closeViewOrderModal').addEventListener('click', () => {
+        document.getElementById('viewOrderModal').classList.add('hidden');
       });
 
-      document.getElementById('logout').addEventListener('click', () => {
-        showToast('Logged out successfully', 'success');
-        localStorage.removeItem('jwtToken');
-        window.location.href = 'index.html';
-      });
-
-      document.getElementById('profileQuick').addEventListener('click', () => {
-        document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-        document.getElementById('admin-settings').classList.remove('hidden');
-        document.querySelectorAll('.admin-nav').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.admin-nav[data-section="settings"]').forEach(b => b.classList.add('active'));
-        navModal.classList.remove('nav-modal-open');
-        loadSettings();
-      });
-
+      // Add Menu Item
       document.getElementById('addMenuItem').addEventListener('click', () => {
-        document.getElementById('menuModalTitle').textContent = 'Add Menu Item';
         document.getElementById('addMenuForm').reset();
         document.getElementById('menuImagePreview').classList.add('hidden');
-        document.getElementById('menuImage').required = true;
         document.getElementById('addMenuModal').classList.remove('hidden');
-        delete document.getElementById('addMenuModal').dataset.editId;
+      });
+
+      document.getElementById('menuImage').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            document.getElementById('menuImagePreview').src = reader.result;
+            document.getElementById('menuImagePreview').classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = sanitizeInput(document.getElementById('menuName').value);
+        const category = document.getElementById('menuCategory').value;
+        const price = parseFloat(document.getElementById('menuPrice').value);
+        const image = document.getElementById('menuImage').files[0];
+
+        if (image) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const newItem = {
+              id: MOCK_DATA.menu.length + 1,
+              name,
+              category,
+              price,
+              image: reader.result,
+            };
+            MOCK_DATA.menu.push(newItem);
+            await api.fetchData('/menu', 'POST', newItem);
+            showToast('Menu item added successfully', 'success');
+            document.getElementById('addMenuModal').classList.add('hidden');
+            loadMenu();
+          };
+          reader.readAsDataURL(image);
+        }
       });
 
       document.getElementById('closeMenuModal').addEventListener('click', () => {
         document.getElementById('addMenuModal').classList.add('hidden');
       });
 
-      document.getElementById('menuImage').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file && file.size < 2 * 1024 * 1024 && ['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
-          document.getElementById('menuImagePreview').src = URL.createObjectURL(file);
-          document.getElementById('menuImagePreview').classList.remove('hidden');
-        } else {
-          showToast('Image must be under 2MB and in PNG, JPEG, or GIF format', 'error');
-          e.target.value = '';
-        }
-      });
-
-      document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', sanitizeInput(document.getElementById('menuName').value));
-        formData.append('category', document.getElementById('menuCategory').value);
-        formData.append('price', parseFloat(document.getElementById('menuPrice').value));
-        const file = document.getElementById('menuImage').files[0];
-        if (!file && !document.getElementById('addMenuModal').dataset.editId) {
-          showToast('Image is required', 'error');
-          return;
-        }
-        if (file) formData.append('image', file);
-
-        const editId = document.getElementById('addMenuModal').dataset.editId;
-        const endpoint = editId ? `/menu/${editId}` : '/menu';
-        const method = editId ? 'PUT' : 'POST';
-        const result = await api.fetchData(endpoint, method, formData);
-        if (result) {
-          showToast(`${editId ? 'Updated' : 'Added'} menu item successfully`, 'success');
-          document.getElementById('addMenuModal').classList.add('hidden');
-          loadMenu();
-          triggerConfetti();
-        } else {
-          showToast(`Failed to ${editId ? 'update' : 'add'} menu item`, 'error');
-        }
-      });
-
+      // Edit/Delete Menu Item
       document.getElementById('menuTable').addEventListener('click', async (e) => {
-        const { action, id } = e.target.dataset;
-        if (action === 'edit') {
+        const action = e.target.closest('button')?.getAttribute('data-action');
+        const id = e.target.closest('button')?.getAttribute('data-id');
+
+        if (action === 'edit' && id) {
           const item = await api.fetchData(`/menu/${id}`);
           if (item) {
-            document.getElementById('menuModalTitle').textContent = 'Edit Menu Item';
             document.getElementById('menuName').value = item.name;
             document.getElementById('menuCategory').value = item.category;
             document.getElementById('menuPrice').value = item.price;
-            document.getElementById('menuImagePreview').src = item.image && item.image.trim() !== '' ? item.image : FALLBACK_IMAGE;
+            document.getElementById('menuImagePreview').src = item.image || FALLBACK_IMAGE;
             document.getElementById('menuImagePreview').classList.remove('hidden');
-            document.getElementById('menuImage').required = false;
-            document.getElementById('addMenuModal').dataset.editId = id;
             document.getElementById('addMenuModal').classList.remove('hidden');
-          } else {
-            showToast('Failed to load menu item', 'error');
+            document.getElementById('addMenuForm').onsubmit = async (e) => {
+              e.preventDefault();
+              const name = sanitizeInput(document.getElementById('menuName').value);
+              const category = document.getElementById('menuCategory').value;
+              const price = parseFloat(document.getElementById('menuPrice').value);
+              const image = document.getElementById('menuImage').files[0];
+
+              if (image) {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                  const updatedItem = { id, name, category, price, image: reader.result };
+                  await api.fetchData(`/menu/${id}`, 'PUT', updatedItem);
+                  showToast('Menu item updated successfully', 'success');
+                  document.getElementById('addMenuModal').classList.add('hidden');
+                  loadMenu();
+                };
+                reader.readAsDataURL(image);
+              } else {
+                const updatedItem = { id, name, category, price, image: item.image };
+                await api.fetchData(`/menu/${id}`, 'PUT', updatedItem);
+                showToast('Menu item updated successfully', 'success');
+                document.getElementById('addMenuModal').classList.add('hidden');
+                loadMenu();
+              }
+            };
           }
-        } else if (action === 'delete') {
-          if (confirm('Are you sure you want to delete this item?')) {
-            const result = await api.fetchData(`/menu/${id}`, 'DELETE');
-            if (result) {
-                showToast('Promotion deleted successfully', 'success');
+        } else if (action === 'delete' && id) {
+          if (confirm('Are you sure you want to delete this menu item?')) {
+            await api.fetchData(`/menu/${id}`, 'DELETE');
+            MOCK_DATA.menu = MOCK_DATA.menu.filter(item => item.id != id);
+            showToast('Menu item deleted successfully', 'success');
+            loadMenu();
+          }
+        }
+      });
+
+      // Support Chat
+      document.getElementById('chatUserSelect').addEventListener('change', loadSupport);
+      document.getElementById('sendChat').addEventListener('click', async () => {
+        const userId = document.getElementById('chatUserSelect').value;
+        const text = sanitizeInput(document.getElementById('chatInput').value.trim());
+        if (userId && text) {
+          const newMessage = {
+            id: MOCK_DATA.chatMessages.length + 1,
+            userId: parseInt(userId),
+            text,
+            isAdmin: true,
+            createdAt: new Date().toISOString(),
+          };
+          MOCK_DATA.chatMessages.push(newMessage);
+          document.getElementById('chatInput').value = '';
+          await loadSupport();
+        } else {
+          showToast('Please select a customer and enter a message', 'error');
+        }
+      });
+
+      // Add Promotion
+      document.getElementById('addPromotion').addEventListener('click', () => {
+        document.getElementById('addPromotionForm').reset();
+        document.getElementById('promoImagePreview').classList.add('hidden');
+        document.getElementById('addPromotionModal').classList.remove('hidden');
+      });
+
+      document.getElementById('promoImage').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            document.getElementById('promoImagePreview').src = reader.result;
+            document.getElementById('promoImagePreview').classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      document.getElementById('addPromotionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = sanitizeInput(document.getElementById('promoCode').value);
+        const discount = parseInt(document.getElementById('promoDiscount').value);
+        const validFrom = document.getElementById('promoValidFrom').value;
+        const validUntil = document.getElementById('promoValidUntil').value;
+        const image = document.getElementById('promoImage').files[0];
+
+        if (image) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const newPromo = {
+              id: MOCK_DATA.promotions.length + 1,
+              code,
+              discount,
+              validFrom,
+              validUntil,
+              image: reader.result,
+              usageCount: 0,
+            };
+            MOCK_DATA.promotions.push(newPromo);
+            await api.fetchData('/promotions', 'POST', newPromo);
+            showToast('Promotion added successfully', 'success');
+            document.getElementById('addPromotionModal').classList.add('hidden');
+            loadPromotions();
+          };
+          reader.readAsDataURL(image);
+        }
+      });
+
+      document.getElementById('closePromotionModal').addEventListener('click', () => {
+        document.getElementById('addPromotionModal').classList.add('hidden');
+      });
+
+      // Edit/Delete Promotion
+      document.getElementById('promotionsGrid').addEventListener('click', async (e) => {
+        const action = e.target.closest('button')?.getAttribute('data-action');
+        const id = e.target.closest('button')?.getAttribute('data-id');
+
+        if (action === 'edit' && id) {
+          const promo = MOCK_DATA.promotions.find(p => p.id == id);
+          if (promo) {
+            document.getElementById('promoCode').value = promo.code;
+            document.getElementById('promoDiscount').value = promo.discount;
+            document.getElementById('promoValidFrom').value = promo.validFrom;
+            document.getElementById('promoValidUntil').value = promo.validUntil;
+            document.getElementById('promoImagePreview').src = promo.image || FALLBACK_IMAGE;
+            document.getElementById('promoImagePreview').classList.remove('hidden');
+            document.getElementById('addPromotionModal').classList.remove('hidden');
+            document.getElementById('addPromotionForm').onsubmit = async (e) => {
+              e.preventDefault();
+              const code = sanitizeInput(document.getElementById('promoCode').value);
+              const discount = parseInt(document.getElementById('promoDiscount').value);
+              const validFrom = document.getElementById('promoValidFrom').value;
+              const validUntil = document.getElementById('promoValidUntil').value;
+              const image = document.getElementById('promoImage').files[0];
+
+              if (image) {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                  const updatedPromo = { id, code, discount, validFrom, validUntil, image: reader.result, usageCount: promo.usageCount };
+                  await api.fetchData(`/promotions/${id}`, 'PUT', updatedPromo);
+                  showToast('Promotion updated successfully', 'success');
+                  document.getElementById('addPromotionModal').classList.add('hidden');
+                  loadPromotions();
+                };
+                reader.readAsDataURL(image);
+              } else {
+                const updatedPromo = { id, code, discount, validFrom, validUntil, image: promo.image, usageCount: promo.usageCount };
+                await api.fetchData(`/promotions/${id}`, 'PUT', updatedPromo);
+                showToast('Promotion updated successfully', 'success');
+                document.getElementById('addPromotionModal').classList.add('hidden');
                 loadPromotions();
-            } else {
-                showToast('Failed to delete promotion', 'error');
-            }
+              }
+            };
+          }
+        } else if (action === 'delete' && id) {
+          if (confirm('Are you sure you want to delete this promotion?')) {
+            await api.fetchData(`/promotions/${id}`, 'DELETE');
+            MOCK_DATA.promotions = MOCK_DATA.promotions.filter(p => p.id != id);
+            showToast('Promotion deleted successfully', 'success');
+            loadPromotions();
+          }
         }
-    }
-});
+      });
 
-document.getElementById('orderSearch').addEventListener('input', debounce(loadOrders, 300));
-document.getElementById('orderFilter').addEventListener('change', loadOrders);
-document.getElementById('customerSearch').addEventListener('input', debounce(loadCustomers, 300));
-
-document.getElementById('chatUserSelect').addEventListener('change', loadSupport);
-document.getElementById('sendChat').addEventListener('click', async () => {
-    const userId = document.getElementById('chatUserSelect').value;
-    const message = sanitizeInput(document.getElementById('chatInput').value);
-    if (!userId || !message) {
-        showToast('Please select a user and enter a message', 'error');
-        return;
-    }
-    const result = await api.fetchData('/chat-messages', 'POST', { userId, text: message, isAdmin: true });
-    if (result) {
-        document.getElementById('chatInput').value = '';
-        loadSupport();
-    } else {
-        showToast('Failed to send message', 'error');
-    }
-});
-
-document.getElementById('feedbackTable').addEventListener('click', async (e) => {
-    if (e.target.dataset.action === 'respond') {
-        const feedbackId = e.target.dataset.id;
-        const response = prompt('Enter your response:');
-        if (response) {
-            const result = await api.fetchData(`/feedback/${feedbackId}/respond`, 'POST', { response: sanitizeInput(response) });
-            if (result) {
-                showToast('Response sent successfully', 'success');
-                loadFeedback();
-            } else {
-                showToast('Failed to send response', 'error');
-            }
-        }
-    }
-});
-
-document.getElementById('editProfileBtn').addEventListener('click', () => {
-    const { name, email, image } = state.dataStore.profile;
-    document.getElementById('adminName').value = name || '';
-    document.getElementById('adminEmail').value = email || '';
-    document.getElementById('adminImagePreview').src = image && image.trim() !== '' ? image : FALLBACK_IMAGE;
-    document.getElementById('adminImagePreview').classList.remove('hidden');
-    document.getElementById('editProfileModal').classList.remove('hidden');
-});
-
-document.getElementById('closeEditProfileModal').addEventListener('click', () => {
-    document.getElementById('editProfileModal').classList.add('hidden');
-});
-
-document.getElementById('adminImage').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file && file.size < 2 * 1024 * 1024 && ['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
-        document.getElementById('adminImagePreview').src = URL.createObjectURL(file);
+      // Edit Profile
+      document.getElementById('editProfileBtn').addEventListener('click', () => {
+        const profile = state.dataStore.profile;
+        document.getElementById('adminName').value = profile.name;
+        document.getElementById('adminEmail').value = profile.email;
+        document.getElementById('adminImagePreview').src = profile.image || FALLBACK_IMAGE;
         document.getElementById('adminImagePreview').classList.remove('hidden');
-    } else {
-        showToast('Image must be under 2MB and in PNG, JPEG, or GIF format', 'error');
-        e.target.value = '';
-    }
-});
+        document.getElementById('editProfileModal').classList.remove('hidden');
+      });
 
-document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('name', sanitizeInput(document.getElementById('adminName').value));
-    formData.append('email', document.getElementById('adminEmail').value);
-    const file = document.getElementById('adminImage').files[0];
-    if (file) formData.append('image', file);
+      document.getElementById('adminImage').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            document.getElementById('adminImagePreview').src = reader.result;
+            document.getElementById('adminImagePreview').classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
 
-    const result = await api.fetchData('/profile', 'PUT', formData);
-    if (result) {
-        showToast('Profile updated successfully', 'success');
+      document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = sanitizeInput(document.getElementById('adminName').value);
+        const email = sanitizeInput(document.getElementById('adminEmail').value);
+        const image = document.getElementById('adminImage').files[0];
+
+        if (image) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const updatedProfile = { name, email, image: reader.result };
+            await api.fetchData('/profile', 'PUT', updatedProfile);
+            MOCK_DATA.profile = updatedProfile;
+            showToast('Profile updated successfully', 'success');
+            document.getElementById('editProfileModal').classList.add('hidden');
+            loadSettings();
+          };
+          reader.readAsDataURL(image);
+        } else {
+          const updatedProfile = { name, email, image: state.dataStore.profile.image };
+          await api.fetchData('/profile', 'PUT', updatedProfile);
+          MOCK_DATA.profile = updatedProfile;
+          showToast('Profile updated successfully', 'success');
+          document.getElementById('editProfileModal').classList.add('hidden');
+          loadSettings();
+        }
+      });
+
+      document.getElementById('closeEditProfileModal').addEventListener('click', () => {
         document.getElementById('editProfileModal').classList.add('hidden');
-        loadSettings();
-        triggerConfetti();
-    } else {
-        showToast('Failed to update profile', 'error');
-    }
-});
+      });
 
-document.addEventListener('click', (e) => {
-    const { section } = e.target.closest('.admin-nav')?.dataset || {};
-    if (section) {
-        document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-        document.getElementById(`admin-${section}`).classList.remove('hidden');
-        document.querySelectorAll('.admin-nav').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll(`.admin-nav[data-section="${section}"]`).forEach(b => b.classList.add('active'));
-        navModal.classList.remove('nav-modal-open');
-
-        state.currentPage[section] = 1;
-        switch (section) {
-            case 'dashboard': loadDashboard(); break;
-            case 'orders': loadOrders(); break;
-            case 'customers': loadCustomers(); break;
-            case 'menu': loadMenu(); break;
-            case 'support': loadSupport(); break;
-            case 'promotions': loadPromotions(); break;
-            case 'feedback': loadFeedback(); break;
-            case 'settings': loadSettings(); break;
-            case 'reports': loadReports(); break;
+      // Reports
+      document.getElementById('generateDailyReport').addEventListener('click', () => {
+        const date = document.getElementById('reportDate').value;
+        if (date) {
+          const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
+          const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+          showToast(`Daily Sales for ${date}: ₹${totalSales.toLocaleString()}`, 'success');
+        } else {
+          showToast('Please select a date', 'error');
         }
-    }
+      });
 
-    const { action, id } = e.target.dataset;
-    if (action === 'view') {
-        if (e.target.closest('#ordersTable') || e.target.closest('#recentOrders')) {
-            showToast(`View order #${id}`, 'info');
-        } else if (e.target.closest('#customersTable')) {
-            showToast(`View customer #${id}`, 'info');
+      document.getElementById('exportCsv').addEventListener('click', () => {
+        const date = document.getElementById('reportDate').value;
+        if (date) {
+          const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
+          const csv = [
+            ['Order ID', 'Customer', 'Total', 'Status', 'Created At'],
+            ...orders.map(o => {
+              const customer = state.dataStore.customers.find(c => c.id === o.userId) || { name: 'Unknown' };
+              return [o.id, customer.name, o.total, o.status, new Date(o.createdAt).toLocaleString()];
+            }),
+          ].map(row => row.join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `orders_${date}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('CSV exported successfully', 'success');
+        } else {
+          showToast('Please select a date', 'error');
         }
-    }
-});
+      });
 
-window.addEventListener('resize', () => {
-    if (state.salesChart) state.salesChart.resize();
-    if (state.orderStatusChart) state.orderStatusChart.resize();
-    if (state.customerActivityChart) state.customerActivityChart.resize();
-    if (state.menuCategoriesChart) state.menuCategoriesChart.resize();
-    if (state.promotionPerformanceChart) state.promotionPerformanceChart.resize();
-    if (state.feedbackChart) state.feedbackChart.resize();
-    if (state.salesTrendsChart) state.salesTrendsChart.resize();
-});
-}
-
-// Debounce Utility
-function debounce(func, wait) {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-}
-
-// Countdown Timer
-function startCountdown() {
-    const endTime = new Date();
-    endTime.setHours(23, 59, 59, 999);
-    const timer = document.getElementById('countdownTimer');
-    function updateTimer() {
+      // Countdown Timer
+      function updateCountdown() {
         const now = new Date();
-        const timeLeft = endTime - now;
-        if (timeLeft <= 0) {
-            timer.textContent = 'Day Ended';
-            return;
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        const diff = endOfDay - now;
+        const hours = Math.floor(diff / 1000 / 60 / 60);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        document.getElementById('countdownTimer').textContent = `Time until close: ${hours}h ${minutes}m ${seconds}s`;
+      }
+      setInterval(updateCountdown, 1000);
+      updateCountdown();
+    });
+
+    // Accessibility Enhancements
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('viewOrderModal').classList.add('hidden');
+        document.getElementById('addMenuModal').classList.add('hidden');
+        document.getElementById('addPromotionModal').classList.add('hidden');
+        document.getElementById('editProfileModal').classList.add('hidden');
+        if (state.isNavOpen) {
+          state.isNavOpen = false;
+          document.getElementById('navModal').classList.remove('nav-modal-open');
+          document.querySelector('.main-content').classList.remove('nav-open');
         }
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-        timer.textContent = `${hours}h ${minutes}m ${seconds}s`;
-        setTimeout(updateTimer, 1000);
-    }
-    updateTimer();
-}
-
-// Initialize
-function init() {
-    setTimeout(() => {
-        document.getElementById('preloader').classList.add('opacity-0');
-        setTimeout(() => {
-            document.getElementById('preloader').classList.add('hidden');
-            document.getElementById('welcomeModal').classList.remove('hidden');
-            document.getElementById('adminDashboard').classList.remove('hidden');
-            loadDashboard();
-            startCountdown();
-            setupEventListeners();
-        }, 500);
-    }, 1500);
-}
-
-// Start the app
-document.addEventListener('DOMContentLoaded', () => {
-    if (!CONFIG.API_TOKEN) {
-        showToast('Please log in to continue', 'error');
-        setTimeout(() => window.location.href = 'login.html', 2000);
-    } else {
-        init();
-    }
-});
-</script>
+      }
+    });
+  </script>
 </body>
 </html>

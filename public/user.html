@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://cdn.tailwindcss.com https://accounts.google.com https://*.googleapis.com https://checkout.razorpay.com https://cdn.jsdelivr.net 'sha256-8wvlpyRYA7Fq973dmHvvBvWE5aWN+M3JgfuicB4q57g=' 'sha256-xGVnwsv56giTtPYnPOOhkqBG0vSXCVdeQNPz1dbT1qg=' 'sha256-Nmtf3g6z4SucJTgdnsupLiJfkcIc5mQ3a8ZobHQDWCk=' 'sha256-HkuwCdsZT9LrDBsR6YNAZ1XmIUdE14oNfevFwF8rfgc=';
+    script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline';
     style-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline';
-    img-src 'self' data: https://via.placeholder.com https://*.googleapis.com https://i.imgur.com https://imgur.com;
-    connect-src 'self' ws://localhost:3000 http://localhost:3000 https://api.razorpay.com;
+    img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com;
+    connect-src 'self';
     font-src 'self' https://cdnjs.cloudflare.com;
-    frame-src 'self' https://checkout.razorpay.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -18,50 +17,63 @@
   <title>User Dashboard - DELICUTE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#f97316">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
-    /* Reset and Base Styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #f3f4f6; overflow-x: hidden; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
     
-    /* Animations */
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
     .animate-slideUp { animation: slideUp 0.5s ease-out; }
+    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
 
-    /* Toast Notification */
     .toast {
       position: fixed; bottom: 20px; right: 20px; background: #f97316; color: white;
       padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       z-index: 1000; display: none; font-size: 1rem; transition: opacity 0.3s ease;
     }
 
-    /* Sidebar (Web) */
     .sidebar {
-      background: #1e293b; width: 260px; height: 100vh; position: sticky; top: 0;
-      padding: 16px; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); z-index: 1000;
-      transition: transform 0.3s ease;
+      background: linear-gradient(180deg, #1e293b 0%, #334155 100%); width: 280px; height: 100vh; 
+      position: fixed; top: 0; left: 0; padding: 24px 16px; box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2); 
+      z-index: 1000; transition: transform 0.3s ease; border-radius: 0 16px 16px 0; overflow-y: auto;
     }
     .sidebar-hidden { transform: translateX(-100%); }
     .sidebar button {
-      color: #e2e8f0; width: 100%; text-align: left; padding: 12px; border-radius: 8px;
-      display: flex; align-items: center; gap: 8px; font-size: 1rem; transition: all 0.2s ease;
+      color: #e2e8f0; width: 100%; text-align: left; padding: 12px 16px; border-radius: 12px;
+      display: flex; align-items: center; gap: 12px; font-size: 1rem; font-weight: 500; 
+      transition: all 0.2s ease; position: relative; overflow: hidden;
     }
-    .sidebar button:hover { background: #475569; }
+    .sidebar button::before {
+      content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; 
+      background: #f97316; transform: translateX(-100%); transition: transform 0.2s ease;
+    }
+    .sidebar button:hover { background: rgba(71, 85, 105, 0.5); }
+    .sidebar button:hover::before { transform: translateX(0); }
     .sidebar button.active { background: #f97316; color: white; }
-    .sidebar button i { font-size: 1.2rem; }
+    .sidebar button.active::before { transform: translateX(0); }
+    .sidebar button i { font-size: 1.2rem; transition: transform 0.2s ease; }
+    .sidebar button:hover i { transform: scale(1.1); }
+    .sidebar img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #f97316; }
 
-    /* Bottom Navigation (Mobile) */
+    .hamburger {
+      display: flex; flex-direction: column; justify-content: space-around; width: 24px; height: 20px; 
+      cursor: pointer; transition: all 0.3s ease; z-index: 1010; padding: 4px;
+    }
+    .hamburger div {
+      width: 100%; height: 3px; background: white; border-radius: 2px; 
+      transition: all 0.3s ease; transform-origin: center;
+    }
+    .hamburger.open div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open div:nth-child(2) { opacity: 0; }
+    .hamburger.open div:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b;
-      display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000;
+      display: none; justify-content: space-around; padding: 12px 0; z-index: 1000;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
     }
     .bottom-nav button {
@@ -71,21 +83,20 @@
     }
     .bottom-nav button.active { color: #f97316; }
     .bottom-nav button i { font-size: 1.5rem; }
+    .bottom-nav img { width: 24px; height: 24px; }
 
-    /* Header */
     header {
       background: linear-gradient(to right, #f97316, #fb923c); padding: 12px 16px;
       position: sticky; top: 0; z-index: 20;
     }
 
-    /* Hero Section */
     .hero-bg {
       background: linear-gradient(to right, #ffedd5, #fed7aa); position: relative;
-      overflow: hidden; border-radius: 12px; padding: 16px;
+      overflow: hidden; border-radius: 12px; padding: 16px; display: flex; align-items: center;
+      gap: 16px;
     }
     .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 
-    /* Menu Items */
     .menu-item {
       background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s ease;
@@ -93,7 +104,6 @@
     .menu-item:hover { transform: scale(1.02); }
     .menu-item img { width: 100%; height: 150px; object-fit: cover; display: block; }
 
-    /* Promotion Banner */
     .banner-container {
       position: relative; overflow: hidden; width: 100%; padding: 0 16px;
     }
@@ -117,7 +127,6 @@
     .banner-arrow.left { left: 8px; }
     .banner-arrow.right { right: 8px; }
 
-    /* Chat */
     .chat-container {
       max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #e5e7eb;
       border-radius: 8px; background: white;
@@ -128,7 +137,6 @@
     .chat-message.user { background: #f97316; color: white; margin-left: auto; }
     .chat-message.admin { background: #e5e7eb; color: #374151; margin-right: auto; }
 
-    /* Share Modal */
     .share-modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);
       z-index: 2000; display: none; justify-content: center; align-items: center; transition: opacity 0.3s ease;
@@ -144,36 +152,42 @@
       color: #374151;
     }
 
-    /* Responsive Design */
     @media (min-width: 1024px) {
       .bottom-nav { display: none; }
-      .sidebar { display: block; transform: translateX(0) !important; }
-      .main-content { margin-left: 260px; }
+      .sidebar { transform: translateX(0); }
+      .main-content { margin-left: 280px; }
       .menu-item img { height: 200px; }
       .banner-item { min-height: 200px; }
       .banner-content { max-width: 60%; }
       .text-2xl { font-size: 1.5rem; }
       .grid-cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .hamburger { display: none; }
     }
     @media (max-width: 1023px) {
-      .sidebar { position: fixed; top: 0; left: 0; height: 100%; z-index: 2000; }
+      .sidebar { transform: translateX(-100%); width: 240px; }
       .main-content { margin-bottom: 80px; }
+      .bottom-nav { display: flex; }
       .text-2xl { font-size: 1.25rem; }
       .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 640px) {
+      .sidebar { width: 200px; }
       .grid-cols-2 { grid-template-columns: 1fr; }
       .banner-item { padding: 12px; }
       .banner-content { max-width: 90%; }
+      .hero-bg { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <header class="text-white">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <button id="sidebarToggle" class="lg:hidden text-white"><i class="fas fa-bars text-2xl"></i></button>
+        <div id="sidebarToggle" class="hamburger">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
         <div class="text-2xl font-bold">DELICUTE</div>
       </div>
@@ -192,10 +206,9 @@
   </header>
 
   <div class="flex min-h-screen">
-    <!-- Sidebar (Web) -->
-    <div id="sidebar" class="sidebar text-white sidebar-hidden lg:sidebar-hidden">
-      <div class="flex items-center gap-3 mb-6">
-        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
+    <div id="sidebar" class="sidebar text-white sidebar-hidden">
+      <div class="flex items-center gap-3 mb-8">
+        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10">
         <div class="text-xl font-bold">DELICUTE</div>
       </div>
       <nav class="space-y-2">
@@ -215,11 +228,9 @@
       </nav>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content flex-1 p-4">
-      <!-- Dashboard Section -->
       <section id="user-dashboard" class="user-section animate-slideUp">
-        <div id="statusBar" class="bg-yellow-100 text-yellow-800 p-3 rounded-lg mb-4 text-center text-sm">Loading status...</div>
+        <div id="statusBar" class="bg-yellow-100 text-yellow-800 p-3 rounded-lg mb-4 text-center text-sm">Restaurant: Open | Prep: 30 mins</div>
         <div class="banner-container mb-6">
           <div id="banner1" class="banner-item hidden">
             <div class="banner-content">
@@ -233,6 +244,11 @@
         </div>
         <div class="hero-bg mb-6">
           <canvas class="particles"></canvas>
+          <div id="heroSidebarToggle" class="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
           <div class="relative z-10">
             <h2 class="text-2xl font-bold mb-2">Savor the Moment!</h2>
             <p class="text-sm mb-4">Discover gourmet dishes crafted for you.</p>
@@ -271,7 +287,6 @@
         </div>
       </section>
 
-      <!-- Menu Section -->
       <section id="user-menu" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Our Menu</h2>
@@ -298,7 +313,6 @@
         <div id="menuItems" class="grid grid-cols-2 gap-4"></div>
       </section>
 
-      <!-- Orders Section -->
       <section id="user-orders" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Orders</h2>
@@ -306,7 +320,7 @@
         </div>
         <div class="bg-white rounded-lg p-4 shadow mb-4">
           <h3 class="text-lg font-bold mb-2">Cancellation Policy</h3>
-          <p id="cancellationPolicy">Loading...</p>
+          <p id="cancellationPolicy">Cancel within 10 mins for full refund</p>
         </div>
         <div class="bg-white rounded-lg shadow overflow-x-auto">
           <table class="w-full text-sm">
@@ -325,7 +339,6 @@
         </div>
       </section>
 
-      <!-- Cart Section -->
       <section id="user-cart" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Cart</h2>
@@ -350,8 +363,8 @@
             <div class="mt-4">
               <label class="block text-gray-700 mb-2">Payment Method</label>
               <select id="paymentMethod" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" aria-label="Select payment">
-                <option value="razorpay">Online Payment</option>
                 <option value="cod">Cash on Delivery</option>
+                <option value="online">Online Payment</option>
               </select>
             </div>
             <button id="checkoutBtn" class="mt-4 w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Checkout</button>
@@ -359,7 +372,6 @@
         </div>
       </section>
 
-      <!-- Favourites Section -->
       <section id="user-favourites" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Favourites</h2>
@@ -368,7 +380,6 @@
         <div id="favouritesItems" class="grid grid-cols-2 gap-4"></div>
       </section>
 
-      <!-- Addresses Section -->
       <section id="user-addresses" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Addresses</h2>
@@ -378,7 +389,6 @@
         <div id="addressItems" class="space-y-4"></div>
       </section>
 
-      <!-- Loyalty Section -->
       <section id="user-loyalty" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Loyalty Points</h2>
@@ -391,7 +401,6 @@
         </div>
       </section>
 
-      <!-- Referrals Section -->
       <section id="user-referrals" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Refer & Earn</h2>
@@ -404,7 +413,6 @@
         </div>
       </section>
 
-      <!-- Support Section -->
       <section id="user-support" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Support</h2>
@@ -426,7 +434,6 @@
         </div>
       </section>
 
-      <!-- FAQ Section -->
       <section id="user-faq" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">FAQ</h2>
@@ -437,7 +444,6 @@
         </div>
       </section>
 
-      <!-- Profile Section -->
       <section id="user-profile" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Profile</h2>
@@ -460,7 +466,6 @@
         </div>
       </section>
 
-      <!-- Settings Section -->
       <section id="user-settings" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Settings</h2>
@@ -474,19 +479,16 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation (Mobile) -->
-  <nav class="bottom-nav lg:hidden">
-    <button data-section="dashboard" class="user-nav active"><i class="fas fa-home"></i>Home</button>
-    <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i>Menu</button>
-    <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i>Cart</button>
-    <button data-section="orders" class="user-nav"><i class="fas fa-shopping-cart"></i>Orders</button>
-    <button data-section="profile" class="user-nav"><i class="fas fa-user"></i>Profile</button>
+  <nav class="bottom-nav">
+    <button data-section="dashboard" class="user-nav active"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Home Icon"><span>Home</span></button>
+    <button data-section="menu" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Menu Icon"><span>Menu</span></button>
+    <button data-section="cart" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Cart Icon"><span>Cart</span></button>
+    <button data-section="orders" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Orders Icon"><span>Orders</span></button>
+    <button data-section="profile" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Profile Icon"><span>Profile</span></button>
   </nav>
 
-  <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <!-- Share Modal -->
   <div id="shareModal" class="share-modal">
     <div class="share-modal-content">
       <span class="close">×</span>
@@ -500,19 +502,133 @@
   </div>
 
   <script>
-    // Backend Configuration
-    const API_URL = 'http://localhost:3000/api/users';
-    const WS_URL = 'ws://localhost:3000';
-    const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_HERE'; // Replace with actual key
-    const defaultImage = 'https://via.placeholder.com/150?text=No+Image';
-    const defaultBannerImage = 'https://via.placeholder.com/1200x300?text=Promotion';
+    // Mock Data
+    const mockData = {
+      profile: {
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        phone: '+91 9876543210'
+      },
+      status: {
+        isOpen: true,
+        prepTime: 30
+      },
+      offers: [
+        {
+          id: 'offer1',
+          title: '20% Off First Order',
+          description: 'Use code FIRST20 for 20% off',
+          code: 'FIRST20',
+          discount: 20,
+          image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300&q=80'
+        },
+        {
+          id: 'offer2',
+          title: 'Free Dessert',
+          description: 'Free dessert on orders above ₹500',
+          code: 'DESSERT500',
+          discount: 10,
+          image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300&q=80'
+        }
+      ],
+      menu: [
+        {
+          id: '1',
+          name: 'Margherita Pizza',
+          price: 250,
+          description: 'Classic pizza with tomato and mozzarella',
+          category: 'Vegetarian',
+          is_popular: true,
+          image: 'https://images.unsplash.com/photo-1595854341625-f33eece6d2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+        },
+        {
+          id: '2',
+          name: 'Butter Chicken',
+          price: 350,
+          description: 'Creamy tomato-based chicken curry',
+          category: 'Non-Veg',
+          is_popular: true,
+          image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+        },
+        {
+          id: '3',
+          name: 'Chocolate Lava Cake',
+          price: 150,
+          description: 'Warm cake with molten chocolate center',
+          category: 'Desserts',
+          is_popular: false,
+          image: 'https://images.unsplash.com/photo-1617634667039-44e6a1004b2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+        },
+        {
+          id: '4',
+          name: 'Paneer Tikka',
+          price: 280,
+          description: 'Grilled paneer with spices',
+          category: 'Vegetarian',
+          is_popular: false,
+          image: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+        }
+      ],
+      cart: {
+        items: []
+      },
+      orders: [
+        {
+          id: 'ORD001',
+          date: '2025-05-01',
+          items: [{ name: 'Margherita Pizza', price: 250, quantity: 1 }],
+          total: 250,
+          status: 'Delivered'
+        }
+      ],
+      favourites: [],
+      addresses: [
+        {
+          id: 'addr1',
+          name: 'Home',
+          street: '123 Main St',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          zip: '400001',
+          mobile: '+91 9876543210',
+          isDefault: true
+        }
+      ],
+      loyalty: {
+        points: 100,
+        history: [
+          { action: 'Order placed', points: 50, date: '2025-05-01' },
+          { action: 'Referral', points: 50, date: '2025-05-02' }
+        ]
+      },
+      referral: {
+        code: 'DEL123',
+        link: 'https://delicute.com/refer/DEL123'
+      },
+      support: {
+        tickets: [
+          { id: 'TCK001', subject: 'Order Issue', status: 'Open', date: '2025-05-01' }
+        ],
+        chat: [
+          { sender: 'john.doe@example.com', message: 'Hello, I have an issue with my order', timestamp: '2025-05-01T10:00:00Z' },
+          { sender: 'admin', message: 'Please provide your order ID', timestamp: '2025-05-01T10:01:00Z' }
+        ]
+      },
+      faq: [
+        { question: 'What are your delivery hours?', answer: 'We deliver from 10 AM to 10 PM daily.' },
+        { question: 'Can I cancel my order?', answer: 'Yes, within 10 minutes of placing the order.' }
+      ],
+      cancellationPolicy: { text: 'Cancel within 10 mins for full refund' }
+    };
 
     // State
-    let isLoggedIn = !!localStorage.getItem('jwtToken');
-    let navigationHistory = ['dashboard'];
-    let ws = null;
-    let userId = null;
-    let appliedCoupon = null;
+    let state = {
+      ...mockData,
+      isLoggedIn: true,
+      userId: mockData.profile.email,
+      navigationHistory: ['dashboard'],
+      appliedCoupon: null
+    };
 
     // Utilities
     const showToast = (msg) => {
@@ -530,72 +646,198 @@
 
     const fetchData = async (endpoint, method = 'GET', data = null) => {
       try {
-        const res = await fetch(`${API_URL}${endpoint}`, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-          },
-          body: data ? JSON.stringify(data) : null
-        });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Request failed');
-        return result;
+        if (method === 'GET') {
+          if (endpoint === '/profile') return state.profile;
+          if (endpoint === '/status') return state.status;
+          if (endpoint === '/offers') return state.offers;
+          if (endpoint.startsWith('/menu')) {
+            const params = new URLSearchParams(endpoint.split('?')[1] || '');
+            const category = params.get('category') || 'all';
+            const price = params.get('price') || 'all';
+            const query = params.get('query') || '';
+            let items = state.menu;
+            if (category !== 'all') items = items.filter(i => i.category === category);
+            if (price !== 'all') {
+              const [min, max] = price.split('-').map(Number);
+              items = items.filter(i => max ? i.price >= min && i.price <= max : i.price >= min);
+            }
+            if (query) items = items.filter(i => i.name.toLowerCase().includes(query.toLowerCase()));
+            return items;
+          }
+          if (endpoint === '/cart') return state.cart;
+          if (endpoint === '/orders') return state.orders;
+          if (endpoint === '/favourites') return state.favourites;
+          if (endpoint === '/addresses') return state.addresses;
+          if (endpoint === '/loyalty') return state.loyalty;
+          if (endpoint === '/referral') return state.referral;
+          if (endpoint === '/support/tickets') return state.support.tickets;
+          if (endpoint === '/support/chat') return state.support.chat;
+          if (endpoint === '/faq') return state.faq;
+          if (endpoint === '/cancellation-policy') return state.cancellationPolicy;
+          if (endpoint.startsWith('/orders/') && endpoint.includes('/track')) {
+            const orderId = endpoint.split('/')[2];
+            return { status: state.orders.find(o => o.id === orderId)?.status || 'Unknown', deliveryPartner: { name: 'John Smith', contact: '+91 9876543210' } };
+          }
+        } else if (method === 'POST') {
+          if (endpoint === '/cart/add') {
+            const item = data.item;
+            const existing = state.cart.items.find(i => i.id === item.id);
+            if (existing) {
+              existing.quantity += item.quantity;
+            } else {
+              state.cart.items.push(item);
+            }
+            return { success: true };
+          }
+          if (endpoint === '/cart/update') {
+            const { itemId, action } = data;
+            const item = state.cart.items.find(i => i.id === itemId);
+            if (item) {
+              if (action === 'increase') item.quantity += 1;
+              if (action === 'decrease' && item.quantity > 1) item.quantity -= 1;
+            }
+            return { success: true };
+          }
+          if (endpoint === '/cart/remove') {
+            state.cart.items = state.cart.items.filter(i => i.id !== data.itemId);
+            return { success: true };
+          }
+          if (endpoint === '/cart/apply-coupon') {
+            const offer = state.offers.find(o => o.code === data.code);
+            if (offer) {
+              state.appliedCoupon = { code: offer.code, discount: offer.discount };
+              return { success: true, discount: offer.discount };
+            }
+            throw new Error('Invalid coupon');
+          }
+          if (endpoint === '/cart/checkout') {
+            const order = {
+              id: `ORD${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+              date: new Date().toISOString(),
+              items: [...state.cart.items],
+              total: state.cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0) * (1 - (state.appliedCoupon?.discount || 0) / 100),
+              status: 'Placed',
+              addressId: data.addressId,
+              paymentMethod: data.paymentMethod
+            };
+            state.orders.push(order);
+            state.cart.items = [];
+            state.appliedCoupon = null;
+            return { success: true, order };
+          }
+          if (endpoint.startsWith('/favourites/add')) {
+            const item = state.menu.find(i => i.id === data.itemId);
+            if (item) state.favourites.push(item);
+            return { success: true };
+          }
+          if (endpoint.startsWith('/favourites/remove')) {
+            state.favourites = state.favourites.filter(f => f.id !== data.itemId);
+            return { success: true };
+          }
+          if (endpoint === '/addresses/add') {
+            const address = { id: `addr${state.addresses.length + 1}`, ...data };
+            if (address.isDefault) state.addresses.forEach(a => a.isDefault = false);
+            state.addresses.push(address);
+            return { success: true };
+          }
+          if (endpoint === '/addresses/update') {
+            const index = state.addresses.findIndex(a => a.id === data.id);
+            if (index !== -1) {
+              if (data.isDefault) state.addresses.forEach(a => a.isDefault = false);
+              state.addresses[index] = { ...state.addresses[index], ...data };
+            }
+            return { success: true };
+          }
+          if (endpoint === '/addresses/delete') {
+            state.addresses = state.addresses.filter(a => a.id !== data.id);
+            return { success: true };
+          }
+          if (endpoint === '/addresses/set-default') {
+            state.addresses.forEach(a => a.isDefault = a.id === data.id);
+            return { success: true };
+          }
+          if (endpoint === '/support/tickets') {
+            const ticket = {
+              id: `TCK${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+              subject: data.subject,
+              status: 'Open',
+              date: new Date().toISOString()
+            };
+            state.support.tickets.push(ticket);
+            return { success: true };
+          }
+          if (endpoint.startsWith('/orders/') && endpoint.includes('/reorder')) {
+            const orderId = endpoint.split('/')[2];
+            const order = state.orders.find(o => o.id === orderId);
+            if (order) {
+              order.items.forEach(item => {
+                const existing = state.cart.items.find(i => i.id === item.id);
+                if (existing) {
+                  existing.quantity += item.quantity;
+                } else {
+                  state.cart.items.push({ ...item });
+                }
+              });
+            }
+            return { success: true };
+          }
+          if (endpoint.startsWith('/orders/') && endpoint.includes('/rate')) {
+            const orderId = endpoint.split('/')[2];
+            const order = state.orders.find(o => o.id === orderId);
+            if (order) order.rating = data;
+            return { success: true };
+          }
+          if (endpoint === '/profile') {
+            state.profile = { ...state.profile, ...data };
+            return { success: true };
+          }
+          if (endpoint === '/logout') {
+            state.isLoggedIn = false;
+            window.location.href = 'index.html';
+            return { success: true };
+          }
+        }
+        return null;
       } catch (err) {
         showToast(`Error: ${err.message}`);
-        if (err.message.includes('401') || err.message.includes('403')) {
-          localStorage.removeItem('jwtToken');
-          window.location.href = 'index.html';
-        }
         return null;
       }
     };
 
-    // WebSocket
-    const initWebSocket = () => {
-      ws = new WebSocket(`${WS_URL}?userId=${userId || 'anonymous'}`);
-      ws.onopen = () => console.log('WebSocket connected');
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
+    // Simulated WebSocket
+    const simulateWebSocket = () => {
+      setInterval(() => {
+        const messages = [
+          { type: 'support', sender: 'admin', message: 'How can I assist you today?' },
+          { type: 'order', message: 'New order placed!' },
+          { type: 'track', orderId: state.orders[0]?.id, status: 'Out for Delivery', deliveryPartner: { name: 'John Smith', contact: '+91 9876543210' } }
+        ];
+        const data = messages[Math.floor(Math.random() * messages.length)];
         if (data.type === 'support') appendChatMessage(data.sender, data.message);
-        else if (data.type === 'typing') document.getElementById('typingIndicator').textContent = data.isTyping ? 'Admin is typing...' : '';
-        else if (data.type === 'menu') {
-          showToast('Menu updated!');
-          if (!document.getElementById('user-menu').classList.contains('hidden') || !document.getElementById('user-dashboard').classList.contains('hidden')) loadMenu();
-        } else if (data.type === 'order') {
-          showToast(data.message);
-          if (!document.getElementById('user-orders').classList.contains('hidden')) loadOrders();
-        } else if (data.type === 'track') updateOrderTracker(data.orderId, data.status, data.deliveryPartner);
-      };
-      ws.onclose = () => setTimeout(initWebSocket, 5000);
-      ws.onerror = (err) => console.error('WebSocket error:', err);
+        else if (data.type === 'order') showToast(data.message);
+        else if (data.type === 'track') updateOrderTracker(data.orderId, data.status, data.deliveryPartner);
+      }, 30000);
     };
-
-    // Auth Check
-    if (!isLoggedIn) window.location.href = 'index.html';
-    else {
-      fetchData('/profile').then(profile => {
-        if (profile) {
-          userId = profile.email;
-          document.getElementById('profileName').value = profile.name || '';
-          document.getElementById('profileEmail').value = profile.email || '';
-          document.getElementById('profilePhone').value = profile.phone || '';
-          initWebSocket();
-        }
-      });
-    }
 
     // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
-    document.getElementById('sidebarToggle').addEventListener('click', () => {
+    const toggleSidebar = () => {
       sidebar.classList.toggle('sidebar-hidden');
-      document.body.style.overflow = sidebar.classList.contains('sidebar-hidden') ? 'auto' : 'hidden';
-    });
+      const isOpen = !sidebar.classList.contains('sidebar-hidden');
+      document.querySelectorAll('.hamburger').forEach(h => h.classList.toggle('open', isOpen));
+      document.body.style.overflow = isOpen && window.innerWidth < 1024 ? 'hidden' : 'auto';
+      if (isOpen) sidebar.classList.add('animate-slideIn');
+      else sidebar.classList.remove('animate-slideIn');
+    };
+
+    document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+    document.getElementById('heroSidebarToggle').addEventListener('click', toggleSidebar);
 
     document.addEventListener('click', (e) => {
-      if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('#sidebarToggle') && !sidebar.classList.contains('sidebar-hidden')) {
-        sidebar.classList.add('sidebar-hidden');
-        document.body.style.overflow = 'auto';
+      if (window.innerWidth < 1024 && !sidebar.contains(e.target) && 
+          !e.target.closest('#sidebarToggle') && !e.target.closest('#heroSidebarToggle') && 
+          !sidebar.classList.contains('sidebar-hidden')) {
+        toggleSidebar();
       }
     });
 
@@ -607,8 +849,8 @@
       const target = document.getElementById(`user-${sectionId}`);
       target.classList.remove('hidden');
       navButtons.forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-section="${sectionId}"]`)?.classList.add('active');
-      if (navigationHistory[navigationHistory.length - 1] !== sectionId) navigationHistory.push(sectionId);
+      document.querySelectorAll(`[data-section="${sectionId}"]`).forEach(b => b.classList.add('active'));
+      if (state.navigationHistory[state.navigationHistory.length - 1] !== sectionId) state.navigationHistory.push(sectionId);
       if (sectionId === 'menu') loadMenu();
       else if (sectionId === 'cart') loadCart();
       else if (sectionId === 'orders') loadOrders();
@@ -619,10 +861,7 @@
       else if (sectionId === 'support') loadSupport();
       else if (sectionId === 'faq') loadFAQ();
       else if (sectionId === 'profile') loadProfile();
-      if (window.innerWidth < 1024) {
-        sidebar.classList.add('sidebar-hidden');
-        document.body.style.overflow = 'auto';
-      }
+      if (window.innerWidth < 1024) toggleSidebar();
     };
 
     navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
@@ -630,8 +869,8 @@
     document.getElementById('profileQuick').addEventListener('click', () => showSection('profile'));
 
     const goBack = () => {
-      navigationHistory.pop();
-      showSection(navigationHistory[navigationHistory.length - 1] || 'dashboard');
+      state.navigationHistory.pop();
+      showSection(state.navigationHistory[state.navigationHistory.length - 1] || 'dashboard');
     };
 
     document.querySelectorAll('[id^="backFrom"]').forEach(btn => btn.addEventListener('click', goBack));
@@ -639,9 +878,7 @@
     // Logout
     const handleLogout = () => {
       fetchData('/logout', 'POST').then(() => {
-        localStorage.removeItem('jwtToken');
-        if (ws) ws.close();
-        window.location.href = 'index.html';
+        showToast('Logged out');
       });
     };
 
@@ -665,7 +902,7 @@
       }
       carousel.innerHTML = offers.map((o, i) => `
         <div id="banner${i}" class="banner-item ${i ? 'hidden' : ''}">
-          ${o.image ? `<img src="${o.image}" alt="${o.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">` : ''}
+          <img src="${o.image}" alt="${o.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">
           <div class="banner-content">
             <h3 class="text-lg font-bold">${o.title}</h3>
             <p>${o.description} | Code: ${o.code}</p>
@@ -687,10 +924,10 @@
       setInterval(() => showBanner(idx = (idx + 1) % items.length), 5000);
       document.querySelectorAll('.apply-banner-offer').forEach(btn => {
         btn.addEventListener('click', async () => {
-          appliedCoupon = { code: btn.dataset.code, discount: parseFloat(btn.dataset.discount) };
-          const data = await fetchData('/cart/apply-coupon', 'POST', { code: appliedCoupon.code });
+          state.appliedCoupon = { code: btn.dataset.code, discount: parseFloat(btn.dataset.discount) };
+          const data = await fetchData('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
           if (data) {
-            showToast(`Offer ${appliedCoupon.code} applied! ${appliedCoupon.discount}% off`);
+            showToast(`Offer ${state.appliedCoupon.code} applied! ${state.appliedCoupon.discount}% off`);
             loadCart();
           }
         });
@@ -706,7 +943,7 @@
       }
       const offer = offers[0];
       document.getElementById('applyOffer').addEventListener('click', async () => {
-        appliedCoupon = { code: offer.code, discount: offer.discount };
+        state.appliedCoupon = { code: offer.code, discount: offer.discount };
         const data = await fetchData('/cart/apply-coupon', 'POST', { code: offer.code });
         if (data) {
           showToast(`Offer ${offer.code} applied! ${offer.discount}% off`);
@@ -722,7 +959,7 @@
       const favouriteIds = favourites.map(f => f.id);
       const renderItem = item => `
         <div class="menu-item">
-          ${item.image ? `<img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='${defaultImage}'">` : `<div class="h-150 bg-gray-200 flex items-center justify-center">No Image</div>`}
+          <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="p-4">
             <h3 class="text-base font-semibold">${item.name}</h3>
             <p class="text-gray-600">₹${item.price}</p>
@@ -761,7 +998,7 @@
       const addresses = await fetchData('/addresses') || [];
       addressEl.innerHTML = '<option value="">Select Address</option>' + addresses.map(a => `<option value="${a.id}" ${a.isDefault ? 'selected' : ''}>${a.name}: ${a.street}, ${a.city}</option>`).join('');
       const subtotal = cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-      const discount = appliedCoupon ? (subtotal * appliedCoupon.discount / 100) : 0;
+      const discount = state.appliedCoupon ? (subtotal * state.appliedCoupon.discount / 100) : 0;
       const total = subtotal - discount;
       itemsEl.innerHTML = cart.items.map(i => `
         <div class="flex justify-between items-center p-2 border-b">
@@ -827,7 +1064,6 @@
       if (!code) return showToast('Enter a promo code');
       const data = await fetchData('/cart/apply-coupon', 'POST', { code });
       if (data) {
-        appliedCoupon = { code, discount: data.discount };
         showToast(`Coupon ${code} applied! ${data.discount}% off`);
         loadCart();
       }
@@ -937,8 +1173,7 @@
       const favourites = await fetchData('/favourites');
       const container = document.getElementById('favouritesItems');
       container.innerHTML = favourites?.length ? favourites.map(i => `
-        <div class="menu-item">
-          ${i.image ? `<img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='${defaultImage}'">` : `<div class="h-150 bg-gray-200 flex items-center justify-center">No Image</div>`}
+        <div class="menu-item">          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="p-4">
             <h3 class="text-base font-semibold">${i.name}</h3>
             <p class="text-gray-600">₹${i.price}</p>
@@ -949,23 +1184,28 @@
             </div>
           </div>
         </div>
-      `).join('') : '<p>No favourites</p>';
+      `).join('') : '<p>No favourite items</p>';
       VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 10, speed: 400 });
     };
 
     document.addEventListener('click', async e => {
-      if (e.target.closest('.toggle-favourite')) {
-        const btn = e.target.closest('.toggle-favourite');
-        const id = btn.dataset.id;
-        const icon = btn.querySelector('i');
-        const isFav = icon.classList.contains('text-red-500');
-        const data = await fetchData(`/favourites/${isFav ? 'remove' : 'add'}`, 'POST', { itemId: id });
-        if (data) {
-          icon.classList.toggle('text-red-500');
-          showToast(isFav ? 'Removed from favourites' : 'Added to favourites');
-          if (!document.getElementById('user-favourites').classList.contains('hidden')) loadFavourites();
-          if (!document.getElementById('user-menu').classList.contains('hidden') || !document.getElementById('user-dashboard').classList.contains('hidden')) loadMenu();
+      const btn = e.target.closest('.toggle-favourite');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const isFavourite = state.favourites.some(f => f.id === id);
+      const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
+      const data = await fetchData(endpoint, 'POST', { itemId: id });
+      if (data) {
+        if (isFavourite) {
+          state.favourites = state.favourites.filter(f => f.id !== id);
+          showToast('Removed from favourites');
+        } else {
+          const item = state.menu.find(i => i.id === id);
+          state.favourites.push(item);
+          showToast('Added to favourites');
         }
+        if (!document.getElementById('user-menu').classList.contains('hidden')) loadMenu();
+        if (!document.getElementById('user-favourites').classList.contains('hidden')) loadFavourites();
       }
     });
 
@@ -974,18 +1214,20 @@
       const addresses = await fetchData('/addresses');
       const container = document.getElementById('addressItems');
       container.innerHTML = addresses?.length ? addresses.map(a => `
-        <div class="bg-white rounded-lg p-4 shadow">
-          <h3 class="text-base font-semibold">${a.name}</h3>
-          <p class="text-gray-600">${a.street}, ${a.city}, ${a.state} - ${a.zip}</p>
-          <p class="text-gray-600">Mobile: ${a.mobile}</p>
-          <p class="text-gray-600">${a.isDefault ? '<span class="text-green-600">Default</span>' : ''}</p>
-          <div class="flex gap-2 mt-2">
-            <button class="edit-address bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-id="${a.id}"><i class="fas fa-edit mr-1"></i>Edit</button>
-            <button class="delete-address bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700" data-id="${a.id}"><i class="fas fa-trash mr-1"></i>Delete</button>
-            ${!a.isDefault ? `<button class="set-default-address bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700" data-id="${a.id}"><i class="fas fa-check mr-1"></i>Set Default</button>` : ''}
+        <div class="bg-white rounded-lg p-4 shadow flex justify-between items-start">
+          <div>
+            <h4 class="text-lg font-semibold">${a.name}</h4>
+            <p class="text-gray-600">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
+            <p class="text-gray-600">Mobile: ${a.mobile}</p>
+            ${a.isDefault ? '<p class="text-green-600">Default</p>' : ''}
+          </div>
+          <div class="flex gap-2">
+            <button class="edit-address bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-id="${a.id}"><i class="fas fa-edit"></i></button>
+            <button class="delete-address bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+            ${!a.isDefault ? `<button class="set-default-address bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
           </div>
         </div>
-      `).join('') : '<p>No addresses</p>';
+      `).join('') : '<p>No addresses saved</p>';
     };
 
     document.getElementById('addAddress').addEventListener('click', () => {
@@ -994,121 +1236,175 @@
       modal.innerHTML = `
         <div class="share-modal-content">
           <span class="close">×</span>
-          <h3>Add Address</h3>
-          <div class="space-y-2">
-            <input type="text" id="addressName" class="w-full px-4 py-2 border rounded-full" placeholder="Name">
-            <input type="text" id="addressStreet" class="w-full px-4 py-2 border rounded-full" placeholder="Street">
-            <input type="text" id="addressCity" class="w-full px-4 py-2 border rounded-full" placeholder="City">
-            <input type="text" id="addressState" class="w-full px-4 py-2 border rounded-full" placeholder="State">
-            <input type="text" id="addressZip" class="w-full px-4 py-2 border rounded-full" placeholder="ZIP Code">
-            <input type="tel" id="addressMobile" class="w-full px-4 py-2 border rounded-full" placeholder="Mobile">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" id="addressDefault">
-              <span>Set as Default</span>
-            </label>
-            <button id="saveAddress" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
-          </div>
+          <h3 class="text-lg font-bold text-orange-600">Add Address</h3>
+          <form id="addressForm" class="space-y-4">
+            <div>
+              <label class="block text-gray-700">Name</label>
+              <input type="text" name="name" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Street</label>
+              <input type="text" name="street" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">City</label>
+              <input type="text" name="city" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">State</label>
+              <input type="text" name="state" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">ZIP</label>
+              <input type="text" name="zip" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Mobile</label>
+              <input type="tel" name="mobile" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" name="isDefault" id="isDefault" class="h-4 w-4">
+              <label for="isDefault">Set as default</label>
+            </div>
+            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
+          </form>
         </div>
       `;
       document.body.appendChild(modal);
       modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#saveAddress').addEventListener('click', async () => {
+      modal.querySelector('#addressForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
         const address = {
-          name: document.getElementById('addressName').value,
-          street: document.getElementById('addressStreet').value,
-          city: document.getElementById('addressCity').value,
-          state: document.getElementById('addressState').value,
-          zip: document.getElementById('addressZip').value,
-          mobile: document.getElementById('addressMobile').value,
-          isDefault: document.getElementById('addressDefault').checked
+          name: formData.get('name'),
+          street: formData.get('street'),
+          city: formData.get('city'),
+          state: formData.get('state'),
+          zip: formData.get('zip'),
+          mobile: formData.get('mobile'),
+          isDefault: formData.get('isDefault') === 'on'
         };
-        if (!Object.values(address).every(v => v)) return showToast('Fill all fields');
         const data = await fetchData('/addresses/add', 'POST', address);
         if (data) {
           showToast('Address added');
+          modal.remove();
           loadAddresses();
           loadCart();
-          modal.remove();
         }
       });
     });
 
     document.addEventListener('click', async e => {
-      if (e.target.closest('.edit-address')) {
-        const id = e.target.closest('.edit-address').dataset.id;
-        const addresses = await fetchData('/addresses');
-        const address = addresses.find(a => a.id === id);
-        if (!address) return showToast('Address not found');
+      const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.classList.contains('edit-address')) {
+        const address = state.addresses.find(a => a.id === id);
+        if (!address) return;
         const modal = document.createElement('div');
         modal.className = 'share-modal active';
         modal.innerHTML = `
           <div class="share-modal-content">
             <span class="close">×</span>
-            <h3>Edit Address</h3>
-            <div class="space-y-2">
-              <input type="text" id="addressName" class="w-full px-4 py-2 border rounded-full" value="${address.name}">
-              <input type="text" id="addressStreet" class="w-full px-4 py-2 border rounded-full" value="${address.street}">
-              <input type="text" id="addressCity" class="w-full px-4 py-2 border rounded-full" value="${address.city}">
-              <input type="text" id="addressState" class="w-full px-4 py-2 border rounded-full" value="${address.state}">
-              <input type="text" id="addressZip" class="w-full px-4 py-2 border rounded-full" value="${address.zip}">
-              <input type="tel" id="addressMobile" class="w-full px-4 py-2 border rounded-full" value="${address.mobile}">
-              <label class="flex items-center gap-2">
-                <input type="checkbox" id="addressDefault" ${address.isDefault ? 'checked' : ''}>
-                <span>Set as Default</span>
-              </label>
-              <button id="saveAddress" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
-            </div>
+            <h3 class="text-lg font-bold text-orange-600">Edit Address</h3>
+            <form id="addressForm" class="space-y-4">
+              <div>
+                <label class="block text-gray-700">Name</label>
+                <input type="text" name="name" value="${address.name}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">Street</label>
+                <input type="text" name="street" value="${address.street}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">City</label>
+                <input type="text" name="city" value="${address.city}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">State</label>
+                <input type="text" name="state" value="${address.state}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">ZIP</label>
+                <input type="text" name="zip" value="${address.zip}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">Mobile</label>
+                <input type="tel" name="mobile" value="${address.mobile}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" name="isDefault" id="isDefault" class="h-4 w-4" ${address.isDefault ? 'checked' : ''}>
+                <label for="isDefault">Set as default</label>
+              </div>
+              <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
+            </form>
           </div>
         `;
         document.body.appendChild(modal);
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
-        modal.querySelector('#saveAddress').addEventListener('click', async () => {
-          const updated = {
+        modal.querySelector('#addressForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const addressData = {
             id,
-            name: document.getElementById('addressName').value,
-            street: document.getElementById('addressStreet').value,
-            city: document.getElementById('addressCity').value,
-            state: document.getElementById('addressState').value,
-            zip: document.getElementById('addressZip').value,
-            mobile: document.getElementById('addressMobile').value,
-            isDefault: document.getElementById('addressDefault').checked
+            name: formData.get('name'),
+            street: formData.get('street'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zip: formData.get('zip'),
+            mobile: formData.get('mobile'),
+            isDefault: formData.get('isDefault') === 'on'
           };
-          if (!Object.values(updated).every(v => v)) return showToast('Fill all fields');
-          const data = await fetchData('/addresses/update', 'POST', updated);
+          const data = await fetchData('/addresses/update', 'POST', addressData);
           if (data) {
             showToast('Address updated');
+            modal.remove();
             loadAddresses();
             loadCart();
-            modal.remove();
           }
         });
-      } else if (e.target.closest('.delete-address')) {
-        const id = e.target.closest('.delete-address').dataset.id;
-        const data = await fetchData(`/addresses/delete`, 'POST', { id });
+      } else if (btn.classList.contains('delete-address')) {
+        const data = await fetchData('/addresses/delete', 'POST', { id });
         if (data) {
           showToast('Address deleted');
           loadAddresses();
           loadCart();
         }
-      } else if (e.target.closest('.set-default-address')) {
-        const id = e.target.closest('.set-default-address').dataset.id;
-        const data = await fetchData(`/addresses/set-default`, 'POST', { id });
+      } else if (btn.classList.contains('set-default-address')) {
+        const data = await fetchData('/addresses/set-default', 'POST', { id });
         if (data) {
-          showToast('Default address set');
+          showToast('Default address updated');
           loadAddresses();
           loadCart();
         }
       }
     });
 
+    // Checkout
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const addressId = document.getElementById('cartAddress').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      if (!addressId) return showToast('Select a delivery address');
+      if (!state.cart.items.length) return showToast('Cart is empty');
+      const data = await fetchData('/cart/checkout', 'POST', { addressId, paymentMethod });
+      if (data) {
+        showToast('Order placed successfully!');
+        triggerConfetti();
+        loadCart();
+        loadOrders();
+        showSection('orders');
+      }
+    });
+
     // Loyalty
     const loadLoyalty = async () => {
       const loyalty = await fetchData('/loyalty');
-      document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-      document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
-        <div class="border-b py-2">
-          <p>${h.action} - ${h.points} points</p>
-          <p class="text-sm text-gray-500">${new Date(h.date).toLocaleDateString()}</p>
+      document.getElementById('loyaltyPoints').textContent = loyalty.points || 0;
+      document.getElementById('loyaltyHistory').innerHTML = loyalty.history?.length ? loyalty.history.map(h => `
+        <div class="flex justify-between p-2 border-b">
+          <span>${h.action}</span>
+          <span>${h.points} points</span>
+          <span>${new Date(h.date).toLocaleDateString()}</span>
         </div>
       `).join('') : '<p>No loyalty history</p>';
     };
@@ -1116,295 +1412,255 @@
     // Referrals
     const loadReferrals = async () => {
       const referral = await fetchData('/referral');
-      document.getElementById('referralCode').textContent = referral?.code || 'N/A';
-      document.getElementById('referralLink').href = referral?.link || '#';
+      document.getElementById('referralCode').textContent = referral.code || 'N/A';
+      const linkEl = document.getElementById('referralLink');
+      linkEl.href = referral.link;
+      linkEl.addEventListener('click', () => {
+        navigator.clipboard.writeText(referral.link);
+        showToast('Referral link copied!');
+      });
     };
 
     // Support
-const loadSupport = async () => {
-  const tickets = await fetchData('/support/tickets');
-  document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-    <div class="border-b py-2">
-      <p>Ticket #${t.id}: ${t.subject}</p>
-      <p class="text-sm text-gray-500">Status: ${t.status} | ${new Date(t.date).toLocaleDateString()}</p>
-    </div>
-  `).join('') : '<p>No tickets</p>';
-  loadChat();
-};
-
-const loadChat = async () => {
-  const messages = await fetchData('/support/chat');
-  document.getElementById('chatMessages').innerHTML = messages?.length ? messages.map(m => `
-    <div class="chat-message ${m.sender === userId ? 'user' : 'admin'}">
-      <p>${m.message}</p>
-      <p class="text-xs text-gray-400">${new Date(m.timestamp).toLocaleTimeString()}</p>
-    </div>
-  `).join('') : '<p>No messages</p>';
-  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-};
-
-const appendChatMessage = (sender, message) => {
-  const chat = document.getElementById('chatMessages');
-  chat.innerHTML += `
-    <div class="chat-message ${sender === userId ? 'user' : 'admin'}">
-      <p>${message}</p>
-      <p class="text-xs text-gray-400">${new Date().toLocaleTimeString()}</p>
-    </div>
-  `;
-  chat.scrollTop = chat.scrollHeight;
-};
-
-document.getElementById('sendChat').addEventListener('click', async () => {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  if (!message) return showToast('Type a message');
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'support', sender: userId, message }));
-    appendChatMessage(userId, message);
-    input.value = '';
-  } else {
-    showToast('Chat unavailable');
-  }
-});
-
-document.getElementById('chatInput').addEventListener('input', () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'typing', isTyping: true }));
-    setTimeout(() => ws.send(JSON.stringify({ type: 'typing', isTyping: false })), 2000);
-  }
-});
-
-document.getElementById('createTicketBtn').addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'share-modal active';
-  modal.innerHTML = `
-    <div class="share-modal-content">
-      <span class="close">×</span>
-      <h3>Create Support Ticket</h3>
-      <div class="space-y-2">
-        <input type="text" id="ticketSubject" class="w-full px-4 py-2 border rounded-full" placeholder="Subject">
-        <textarea id="ticketDescription" class="w-full px-4 py-2 border rounded-lg" rows="4" placeholder="Description"></textarea>
-        <button id="submitTicket" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelector('.close').addEventListener('click', () => modal.remove());
-  modal.querySelector('#submitTicket').addEventListener('click', async () => {
-    const subject = document.getElementById('ticketSubject').value;
-    const description = document.getElementById('ticketDescription').value;
-    if (!subject || !description) return showToast('Fill all fields');
-    const data = await fetchData('/support/tickets', 'POST', { subject, description });
-    if (data) {
-      showToast('Ticket created');
-      loadSupport();
-      modal.remove();
-    }
-  });
-});
-
-// FAQ
-const loadFAQ = async () => {
-  const faqs = await fetchData('/faq');
-  document.getElementById('faqItems').innerHTML = faqs?.length ? faqs.map(f => `
-    <div class="border-b py-2">
-      <h4 class="font-semibold">${f.question}</h4>
-      <p class="text-gray-600">${f.answer}</p>
-    </div>
-  `).join('') : '<p>No FAQs available</p>';
-};
-
-// Profile
-const loadProfile = async () => {
-  const profile = await fetchData('/profile');
-  if (profile) {
-    document.getElementById('profileName').value = profile.name || '';
-    document.getElementById('profileEmail').value = profile.email || '';
-    document.getElementById('profilePhone').value = profile.phone || '';
-  }
-};
-
-document.getElementById('editProfileBtn').addEventListener('click', () => {
-  const inputs = document.querySelectorAll('#user-profile input');
-  const isEditing = inputs[0].readOnly;
-  inputs.forEach(input => input.readOnly = !isEditing);
-  const btn = document.getElementById('editProfileBtn');
-  btn.innerHTML = isEditing ? '<i class="fas fa-save mr-2"></i>Save' : '<i class="fas fa-edit mr-2"></i>Edit Profile';
-  if (!isEditing) {
-    const profile = {
-      name: document.getElementById('profileName').value,
-      email: document.getElementById('profileEmail').value,
-      phone: document.getElementById('profilePhone').value
+    const loadSupport = async () => {
+      const tickets = await fetchData('/support/tickets');
+      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+        <div class="p-2 border-b">
+          <p class="font-semibold">${t.subject}</p>
+          <p class="text-gray-600">Status: ${t.status}</p>
+          <p class="text-gray-600">${new Date(t.date).toLocaleDateString()}</p>
+        </div>
+      `).join('') : '<p>No tickets</p>';
+      const chat = await fetchData('/support/chat');
+      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
+        <div class="chat-message ${m.sender === state.userId ? 'user' : 'admin'}">
+          <p>${m.message}</p>
+          <p class="text-xs text-gray-400">${new Date(m.timestamp).toLocaleTimeString()}</p>
+        </div>
+      `).join('') : '<p>No messages</p>';
+      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
     };
-    fetchData('/profile', 'PUT', profile).then(data => {
-      if (data) {
-        showToast('Profile updated');
-        userId = profile.email;
-        if (ws) ws.close();
-        initWebSocket();
+
+    const appendChatMessage = (sender, message) => {
+      const chat = document.getElementById('chatMessages');
+      const isUser = sender === state.userId;
+      if (!chat) return;
+      chat.innerHTML += `
+        <div class="chat-message ${isUser ? 'user' : 'admin'}">
+          <p>${message}</p>
+          <p class="text-xs text-gray-400">${new Date().toLocaleTimeString()}</p>
+        </div>
+      `;
+      chat.scrollTop = chat.scrollHeight;
+      if (!isUser && document.getElementById('user-support').classList.contains('hidden')) {
+        showToast('New support message received');
+      }
+    };
+
+    document.getElementById('createTicketBtn').addEventListener('click', () => {
+      const modal = document.createElement('div');
+      modal.className = 'share-modal active';
+      modal.innerHTML = `
+        <div class="share-modal-content">
+          <span class="close">×</span>
+          <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
+          <form id="ticketForm" class="space-y-4">
+            <div>
+              <label class="block text-gray-700">Subject</label>
+              <input type="text" name="subject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Description</label>
+              <textarea name="description" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.querySelector('#ticketForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const ticket = { subject: formData.get('subject'), description: formData.get('description') };
+        const data = await fetchData('/support/tickets', 'POST', ticket);
+        if (data) {
+          showToast('Ticket created');
+          modal.remove();
+          loadSupport();
+        }
+      });
+    });
+
+    document.getElementById('sendChat').addEventListener('click', async () => {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+      appendChatMessage(state.userId, message);
+      state.support.chat.push({ sender: state.userId, message, timestamp: new Date().toISOString() });
+      input.value = '';
+      setTimeout(() => {
+        const typing = document.getElementById('typingIndicator');
+        typing.textContent = 'Admin is typing...';
+        setTimeout(() => {
+          typing.textContent = '';
+          appendChatMessage('admin', 'Thank you for your message. We will get back to you soon.');
+          state.support.chat.push({ sender: 'admin', message: 'Thank you for your message. We will get back to you soon.', timestamp: new Date().toISOString() });
+        }, 1000);
+      }, 500);
+    });
+
+    // FAQ
+    const loadFAQ = async () => {
+      const faq = await fetchData('/faq');
+      document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
+        <div class="p-2 border-b">
+          <p class="font-semibold">${f.question}</p>
+          <p class="text-gray-600">${f.answer}</p>
+        </div>
+      `).join('') : '<p>No FAQs available</p>';
+    };
+
+    // Profile
+    const loadProfile = async () => {
+      const profile = await fetchData('/profile');
+      document.getElementById('profileName').value = profile.name || '';
+      document.getElementById('profileEmail').value = profile.email || '';
+      document.getElementById('profilePhone').value = profile.phone || '';
+    };
+
+    document.getElementById('editProfileBtn').addEventListener('click', () => {
+      const inputs = document.querySelectorAll('#user-profile input');
+      const isEditable = inputs[0].readOnly;
+      inputs.forEach(i => i.readOnly = !isEditable);
+      const btn = document.getElementById('editProfileBtn');
+      btn.innerHTML = isEditable ? '<i class="fas fa-save mr-2"></i>Save' : '<i class="fas fa-edit mr-2"></i>Edit Profile';
+      if (!isEditable) {
+        const profile = {
+          name: document.getElementById('profileName').value,
+          email: document.getElementById('profileEmail').value,
+          phone: document.getElementById('profilePhone').value
+        };
+        fetchData('/profile', 'POST', profile).then(data => {
+          if (data) showToast('Profile updated');
+        });
       }
     });
-  }
-});
 
-// Checkout
-document.getElementById('checkoutBtn').addEventListener('click', async () => {
-  const addressId = document.getElementById('cartAddress').value;
-  const paymentMethod = document.getElementById('paymentMethod').value;
-  if (!addressId) return showToast('Select an address');
-  const cart = await fetchData('/cart');
-  if (!cart?.items?.length) return showToast('Cart is empty');
-  const order = {
-    addressId,
-    paymentMethod,
-    coupon: appliedCoupon?.code
-  };
-  if (paymentMethod === 'razorpay') {
-    const paymentData = await fetchData('/cart/checkout', 'POST', order);
-    if (!paymentData) return;
-    const options = {
-      key: RAZORPAY_KEY,
-      amount: paymentData.amount,
-      currency: 'INR',
-      name: 'DELICUTE',
-      description: 'Order Payment',
-      order_id: paymentData.id,
-      handler: async response => {
-        const verification = await fetchData('/cart/verify-payment', 'POST', response);
-        if (verification) {
-          showToast('Order placed successfully!');
-          triggerConfetti();
-          appliedCoupon = null;
-          loadCart();
-          showSection('orders');
-        }
-      },
-      prefill: {
-        name: document.getElementById('profileName').value,
-        email: document.getElementById('profileEmail').value,
-        contact: document.getElementById('profilePhone').value
-      },
-      theme: { color: '#f97316' }
+    // Filters and Search
+    const applyFilters = async (section = 'dashboard') => {
+      const category = document.querySelector(`#${section === 'menu' ? 'menuItems' : 'menuPreview'}`).parentElement.querySelector('.filter-btn.active')?.dataset.category || 'all';
+      const price = document.getElementById(section === 'menu' ? 'menuPriceFilter' : 'priceFilter').value;
+      const query = document.getElementById(section === 'menu' ? 'menuSearch' : 'searchMenu').value;
+      await loadMenu(category, price, query);
     };
-    const rzp = new Razorpay(options);
-    rzp.open();
-  } else {
-    const data = await fetchData('/cart/checkout', 'POST', order);
-    if (data) {
-      showToast('Order placed successfully!');
-      triggerConfetti();
-      appliedCoupon = null;
-      loadCart();
-      showSection('orders');
-    }
-  }
-});
 
-// Search
-const handleSearch = (inputId, filterCategory, filterPrice) => {
-  const input = document.getElementById(inputId);
-  let timeout;
-  input.addEventListener('input', () => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      loadMenu(
-        document.querySelector(`#${filterCategory} .filter-btn.active`)?.dataset.category || 'all',
-        document.getElementById(filterPrice).value,
-        input.value
-      );
-    }, 500);
-  });
-};
-
-// Filter Buttons
-const initFilterButtons = (containerId, filterPrice) => {
-  document.querySelectorAll(`#${containerId} .filter-btn`).forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll(`#${containerId} .filter-btn`).forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      loadMenu(
-        btn.dataset.category,
-        document.getElementById(filterPrice).value,
-        document.getElementById(containerId === 'user-dashboard' ? 'searchMenu' : 'menuSearch').value
-      );
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters(btn.closest('.user-section').id === 'user-menu' ? 'menu' : 'dashboard');
+      });
     });
-  });
-};
 
-// Price Filter
-const initPriceFilter = (filterId, filterCategory) => {
-  document.getElementById(filterId).addEventListener('change', (e) => {
-    loadMenu(
-      document.querySelector(`#${filterCategory} .filter-btn.active`)?.dataset.category || 'all',
-      e.target.value,
-      document.getElementById(filterCategory === 'user-dashboard' ? 'searchMenu' : 'menuSearch').value
-    );
-  });
-};
+    document.getElementById('priceFilter').addEventListener('change', () => applyFilters('dashboard'));
+    document.getElementById('menuPriceFilter').addEventListener('change', () => applyFilters('menu'));
 
-// Particles Animation
-const initParticles = () => {
-  const canvas = document.querySelector('.particles');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-  const particles = Array.from({ length: 50 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 5 + 2,
-    vx: Math.random() * 2 - 1,
-    vy: Math.random() * 2 - 1
-  }));
+    document.getElementById('searchMenu').addEventListener('input', () => applyFilters('dashboard'));
+    document.getElementById('menuSearch').addEventListener('input', () => applyFilters('menu'));
 
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
-      ctx.fill();
+    // Share Modal
+    const shareModal = document.getElementById('shareModal');
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      shareModal.classList.add('active');
     });
-    requestAnimationFrame(animate);
-  };
-  animate();
-};
 
-// Share Modal
-document.getElementById('shareBtn').addEventListener('click', () => {
-  const modal = document.getElementById('shareModal');
-  modal.classList.add('active');
-  modal.querySelector('.close').addEventListener('click', () => modal.classList.remove('active'));
-  const shareData = {
-    title: 'DELICUTE',
-    text: 'Check out DELICUTE for delicious gourmet dishes!',
-    url: window.location.origin
-  };
-  document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`;
-  document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}`;
-  document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`;
-});
+    shareModal.querySelector('.close').addEventListener('click', () => {
+      shareModal.classList.remove('active');
+    });
 
-// Initialize
-const init = () => {
-  loadStatusBar();
-  loadBanners();
-  loadOffers();
-  loadMenu();
-  loadCart();
-  initParticles();
-  initFilterButtons('user-dashboard', 'priceFilter');
-  initFilterButtons('user-menu', 'menuPriceFilter');
-  initPriceFilter('priceFilter', 'user-dashboard');
-  initPriceFilter('menuPriceFilter', 'user-menu');
-  handleSearch('searchMenu', 'user-dashboard', 'priceFilter');
-  handleSearch('menuSearch', 'user-menu', 'menuPriceFilter');
-};
+    const shareLinks = {
+      shareWhatsApp: `https://api.whatsapp.com/send?text=Check%20out%20DELICUTE!%20Join%20using%20my%20referral:%20${encodeURIComponent(state.referral.link)}`,
+      shareTwitter: `https://twitter.com/intent/tweet?text=Check%20out%20DELICUTE!%20Join%20using%20my%20referral:%20${encodeURIComponent(state.referral.link)}`,
+      shareFacebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(state.referral.link)}`
+    };
 
-init();
-</script>
+    Object.keys(shareLinks).forEach(id => {
+      const el = document.getElementById(id);
+      el.href = shareLinks[id];
+      el.addEventListener('click', () => {
+        shareModal.classList.remove('active');
+        showToast('Shared successfully!');
+      });
+    });
+
+    // Particles
+    const initParticles = () => {
+      const canvas = document.querySelector('.particles');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = canvas.parentElement.offsetHeight;
+      const particles = Array.from({ length: 50 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 5 + 2,
+        speedX: Math.random() * 2 - 1,
+        speedY: Math.random() * 2 - 1
+      }));
+
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = '#f97316';
+          ctx.globalAlpha = 0.5;
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      };
+      animate();
+    };
+
+    // Initialize
+    const init = async () => {
+      if (!state.isLoggedIn) {
+        window.location.href = 'index.html';
+        return;
+      }
+      await Promise.all([
+        loadStatusBar(),
+        loadBanners(),
+        loadMenu(),
+        loadCart(),
+        loadOrders(),
+        loadOffers(),
+        loadFavourites(),
+        loadAddresses(),
+        loadLoyalty(),
+        loadReferrals(),
+        loadSupport(),
+        loadFAQ(),
+        loadProfile()
+      ]);
+      initParticles();
+      simulateWebSocket();
+      showSection('dashboard');
+    };
+
+    window.addEventListener('resize', () => {
+      initParticles();
+      if (window.innerWidth >= 1024 && sidebar.classList.contains('sidebar-hidden')) {
+        toggleSidebar();
+      }
+    });
+
+    init();
+  </script>
 </body>
 </html>
