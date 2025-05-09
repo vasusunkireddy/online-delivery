@@ -120,6 +120,7 @@ app.post('/api/users/request-otp', async (req, res) => {
   let client;
   try {
     client = await pool.connect();
+    // Ensure otps table exists
     await client.query(`
       CREATE TABLE IF NOT EXISTS otps (
         email VARCHAR(255) PRIMARY KEY,
@@ -127,13 +128,16 @@ app.post('/api/users/request-otp', async (req, res) => {
         expires TIMESTAMP NOT NULL
       )
     `);
+    // Delete existing OTP
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
+    // Insert new OTP
     await client.query(
       'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3)',
       [email, otp, expires]
     );
   } catch (err) {
     console.error('Database error in OTP request:', err.message);
+    if (client) client.release();
     return res.status(500).json({ message: 'Failed to store OTP: Database error' });
   } finally {
     if (client) client.release();
@@ -159,6 +163,7 @@ app.post('/api/users/signup', async (req, res) => {
   const { name, email, phone, password, address, otp } = req.body;
   console.log(`Signup attempt: ${email}, OTP: ${otp}`);
 
+  // Server-side validation
   if (!name || name.length < 3) {
     return res.status(400).json({ message: 'Name must be at least 3 characters' });
   }
@@ -245,65 +250,47 @@ app.post('/api/users/login', async (req, res) => {
   }
 });
 
-// Google Login - Redirect Initiation
-app.get('/api/users/google/redirect', (req, res) => {
-  const redirectUri = 'http://localhost:3000/api/users/google/callback';
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email%20profile`;
-  res.redirect(authUrl);
-});
+// Google Login
+app.post('/api/users/google', async (req, res) => {
+  const { id_token } = req.body;
+  console.log('Google login attempt');
 
-// Google Login - Callback Handler
-app.get('/api/users/google/callback', async (req, res) => {
-  const { code } = req.query;
-  if (!code) {
-    console.log('No code provided in Google callback');
-    return res.status(400).json({ message: 'Authorization code required' });
+  if (!id_token) {
+    console.log('No id_token provided');
+    return res.status(400).json({ message: 'id_token required' });
   }
 
   try {
-    const { tokens } = await googleClient.getToken({
-      code,
-      redirect_uri: 'http://localhost:3000/api/users/google/callback',
-    });
-
     const ticket = await googleClient.verifyIdToken({
-      idToken: tokens.id_token,
+      idToken: id_token,
       audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     const { email, name, sub: google_id } = payload;
 
-    let client;
-    try {
-      client = await pool.connect();
-      let user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
+    const client = await pool.connect();
+    let user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
 
-      if (!user) {
-        const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
-        const result = await client.query(
-          'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
-          [name || 'Google User', email, null, hashedPassword, 'Google Address', 'user', google_id]
-        );
-        user = result.rows[0];
-        console.log(`New Google user created: ${email}`);
-      } else if (!user.google_id) {
-        await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
-        console.log(`Linked Google ID to existing user: ${email}`);
-      }
-
-      const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      console.log(`Google login successful: ${email}`);
-
-      // Redirect back to frontend with token
-      res.redirect(`http://localhost:3000/auth/callback?token=${token}`);
-    } catch (err) {
-      console.error('Database error in Google callback:', err.message);
-      res.status(500).json({ message: 'Google login failed: Database error' });
-    } finally {
-      if (client) client.release();
+    if (!user) {
+      const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
+      const result = await client.query(
+        'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
+        [name || 'Google User', email, null, hashedPassword, 'Google Address', 'user', google_id]
+      );
+      user = result.rows[0];
+      console.log(`New Google user created: ${email}`);
+    } else if (!user.google_id) {
+      await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
+      console.log(`Linked Google ID to existing user: ${email}`);
     }
+
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    client.release();
+
+    console.log(`Google login successful: ${email}`);
+    res.json({ token });
   } catch (err) {
-    console.error('Google callback error:', err.message);
+    console.error('Google login error:', err.message, err.stack);
     res.status(500).json({ message: 'Google login failed: ' + err.message });
   }
 });
