@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const https = require('https');
 const http = require('http');
 
@@ -16,15 +16,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.JWT_SECRET;
 
+// Log DATABASE_URL for debugging (mask sensitive parts)
+const maskedDbUrl = process.env.DATABASE_URL.replace(/:[^@]+@/, ':****@');
+console.log(`Using DATABASE_URL: ${maskedDbUrl}`);
+
 // Database connection with pooling
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false }, // Enable SSL for all environments
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000
+  connectionTimeoutMillis: 10000 // Increased timeout
 });
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -160,9 +163,9 @@ async function initDb(retries = 3, delay = 5000) {
         client.release();
       }
     } catch (err) {
-      console.error(`Database initialization attempt ${attempt} failed:`, err.message, err.stack);
+      console.error(`Database initialization attempt ${attempt} failed: ${err.message}`, err.stack);
       if (attempt === retries) {
-        throw new Error('Failed to initialize database after multiple attempts');
+        throw new Error(`Failed to initialize database after ${retries} attempts: ${err.message}`);
       }
       await new Promise(resolve => setTimeout(resolve, delay));
     }
