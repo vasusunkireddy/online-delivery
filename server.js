@@ -5,13 +5,24 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 const http = require('http');
 const { OAuth2Client } = require('google-auth-library');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const app = express();
 
 // Google OAuth2 Client
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+if (!GOOGLE_CLIENT_ID) {
+  console.error('GOOGLE_CLIENT_ID is not set in .env');
+  process.exit(1);
+}
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+// PostgreSQL Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // Required for Render PostgreSQL
+});
 
 // Middleware
 const corsOptions = {
@@ -23,44 +34,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use(express.static('public')); // Serve static files
+app.use(express.static('public'));
 
 // Request logging
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${JSON.stringify(req.body)}`);
   next();
 });
-
-// In-memory storage
-let users = [];
-let cart = [];
-const otpStore = {};
-
-// Seed admin user
-async function initializeDatabase() {
-  try {
-    const adminEmail = 'svasudevareddy18604@gmail.com';
-    const adminPassword = 'vasudev';
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-    if (!users.some(user => user.email === adminEmail)) {
-      users.push({
-        id: 1,
-        name: 'Admin',
-        email: adminEmail,
-        phone: '1234567890',
-        password: hashedPassword,
-        address: 'Admin Address',
-        role: 'admin',
-        created_at: new Date(),
-      });
-      console.log('Admin user seeded');
-    }
-  } catch (err) {
-    console.error('Database initialization error:', err.message);
-    throw err;
-  }
-}
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -94,6 +74,29 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Initialize database (seed admin user)
+async function initializeDatabase() {
+  try {
+    const adminEmail = 'svasudevareddy18604@gmail.com';
+    const adminPassword = 'vasudev';
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    const client = await pool.connect();
+    const userExists = await client.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
+    if (userExists.rows.length === 0) {
+      await client.query(
+        'INSERT INTO users (name, email, phone, password, address, role) VALUES ($1, $2, $3, $4, $5, $6)',
+        ['Admin', adminEmail, '1234567890', hashedPassword, 'Admin Address', 'admin']
+      );
+      console.log('Admin user seeded');
+    }
+    client.release();
+  } catch (err) {
+    console.error('Database initialization error:', err.message);
+    throw err;
+  }
+}
+
 // Routes
 
 // Request OTP
@@ -105,7 +108,7 @@ app.post('/api/users/request-otp', async (req, res) => {
   }
 
   const otp = generateOTP();
-  otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5-minute expiry
+  const expires = new Date(Date.now() + 5 * 60 * 1000); // 5-minute expiry
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -115,11 +118,18 @@ app.post('/api/users/request-otp', async (req, res) => {
   };
 
   try {
+    const client = await pool.connect();
+    await client.query(
+      'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET otp = $2, expires = $3',
+      [email, otp, expires]
+    );
+    client.release();
+
     await transporter.sendMail(mailOptions);
     console.log(`OTP sent to ${email}`);
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Email error:', err.message);
+    console.error('Email or database error:', err.message);
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 });
@@ -129,31 +139,33 @@ app.post('/api/users/signup', async (req, res) => {
   const { name, email, phone, password, address, otp } = req.body;
   console.log(`Signup attempt: ${email}, OTP: ${otp}`);
 
-  if (!otpStore[email] || otpStore[email].otp !== otp || Date.now() > otpStore[email].expires) {
-    console.log(`Invalid or expired OTP for ${email}`);
-    return res.status(400).json({ message: 'Invalid or expired OTP' });
-  }
-
   try {
-    if (users.some(user => user.email === email)) {
+    const client = await pool.connect();
+    const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
+    if (otpRecord.rows.length === 0) {
+      client.release();
+      console.log(`Invalid or expired OTP for ${email}`);
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    const userExists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userExists.rows.length > 0) {
+      client.release();
       console.log(`User already exists: ${email}`);
       return res.status(400).json({ message: 'User already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = {
-      id: users.length + 1,
-      name,
-      email,
-      phone,
-      password: hashedPassword,
-      address,
-      role: 'user',
-      created_at: new Date(),
-    };
-    users.push(user);
-    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    delete otpStore[email];
+    const result = await client.query(
+      'INSERT INTO users (name, email, phone, password, address, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, role',
+      [name, email, phone, hashedPassword, address, 'user']
+    );
+    const user = result.rows[0];
+
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    await client.query('DELETE FROM otps WHERE email = $1', [email]);
+    client.release();
+
     console.log(`Signup successful: ${email}`);
     res.status(201).json({ token });
   } catch (err) {
@@ -168,13 +180,17 @@ app.post('/api/users/login', async (req, res) => {
   console.log(`Login attempt: ${email}`);
 
   try {
-    const user = users.find(u => u.email === email);
+    const client = await pool.connect();
+    const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+    client.release();
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       console.log(`Invalid credentials for ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     console.log(`Login successful: ${email}`);
     res.json({ token });
   } catch (err) {
@@ -199,31 +215,32 @@ app.post('/api/users/google', async (req, res) => {
       audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    const { email, name } = payload;
+    const { email, name, sub: google_id } = payload;
 
-    let user = users.find(u => u.email === email);
+    const client = await pool.connect();
+    let user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
+
     if (!user) {
       const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
-      user = {
-        id: users.length + 1,
-        name: name || 'Google User',
-        email,
-        phone: '1234567890',
-        password: hashedPassword,
-        address: 'Google Address',
-        role: 'user',
-        created_at: new Date(),
-      };
-      users.push(user);
+      const result = await client.query(
+        'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
+        [name || 'Google User', email, '1234567890', hashedPassword, 'Google Address', 'user', google_id]
+      );
+      user = result.rows[0];
       console.log(`New Google user created: ${email}`);
+    } else if (!user.google_id) {
+      await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
+      console.log(`Linked Google ID to existing user: ${email}`);
     }
 
-    const token = jwt.sign({ id: user.id, email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    client.release();
+
     console.log(`Google login successful: ${email}`);
     res.json({ token });
   } catch (err) {
-    console.error('Google login error:', err.message);
-    res.status(500).json({ message: 'Google login failed' });
+    console.error('Google login error:', err.message, err.stack);
+    res.status(500).json({ message: 'Google login failed', error: err.message });
   }
 });
 
@@ -232,20 +249,27 @@ app.post('/api/users/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
   console.log(`Password reset attempt: ${email}`);
 
-  if (!otpStore[email] || otpStore[email].otp !== otp || Date.now() > otpStore[email].expires) {
-    console.log(`Invalid or expired OTP for ${email}`);
-    return res.status(400).json({ message: 'Invalid or expired OTP' });
-  }
-
   try {
-    const user = users.find(u => u.email === email);
+    const client = await pool.connect();
+    const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
+    if (otpRecord.rows.length === 0) {
+      client.release();
+      console.log(`Invalid or expired OTP for ${email}`);
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    const user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
     if (!user) {
+      client.release();
       console.log(`User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    delete otpStore[email];
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await client.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
+    await client.query('DELETE FROM otps WHERE email = $1', [email]);
+    client.release();
+
     console.log(`Password reset successful: ${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (err) {
@@ -255,29 +279,40 @@ app.post('/api/users/reset-password', async (req, res) => {
 });
 
 // Menu
-app.get('/api/users/menu', authenticateToken, (req, res) => {
-  const menuItems = [
-    { id: 1, name: 'Butter Chicken', price: 350, category: 'Non-Veg', image: 'https://images.unsplash.com/photo-1603894584373-5' },
-    { id: 2, name: 'Paneer Tikka', price: 300, category: 'Vegetarian', image: 'https://images.unsplash.com/photo-1596797038530-2' },
-    { id: 3, name: 'Gulab Jamun', price: 150, category: 'Desserts', image: 'https://images.unsplash.com/photo-1623855344311-9' },
-  ];
-
+app.get('/api/users/menu', authenticateToken, async (req, res) => {
   const { search, category } = req.query;
-  let filteredItems = menuItems;
 
-  if (search) {
-    filteredItems = filteredItems.filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
-  }
-  if (category) {
-    filteredItems = filteredItems.filter(item => item.category === category);
-  }
+  try {
+    let query = 'SELECT * FROM menu_items';
+    const params = [];
+    let conditions = [];
 
-  console.log(`Menu fetched for user ${req.user.email}`);
-  res.json(filteredItems);
+    if (search) {
+      conditions.push('LOWER(name) LIKE LOWER($' + (params.length + 1) + ')');
+      params.push(`%${search}%`);
+    }
+    if (category) {
+      conditions.push('category = $' + (params.length + 1));
+      params.push(category);
+    }
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const client = await pool.connect();
+    const result = await client.query(query, params);
+    client.release();
+
+    console.log(`Menu fetched for user ${req.user.email}`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Menu fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch menu' });
+  }
 });
 
 // Add to Cart
-app.post('/api/users/cart/add', authenticateToken, (req, res) => {
+app.post('/api/users/cart/add', authenticateToken, async (req, res) => {
   const { item } = req.body;
   console.log(`Add to cart attempt for user ${req.user.email}`);
 
@@ -287,13 +322,13 @@ app.post('/api/users/cart/add', authenticateToken, (req, res) => {
   }
 
   try {
-    cart.push({
-      id: cart.length + 1,
-      user_id: req.user.id,
-      item_id: item.id,
-      quantity: 1,
-      created_at: new Date(),
-    });
+    const client = await pool.connect();
+    await client.query(
+      'INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)',
+      [req.user.id, item.id, 1]
+    );
+    client.release();
+
     console.log(`Item ${item.id} added to cart for user ${req.user.email}`);
     res.json({ message: 'Item added to cart' });
   } catch (err) {
@@ -312,6 +347,13 @@ app.get('/api/users/admin', authenticateToken, (req, res) => {
   res.json({ message: 'Admin dashboard' });
 });
 
+// Razorpay Placeholder (for future integration)
+app.get('/api/payment/config', authenticateToken, (req, res) => {
+  res.json({
+    key_id: process.env.RAZORPAY_KEY_ID,
+  });
+});
+
 // Test Endpoint
 app.get('/api/users/test', (req, res) => {
   console.log('Test endpoint accessed');
@@ -320,15 +362,17 @@ app.get('/api/users/test', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.message);
+  console.error('Server error:', err.message, err.stack);
   res.status(500).json({ message: 'Internal server error' });
 });
 
 // Start server
 const PORT = process.env.PORT || 3000;
-const httpServer = http.createServer(app);
+const server = http.createServer(app);
+server.keepAliveTimeout = 120000; // 120 seconds
+server.headersTimeout = 120000; // 120 seconds
 
-httpServer.listen(PORT, async () => {
+server.listen(PORT, async () => {
   try {
     await initializeDatabase();
     console.log(`HTTP Server running on http://localhost:${PORT}`);
