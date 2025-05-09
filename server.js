@@ -77,7 +77,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/user.html', (req, res) => {
   const filePath = path.join(__dirname, 'public/user.html');
   logger.info(`Serving user.html from: ${filePath}`);
-  res.sendFile(filePath, (err) {
+  res.sendFile(filePath, (err) => { // Corrected syntax here
     if (err) {
       logger.error(`Error serving user.html: ${err.message}`, { error: err });
       res.status(404).json({ message: 'user.html not found' });
