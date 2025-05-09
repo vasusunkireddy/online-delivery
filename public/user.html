@@ -8,7 +8,7 @@
     script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline';
     style-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline';
     img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com;
-    connect-src 'self';
+    connect-src 'self' https://api.delicute.com;
     font-src 'self' https://cdnjs.cloudflare.com;
     object-src 'none';
     base-uri 'self';
@@ -502,132 +502,17 @@
   </div>
 
   <script>
-    // Mock Data
-    const mockData = {
-      profile: {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+91 9876543210'
-      },
-      status: {
-        isOpen: true,
-        prepTime: 30
-      },
-      offers: [
-        {
-          id: 'offer1',
-          title: '20% Off First Order',
-          description: 'Use code FIRST20 for 20% off',
-          code: 'FIRST20',
-          discount: 20,
-          image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300&q=80'
-        },
-        {
-          id: 'offer2',
-          title: 'Free Dessert',
-          description: 'Free dessert on orders above ₹500',
-          code: 'DESSERT500',
-          discount: 10,
-          image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300&q=80'
-        }
-      ],
-      menu: [
-        {
-          id: '1',
-          name: 'Margherita Pizza',
-          price: 250,
-          description: 'Classic pizza with tomato and mozzarella',
-          category: 'Vegetarian',
-          is_popular: true,
-          image: 'https://images.unsplash.com/photo-1595854341625-f33eece6d2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
-        },
-        {
-          id: '2',
-          name: 'Butter Chicken',
-          price: 350,
-          description: 'Creamy tomato-based chicken curry',
-          category: 'Non-Veg',
-          is_popular: true,
-          image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
-        },
-        {
-          id: '3',
-          name: 'Chocolate Lava Cake',
-          price: 150,
-          description: 'Warm cake with molten chocolate center',
-          category: 'Desserts',
-          is_popular: false,
-          image: 'https://images.unsplash.com/photo-1617634667039-44e6a1004b2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
-        },
-        {
-          id: '4',
-          name: 'Paneer Tikka',
-          price: 280,
-          description: 'Grilled paneer with spices',
-          category: 'Vegetarian',
-          is_popular: false,
-          image: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
-        }
-      ],
-      cart: {
-        items: []
-      },
-      orders: [
-        {
-          id: 'ORD001',
-          date: '2025-05-01',
-          items: [{ name: 'Margherita Pizza', price: 250, quantity: 1 }],
-          total: 250,
-          status: 'Delivered'
-        }
-      ],
-      favourites: [],
-      addresses: [
-        {
-          id: 'addr1',
-          name: 'Home',
-          street: '123 Main St',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          zip: '400001',
-          mobile: '+91 9876543210',
-          isDefault: true
-        }
-      ],
-      loyalty: {
-        points: 100,
-        history: [
-          { action: 'Order placed', points: 50, date: '2025-05-01' },
-          { action: 'Referral', points: 50, date: '2025-05-02' }
-        ]
-      },
-      referral: {
-        code: 'DEL123',
-        link: 'https://delicute.com/refer/DEL123'
-      },
-      support: {
-        tickets: [
-          { id: 'TCK001', subject: 'Order Issue', status: 'Open', date: '2025-05-01' }
-        ],
-        chat: [
-          { sender: 'john.doe@example.com', message: 'Hello, I have an issue with my order', timestamp: '2025-05-01T10:00:00Z' },
-          { sender: 'admin', message: 'Please provide your order ID', timestamp: '2025-05-01T10:01:00Z' }
-        ]
-      },
-      faq: [
-        { question: 'What are your delivery hours?', answer: 'We deliver from 10 AM to 10 PM daily.' },
-        { question: 'Can I cancel my order?', answer: 'Yes, within 10 minutes of placing the order.' }
-      ],
-      cancellationPolicy: { text: 'Cancel within 10 mins for full refund' }
-    };
+    // Base URL for the backend API (replace with your actual backend URL)
+    const BASE_URL = 'https://api.delicute.com';
 
     // State
     let state = {
-      ...mockData,
       isLoggedIn: true,
-      userId: mockData.profile.email,
+      userId: null, // Will be set after fetching profile
       navigationHistory: ['dashboard'],
-      appliedCoupon: null
+      appliedCoupon: null,
+      favourites: [], // Cache favourites to avoid extra calls
+      referral: { link: '' } // Initialize referral link
     };
 
     // Utilities
@@ -644,178 +529,39 @@
 
     const triggerConfetti = () => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
 
-    const fetchData = async (endpoint, method = 'GET', data = null) => {
+    // Real API fetch function
+    const apiFetch = async (endpoint, method = 'GET', data = null) => {
       try {
-        if (method === 'GET') {
-          if (endpoint === '/profile') return state.profile;
-          if (endpoint === '/status') return state.status;
-          if (endpoint === '/offers') return state.offers;
-          if (endpoint.startsWith('/menu')) {
-            const params = new URLSearchParams(endpoint.split('?')[1] || '');
-            const category = params.get('category') || 'all';
-            const price = params.get('price') || 'all';
-            const query = params.get('query') || '';
-            let items = state.menu;
-            if (category !== 'all') items = items.filter(i => i.category === category);
-            if (price !== 'all') {
-              const [min, max] = price.split('-').map(Number);
-              items = items.filter(i => max ? i.price >= min && i.price <= max : i.price >= min);
-            }
-            if (query) items = items.filter(i => i.name.toLowerCase().includes(query.toLowerCase()));
-            return items;
-          }
-          if (endpoint === '/cart') return state.cart;
-          if (endpoint === '/orders') return state.orders;
-          if (endpoint === '/favourites') return state.favourites;
-          if (endpoint === '/addresses') return state.addresses;
-          if (endpoint === '/loyalty') return state.loyalty;
-          if (endpoint === '/referral') return state.referral;
-          if (endpoint === '/support/tickets') return state.support.tickets;
-          if (endpoint === '/support/chat') return state.support.chat;
-          if (endpoint === '/faq') return state.faq;
-          if (endpoint === '/cancellation-policy') return state.cancellationPolicy;
-          if (endpoint.startsWith('/orders/') && endpoint.includes('/track')) {
-            const orderId = endpoint.split('/')[2];
-            return { status: state.orders.find(o => o.id === orderId)?.status || 'Unknown', deliveryPartner: { name: 'John Smith', contact: '+91 9876543210' } };
-          }
-        } else if (method === 'POST') {
-          if (endpoint === '/cart/add') {
-            const item = data.item;
-            const existing = state.cart.items.find(i => i.id === item.id);
-            if (existing) {
-              existing.quantity += item.quantity;
-            } else {
-              state.cart.items.push(item);
-            }
-            return { success: true };
-          }
-          if (endpoint === '/cart/update') {
-            const { itemId, action } = data;
-            const item = state.cart.items.find(i => i.id === itemId);
-            if (item) {
-              if (action === 'increase') item.quantity += 1;
-              if (action === 'decrease' && item.quantity > 1) item.quantity -= 1;
-            }
-            return { success: true };
-          }
-          if (endpoint === '/cart/remove') {
-            state.cart.items = state.cart.items.filter(i => i.id !== data.itemId);
-            return { success: true };
-          }
-          if (endpoint === '/cart/apply-coupon') {
-            const offer = state.offers.find(o => o.code === data.code);
-            if (offer) {
-              state.appliedCoupon = { code: offer.code, discount: offer.discount };
-              return { success: true, discount: offer.discount };
-            }
-            throw new Error('Invalid coupon');
-          }
-          if (endpoint === '/cart/checkout') {
-            const order = {
-              id: `ORD${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-              date: new Date().toISOString(),
-              items: [...state.cart.items],
-              total: state.cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0) * (1 - (state.appliedCoupon?.discount || 0) / 100),
-              status: 'Placed',
-              addressId: data.addressId,
-              paymentMethod: data.paymentMethod
-            };
-            state.orders.push(order);
-            state.cart.items = [];
-            state.appliedCoupon = null;
-            return { success: true, order };
-          }
-          if (endpoint.startsWith('/favourites/add')) {
-            const item = state.menu.find(i => i.id === data.itemId);
-            if (item) state.favourites.push(item);
-            return { success: true };
-          }
-          if (endpoint.startsWith('/favourites/remove')) {
-            state.favourites = state.favourites.filter(f => f.id !== data.itemId);
-            return { success: true };
-          }
-          if (endpoint === '/addresses/add') {
-            const address = { id: `addr${state.addresses.length + 1}`, ...data };
-            if (address.isDefault) state.addresses.forEach(a => a.isDefault = false);
-            state.addresses.push(address);
-            return { success: true };
-          }
-          if (endpoint === '/addresses/update') {
-            const index = state.addresses.findIndex(a => a.id === data.id);
-            if (index !== -1) {
-              if (data.isDefault) state.addresses.forEach(a => a.isDefault = false);
-              state.addresses[index] = { ...state.addresses[index], ...data };
-            }
-            return { success: true };
-          }
-          if (endpoint === '/addresses/delete') {
-            state.addresses = state.addresses.filter(a => a.id !== data.id);
-            return { success: true };
-          }
-          if (endpoint === '/addresses/set-default') {
-            state.addresses.forEach(a => a.isDefault = a.id === data.id);
-            return { success: true };
-          }
-          if (endpoint === '/support/tickets') {
-            const ticket = {
-              id: `TCK${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-              subject: data.subject,
-              status: 'Open',
-              date: new Date().toISOString()
-            };
-            state.support.tickets.push(ticket);
-            return { success: true };
-          }
-          if (endpoint.startsWith('/orders/') && endpoint.includes('/reorder')) {
-            const orderId = endpoint.split('/')[2];
-            const order = state.orders.find(o => o.id === orderId);
-            if (order) {
-              order.items.forEach(item => {
-                const existing = state.cart.items.find(i => i.id === item.id);
-                if (existing) {
-                  existing.quantity += item.quantity;
-                } else {
-                  state.cart.items.push({ ...item });
-                }
-              });
-            }
-            return { success: true };
-          }
-          if (endpoint.startsWith('/orders/') && endpoint.includes('/rate')) {
-            const orderId = endpoint.split('/')[2];
-            const order = state.orders.find(o => o.id === orderId);
-            if (order) order.rating = data;
-            return { success: true };
-          }
-          if (endpoint === '/profile') {
-            state.profile = { ...state.profile, ...data };
-            return { success: true };
-          }
-          if (endpoint === '/logout') {
-            state.isLoggedIn = false;
-            window.location.href = 'index.html';
-            return { success: true };
-          }
+        const options = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authentication headers if required, e.g., Authorization: Bearer <token>
+          },
+        };
+        if (data) {
+          options.body = JSON.stringify(data);
         }
-        return null;
+        const response = await fetch(`${BASE_URL}${endpoint}`, options);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
       } catch (err) {
         showToast(`Error: ${err.message}`);
         return null;
       }
     };
 
-    // Simulated WebSocket
+    // Simulated WebSocket (replace with real WebSocket if available)
     const simulateWebSocket = () => {
-      setInterval(() => {
-        const messages = [
-          { type: 'support', sender: 'admin', message: 'How can I assist you today?' },
-          { type: 'order', message: 'New order placed!' },
-          { type: 'track', orderId: state.orders[0]?.id, status: 'Out for Delivery', deliveryPartner: { name: 'John Smith', contact: '+91 9876543210' } }
-        ];
-        const data = messages[Math.floor(Math.random() * messages.length)];
-        if (data.type === 'support') appendChatMessage(data.sender, data.message);
-        else if (data.type === 'order') showToast(data.message);
-        else if (data.type === 'track') updateOrderTracker(data.orderId, data.status, data.deliveryPartner);
+      setInterval(async () => {
+        // Fetch updates or use a real WebSocket connection
+        const orders = await apiFetch('/orders');
+        if (orders && orders.length) {
+          const order = orders[0];
+          showToast(`Order #${order.id}: ${order.status}`);
+        }
       }, 30000);
     };
 
@@ -876,10 +622,12 @@
     document.querySelectorAll('[id^="backFrom"]').forEach(btn => btn.addEventListener('click', goBack));
 
     // Logout
-    const handleLogout = () => {
-      fetchData('/logout', 'POST').then(() => {
+    const handleLogout = async () => {
+      const data = await apiFetch('/logout', 'POST');
+      if (data && data.success) {
         showToast('Logged out');
-      });
+        window.location.href = 'index.html';
+      }
     };
 
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -887,14 +635,14 @@
 
     // Status Bar
     const loadStatusBar = async () => {
-      const status = await fetchData('/status');
+      const status = await apiFetch('/status');
       document.getElementById('statusBar').textContent = status ? 
         `Restaurant: ${status.isOpen ? 'Open' : 'Closed'} | Prep: ${status.prepTime} mins` : 'Status unavailable';
     };
 
     // Banners
     const loadBanners = async () => {
-      const offers = await fetchData('/offers');
+      const offers = await apiFetch('/offers');
       const carousel = document.getElementById('banner1').parentElement;
       if (!offers || !offers.length) {
         carousel.innerHTML = `<div class="banner-item"><div class="banner-content"><p>No promotions available</p></div></div>`;
@@ -925,8 +673,8 @@
       document.querySelectorAll('.apply-banner-offer').forEach(btn => {
         btn.addEventListener('click', async () => {
           state.appliedCoupon = { code: btn.dataset.code, discount: parseFloat(btn.dataset.discount) };
-          const data = await fetchData('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
-          if (data) {
+          const data = await apiFetch('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
+          if (data && data.success) {
             showToast(`Offer ${state.appliedCoupon.code} applied! ${state.appliedCoupon.discount}% off`);
             loadCart();
           }
@@ -936,7 +684,7 @@
 
     // Offers
     const loadOffers = async () => {
-      const offers = await fetchData('/offers');
+      const offers = await apiFetch('/offers');
       if (!offers || !offers.length) {
         document.getElementById('applyOffer').classList.add('hidden');
         return;
@@ -944,8 +692,8 @@
       const offer = offers[0];
       document.getElementById('applyOffer').addEventListener('click', async () => {
         state.appliedCoupon = { code: offer.code, discount: offer.discount };
-        const data = await fetchData('/cart/apply-coupon', 'POST', { code: offer.code });
-        if (data) {
+        const data = await apiFetch('/cart/apply-coupon', 'POST', { code: offer.code });
+        if (data && data.success) {
           showToast(`Offer ${offer.code} applied! ${offer.discount}% off`);
           loadCart();
         }
@@ -954,9 +702,9 @@
 
     // Menu
     const loadMenu = async (category = 'all', price = 'all', query = '') => {
-      const items = await fetchData(`/menu?category=${category}&price=${price}&query=${encodeURIComponent(query)}`);
-      const favourites = await fetchData('/favourites') || [];
-      const favouriteIds = favourites.map(f => f.id);
+      const params = new URLSearchParams({ category, price, query });
+      const items = await apiFetch(`/menu?${params.toString()}`);
+      const favouriteIds = state.favourites.map(f => f.id);
       const renderItem = item => `
         <div class="menu-item">
           <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
@@ -979,7 +727,7 @@
 
     // Cart
     const loadCart = async () => {
-      const cart = await fetchData('/cart');
+      const cart = await apiFetch('/cart');
       const itemsEl = document.getElementById('cartItems');
       const subtotalEl = document.getElementById('cartSubtotal');
       const discountEl = document.getElementById('cartDiscount');
@@ -995,7 +743,7 @@
         addressEl.innerHTML = '<option value="">Select Address</option>';
         return;
       }
-      const addresses = await fetchData('/addresses') || [];
+      const addresses = await apiFetch('/addresses') || [];
       addressEl.innerHTML = '<option value="">Select Address</option>' + addresses.map(a => `<option value="${a.id}" ${a.isDefault ? 'selected' : ''}>${a.name}: ${a.street}, ${a.city}</option>`).join('');
       const subtotal = cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const discount = state.appliedCoupon ? (subtotal * state.appliedCoupon.discount / 100) : 0;
@@ -1027,31 +775,31 @@
       const id = btn.dataset.id;
       if (btn.classList.contains('add-to-cart')) {
         const item = { id, name: btn.dataset.name, price: parseFloat(btn.dataset.price), quantity: 1 };
-        const cart = await fetchData('/cart');
+        const cart = await apiFetch('/cart');
         const existing = cart?.items.find(i => i.id === id);
         if (existing) {
-          const data = await fetchData('/cart/update', 'POST', { itemId: id, action: 'increase' });
-          if (data) {
+          const data = await apiFetch('/cart/update', 'POST', { itemId: id, action: 'increase' });
+          if (data && data.success) {
             showToast(`${item.name} quantity updated`);
             loadCart();
           }
         } else {
-          const data = await fetchData('/cart/add', 'POST', { item });
-          if (data) {
+          const data = await apiFetch('/cart/add', 'POST', { item });
+          if (data && data.success) {
             showToast(`${item.name} added to cart`);
             loadCart();
           }
         }
       } else if (btn.classList.contains('update-cart')) {
         const action = btn.dataset.action;
-        const data = await fetchData('/cart/update', 'POST', { itemId: id, action });
-        if (data) {
+        const data = await apiFetch('/cart/update', 'POST', { itemId: id, action });
+        if (data && data.success) {
           showToast('Cart updated');
           loadCart();
         }
       } else if (btn.classList.contains('remove-from-cart')) {
-        const data = await fetchData('/cart/remove', 'POST', { itemId: id });
-        if (data) {
+        const data = await apiFetch('/cart/remove', 'POST', { itemId: id });
+        if (data && data.success) {
           showToast('Item removed');
           loadCart();
         }
@@ -1062,8 +810,9 @@
     document.getElementById('applyCoupon').addEventListener('click', async () => {
       const code = document.getElementById('couponCode').value.trim();
       if (!code) return showToast('Enter a promo code');
-      const data = await fetchData('/cart/apply-coupon', 'POST', { code });
-      if (data) {
+      const data = await apiFetch('/cart/apply-coupon', 'POST', { code });
+      if (data && data.success) {
+        state.appliedCoupon = { code, discount: data.discount };
         showToast(`Coupon ${code} applied! ${data.discount}% off`);
         loadCart();
       }
@@ -1071,8 +820,8 @@
 
     // Orders
     const loadOrders = async () => {
-      const orders = await fetchData('/orders');
-      const policy = await fetchData('/cancellation-policy');
+      const orders = await apiFetch('/orders');
+      const policy = await apiFetch('/cancellation-policy');
       document.getElementById('cancellationPolicy').textContent = policy?.text || 'Cancel within 10 mins for full refund';
       document.getElementById('orderItems').innerHTML = orders?.length ? orders.map(o => `
         <tr>
@@ -1104,7 +853,7 @@
       if (!btn) return;
       const orderId = btn.dataset.orderId;
       if (btn.classList.contains('track-order')) {
-        const data = await fetchData(`/orders/${orderId}/track`);
+        const data = await apiFetch(`/orders/${orderId}/track`);
         if (data) {
           const modal = document.createElement('div');
           modal.className = 'share-modal active';
@@ -1122,8 +871,8 @@
           modal.querySelector('.close').addEventListener('click', () => modal.remove());
         }
       } else if (btn.classList.contains('reorder')) {
-        const data = await fetchData(`/orders/${orderId}/reorder`, 'POST');
-        if (data) {
+        const data = await apiFetch(`/orders/${orderId}/reorder`, 'POST');
+        if (data && data.success) {
           showToast('Items added to cart');
           loadCart();
           showSection('cart');
@@ -1158,8 +907,8 @@
         modal.querySelector('#submitRating').addEventListener('click', async () => {
           const comment = document.getElementById('ratingComment').value;
           if (!comment) return showToast('Please provide feedback');
-          const data = await fetchData(`/orders/${orderId}/rate`, 'POST', { rating, comment });
-          if (data) {
+          const data = await apiFetch(`/orders/${orderId}/rate`, 'POST', { rating, comment });
+          if (data && data.success) {
             showToast('Rating submitted');
             modal.remove();
             loadOrders();
@@ -1170,10 +919,12 @@
 
     // Favourites
     const loadFavourites = async () => {
-      const favourites = await fetchData('/favourites');
+      const favourites = await apiFetch('/favourites');
+      state.favourites = favourites || [];
       const container = document.getElementById('favouritesItems');
       container.innerHTML = favourites?.length ? favourites.map(i => `
-        <div class="menu-item">          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+        <div class="menu-item">
+          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="p-4">
             <h3 class="text-base font-semibold">${i.name}</h3>
             <p class="text-gray-600">₹${i.price}</p>
@@ -1194,13 +945,13 @@
       const id = btn.dataset.id;
       const isFavourite = state.favourites.some(f => f.id === id);
       const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
-      const data = await fetchData(endpoint, 'POST', { itemId: id });
-      if (data) {
+      const data = await apiFetch(endpoint, 'POST', { itemId: id });
+      if (data && data.success) {
         if (isFavourite) {
           state.favourites = state.favourites.filter(f => f.id !== id);
           showToast('Removed from favourites');
         } else {
-          const item = state.menu.find(i => i.id === id);
+          const item = (await apiFetch('/menu')).find(i => i.id === id);
           state.favourites.push(item);
           showToast('Added to favourites');
         }
@@ -1211,7 +962,7 @@
 
     // Addresses
     const loadAddresses = async () => {
-      const addresses = await fetchData('/addresses');
+      const addresses = await apiFetch('/addresses');
       const container = document.getElementById('addressItems');
       container.innerHTML = addresses?.length ? addresses.map(a => `
         <div class="bg-white rounded-lg p-4 shadow flex justify-between items-start">
@@ -1284,8 +1035,8 @@
           mobile: formData.get('mobile'),
           isDefault: formData.get('isDefault') === 'on'
         };
-        const data = await fetchData('/addresses/add', 'POST', address);
-        if (data) {
+        const data = await apiFetch('/addresses/add', 'POST', address);
+        if (data && data.success) {
           showToast('Address added');
           modal.remove();
           loadAddresses();
@@ -1299,7 +1050,8 @@
       if (!btn) return;
       const id = btn.dataset.id;
       if (btn.classList.contains('edit-address')) {
-        const address = state.addresses.find(a => a.id === id);
+        const addresses = await apiFetch('/addresses');
+        const address = addresses.find(a => a.id === id);
         if (!address) return;
         const modal = document.createElement('div');
         modal.className = 'share-modal active';
@@ -1355,8 +1107,8 @@
             mobile: formData.get('mobile'),
             isDefault: formData.get('isDefault') === 'on'
           };
-          const data = await fetchData('/addresses/update', 'POST', addressData);
-          if (data) {
+          const data = await apiFetch('/addresses/update', 'POST', addressData);
+          if (data && data.success) {
             showToast('Address updated');
             modal.remove();
             loadAddresses();
@@ -1364,15 +1116,15 @@
           }
         });
       } else if (btn.classList.contains('delete-address')) {
-        const data = await fetchData('/addresses/delete', 'POST', { id });
-        if (data) {
+        const data = await apiFetch('/addresses/delete', 'POST', { id });
+        if (data && data.success) {
           showToast('Address deleted');
           loadAddresses();
           loadCart();
         }
       } else if (btn.classList.contains('set-default-address')) {
-        const data = await fetchData('/addresses/set-default', 'POST', { id });
-        if (data) {
+        const data = await apiFetch('/addresses/set-default', 'POST', { id });
+        if (data && data.success) {
           showToast('Default address updated');
           loadAddresses();
           loadCart();
@@ -1381,286 +1133,310 @@
     });
 
     // Checkout
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
-      const addressId = document.getElementById('cartAddress').value;
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      if (!addressId) return showToast('Select a delivery address');
-      if (!state.cart.items.length) return showToast('Cart is empty');
-      const data = await fetchData('/cart/checkout', 'POST', { addressId, paymentMethod });
-      if (data) {
-        showToast('Order placed successfully!');
-        triggerConfetti();
-        loadCart();
-        loadOrders();
-        showSection('orders');
-      }
-    });
+document.getElementById('checkoutBtn').addEventListener('click', async () => {
+  const addressId = document.getElementById('cartAddress').value;
+  const paymentMethod = document.getElementById('paymentMethod').value;
+  if (!addressId) return showToast('Please select a delivery address');
+  const cart = await apiFetch('/cart');
+  if (!cart || !cart.items?.length) return showToast('Cart is empty');
+  const order = {
+    addressId,
+    paymentMethod,
+    couponCode: state.appliedCoupon?.code,
+  };
+  const data = await apiFetch('/checkout', 'POST', order);
+  if (data && data.success) {
+    showToast('Order placed successfully!');
+    triggerConfetti();
+    state.appliedCoupon = null;
+    loadCart();
+    showSection('orders');
+  }
+});
 
-    // Loyalty
-    const loadLoyalty = async () => {
-      const loyalty = await fetchData('/loyalty');
-      document.getElementById('loyaltyPoints').textContent = loyalty.points || 0;
-      document.getElementById('loyaltyHistory').innerHTML = loyalty.history?.length ? loyalty.history.map(h => `
-        <div class="flex justify-between p-2 border-b">
-          <span>${h.action}</span>
-          <span>${h.points} points</span>
-          <span>${new Date(h.date).toLocaleDateString()}</span>
+// Loyalty
+const loadLoyalty = async () => {
+  const loyalty = await apiFetch('/loyalty');
+  document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+  const history = loyalty?.history || [];
+  document.getElementById('loyaltyHistory').innerHTML = history.length
+    ? history
+        .map(
+          (h) => `
+        <div class="border-b py-2">
+          <p>${h.description}</p>
+          <p class="text-sm text-gray-600">${new Date(
+            h.date
+          ).toLocaleDateString()}: ${h.points > 0 ? '+' : ''}${h.points} points</p>
         </div>
-      `).join('') : '<p>No loyalty history</p>';
+      `
+        )
+        .join('')
+    : '<p>No loyalty history</p>';
+};
+
+// Referrals
+const loadReferrals = async () => {
+  const referral = await apiFetch('/referrals');
+  state.referral.link = referral?.link || '';
+  document.getElementById('referralCode').textContent = referral?.code || 'N/A';
+  document.getElementById('referralLink').href = state.referral.link;
+};
+
+// Support
+const loadSupport = async () => {
+  const tickets = await apiFetch('/support/tickets');
+  document.getElementById('supportTickets').innerHTML = tickets?.length
+    ? tickets
+        .map(
+          (t) => `
+        <div class="border-b py-2">
+          <p class="font-semibold">Ticket #${t.id}: ${t.subject}</p>
+          <p class="text-sm text-gray-600">Status: ${t.status}</p>
+          <p class="text-sm text-gray-600">${new Date(
+            t.createdAt
+          ).toLocaleDateString()}</p>
+        </div>
+      `
+        )
+        .join('')
+    : '<p>No support tickets</p>';
+  loadChat();
+};
+
+const loadChat = async () => {
+  const messages = await apiFetch('/support/chat');
+  const chatContainer = document.getElementById('chatMessages');
+  chatContainer.innerHTML = messages?.length
+    ? messages
+        .map(
+          (m) => `
+        <div class="chat-message ${m.sender === 'user' ? 'user' : 'admin'}">
+          <p>${m.content}</p>
+          <p class="text-xs text-gray-400">${new Date(
+            m.timestamp
+          ).toLocaleTimeString()}</p>
+        </div>
+      `
+        )
+        .join('')
+    : '<p>No messages</p>';
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  // Simulate typing indicator
+  const typingIndicator = document.getElementById('typingIndicator');
+  const simulateTyping = () => {
+    typingIndicator.textContent = 'Support is typing...';
+    setTimeout(() => (typingIndicator.textContent = ''), 2000);
+  };
+  setInterval(simulateTyping, 10000);
+};
+
+document.getElementById('sendChat').addEventListener('click', async () => {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message) return showToast('Please enter a message');
+  const data = await apiFetch('/support/chat/send', 'POST', { message });
+  if (data && data.success) {
+    input.value = '';
+    loadChat();
+  }
+});
+
+document.getElementById('createTicketBtn').addEventListener('click', () => {
+  const modal = document.createElement('div');
+  modal.className = 'share-modal active';
+  modal.innerHTML = `
+    <div class="share-modal-content">
+      <span class="close">×</span>
+      <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
+      <form id="ticketForm" class="space-y-4">
+        <div>
+          <label class="block text-gray-700">Subject</label>
+          <input type="text" name="subject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+        </div>
+        <div>
+          <label class="block text-gray-700">Description</label>
+          <textarea name="description" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.close').addEventListener('click', () => modal.remove());
+  modal.querySelector('#ticketForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const ticket = {
+      subject: formData.get('subject'),
+      description: formData.get('description'),
     };
+    const data = await apiFetch('/support/tickets/create', 'POST', ticket);
+    if (data && data.success) {
+      showToast('Ticket created');
+      modal.remove();
+      loadSupport();
+    }
+  });
+});
 
-    // Referrals
-    const loadReferrals = async () => {
-      const referral = await fetchData('/referral');
-      document.getElementById('referralCode').textContent = referral.code || 'N/A';
-      const linkEl = document.getElementById('referralLink');
-      linkEl.href = referral.link;
-      linkEl.addEventListener('click', () => {
-        navigator.clipboard.writeText(referral.link);
-        showToast('Referral link copied!');
-      });
-    };
-
-    // Support
-    const loadSupport = async () => {
-      const tickets = await fetchData('/support/tickets');
-      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-        <div class="p-2 border-b">
-          <p class="font-semibold">${t.subject}</p>
-          <p class="text-gray-600">Status: ${t.status}</p>
-          <p class="text-gray-600">${new Date(t.date).toLocaleDateString()}</p>
-        </div>
-      `).join('') : '<p>No tickets</p>';
-      const chat = await fetchData('/support/chat');
-      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
-        <div class="chat-message ${m.sender === state.userId ? 'user' : 'admin'}">
-          <p>${m.message}</p>
-          <p class="text-xs text-gray-400">${new Date(m.timestamp).toLocaleTimeString()}</p>
-        </div>
-      `).join('') : '<p>No messages</p>';
-      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-    };
-
-    const appendChatMessage = (sender, message) => {
-      const chat = document.getElementById('chatMessages');
-      const isUser = sender === state.userId;
-      if (!chat) return;
-      chat.innerHTML += `
-        <div class="chat-message ${isUser ? 'user' : 'admin'}">
-          <p>${message}</p>
-          <p class="text-xs text-gray-400">${new Date().toLocaleTimeString()}</p>
-        </div>
-      `;
-      chat.scrollTop = chat.scrollHeight;
-      if (!isUser && document.getElementById('user-support').classList.contains('hidden')) {
-        showToast('New support message received');
-      }
-    };
-
-    document.getElementById('createTicketBtn').addEventListener('click', () => {
-      const modal = document.createElement('div');
-      modal.className = 'share-modal active';
-      modal.innerHTML = `
-        <div class="share-modal-content">
-          <span class="close">×</span>
-          <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
-          <form id="ticketForm" class="space-y-4">
-            <div>
-              <label class="block text-gray-700">Subject</label>
-              <input type="text" name="subject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">Description</label>
-              <textarea name="description" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#ticketForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const ticket = { subject: formData.get('subject'), description: formData.get('description') };
-        const data = await fetchData('/support/tickets', 'POST', ticket);
-        if (data) {
-          showToast('Ticket created');
-          modal.remove();
-          loadSupport();
-        }
-      });
-    });
-
-    document.getElementById('sendChat').addEventListener('click', async () => {
-      const input = document.getElementById('chatInput');
-      const message = input.value.trim();
-      if (!message) return;
-      appendChatMessage(state.userId, message);
-      state.support.chat.push({ sender: state.userId, message, timestamp: new Date().toISOString() });
-      input.value = '';
-      setTimeout(() => {
-        const typing = document.getElementById('typingIndicator');
-        typing.textContent = 'Admin is typing...';
-        setTimeout(() => {
-          typing.textContent = '';
-          appendChatMessage('admin', 'Thank you for your message. We will get back to you soon.');
-          state.support.chat.push({ sender: 'admin', message: 'Thank you for your message. We will get back to you soon.', timestamp: new Date().toISOString() });
-        }, 1000);
-      }, 500);
-    });
-
-    // FAQ
-    const loadFAQ = async () => {
-      const faq = await fetchData('/faq');
-      document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
-        <div class="p-2 border-b">
+// FAQ
+const loadFAQ = async () => {
+  const faqs = await apiFetch('/faq');
+  document.getElementById('faqItems').innerHTML = faqs?.length
+    ? faqs
+        .map(
+          (f) => `
+        <div class="border-b py-2">
           <p class="font-semibold">${f.question}</p>
           <p class="text-gray-600">${f.answer}</p>
         </div>
-      `).join('') : '<p>No FAQs available</p>';
-    };
+      `
+        )
+        .join('')
+    : '<p>No FAQs available</p>';
+};
 
-    // Profile
-    const loadProfile = async () => {
-      const profile = await fetchData('/profile');
-      document.getElementById('profileName').value = profile.name || '';
-      document.getElementById('profileEmail').value = profile.email || '';
-      document.getElementById('profilePhone').value = profile.phone || '';
-    };
+// Profile
+const loadProfile = async () => {
+  const profile = await apiFetch('/profile');
+  if (profile) {
+    state.userId = profile.id;
+    document.getElementById('profileName').value = profile.name || '';
+    document.getElementById('profileEmail').value = profile.email || '';
+    document.getElementById('profilePhone').value = profile.phone || '';
+  }
+};
 
-    document.getElementById('editProfileBtn').addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#user-profile input');
-      const isEditable = inputs[0].readOnly;
-      inputs.forEach(i => i.readOnly = !isEditable);
-      const btn = document.getElementById('editProfileBtn');
-      btn.innerHTML = isEditable ? '<i class="fas fa-save mr-2"></i>Save' : '<i class="fas fa-edit mr-2"></i>Edit Profile';
-      if (!isEditable) {
-        const profile = {
-          name: document.getElementById('profileName').value,
-          email: document.getElementById('profileEmail').value,
-          phone: document.getElementById('profilePhone').value
-        };
-        fetchData('/profile', 'POST', profile).then(data => {
-          if (data) showToast('Profile updated');
-        });
+document.getElementById('editProfileBtn').addEventListener('click', () => {
+  const inputs = document.querySelectorAll('#user-profile input');
+  const isEditing = inputs[0].readOnly;
+  inputs.forEach((input) => (input.readOnly = !isEditing));
+  const btn = document.getElementById('editProfileBtn');
+  btn.innerHTML = isEditing
+    ? `<i class="fas fa-save mr-2"></i>Save`
+    : `<i class="fas fa-edit mr-2"></i>Edit Profile`;
+  if (!isEditing) {
+    const profile = {
+      name: document.getElementById('profileName').value,
+      email: document.getElementById('profileEmail').value,
+      phone: document.getElementById('profilePhone').value,
+    };
+    apiFetch('/profile/update', 'POST', profile).then((data) => {
+      if (data && data.success) {
+        showToast('Profile updated');
       }
     });
+  }
+});
 
-    // Filters and Search
-    const applyFilters = async (section = 'dashboard') => {
-      const category = document.querySelector(`#${section === 'menu' ? 'menuItems' : 'menuPreview'}`).parentElement.querySelector('.filter-btn.active')?.dataset.category || 'all';
-      const price = document.getElementById(section === 'menu' ? 'menuPriceFilter' : 'priceFilter').value;
-      const query = document.getElementById(section === 'menu' ? 'menuSearch' : 'searchMenu').value;
-      await loadMenu(category, price, query);
-    };
+// Filters and Search
+const applyFilters = (section = 'dashboard') => {
+  const category =
+    document
+      .querySelector(`#user-${section} .filter-btn.active`)
+      ?.dataset.category || 'all';
+  const price =
+    document.getElementById(
+      section === 'menu' ? 'menuPriceFilter' : 'priceFilter'
+    )?.value || 'all';
+  const query =
+    document.getElementById(
+      section === 'menu' ? 'menuSearch' : 'searchMenu'
+    )?.value || '';
+  loadMenu(category, price, query);
+};
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyFilters(btn.closest('.user-section').id === 'user-menu' ? 'menu' : 'dashboard');
-      });
+document.querySelectorAll('.filter-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    btn.parentElement
+      .querySelectorAll('.filter-btn')
+      .forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters(btn.closest('.user-section').id.replace('user-', ''));
+  });
+});
+
+document.getElementById('priceFilter')?.addEventListener('change', () => applyFilters('dashboard'));
+document.getElementById('menuPriceFilter')?.addEventListener('change', () => applyFilters('menu'));
+document.getElementById('searchMenu')?.addEventListener('input', () => applyFilters('dashboard'));
+document.getElementById('menuSearch')?.addEventListener('input', () => applyFilters('menu'));
+
+// Share Modal
+const shareModal = document.getElementById('shareModal');
+document.getElementById('shareBtn').addEventListener('click', () => {
+  shareModal.classList.add('active');
+});
+shareModal.querySelector('.close').addEventListener('click', () => {
+  shareModal.classList.remove('active');
+});
+
+const shareContent = encodeURIComponent(
+  'Discover delicious meals with DELICUTE! ' + state.referral.link
+);
+document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${shareContent}`;
+document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${shareContent}`;
+document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+  state.referral.link
+)}`;
+
+// Particles Animation
+const initParticles = () => {
+  const canvas = document.querySelector('.particles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = canvas.parentElement.offsetHeight;
+  const particles = [];
+  for (let i = 0; i < 50; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 3 + 1,
+      vx: Math.random() * 2 - 1,
+      vy: Math.random() * 2 - 1,
     });
-
-    document.getElementById('priceFilter').addEventListener('change', () => applyFilters('dashboard'));
-    document.getElementById('menuPriceFilter').addEventListener('change', () => applyFilters('menu'));
-
-    document.getElementById('searchMenu').addEventListener('input', () => applyFilters('dashboard'));
-    document.getElementById('menuSearch').addEventListener('input', () => applyFilters('menu'));
-
-    // Share Modal
-    const shareModal = document.getElementById('shareModal');
-    document.getElementById('shareBtn').addEventListener('click', () => {
-      shareModal.classList.add('active');
+  }
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#f97316';
+      ctx.fill();
     });
+    requestAnimationFrame(animate);
+  };
+  animate();
+};
 
-    shareModal.querySelector('.close').addEventListener('click', () => {
-      shareModal.classList.remove('active');
-    });
+// Initialization
+const init = async () => {
+  if (!state.isLoggedIn) {
+    window.location.href = 'login.html';
+    return;
+  }
+  await Promise.all([
+    loadStatusBar(),
+    loadBanners(),
+    loadOffers(),
+    loadMenu(),
+    loadCart(),
+    loadProfile(),
+    loadFavourites(),
+    loadReferrals(),
+  ]);
+  initParticles();
+  simulateWebSocket();
+  showSection('dashboard');
+};
 
-    const shareLinks = {
-      shareWhatsApp: `https://api.whatsapp.com/send?text=Check%20out%20DELICUTE!%20Join%20using%20my%20referral:%20${encodeURIComponent(state.referral.link)}`,
-      shareTwitter: `https://twitter.com/intent/tweet?text=Check%20out%20DELICUTE!%20Join%20using%20my%20referral:%20${encodeURIComponent(state.referral.link)}`,
-      shareFacebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(state.referral.link)}`
-    };
-
-    Object.keys(shareLinks).forEach(id => {
-      const el = document.getElementById(id);
-      el.href = shareLinks[id];
-      el.addEventListener('click', () => {
-        shareModal.classList.remove('active');
-        showToast('Shared successfully!');
-      });
-    });
-
-    // Particles
-    const initParticles = () => {
-      const canvas = document.querySelector('.particles');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      canvas.width = canvas.parentElement.offsetWidth;
-      canvas.height = canvas.parentElement.offsetHeight;
-      const particles = Array.from({ length: 50 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 5 + 2,
-        speedX: Math.random() * 2 - 1,
-        speedY: Math.random() * 2 - 1
-      }));
-
-      const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = '#f97316';
-          ctx.globalAlpha = 0.5;
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
-      };
-      animate();
-    };
-
-    // Initialize
-    const init = async () => {
-      if (!state.isLoggedIn) {
-        window.location.href = 'index.html';
-        return;
-      }
-      await Promise.all([
-        loadStatusBar(),
-        loadBanners(),
-        loadMenu(),
-        loadCart(),
-        loadOrders(),
-        loadOffers(),
-        loadFavourites(),
-        loadAddresses(),
-        loadLoyalty(),
-        loadReferrals(),
-        loadSupport(),
-        loadFAQ(),
-        loadProfile()
-      ]);
-      initParticles();
-      simulateWebSocket();
-      showSection('dashboard');
-    };
-
-    window.addEventListener('resize', () => {
-      initParticles();
-      if (window.innerWidth >= 1024 && sidebar.classList.contains('sidebar-hidden')) {
-        toggleSidebar();
-      }
-    });
-
-    init();
-  </script>
+init();
+</script>
 </body>
 </html>
