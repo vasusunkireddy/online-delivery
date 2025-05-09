@@ -49,3 +49,6 @@
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-05-09 18:04:06"}
 {"level":"info","message":"Server running at http://localhost:3000","timestamp":"2025-05-09 18:04:06"}
 {"level":"info","message":"Google Sign-In: svasudevareddy18604@gmail.com, Role: admin","timestamp":"2025-05-09 18:04:19"}
+{"error":{"code":"ECONNREFUSED"},"level":"error","message":"Error initializing database","timestamp":"2025-05-09 18:22:44"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-05-09 18:22:59"}
+{"level":"info","message":"Server running at http://localhost:3000","timestamp":"2025-05-09 18:22:59"}
