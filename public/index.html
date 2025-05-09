@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://accounts.google.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https://images.unsplash.com https://i.imgur.com; connect-src 'self' https://online-food-deliveryyy.onrender.com; font-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://accounts.google.com;">
+  <!-- CSP Meta Tag -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://accounts.google.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https://images.unsplash.com https://i.imgur.com; connect-src 'self' http://localhost:3000 https://online-food-deliveryyy.onrender.com; font-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://accounts.google.com;">
   <title>DELICUTE - Cloud Kitchen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -35,18 +36,6 @@
       border-color: #f97316;
       box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
     }
-    .hero-bg {
-      background-size: cover;
-      background-position: center;
-      transition: opacity 0.5s ease-in-out;
-    }
-    .offer-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .offer-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
     @media (max-width: 640px) {
       .container {
         padding-left: 1rem;
@@ -61,9 +50,6 @@
       }
       #menuItems img {
         height: 10rem;
-      }
-      .hero-bg {
-        background-position: top;
       }
     }
     #toast {
@@ -133,16 +119,6 @@
               </span>
               <input type="password" id="loginPassword" class="form-input w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none" placeholder="Enter your password" required aria-required="true">
             </div>
-          </div>
-          <div>
-            <label for="loginPhone" class="block text-gray-700 font-medium">Phone</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fas fa-phone text-gray-400"></i>
-              </span>
-              <input type="tel" id="loginPhone" class="form-input w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none" placeholder="Enter your phone number" required aria-required="true">
-            </div>
-            <p id="loginPhoneError" class="text-red-500 text-sm mt-1 hidden">Phone number must be 10 digits long.</p>
           </div>
           <div class="flex justify-between items-center">
             <a href="#" id="forgotPassword" class="text-sm text-orange-600 hover:underline">Forgot Password?</a>
@@ -267,28 +243,28 @@
   </section>
 
   <!-- Home Section -->
-  <section id="home" class="section hidden">
-    <div class="hero-bg py-24 text-center bg-orange-100" style="background-image: url('https://images.unsplash.com/photo-1513104890138-7c749659a680?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
+  <section id="home" class="section hidden py-16">
+    <div class="bg-orange-100 py-16 text-center">
       <div class="container mx-auto">
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-16 mx-auto">
-        <h1 class="text-5xl md:text-6xl font-bold text-orange-600 animate-fade-in">DELICUTE</h1>
-        <p class="text-2xl italic text-gray-800 mt-4">Every bite tells a story</p>
-        <p class="text-xl text-gray-800 mt-4 max-w-2xl mx-auto">Savor authentic meals crafted with love, delivered fresh to your door.</p>
-        <button id="orderNow" class="mt-8 inline-block bg-orange-600 text-white px-8 py-4 rounded-lg hover:bg-orange-700 transition focus:outline-none focus:ring-2 focus:ring-orange-600 text-lg">Order Now</button>
+        <h1 class="text-4xl md:text-5xl font-bold text-orange-600">DELICUTE</h1>
+        <p class="text-xl italic text-gray-600 mt-2">Every bite tells a story</p>
+        <p class="text-lg text-gray-700 mt-4">Order delicious Indian meals delivered to your door!</p>
+        <button id="orderNow" class="mt-6 inline-block bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition focus:outline-none focus:ring-2 focus:ring-orange-600">Order Now</button>
       </div>
     </div>
-    <div id="menuSection" class="py-16 bg-gray-100 hidden">
+    <div id="menuSection" class="py-16 hidden">
       <div class="container mx-auto">
-        <h2 class="text-4xl font-bold text-center text-orange-600 mb-8">Our Menu</h2>
+        <h2 class="text-3xl font-bold text-center text-orange-600 mb-8">Our Menu</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="menuItems">
-          <!-- Menu items populated dynamically -->
+          <!-- Menu items will be populated dynamically -->
         </div>
       </div>
     </div>
-    <div id="loginPrompt" class="py-16 text-center bg-gray-100">
+    <div id="loginPrompt" class="py-16 text-center">
       <p class="text-xl text-gray-700">Please <a href="#" data-section="login" class="nav-link text-orange-600 hover:underline">login</a> to view our menu and place orders.</p>
     </div>
-    <div class="py-16 bg-white">
+    <div class="py-16 bg-gray-200">
       <div class="container mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <input type="text" id="searchDishes" placeholder="Search dishes..." class="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600">
@@ -300,11 +276,24 @@
         </div>
       </div>
     </div>
-    <div class="py-16 bg-gray-100">
+    <div class="py-16">
+      <div class="container mx-auto text-center">
+        <h2 class="text-3xl font-bold text-orange-600 mb-8">Special Offers</h2>
+        <p class="text-xl text-gray-700">Get ₹100 off your first order! Use code: DELICUTE100</p>
+      </div>
+    </div>
+    <div class="py-16 bg-gray-200">
       <div class="container mx-auto">
-        <h2 class="text-4xl font-bold text-center text-orange-600 mb-8">Special Offers</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="specialOffers">
-          <!-- Special offers populated dynamically -->
+        <h2 class="text-3xl font-bold text-center text-orange-600 mb-8">What Our Customers Say</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-lg">
+            <p class="text-gray-600">"The Butter Chicken was absolutely delicious!"</p>
+            <p class="mt-4 font-semibold text-orange-600">- Priya S.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-lg">
+            <p class="text-gray-600">"Fast delivery and amazing Gulab Jamun!"</p>
+            <p class="mt-4 font-semibold text-orange-600">- Rahul M.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -314,7 +303,7 @@
         <div class="mt-4 space-x-4">
           <a href="#" data-section="terms" class="nav-link hover:underline">Terms</a>
           <a href="#" data-section="privacy" class="nav-link hover:underline">Privacy Policy</a>
-          <a href="mailto:contact@delicute.com" class="hover:underline">Contact</a>
+          <a href="mailto:support@delicute.com" class="hover:underline">Contact</a>
           <a href="#" class="hover:underline">About</a>
         </div>
       </div>
@@ -322,7 +311,7 @@
   </section>
 
   <!-- Terms Section -->
-  <section id="terms" class="section hidden py-16 bg-gray-100">
+  <section id="terms" class="section hidden py-16">
     <div class="container mx-auto max-w-3xl">
       <div class="flex items-center space-x-2 mb-6">
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
@@ -336,13 +325,13 @@
         <li class="mb-2">All payments are processed securely through our payment gateway.</li>
         <li class="mb-2">We comply with the Information Technology Act, 2000, for data protection.</li>
       </ul>
-      <p class="text-gray-700 mt-4">For any questions, contact us at <a href="mailto:contact@delicute.com" class="text-orange-600 hover:underline">contact@delicute.com</a>.</p>
+      <p class="text-gray-700 mt-4">For any questions, contact us at <a href="mailto:support@delicute.com" class="text-orange-600 hover:underline">support@delicute.com</a>.</p>
       <a href="#" data-section="home" class="nav-link mt-4 inline-block text-orange-600 hover:underline">Back to Home</a>
     </div>
   </section>
 
   <!-- Privacy Section -->
-  <section id="privacy" class="section hidden py-16 bg-gray-100">
+  <section id="privacy" class="section hidden py-16">
     <div class="container mx-auto max-w-3xl">
       <div class="flex items-center space-x-2 mb-6">
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
@@ -356,7 +345,7 @@
         <li class="mb-2">You can request deletion of your data by contacting us.</li>
         <li class="mb-2">We comply with the Information Technology Act, 2000.</li>
       </ul>
-      <p class="text-gray-700 mt-4">For more details, email us at <a href="mailto:contact@delicute.com" class="text-orange-600 hover:underline">contact@delicute.com</a>.</p>
+      <p class="text-gray-700 mt-4">For more details, email us at <a href="mailto:support@delicute.com" class="text-orange-600 hover:underline">support@delicute.com</a>.</p>
       <a href="#" data-section="home" class="nav-link mt-4 inline-block text-orange-600 hover:underline">Back to Home</a>
     </div>
   </section>
@@ -366,11 +355,11 @@
 
   <script>
     // Configuration
-    const API_URL = 'https://online-food-deliveryyy.onrender.com/api/users';
+    const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api/users' : 'https://online-food-deliveryyy.onrender.com/api/users';
     const GOOGLE_CLIENT_ID = '1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com';
     let isLoggedIn = !!localStorage.getItem('jwtToken');
 
-    // Disposable email domains
+    // List of disposable email domains
     const disposableDomains = [
       'tempmail.com', 'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'yopmail.com',
       'getnada.com', 'dispostable.com', 'throwawaymail.com', 'temp-mail.org', 'fakemail.com'
@@ -400,7 +389,7 @@
       }
     }
 
-    // Fetch utility
+    // Centralized fetch utility with error handling
     async function fetchData(endpoint, method = 'GET', data = null, includeToken = true) {
       const headers = {
         'Content-Type': 'application/json',
@@ -458,7 +447,7 @@
       );
     }
 
-    // Handle Google Login
+    // Handle Google Login Response
     async function handleGoogleLogin(response) {
       try {
         const res = await fetchData('/google', 'POST', { id_token: response.credential }, false);
@@ -467,7 +456,13 @@
           isLoggedIn = true;
           updateNav();
           showToast('Google login successful!');
-          showSection('home');
+
+          const decodedToken = decodeJWT(res.token);
+          if (decodedToken && decodedToken.role === 'admin') {
+            window.location.href = '/admin.html';
+          } else {
+            window.location.href = '/user.html';
+          }
         } else {
           showToast('Google login failed. Please try again.', 'error');
         }
@@ -539,35 +534,7 @@
       return emailRegex.test(email);
     }
 
-    // Form Validation
-    function validateLoginForm() {
-      let isValid = true;
-
-      const email = document.getElementById('loginEmail').value.trim();
-      if (!validateEmailFormat(email)) {
-        showToast('Please enter a valid email address.', 'error');
-        isValid = false;
-      }
-
-      const password = document.getElementById('loginPassword').value;
-      if (password.length < 8) {
-        showToast('Password must be at least 8 characters long.', 'error');
-        isValid = false;
-      }
-
-      const phone = document.getElementById('loginPhone').value.trim();
-      const phoneError = document.getElementById('loginPhoneError');
-      const phoneRegex = /^\d{10}$/;
-      if (!phoneRegex.test(phone)) {
-        phoneError.classList.remove('hidden');
-        isValid = false;
-      } else {
-        phoneError.classList.add('hidden');
-      }
-
-      return isValid;
-    }
-
+    // Form Validation for Signup
     function validateSignupForm() {
       let isValid = true;
 
@@ -638,7 +605,7 @@
       resetOtpButton();
     }
 
-    // Loading State
+    // Loading State for Signup Button
     function startLoadingState() {
       const signupButton = document.getElementById('signupButton');
       const signupButtonText = document.getElementById('signupButtonText');
@@ -717,7 +684,7 @@
       }
     }
 
-    // Send OTP
+    // Send OTP Button Click
     document.getElementById('sendOtpButton').addEventListener('click', async () => {
       const email = document.getElementById('signupEmail').value.trim();
       const emailError = document.getElementById('signupEmailError');
@@ -749,21 +716,21 @@
     // Login Form Submission
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!validateLoginForm()) {
-        showToast('Please fix the errors in the form.', 'error');
-        return;
-      }
-
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
-      const phone = document.getElementById('loginPhone').value;
-      const data = await fetchData('/login', 'POST', { email, password, phone }, false);
+      const data = await fetchData('/login', 'POST', { email, password }, false);
       if (data) {
         localStorage.setItem('jwtToken', data.token);
         isLoggedIn = true;
         updateNav();
         showToast('Login successful!');
-        showSection('home');
+
+        const decodedToken = decodeJWT(data.token);
+        if (decodedToken && decodedToken.role === 'admin') {
+          window.location.href = '/admin.html';
+        } else {
+          window.location.href = '/user.html';
+        }
       }
     });
 
@@ -775,6 +742,7 @@
         return;
       }
 
+      Ceremony
       const name = document.getElementById('signupName').value;
       const email = document.getElementById('signupEmail').value;
       const phone = document.getElementById('signupPhone').value;
@@ -789,7 +757,7 @@
         isLoggedIn = true;
         updateNav();
         showToast('Signup successful!');
-        showSection('home');
+        window.location.href = '/user.html';
       }
       stopLoadingState();
     });
@@ -854,7 +822,7 @@
       }
     });
 
-    // Resend Timer
+    // Resend Timer for Forgot Password
     function startResendTimer(buttonId, timerId) {
       let timeLeft = 30;
       const button = document.getElementById(buttonId);
@@ -923,53 +891,49 @@
     // Load Menu
     async function loadMenu(category = '') {
       const data = await fetchData('/menu', 'GET', { category });
-      if (!data) {
-        document.getElementById('menuItems').innerHTML = '<p class="text-gray-600 text-center">No menu items available.</p>';
-        return;
-      }
+      if (!data) return;
 
       const menuContainer = document.getElementById('menuItems');
       menuContainer.innerHTML = data
         .filter(item => !category || item.category === category)
         .map(item => `
           <div class="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg">
             <h3 class="text-xl font-semibold mt-4">${item.name}</h3>
             <p class="text-gray-600">₹${item.price}</p>
-            <button class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="showToast('Order functionality coming soon!')">Order Now</button>
+            <button class="add-to-cart mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Add to Cart</button>
           </div>
         `).join('');
     }
 
-    // Load Special Offers
-    async function loadSpecialOffers() {
-      const data = await fetchData('/special-offers', 'GET');
-      const offersContainer = document.getElementById('specialOffers');
-      if (!data || data.length === 0) {
-        offersContainer.innerHTML = '<p class="text-gray-600 text-center">No special offers available.</p>';
-        return;
-      }
-
-      offersContainer.innerHTML = data.map(offer => `
-        <div class="offer-card bg-white rounded-lg shadow-lg p-4">
-          <img src="${offer.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a680?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'}" alt="${offer.title}" class="w-full h-48 object-cover rounded-lg">
-          <h3 class="text-xl font-semibold mt-4">${offer.title}</h3>
-          <p class="text-gray-600 mt-2">${offer.description}</p>
-          <p class="text-orange-600 font-bold mt-2">${offer.discount}</p>
-          <button class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="showToast('Offer applied! Order now to enjoy.')">Apply Offer</button>
-        </div>
-      `).join('');
-    }
-
-    // Order Now
+    // Order Now and Add to Cart
     const orderNow = document.getElementById('orderNow');
     orderNow.addEventListener('click', () => {
       if (!isLoggedIn) {
         showToast('Please login to place an order');
         showSection('login');
       } else {
-        showSection('home');
-        updateMenuVisibility();
+        showToast('Redirecting to order page...');
+        setTimeout(() => {
+          window.location.href = '/user.html';
+        }, 1000);
+      }
+    });
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('add-to-cart')) {
+        if (!isLoggedIn) {
+          showToast('Please login to add items to cart');
+          showSection('login');
+        } else {
+          const item = {
+            id: e.target.dataset.itemId,
+          };
+          const data = await fetchData('/cart/add', 'POST', { item });
+          if (data) {
+            showToast('Item added to cart!');
+          }
+        }
       }
     });
 
@@ -985,28 +949,24 @@
     document.getElementById('searchDishes').addEventListener('input', async (e) => {
       const query = e.target.value.toLowerCase();
       const data = await fetchData(`/menu?search=${query}`);
-      if (!data) {
-        document.getElementById('menuItems').innerHTML = '<p class="text-gray-600 text-center">No menu items found.</p>';
-        return;
-      }
+      if (!data) return;
 
       const menuContainer = document.getElementById('menuItems');
       menuContainer.innerHTML = data
         .filter(item => item.name.toLowerCase().includes(query))
         .map(item => `
           <div class="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition">
-            <img src="${item.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg">
             <h3 class="text-xl font-semibold mt-4">${item.name}</h3>
             <p class="text-gray-600">₹${item.price}</p>
-            <button class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="showToast('Order functionality coming soon!')">Order Now</button>
+            <button class="add-to-cart mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Add to Cart</button>
           </div>
         `).join('');
     });
 
-    // Initialize
+    // Initialize Google Sign-In
     window.onload = () => {
       initializeGoogleSignIn();
-      loadSpecialOffers();
       if (isLoggedIn) {
         showSection('home');
         updateNav();

@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DELICUTE Mobile Admin Dashboard for restaurant management">
+  <title>DELICUTE - Mobile Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ff6b00;
+      --secondary: #ff8f33;
+      --background: #fef3e7;
+      --glass-bg: rgba(255, 255, 255, 0.95);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      --accent: #34d399;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+    .animate-slideUp { animation: slideUp 0.5s ease-out; }
+    .animate-slideIn { animation: slideIn 0.3s ease-out; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--background), #f8e7d4);
+      color: #1a202c;
+      margin: 0;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-modal {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background: linear-gradient(180deg, var(--primary), var(--secondary));
+      box-shadow: var(--shadow);
+      width: 80%;
+      max-width: 280px;
+      z-index: 2000;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transform: translateX(-100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .nav-modal-open {
+      transform: translateX(0);
+      animation: slideIn 0.3s ease-out;
+    }
+    .nav-modal button {
+      color: #ffffff;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .nav-modal button:hover {
+      background: #ffffff;
+      color: var(--primary);
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .nav-modal button.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
+    }
+    .nav-modal i { 
+      font-size: 1.2rem; 
+      min-width: 20px; 
+      display: inline-block; 
+    }
+    .nav-modal .logout-btn {
+      margin-top: auto;
+      background: #dc2626;
+    }
+    .nav-modal .logout-btn:hover {
+      background: #ffffff;
+      color: #dc2626;
+    }
+
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      padding: 8px 0;
+    }
+    .bottom-nav .nav-item {
+      flex: 1;
+      text-align: center;
+      color: #1a202c;
+      font-size: 0.75rem;
+      padding: 8px 0;
+      transition: all 0.2s ease;
+    }
+    .bottom-nav .nav-item.active {
+      color: var(--primary);
+      background: rgba(255, 107, 0, 0.1);
+    }
+    .bottom-nav .nav-item:hover {
+      color: var(--primary);
+      background: rgba(255, 107, 0, 0.05);
+    }
+    .bottom-nav i {
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+    }
+
+    .glass {
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: var(--shadow);
+      border-radius: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 500px;
+      background: #ffffff;
+      border-radius: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) #e5e7eb;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    th {
+      background: var(--primary);
+      color: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+    }
+    tbody tr:hover {
+      background: #fff7ed;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .pagination button {
+      padding: 8px 14px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+    .pagination button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      display: none;
+      font-size: 0.9rem;
+      max-width: 90%;
+      transition: opacity 0.3s ease;
+    }
+    .toast.show { display: block; opacity: 1; }
+    .toast.error { background: #dc2626; }
+    .toast.success { background: #16a34a; }
+
+    .modal-content {
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 16px;
+      padding: 16px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .chat-container {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) #e5e7eb;
+    }
+    .chat-message {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-message.admin { align-items: flex-end; }
+    .chat-message.user { align-items: flex-start; }
+    .chat-message span {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+    .chat-message.admin span {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .chat-message.user span {
+      background: #e5e7eb;
+      color: #1a202c;
+    }
+    .chat-input-container {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .chat-input-container input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      font-size: 0.85rem;
+    }
+    .chat-input-container button {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+    .chat-input-container button:hover {
+      background: var(--secondary);
+    }
+    .chat-input-container i {
+      font-size: 1rem;
+      display: inline-block;
+    }
+
+    .profile-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--glass-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .profile-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+      transition: transform 0.2s ease;
+    }
+    .profile-image:hover {
+      transform: scale(1.05);
+    }
+
+    @media (min-width: 768px) {
+      .main-content { margin-left: 280px; }
+      .nav-modal { width: 250px; transform: translateX(0); }
+      th, td { font-size: 0.95rem; padding: 14px; }
+      .chat-container { height: 450px; }
+      .bottom-nav { display: none; }
+    }
+
+    @media (max-width: 767px) {
+      .main-content { margin-left: 0; margin-bottom: 60px; }
+      .grid-cols-4 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+      .table-container table { display: block; }
+      .table-container thead, .table-container tbody, .table-container tr { display: block; }
+      .table-container th { display: none; }
+      .table-container td {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px;
+      }
+      .table-container td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        width: 40%;
+        min-width: 90px;
+      }
+      .modal-content { width: 95%; }
+      .promo-card { padding: 12px; }
+      .promo-card img { height: 120px; }
+      button, input, select { font-size: 0.9rem; }
+      .chat-container { height: 350px; }
+      .chat-message span { max-width: 80%; }
+      .profile-container { padding: 12px; }
+      .profile-image { width: 80px; height: 80px; }
+      .nav-modal i { font-size: 1.2rem; }
+      .header i { font-size: 1.2rem; }
+      .glass i { font-size: 1.2rem; }
+      .bottom-nav { display: flex; }
+      .nav-modal { width: 70%; max-width: 240px; }
+      .nav-modal button { font-size: 0.85rem; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="preloader" class="fixed inset-0 bg-orange-600 flex items-center justify-center z-[3000] transition-opacity duration-500">
+    <div class="border-6 border-white border-t-orange-600 rounded-full w-12 h-12 animate-spin"></div>
+    <div class="ml-3 text-white text-xl font-bold animate-pulse">DELICUTE Admin</div>
+  </div>
+
+  <div id="welcomeModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[4000]" role="dialog" aria-labelledby="welcomeModalTitle">
+    <div class="glass p-6 modal-content animate-slideUp">
+      <h2 class="text-2xl font-bold text-orange-600 mb-3" id="welcomeModalTitle">Welcome to DELICUTE!</h2>
+      <p class="text-base mb-4">Manage your restaurant with ease!</p>
+      <button id="closeWelcomeModal" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 w-full flex items-center justify-center gap-2" aria-label="Get Started">
+        <i class="fas fa-rocket"></i> Get Started
+      </button>
+    </div>
+  </div>
+
+  <div id="adminDashboard" class="hidden">
+    <header class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-3 sticky top-0 z-30 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <button id="navToggle" class="text-white hover:text-orange-200 transition-colors" aria-label="Toggle navigation">
+            <i class="fas fa-bars text-lg"></i>
+          </button>
+          <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8" loading="lazy">
+          <div class="text-xl font-bold">DELICUTE</div>
+        </div>
+        <div class="flex gap-4">
+          <button id="profileQuick" class="text-white hover:text-orange-200 transition-colors" aria-label="View profile">
+            <i class="fas fa-user-circle text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="navModal" class="nav-modal p-4">
+      <div class="flex items-center gap-3 mb-6">
+        <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8" loading="lazy">
+        <div class="text-lg font-bold text-white">DELICUTE Admin</div>
+      </div>
+      <nav class="space-y-2 flex-1">
+        <button data-section="dashboard" class="admin-nav active" aria-label="Home"><i class="fas fa-home"></i> Home</button>
+        <button data-section="orders" class="admin-nav" aria-label="Orders"><i class="fas fa-shopping-cart"></i> Orders</button>
+        <button data-section="customers" class="admin-nav" aria-label="Customers"><i class="fas fa-users"></i> Customers</button>
+        <button data-section="menu" class="admin-nav" aria-label="Menu"><i class="fas fa-utensils"></i> Menu</button>
+        <button data-section="support" class="admin-nav" aria-label="Support"><i class="fas fa-headset"></i> Support</button>
+        <button data-section="promotions" class="admin-nav" aria-label="Promotions"><i class="fas fa-tag"></i> Promotions</button>
+        <button data-section="feedback" class="admin-nav" aria-label="Feedback"><i class="fas fa-comment-alt"></i> Feedback</button>
+        <button data-section="settings" class="admin-nav" aria-label="Settings"><i class="fas fa-cog"></i> Settings</button>
+        <button data-section="reports" class="admin-nav" aria-label="Reports"><i class="fas fa-chart-bar"></i> Reports</button>
+      </nav>
+      <button id="logout" class="logout-btn admin-nav text-white flex items-center gap-2" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+
+    <div class="main-content p-4">
+      <section id="admin-dashboard" class="admin-section animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Dashboard</h2>
+          <div id="countdownTimer" class="text-base font-semibold"></div>
+        </div>
+        <div class="glass p-6 mb-6">
+          <h2 class="text-2xl font-bold mb-3">Manage Seamlessly!</h2>
+          <p class="text-base mb-4">Run your restaurant from anywhere.</p>
+          <div class="flex gap-3">
+            <button data-section="orders" class="admin-nav bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="View orders">
+              <i class="fas fa-shopping-cart"></i> Orders
+            </button>
+            <button data-section="menu" class="admin-nav bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-2" aria-label="Manage menu">
+              <i class="fas fa-utensils"></i> Menu
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="glass p-4" data-tilt data-tilt-max="8">
+            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-shopping-cart text-orange-600"></i> Total Orders</h3>
+            <p class="text-2xl text-orange-600 font-bold" id="totalOrders">0</p>
+          </div>
+          <div class="glass p-4" data-tilt data-tilt-max="8">
+            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-rupee-sign text-orange-600"></i> Total Sales</h3>
+            <p class="text-2xl text-orange-600 font-bold" id="totalSales">₹0</p>
+          </div>
+          <div class="glass p-4" data-tilt data-tilt-max="8">
+            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-users text-orange-600"></i> Active Customers</h3>
+            <p class="text-2xl text-orange-600 font-bold" id="activeCustomers">0</p>
+          </div>
+          <div class="glass p-4" data-tilt data-tilt-max="8">
+            <h3 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-undo text-orange-600"></i> Pending Refunds</h3>
+            <p class="text-2xl text-orange-600 font-bold" id="pendingRefunds">0</p>
+          </div>
+        </div>
+        <h3 class="text-2xl font-bold mb-4">Recent Orders</h3>
+        <div class="table-container glass">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrders"></tbody>
+          </table>
+          <div class="pagination" id="recentOrdersPagination"></div>
+        </div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Sales Overview</h3>
+          <canvas id="salesChart"></canvas>
+        </div>
+      </section>
+
+      <section id="admin-orders" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Orders</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="flex flex-col gap-3 mb-4">
+          <input type="text" id="orderSearch" class="px-3 py-2 rounded-lg border" placeholder="Search by ID or customer" aria-label="Search orders">
+          <select id="orderFilter" class="px-3 py-2 rounded-lg border" aria-label="Filter by status">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-container glass">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total (₹)</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Order Status</h3>
+          <canvas id="orderStatusChart"></canvas>
+        </div>
+      </section>
+
+      <section id="admin-customers" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Customers</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <input type="text" id="customerSearch" class="w-full px-3 py-2 rounded-lg border mb-4" placeholder="Search by name or email" aria-label="Search customers">
+        <div class="table-container glass">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customersTable"></tbody>
+          </table>
+          <div class="pagination" id="customersPagination"></div>
+        </div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Customer Activity</h3>
+          <canvas id="customerActivityChart"></canvas>
+        </div>
+      </section>
+
+      <section id="admin-menu" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Menu</h2>
+          <div class="flex gap-3">
+            <button id="addMenuItem" class="bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Add new menu item">
+              <i class="fas fa-plus"></i> Add
+            </button>
+            <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+              <i class="fas fa-arrow-left"></i> Back
+            </button>
+          </div>
+        </div>
+        <div class="table-container glass">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price (₹)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="menuTable"></tbody>
+          </table>
+          <div class="pagination" id="menuPagination"></div>
+        </div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Menu Categories</h3>
+          <canvas id="menuCategoriesChart"></canvas>
+        </div>
+        <div id="addMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="menuModalTitle">
+          <div class="glass p-6 modal-content">
+            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="menuModalTitle">Add Menu Item</h2>
+            <form id="addMenuForm" class="space-y-4">
+              <div>
+                <label for="menuName" class="block font-medium mb-1">Name</label>
+                <input type="text" id="menuName" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter item name">
+              </div>
+              <div>
+                <label for="menuCategory" class="block font-medium mb-1">Category</label>
+                <select id="menuCategory" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select category">
+                  <option value="Vegetarian">Vegetarian</option>
+                  <option value="Non-Veg">Non-Veg</option>
+                  <option value="Desserts">Desserts</option>
+                  <option value="Beverages">Beverages</option>
+                </select>
+              </div>
+              <div>
+                <label for="menuPrice" class="block font-medium mb-1">Price (₹)</label>
+                <input type="number" id="menuPrice" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter price">
+              </div>
+              <div>
+                <label for="menuImage" class="block font-medium mb-1">Image (Required)</label>
+                <input type="file" id="menuImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" required aria-label="Upload image">
+                <img id="menuImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+              </div>
+              <div class="flex gap-3">
+                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save menu item">
+                  <i class="fas fa-save"></i> Save
+                </button>
+                <button type="button" id="closeMenuModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-support" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Support</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="chat-container glass">
+          <select id="chatUserSelect" class="w-full px-3 py-2 rounded-lg border mb-4" aria-label="Select customer to chat">
+            <option value="">Select a customer</option>
+          </select>
+          <div id="chatWindow" class="chat-window"></div>
+          <div class="chat-input-container">
+            <input type="text" id="chatInput" placeholder="Type your response..." aria-label="Type your response">
+            <button id="sendChat" aria-label="Send message"><i class="fas fa-paper-plane"></i> Send</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-promotions" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Promotions</h2>
+          <div class="flex gap-3">
+            <button id="addPromotion" class="bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Add new promotion">
+              <i class="fas fa-plus"></i> Add
+            </button>
+            <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+              <i class="fas fa-arrow-left"></i> Back
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="promotionsGrid"></div>
+        <div class="pagination" id="promotionsPagination"></div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Promotion Performance</h3>
+          <canvas id="promotionPerformanceChart"></canvas>
+        </div>
+        <div id="addPromotionModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="promotionModalTitle">
+          <div class="glass p-6 modal-content">
+            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="promotionModalTitle">Add Promotion</h2>
+            <form id="addPromotionForm" class="space-y-4">
+              <div>
+                <label for="promoCode" class="block font-medium mb-1">Promo Code</label>
+                <input type="text" id="promoCode" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter promo code">
+              </div>
+              <div>
+                <label for="promoDiscount" class="block font-medium mb-1">Discount (%)</label>
+                <input type="number" id="promoDiscount" min="0" max="100" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter discount percentage">
+              </div>
+              <div>
+                <label for="promoValidFrom" class="block font-medium mb-1">Valid From</label>
+                <input type="date" id="promoValidFrom" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select valid from date">
+              </div>
+              <div>
+                <label for="promoValidUntil" class="block font-medium mb-1">Valid Until</label>
+                <input type="date" id="promoValidUntil" class="w-full px-3 py-2 rounded-lg border" required aria-label="Select valid until date">
+              </div>
+              <div>
+                <label for="promoImage" class="block font-medium mb-1">Image (Required)</label>
+                <input type="file" id="promoImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" required aria-label="Upload promotion image">
+                <img id="promoImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+              </div>
+              <div class="flex gap-3">
+                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save promotion">
+                  <i class="fas fa-save"></i> Save
+                </button>
+                <button type="button" id="closePromotionModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-feedback" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Feedback</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="table-container glass mb-6">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Order ID</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackTable"></tbody>
+          </table>
+          <div class="pagination" id="feedbackPagination"></div>
+        </div>
+        <div class="glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Feedback Analytics</h3>
+          <canvas id="feedbackChart"></canvas>
+        </div>
+      </section>
+
+      <section id="admin-settings" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Settings</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Admin Profile</h3>
+          <div class="profile-container">
+            <img id="profileImage" src="" alt="Admin Profile" class="profile-image">
+            <div class="text-center">
+              <h4 id="profileName" class="text-lg font-semibold"></h4>
+              <p id="profileEmail" class="text-gray-600"></p>
+            </div>
+            <button id="editProfileBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Edit profile">
+              <i class="fas fa-edit"></i> Edit Profile
+            </button>
+          </div>
+        </div>
+        <div id="editProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="editProfileModalTitle">
+          <div class="glass p-6 modal-content">
+            <h2 class="text-2xl font-bold text-orange-600 mb-4" id="editProfileModalTitle">Edit Profile</h2>
+            <form id="editProfileForm" class="space-y-4">
+              <div>
+                <label for="adminName" class="block font-medium mb-1">Name</label>
+                <input type="text" id="adminName" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter name">
+              </div>
+              <div>
+                <label for="adminEmail" class="block font-medium mb-1">Email</label>
+                <input type="email" id="adminEmail" class="w-full px-3 py-2 rounded-lg border" required aria-label="Enter email">
+              </div>
+              <div>
+                <label for="adminImage" class="block font-medium mb-1">Profile Image</label>
+                <input type="file" id="adminImage" accept="image/png,image/jpeg,image/gif" class="w-full px-3 py-2 rounded-lg border" aria-label="Upload profile image">
+                <img id="adminImagePreview" src="" alt="Image Preview" class="mt-3 w-20 h-20 object-cover rounded-lg hidden">
+              </div>
+              <div class="flex gap-3">
+                <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Save profile">
+                  <i class="fas fa-save"></i> Save
+                </button>
+                <button type="button" id="closeEditProfileModal" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Cancel">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-reports" class="admin-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-orange-600">Reports</h2>
+          <button data-section="dashboard" class="admin-nav bg-gray-600 text-white px-3 py-1 rounded-lg hover:bg-gray-700 flex items-center gap-2" aria-label="Back to Dashboard">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Generate Reports</h3>
+          <div class="space-y-4">
+            <div>
+              <label for="reportDate" class="block font-medium mb-1">Select Date</label>
+              <input type="date" id="reportDate" class="w-full px-3 py-2 rounded-lg border" aria-label="Select report date">
+            </div>
+            <div class="flex gap-3">
+              <button id="generateDailyReport" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Generate daily report">
+                <i class="fas fa-chart-line"></i> Daily Sales
+              </button>
+              <button id="exportCsv" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2" aria-label="Export to CSV">
+                <i class="fas fa-file-csv"></i> Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 glass p-6">
+          <h3 class="text-2xl font-bold mb-4">Sales Trends</h3>
+          <canvas id="salesTrendsChart"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item admin-nav" data-section="dashboard" aria-label="Dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        <div>Dashboard</div>
+      </div>
+      <div class="nav-item admin-nav" data-section="orders" aria-label="Orders">
+        <i class="fas fa-shopping-cart"></i>
+        <div>Orders</div>
+      </div>
+      <div class="nav-item admin-nav" data-section="menu" aria-label="Menu">
+        <i class="fas fa-utensils"></i>
+        <div>Menu</div>
+      </div>
+      <div class="nav-item admin-nav" data-section="support" aria-label="Support">
+        <i class="fas fa-headset"></i>
+        <div>Support</div>
+      </div>
+      <div class="nav-item admin-nav" data-section="settings" aria-label="Settings">
+        <i class="fas fa-cog"></i>
+        <div>Settings</div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <script>
+    // Configuration
+    const API_URL = 'http://localhost:3000/api';
+    const CONFIG = {
+      ITEMS_PER_PAGE: 8,
+      API_TOKEN: localStorage.getItem('jwtToken') || null,
+    };
+
+    // Fallback Image (Base64-encoded placeholder)
+    const FALLBACK_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABYSURBVGhD7cEBDQAAAMKg909tDjtwAAAAAAAAAAAAAAAcO3YsxQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPCDY3gAAdL2ZwgAAAAASUVORK5CYII=';
+
+    // State Management
+    const state = {
+      currentPage: {
+        orders: 1,
+        customers: 1,
+        menu: 1,
+        promotions: 1,
+        feedback: 1,
+      },
+      salesChart: null,
+      orderStatusChart: null,
+      customerActivityChart: null,
+      menuCategoriesChart: null,
+      promotionPerformanceChart: null,
+      feedbackChart: null,
+      salesTrendsChart: null,
+      dataStore: {
+        orders: [],
+        customers: [],
+        menu: [],
+        promotions: [],
+        feedback: [],
+        chatMessages: [],
+        profile: { name: '', email: '', image: '' },
+      },
+    };
+
+    // Utility Functions
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type === 'error' ? 'error' : type === 'success' ? 'success' : ''} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function triggerConfetti() {
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#ff6b00', '#ff8f33', '#34d399'],
+      });
+    }
+
+    function sanitizeInput(input) {
+      const div = document.createElement('div');
+      div.textContent = input;
+      return div.innerHTML;
+    }
+
+    function paginate(data, page, itemsPerPage) {
+      const start = (page - 1) * itemsPerPage;
+      return data.slice(start, start + itemsPerPage);
+    }
+
+    function renderPagination(containerId, totalItems, currentPage, onPageChange) {
+      const totalPages = Math.ceil(totalItems / CONFIG.ITEMS_PER_PAGE);
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      const prevButton = document.createElement('button');
+      prevButton.innerHTML = '<i class="fas fa-chevron-left"></i> Prev';
+      prevButton.disabled = currentPage === 1;
+      prevButton.addEventListener('click', () => onPageChange(currentPage - 1));
+      container.appendChild(prevButton);
+      for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        pageButton.disabled = i === currentPage;
+        pageButton.addEventListener('click', () => onPageChange(i));
+        container.appendChild(pageButton);
+      }
+      const nextButton = document.createElement('button');
+      nextButton.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.addEventListener('click', () => onPageChange(currentPage + 1));
+      container.appendChild(nextButton);
+    }
+
+    // API Integration
+    const api = {
+      async fetchData(endpoint, method = 'GET', data = null) {
+        try {
+          const headers = {
+            'Authorization': `Bearer ${CONFIG.API_TOKEN}`,
+          };
+          const options = { method, headers };
+          if (data) {
+            if (data instanceof FormData) {
+              options.body = data;
+            } else {
+              headers['Content-Type'] = 'application/json';
+              options.body = JSON.stringify(data);
+            }
+          }
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          options.signal = controller.signal;
+
+          const response = await fetch(`${API_URL}${endpoint}`, options);
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            const contentType = response.headers.get('Content-Type');
+            let errorMessage = `HTTP ${response.status}`;
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorMessage;
+            } else {
+              const text = await response.text();
+              errorMessage = `Unexpected response: ${text.substring(0, 50)}...`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const contentType = response.headers.get('Content-Type');
+          if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON');
+          }
+
+          return await response.json();
+        } catch (err) {
+          console.error(`Fetch error for ${endpoint}:`, err);
+          showToast(`Error: ${err.message}`, 'error');
+          return null;
+        }
+      },
+    };
+
+    // Section Loaders
+    async function loadDashboard() {
+      const orders = await api.fetchData('/orders') || [];
+      const customers = await api.fetchData('/users') || [];
+
+      state.dataStore.orders = orders;
+      state.dataStore.customers = customers;
+
+      document.getElementById('totalOrders').textContent = orders.length;
+      document.getElementById('totalSales').textContent = `₹${orders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString()}`;
+      document.getElementById('activeCustomers').textContent = customers.length;
+      document.getElementById('pendingRefunds').textContent = orders.filter(o => o.status === 'cancelled').length;
+
+      const paginatedOrders = paginate(orders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('recentOrders').innerHTML = paginatedOrders.map(order => {
+        const customer = customers.find(c => c.id === order.userId) || { name: 'Unknown' };
+        return `
+          <tr>
+            <td data-label="Order ID">#${order.id}</td>
+            <td data-label="Customer">${sanitizeInput(customer.name)}</td>
+            <td data-label="Total">₹${order.total || 0}</td>
+            <td data-label="Status">${sanitizeInput(order.status)}</td>
+            <td data-label="Actions">
+              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination('recentOrdersPagination', orders.length, state.currentPage.orders, (page) => {
+        state.currentPage.orders = page;
+        loadDashboard();
+      });
+
+      const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
+      const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      if (state.salesChart) state.salesChart.destroy();
+      state.salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates.length ? dates : ['No Data'],
+          datasets: [{
+            label: 'Sales (₹)',
+            data: salesData.length ? salesData : [0],
+            borderColor: '#ff6b00',
+            backgroundColor: 'rgba(255, 107, 0, 0.2)',
+            fill: true,
+            tension: 0.4,
+          }],
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } },
+      });
+    }
+
+    async function loadOrders() {
+      const orders = await api.fetchData('/orders') || [];
+      const customers = await api.fetchData('/users') || [];
+      state.dataStore.orders = orders;
+      state.dataStore.customers = customers;
+
+      const search = sanitizeInput(document.getElementById('orderSearch').value.toLowerCase());
+      const statusFilter = document.getElementById('orderFilter').value;
+
+      const filteredOrders = orders.filter(order => {
+        const customer = customers.find(c => c.id === order.userId) || { name: '' };
+        return (
+          (search === '' || order.id.toString().includes(search) || customer.name.toLowerCase().includes(search)) &&
+          (statusFilter === 'all' || order.status === statusFilter)
+        );
+      });
+
+      const paginatedOrders = paginate(filteredOrders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('ordersTable').innerHTML = paginatedOrders.map(order => {
+        const customer = customers.find(c => c.id === order.userId) || { name: 'Unknown' };
+        return `
+          <tr>
+            <td data-label="Order ID">#${order.id}</td>
+            <td data-label="Customer">${sanitizeInput(customer.name)}</td>
+            <td data-label="Total">₹${order.total || 0}</td>
+            <td data-label="Status">${sanitizeInput(order.status)}</td>
+            <td data-label="Actions">
+              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination('ordersPagination', filteredOrders.length, state.currentPage.orders, (page) => {
+        state.currentPage.orders = page;
+        loadOrders();
+      });
+
+      const statuses = ['pending', 'confirmed', 'delivered', 'cancelled'];
+      const statusCounts = statuses.map(status => orders.filter(o => o.status === status).length);
+      const ctx = document.getElementById('orderStatusChart').getContext('2d');
+      if (state.orderStatusChart) state.orderStatusChart.destroy();
+      state.orderStatusChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: statuses.length ? statuses : ['No Data'],
+          datasets: [{
+            label: 'Order Status',
+            data: statusCounts.length ? statusCounts : [0],
+            backgroundColor: ['#ff6b00', '#ff8f33', '#16a34a', '#dc2626'],
+          }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    async function loadCustomers() {
+      const customers = await api.fetchData('/users') || [];
+      const orders = await api.fetchData('/orders') || [];
+      state.dataStore.customers = customers;
+      state.dataStore.orders = orders;
+
+      const search = sanitizeInput(document.getElementById('customerSearch').value.toLowerCase());
+      const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(search) || c.email.toLowerCase().includes(search));
+
+      const paginatedCustomers = paginate(filteredCustomers, state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('customersTable').innerHTML = paginatedCustomers.map(customer => `
+        <tr>
+          <td data-label="Name">${sanitizeInput(customer.name)}</td>
+          <td data-label="Email">${sanitizeInput(customer.email)}</td>
+          <td data-label="Phone">${sanitizeInput(customer.phone)}</td>
+          <td data-label="Actions">
+            <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="view" data-id="${customer.id}" aria-label="View customer ${customer.name}">
+              <i class="fas fa-eye"></i> View
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      renderPagination('customersPagination', filteredCustomers.length, state.currentPage.customers, (page) => {
+        state.currentPage.customers = page;
+        loadCustomers();
+      });
+
+      const customerActivity = customers.map(c => orders.filter(o => o.userId === c.id).length);
+      const ctx = document.getElementById('customerActivityChart').getContext('2d');
+      if (state.customerActivityChart) state.customerActivityChart.destroy();
+      state.customerActivityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: customers.length ? customers.map(c => c.name) : ['No Data'],
+          datasets: [{
+            label: 'Number of Orders',
+            data: customerActivity.length ? customerActivity : [0],
+            backgroundColor: '#ff6b00',
+          }],
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } },
+      });
+
+      const chatUserSelect = document.getElementById('chatUserSelect');
+      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + customers.map(c => `<option value="${c.id}">${sanitizeInput(c.name)}</option>`).join('');
+    }
+
+    async function loadMenu() {
+      const menu = await api.fetchData('/menu');
+      if (!menu || !Array.isArray(menu)) {
+        showToast('Failed to load menu items', 'error');
+        state.dataStore.menu = [];
+        document.getElementById('menuTable').innerHTML = '<tr><td colspan="5">No menu items available</td></tr>';
+        return;
+      }
+      state.dataStore.menu = menu;
+
+      const paginatedMenu = paginate(menu, state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('menuTable').innerHTML = paginatedMenu.map(item => {
+        const imageSrc = item.image && typeof item.image === 'string' && item.image.trim() !== '' ? item.image : FALLBACK_IMAGE;
+        return `
+          <tr>
+            <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(item.name)}" class="w-12 h-12 object-cover rounded-lg"></td>
+            <td data-label="Name">${sanitizeInput(item.name)}</td>
+            <td data-label="Category">${sanitizeInput(item.category)}</td>
+            <td data-label="Price">₹${item.price}</td>
+            <td data-label="Actions">
+              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="edit" data-id="${item.id}" aria-label="Edit ${item.name}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 flex items-center gap-1" data-action="delete" data-id="${item.id}" aria-label="Delete ${item.name}">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination('menuPagination', menu.length, state.currentPage.menu, (page) => {
+        state.currentPage.menu = page;
+        loadMenu();
+      });
+
+      const categories = [...new Set(menu.map(item => item.category))];
+      const categoryCounts = categories.map(category => menu.filter(item => item.category === category).length);
+      const ctx = document.getElementById('menuCategoriesChart').getContext('2d');
+      if (state.menuCategoriesChart) state.menuCategoriesChart.destroy();
+      state.menuCategoriesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: categories.length ? categories : ['No Data'],
+          datasets: [{
+            label: 'Menu Items by Category',
+            data: categoryCounts.length ? categoryCounts : [0],
+            backgroundColor: ['#ff6b00', '#ff8f33', '#16a34a', '#dc2626'],
+          }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    async function loadSupport() {
+      const customers = await api.fetchData('/users') || [];
+      state.dataStore.customers = customers;
+
+      const chatMessages = await api.fetchData('/chat-messages') || [];
+      state.dataStore.chatMessages = chatMessages;
+
+      const chatWindow = document.getElementById('chatWindow');
+      const userId = document.getElementById('chatUserSelect').value;
+      chatWindow.innerHTML = chatMessages
+        .filter(msg => msg.userId == userId)
+        .map(msg => `
+          <div class="chat-message ${msg.isAdmin ? 'admin' : 'user'}">
+            <span>${sanitizeInput(msg.text)}</span>
+            <small class="text-gray-500 text-xs mt-1">${new Date(msg.createdAt).toLocaleTimeString()}</small>
+          </div>
+        `).join('');
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function loadPromotions() {
+      const promotions = await api.fetchData('/promotions');
+      if (!promotions || !Array.isArray(promotions)) {
+        showToast('Failed to load promotions', 'error');
+        state.dataStore.promotions = [];
+        document.getElementById('promotionsGrid').innerHTML = '<div class="col-span-full text-center">No promotions available</div>';
+        return;
+      }
+      state.dataStore.promotions = promotions;
+
+      const paginatedPromos = paginate(promotions, state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('promotionsGrid').innerHTML = paginatedPromos.map(promo => {
+        const imageSrc = promo.image && typeof promo.image === 'string' && promo.image.trim() !== '' ? promo.image : FALLBACK_IMAGE;
+        const now = new Date();
+        const validUntil = new Date(promo.validUntil);
+        const status = now > validUntil ? 'Expired' : 'Active';
+        return `
+          <div class="promo-card glass p-4 rounded-lg">
+            <img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(promo.code)}" class="w-full h-32 object-cover rounded-lg mb-3">
+            <h3 class="text-base font-semibold">${sanitizeInput(promo.code)}</h3>
+            <p>Discount: ${promo.discount}%</p>
+            <p>Valid: ${promo.validFrom} to ${promo.validUntil}</p>
+            <p>Status: ${status}</p>
+            <div class="mt-3 flex gap-2">
+              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="edit" data-id="${promo.id}" aria-label="Edit ${promo.code}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 flex items-center gap-1" data-action="delete" data-id="${promo.id}" aria-label="Delete ${promo.code}">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderPagination('promotionsPagination', promotions.length, state.currentPage.promotions, (page) => {
+        state.currentPage.promotions = page;
+        loadPromotions();
+      });
+
+      const promoUsage = promotions.map(p => p.usageCount || 0);
+      const ctx = document.getElementById('promotionPerformanceChart').getContext('2d');
+      if (state.promotionPerformanceChart) state.promotionPerformanceChart.destroy();
+      state.promotionPerformanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: promotions.length ? promotions.map(p => p.code) : ['No Data'],
+          datasets: [{
+            label: 'Usage Count',
+            data: promoUsage.length ? promoUsage : [0],
+            backgroundColor: '#ff6b00',
+          }],
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } },
+      });
+    }
+
+    async function loadFeedback() {
+      const feedback = await api.fetchData('/feedback') || [];
+      const customers = await api.fetchData('/users') || [];
+      state.dataStore.feedback = feedback;
+      state.dataStore.customers = customers;
+
+      const paginatedFeedback = paginate(feedback, state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
+      document.getElementById('feedbackTable').innerHTML = paginatedFeedback.map(f => {
+        const customer = customers.find(c => c.id === f.userId) || { name: 'Unknown' };
+        return `
+          <tr>
+            <td data-label="Customer">${sanitizeInput(customer.name)}</td>
+            <td data-label="Order ID">#${f.orderId}</td>
+            <td data-label="Rating">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</td>
+            <td data-label="Comment">${sanitizeInput(f.comment)}</td>
+            <td data-label="Date">${new Date(f.createdAt).toLocaleDateString()}</td>
+            <td data-label="Actions">
+              <button class="bg-orange-600 text-white px-2 py-1 rounded-lg hover:bg-orange-700 flex items-center gap-1" data-action="respond" data-id="${f.id}" aria-label="Respond to feedback ${f.id}">
+                <i class="fas fa-reply"></i> Respond
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination('feedbackPagination', feedback.length, state.currentPage.feedback, (page) => {
+        state.currentPage.feedback = page;
+        loadFeedback();
+      });
+
+      const ratings = [1, 2, 3, 4, 5].map(r => feedback.filter(f => f.rating === r).length);
+      const ctx = document.getElementById('feedbackChart').getContext('2d');
+      if (state.feedbackChart) state.feedbackChart.destroy();
+      state.feedbackChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+          datasets: [{ label: 'Feedback Ratings', data: ratings.length ? ratings : [0], backgroundColor: '#ff6b00' }],
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } },
+      });
+    }
+
+    async function loadSettings() {
+      const profile = await api.fetchData('/profile') || { name: '', email: '', image: '' };
+      if (profile) {
+        state.dataStore.profile = profile;
+        document.getElementById('profileName').textContent = profile.name || 'Admin';
+        document.getElementById('profileEmail').textContent = profile.email || 'No email';
+        document.getElementById('profileImage').src = profile.image && profile.image.trim() !== '' ? profile.image : FALLBACK_IMAGE;
+      } else {
+        showToast('Failed to load admin profile', 'error');
+      }
+    }
+
+    async function loadReports() {
+      const orders = await api.fetchData('/orders') || [];
+      state.dataStore.orders = orders;
+
+      document.getElementById('generateDailyReport').addEventListener('click', async () => {
+        const date = document.getElementById('reportDate').value;
+        if (date) {
+          const dailyReport = await api.fetchData(`/reports/daily?date=${date}`);
+          if (dailyReport) showToast(`Daily report for ${date} generated`, 'success');
+          else showToast('Failed to generate report', 'error');
+        } else {
+          showToast('Please select a date', 'error');
+        }
+      });
+
+      document.getElementById('exportCsv').addEventListener('click', async () => {
+        const csvData = await api.fetchData('/export/csv');
+        if (csvData) showToast('CSV export initiated', 'success');
+        else showToast('Failed to export CSV', 'error');
+      });
+
+      const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
+      const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
+      const ctx = document.getElementById('salesTrendsChart').getContext('2d');
+      if (state.salesTrendsChart) state.salesTrendsChart.destroy();
+      state.salesTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates.length ? dates : ['No Data'],
+          datasets: [{
+            label: 'Sales Trends (₹)',
+            data: salesData.length ? salesData : [0],
+            borderColor: '#ff6b00',
+            backgroundColor: 'rgba(255, 107, 0, 0.2)',
+            fill: true,
+            tension: 0.4,
+          }],
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } },
+      });
+    }
+
+    // Event Handlers
+    function setupEventListeners() {
+      const navModal = document.getElementById('navModal');
+      const navToggle = document.getElementById('navToggle');
+      
+      navToggle.addEventListener('click', () => {
+        navModal.classList.toggle('nav-modal-open');
+      });
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 767 && navModal.classList.contains('nav-modal-open')) {
+          if (!navModal.contains(e.target) && !navToggle.contains(e.target)) {
+            navModal.classList.remove('nav-modal-open');
+          }
+        }
+      });
+
+      document.getElementById('closeWelcomeModal').addEventListener('click', () => {
+        document.getElementById('welcomeModal').classList.add('hidden');
+        triggerConfetti();
+      });
+
+      document.getElementById('logout').addEventListener('click', () => {
+        showToast('Logged out successfully', 'success');
+        localStorage.removeItem('jwtToken');
+        window.location.href = 'index.html';
+      });
+
+      document.getElementById('profileQuick').addEventListener('click', () => {
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById('admin-settings').classList.remove('hidden');
+        document.querySelectorAll('.admin-nav').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-nav[data-section="settings"]').forEach(b => b.classList.add('active'));
+        navModal.classList.remove('nav-modal-open');
+        loadSettings();
+      });
+
+      document.getElementById('addMenuItem').addEventListener('click', () => {
+        document.getElementById('menuModalTitle').textContent = 'Add Menu Item';
+        document.getElementById('addMenuForm').reset();
+        document.getElementById('menuImagePreview').classList.add('hidden');
+        document.getElementById('menuImage').required = true;
+        document.getElementById('addMenuModal').classList.remove('hidden');
+        delete document.getElementById('addMenuModal').dataset.editId;
+      });
+
+      document.getElementById('closeMenuModal').addEventListener('click', () => {
+        document.getElementById('addMenuModal').classList.add('hidden');
+      });
+
+      document.getElementById('menuImage').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && file.size < 2 * 1024 * 1024 && ['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
+          document.getElementById('menuImagePreview').src = URL.createObjectURL(file);
+          document.getElementById('menuImagePreview').classList.remove('hidden');
+        } else {
+          showToast('Image must be under 2MB and in PNG, JPEG, or GIF format', 'error');
+          e.target.value = '';
+        }
+      });
+
+      document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('name', sanitizeInput(document.getElementById('menuName').value));
+        formData.append('category', document.getElementById('menuCategory').value);
+        formData.append('price', parseFloat(document.getElementById('menuPrice').value));
+        const file = document.getElementById('menuImage').files[0];
+        if (!file && !document.getElementById('addMenuModal').dataset.editId) {
+          showToast('Image is required', 'error');
+          return;
+        }
+        if (file) formData.append('image', file);
+
+        const editId = document.getElementById('addMenuModal').dataset.editId;
+        const endpoint = editId ? `/menu/${editId}` : '/menu';
+        const method = editId ? 'PUT' : 'POST';
+        const result = await api.fetchData(endpoint, method, formData);
+        if (result) {
+          showToast(`${editId ? 'Updated' : 'Added'} menu item successfully`, 'success');
+          document.getElementById('addMenuModal').classList.add('hidden');
+          loadMenu();
+          triggerConfetti();
+        } else {
+          showToast(`Failed to ${editId ? 'update' : 'add'} menu item`, 'error');
+        }
+      });
+
+      document.getElementById('menuTable').addEventListener('click', async (e) => {
+        const { action, id } = e.target.dataset;
+        if (action === 'edit') {
+          const item = await api.fetchData(`/menu/${id}`);
+          if (item) {
+            document.getElementById('menuModalTitle').textContent = 'Edit Menu Item';
+            document.getElementById('menuName').value = item.name;
+            document.getElementById('menuCategory').value = item.category;
+            document.getElementById('menuPrice').value = item.price;
+            document.getElementById('menuImagePreview').src = item.image && item.image.trim() !== '' ? item.image : FALLBACK_IMAGE;
+            document.getElementById('menuImagePreview').classList.remove('hidden');
+            document.getElementById('menuImage').required = false;
+            document.getElementById('addMenuModal').dataset.editId = id;
+            document.getElementById('addMenuModal').classList.remove('hidden');
+          } else {
+            showToast('Failed to load menu item', 'error');
+          }
+        } else if (action === 'delete') {
+          if (confirm('Are you sure you want to delete this item?')) {
+            const result = await api.fetchData(`/menu/${id}`, 'DELETE');
+            if (result) {
+                showToast('Promotion deleted successfully', 'success');
+                loadPromotions();
+            } else {
+                showToast('Failed to delete promotion', 'error');
+            }
+        }
+    }
+});
+
+document.getElementById('orderSearch').addEventListener('input', debounce(loadOrders, 300));
+document.getElementById('orderFilter').addEventListener('change', loadOrders);
+document.getElementById('customerSearch').addEventListener('input', debounce(loadCustomers, 300));
+
+document.getElementById('chatUserSelect').addEventListener('change', loadSupport);
+document.getElementById('sendChat').addEventListener('click', async () => {
+    const userId = document.getElementById('chatUserSelect').value;
+    const message = sanitizeInput(document.getElementById('chatInput').value);
+    if (!userId || !message) {
+        showToast('Please select a user and enter a message', 'error');
+        return;
+    }
+    const result = await api.fetchData('/chat-messages', 'POST', { userId, text: message, isAdmin: true });
+    if (result) {
+        document.getElementById('chatInput').value = '';
+        loadSupport();
+    } else {
+        showToast('Failed to send message', 'error');
+    }
+});
+
+document.getElementById('feedbackTable').addEventListener('click', async (e) => {
+    if (e.target.dataset.action === 'respond') {
+        const feedbackId = e.target.dataset.id;
+        const response = prompt('Enter your response:');
+        if (response) {
+            const result = await api.fetchData(`/feedback/${feedbackId}/respond`, 'POST', { response: sanitizeInput(response) });
+            if (result) {
+                showToast('Response sent successfully', 'success');
+                loadFeedback();
+            } else {
+                showToast('Failed to send response', 'error');
+            }
+        }
+    }
+});
+
+document.getElementById('editProfileBtn').addEventListener('click', () => {
+    const { name, email, image } = state.dataStore.profile;
+    document.getElementById('adminName').value = name || '';
+    document.getElementById('adminEmail').value = email || '';
+    document.getElementById('adminImagePreview').src = image && image.trim() !== '' ? image : FALLBACK_IMAGE;
+    document.getElementById('adminImagePreview').classList.remove('hidden');
+    document.getElementById('editProfileModal').classList.remove('hidden');
+});
+
+document.getElementById('closeEditProfileModal').addEventListener('click', () => {
+    document.getElementById('editProfileModal').classList.add('hidden');
+});
+
+document.getElementById('adminImage').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.size < 2 * 1024 * 1024 && ['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
+        document.getElementById('adminImagePreview').src = URL.createObjectURL(file);
+        document.getElementById('adminImagePreview').classList.remove('hidden');
+    } else {
+        showToast('Image must be under 2MB and in PNG, JPEG, or GIF format', 'error');
+        e.target.value = '';
+    }
+});
+
+document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', sanitizeInput(document.getElementById('adminName').value));
+    formData.append('email', document.getElementById('adminEmail').value);
+    const file = document.getElementById('adminImage').files[0];
+    if (file) formData.append('image', file);
+
+    const result = await api.fetchData('/profile', 'PUT', formData);
+    if (result) {
+        showToast('Profile updated successfully', 'success');
+        document.getElementById('editProfileModal').classList.add('hidden');
+        loadSettings();
+        triggerConfetti();
+    } else {
+        showToast('Failed to update profile', 'error');
+    }
+});
+
+document.addEventListener('click', (e) => {
+    const { section } = e.target.closest('.admin-nav')?.dataset || {};
+    if (section) {
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(`admin-${section}`).classList.remove('hidden');
+        document.querySelectorAll('.admin-nav').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll(`.admin-nav[data-section="${section}"]`).forEach(b => b.classList.add('active'));
+        navModal.classList.remove('nav-modal-open');
+
+        state.currentPage[section] = 1;
+        switch (section) {
+            case 'dashboard': loadDashboard(); break;
+            case 'orders': loadOrders(); break;
+            case 'customers': loadCustomers(); break;
+            case 'menu': loadMenu(); break;
+            case 'support': loadSupport(); break;
+            case 'promotions': loadPromotions(); break;
+            case 'feedback': loadFeedback(); break;
+            case 'settings': loadSettings(); break;
+            case 'reports': loadReports(); break;
+        }
+    }
+
+    const { action, id } = e.target.dataset;
+    if (action === 'view') {
+        if (e.target.closest('#ordersTable') || e.target.closest('#recentOrders')) {
+            showToast(`View order #${id}`, 'info');
+        } else if (e.target.closest('#customersTable')) {
+            showToast(`View customer #${id}`, 'info');
+        }
+    }
+});
+
+window.addEventListener('resize', () => {
+    if (state.salesChart) state.salesChart.resize();
+    if (state.orderStatusChart) state.orderStatusChart.resize();
+    if (state.customerActivityChart) state.customerActivityChart.resize();
+    if (state.menuCategoriesChart) state.menuCategoriesChart.resize();
+    if (state.promotionPerformanceChart) state.promotionPerformanceChart.resize();
+    if (state.feedbackChart) state.feedbackChart.resize();
+    if (state.salesTrendsChart) state.salesTrendsChart.resize();
+});
+}
+
+// Debounce Utility
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+}
+
+// Countdown Timer
+function startCountdown() {
+    const endTime = new Date();
+    endTime.setHours(23, 59, 59, 999);
+    const timer = document.getElementById('countdownTimer');
+    function updateTimer() {
+        const now = new Date();
+        const timeLeft = endTime - now;
+        if (timeLeft <= 0) {
+            timer.textContent = 'Day Ended';
+            return;
+        }
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        timer.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        setTimeout(updateTimer, 1000);
+    }
+    updateTimer();
+}
+
+// Initialize
+function init() {
+    setTimeout(() => {
+        document.getElementById('preloader').classList.add('opacity-0');
+        setTimeout(() => {
+            document.getElementById('preloader').classList.add('hidden');
+            document.getElementById('welcomeModal').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            loadDashboard();
+            startCountdown();
+            setupEventListeners();
+        }, 500);
+    }, 1500);
+}
+
+// Start the app
+document.addEventListener('DOMContentLoaded', () => {
+    if (!CONFIG.API_TOKEN) {
+        showToast('Please log in to continue', 'error');
+        setTimeout(() => window.location.href = 'login.html', 2000);
+    } else {
+        init();
+    }
+});
+</script>
+</body>
+</html>
