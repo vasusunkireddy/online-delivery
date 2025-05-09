@@ -19,8 +19,10 @@
       --secondary: #ff8f33;
       --background: #fef3e7;
       --glass-bg: rgba(255, 255, 255, 0.95);
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       --accent: #34d399;
+      --text-dark: #1a202c;
+      --text-light: #ffffff;
     }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -33,14 +35,13 @@
     body {
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(135deg, var(--background), #f8e7d4);
-      color: #1a202c;
+      color: var(--text-dark);
       margin: 0;
       overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .nav-modal {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    .sidebar {
       background: linear-gradient(180deg, var(--primary), var(--secondary));
       box-shadow: var(--shadow);
       width: 280px;
@@ -49,16 +50,34 @@
       top: 0;
       left: 0;
       height: 100%;
-      transform: translateX(-100%);
+      transition: transform 0.3s ease;
       display: flex;
       flex-direction: column;
+      padding: 1.5rem;
     }
-    .nav-modal-open {
+
+    .sidebar.nav-open {
       transform: translateX(0);
-      animation: slideIn 0.3s ease-out;
     }
-    .nav-modal button {
-      color: #ffffff;
+
+    @media (max-width: 1023px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.nav-open {
+        transform: translateX(0);
+      }
+    }
+
+    .sidebar .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .sidebar button {
+      color: var(--text-light);
       transition: all 0.3s ease;
       font-weight: 500;
       border-radius: 12px;
@@ -72,7 +91,8 @@
       position: relative;
       overflow: hidden;
     }
-    .nav-modal button:before {
+
+    .sidebar button:before {
       content: '';
       position: absolute;
       top: 0;
@@ -82,31 +102,41 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
       transition: 0.5s;
     }
-    .nav-modal button:hover:before {
+
+    .sidebar button:hover:before {
       left: 100%;
     }
-    .nav-modal button:hover {
-      background: #ffffff;
+
+    .sidebar button:hover {
+      background: var(--text-light);
       color: var(--primary);
       transform: translateX(8px);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-    .nav-modal button.active {
-      background: #ffffff;
+
+    .sidebar button.active {
+      background: var(--text-light);
       color: var(--primary);
       box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
     }
-    .nav-modal i { 
-      font-size: 1.3rem; 
-      min-width: 24px; 
+
+    .sidebar i {
+      font-size: 1.3rem;
+      min-width: 24px;
     }
-    .nav-modal .logout-btn {
+
+    .sidebar .logout-btn {
       margin-top: auto;
       background: #dc2626;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .nav-modal .logout-btn:hover {
-      background: #ffffff;
+
+    .sidebar .logout-btn:hover {
+      background: var(--text-light);
       color: #dc2626;
+      transform: scale(1.05);
     }
 
     .bottom-nav {
@@ -116,56 +146,60 @@
       left: 0;
       right: 0;
       background: var(--glass-bg);
-      -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: var(--shadow);
       z-index: 2000;
       padding: 10px 0;
     }
+
     .bottom-nav .nav-item {
       flex: 1;
       text-align: center;
-      color: #1a202c;
+      color: var(--text-dark);
       font-size: 0.8rem;
       padding: 10px 0;
       transition: all 0.3s ease;
       position: relative;
     }
+
     .bottom-nav .nav-item.active {
       color: var(--primary);
       background: rgba(255, 107, 0, 0.1);
     }
+
     .bottom-nav .nav-item:hover {
       color: var(--primary);
       transform: scale(1.1);
     }
+
     .bottom-nav i {
       font-size: 1.5rem;
       margin-bottom: 6px;
       transition: transform 0.3s ease;
     }
+
     .bottom-nav .nav-item:hover i {
       transform: rotate(10deg);
     }
 
     .glass {
       background: var(--glass-bg);
-      -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: var(--shadow);
       border-radius: 16px;
       transition: all 0.3s ease;
     }
+
     .glass:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
     }
 
     .stunning-btn {
       background: linear-gradient(45deg, var(--primary), var(--secondary));
-      color: #ffffff;
+      color: var(--text-light);
       padding: 12px 24px;
       border-radius: 12px;
       font-weight: 600;
@@ -176,6 +210,7 @@
       align-items: center;
       gap: 8px;
     }
+
     .stunning-btn:before {
       content: '';
       position: absolute;
@@ -186,9 +221,11 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
       transition: 0.5s;
     }
+
     .stunning-btn:hover:before {
       left: 100%;
     }
+
     .stunning-btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 20px rgba(255, 107, 0, 0.4);
@@ -202,27 +239,32 @@
       scrollbar-width: thin;
       scrollbar-color: var(--primary) #e5e7eb;
     }
+
     table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
     }
+
     th, td {
       padding: 14px;
       text-align: left;
       font-size: 0.9rem;
     }
+
     th {
       background: linear-gradient(45deg, var(--primary), var(--secondary));
-      color: #ffffff;
+      color: var(--text-light);
       position: sticky;
       top: 0;
       z-index: 10;
       font-weight: 600;
     }
+
     tbody tr {
       transition: all 0.2s ease;
     }
+
     tbody tr:hover {
       background: #fff7ed;
       transform: scale(1.01);
@@ -234,20 +276,23 @@
       gap: 10px;
       margin-top: 20px;
     }
+
     .pagination button {
       padding: 10px 16px;
       background: var(--primary);
-      color: #ffffff;
+      color: var(--text-light);
       border-radius: 10px;
       font-weight: 500;
       font-size: 0.9rem;
       transition: all 0.3s ease;
     }
+
     .pagination button:hover:not(:disabled) {
       background: var(--secondary);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+
     .pagination button:disabled {
       background: #d1d5db;
       cursor: not-allowed;
@@ -258,7 +303,7 @@
       top: 20px;
       right: 20px;
       background: var(--primary);
-      color: #ffffff;
+      color: var(--text-light);
       padding: 14px 28px;
       border-radius: 12px;
       box-shadow: var(--shadow);
@@ -268,11 +313,13 @@
       max-width: 90%;
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
+
     .toast.show {
       display: block;
       opacity: 1;
       transform: translateY(0);
     }
+
     .toast.error { background: #dc2626; }
     .toast.success { background: #16a34a; }
 
@@ -295,6 +342,7 @@
       display: flex;
       flex-direction: column;
     }
+
     .chat-window {
       flex: 1;
       overflow-y: auto;
@@ -305,17 +353,21 @@
       scrollbar-width: thin;
       scrollbar-color: var(--primary) #e5e7eb;
     }
+
     .chat-message {
       margin-bottom: 14px;
       display: flex;
       flex-direction: column;
       transition: all 0.2s ease;
     }
+
     .chat-message:hover {
       transform: scale(1.02);
     }
+
     .chat-message.admin { align-items: flex-end; }
     .chat-message.user { align-items: flex-start; }
+
     .chat-message span {
       max-width: 70%;
       padding: 10px 14px;
@@ -323,19 +375,23 @@
       font-size: 0.9rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+
     .chat-message.admin span {
       background: var(--primary);
-      color: #ffffff;
+      color: var(--text-light);
     }
+
     .chat-message.user span {
       background: #e5e7eb;
-      color: #1a202c;
+      color: var(--text-dark);
     }
+
     .chat-input-container {
       display: flex;
       gap: 10px;
       align-items: center;
     }
+
     .chat-input-container input {
       flex: 1;
       padding: 10px 14px;
@@ -344,21 +400,25 @@
       font-size: 0.9rem;
       transition: all 0.2s ease;
     }
+
     .chat-input-container input:focus {
       border-color: var(--primary);
       box-shadow: 0 0 8px rgba(255, 107, 0, 0.3);
     }
+
     .chat-input-container button {
       padding: 10px 20px;
       background: var(--primary);
-      color: #ffffff;
+      color: var(--text-light);
       border-radius: 12px;
       font-size: 0.9rem;
     }
+
     .chat-input-container button:hover {
       background: var(--secondary);
       transform: scale(1.05);
     }
+
     .chat-input-container i {
       font-size: 1.1rem;
     }
@@ -373,6 +433,7 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
     }
+
     .profile-image {
       width: 120px;
       height: 120px;
@@ -381,6 +442,7 @@
       border: 4px solid var(--primary);
       transition: all 0.3s ease;
     }
+
     .profile-image:hover {
       transform: scale(1.1);
       box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
@@ -391,34 +453,57 @@
       border-radius: 8px;
       font-size: 0.85rem;
       margin-right: 8px;
-      color: #ffffff;
+      color: var(--text-light);
       transition: all 0.3s ease;
     }
+
     .status-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+
     .status-btn.confirmed { background: #16a34a; }
     .status-btn.out-for-delivery { background: #3b82f6; }
     .status-btn.accepted { background: #10b981; }
     .status-btn.rejected { background: #dc2626; }
 
     @media (min-width: 1024px) {
-      .main-content { margin-left: 0; transition: margin-left 0.3s ease; }
-      .main-content.nav-open { margin-left: 280px; }
-      .nav-modal { transform: translateX(-100%); }
-      .nav-modal.nav-open { transform: translateX(0); }
-      th, td { font-size: 1rem; padding: 16px; }
-      .chat-container { height: 500px; }
-      .bottom-nav { display: none; }
+      .main-content {
+        margin-left: 280px;
+        transition: margin-left 0.3s ease;
+      }
+      .sidebar {
+        transform: translateX(0);
+      }
+      th, td {
+        font-size: 1rem;
+        padding: 16px;
+      }
+      .chat-container {
+        height: 500px;
+      }
+      .bottom-nav {
+        display: none;
+      }
     }
 
     @media (max-width: 1023px) {
-      .main-content { margin-left: 0; margin-bottom: 70px; }
-      .grid-cols-4 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-      .table-container table { display: block; }
-      .table-container thead, .table-container tbody, .table-container tr { display: block; }
-      .table-container th { display: none; }
+      .main-content {
+        margin-left: 0;
+        margin-bottom: 70px;
+      }
+      .grid-cols-4 {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+      .table-container table {
+        display: block;
+      }
+      .table-container thead, .table-container tbody, .table-container tr {
+        display: block;
+      }
+      .table-container th {
+        display: none;
+      }
       .table-container td {
         display: flex;
         justify-content: space-between;
@@ -431,20 +516,45 @@
         width: 40%;
         min-width: 100px;
       }
-      .modal-content { width: 95%; }
-      .promo-card { padding: 14px; }
-      .promo-card img { height: 140px; }
-      button, input, select { font-size: 0.95rem; }
-      .chat-container { height: 400px; }
-      .chat-message span { max-width: 80%; }
-      .profile-container { padding: 14px; }
-      .profile-image { width: 100px; height: 100px; }
-      .nav-modal i { font-size: 1.3rem; }
-      .header i { font-size: 1.3rem; }
-      .glass i { font-size: 1.3rem; }
-      .bottom-nav { display: flex; }
-      .nav-modal { width: 80%; max-width: 260px; }
-      .nav-modal button { font-size: 0.9rem; padding: 12px 16px; }
+      .modal-content {
+        width: 95%;
+      }
+      .promo-card {
+        padding: 14px;
+      }
+      .promo-card img {
+        height: 140px;
+      }
+      button, input, select {
+        font-size: 0.95rem;
+      }
+      .chat-container {
+        height: 400px;
+      }
+      .chat-message span {
+        max-width: 80%;
+      }
+      .profile-container {
+        padding: 14px;
+      }
+      .profile-image {
+        width: 100px;
+        height: 100px;
+      }
+      .sidebar i, .header i, .glass i {
+        font-size: 1.3rem;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      .sidebar {
+        width: 80%;
+        max-width: 260px;
+      }
+      .sidebar button {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+      }
     }
   </style>
 </head>
@@ -482,8 +592,8 @@
       </div>
     </header>
 
-    <div id="navModal" class="nav-modal p-6">
-      <div class="flex items-center gap-4 mb-8">
+    <div id="sidebar" class="sidebar p-6">
+      <div class="logo-container">
         <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
         <div class="text-xl font-bold text-white">DELICUTE Admin</div>
       </div>
@@ -835,7 +945,7 @@
             <img id="profileImage" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Admin Profile" class="profile-image" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
             <div class="text-center">
               <h4 id="profileName" class="text-xl font-semibold">John Doe</h4>
-              <p id="profileEmail" class="text-gray-600">john.doe@example.com</p>
+              <p id="profileEmail" class="text-gray-600"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="036d686f692c666d6843667b626e736f662c616d6f">[email&#160;protected]</a></p>
             </div>
             <button id="editProfileBtn" class="stunning-btn" aria-label="Edit profile">
               <i class="fas fa-edit"></i> Edit Profile
@@ -929,6 +1039,7 @@
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
   </div>
 
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
     // Configuration
     const CONFIG = {
@@ -1144,7 +1255,7 @@
     const api = {
       async fetchData(endpoint, method = 'GET', data = null) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+          await new Promise(resolve => setTimeout(resolve, 500));
           if (endpoint === '/orders') return MOCK_DATA.orders;
           if (endpoint === '/users') return MOCK_DATA.users;
           if (endpoint === '/menu') return MOCK_DATA.menu;
@@ -1272,7 +1383,7 @@
               <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
                 <i class="fas fa-eye"></i> View
               </button>
-              <button class="status-btn confirmed text-sm px-3 py-1" data-action="status" data-status="confirmed" data-id="${order.id}" aria-label="Mark order ${order.id} as confirmed">
+              <button class="status-btn confirmed text-sm px-3 py-1" data-action="status" data-status="confirmed" data-id="${order.id}" aria-label="Mark order ${order.id} as confirme">
                 <i class="fas fa-check"></i> Confirm
               </button>
               <button class="status-btn out-for-delivery text-sm px-3 py-1" data-action="status" data-status="out-for-delivery" data-id="${order.id}" aria-label="Mark order ${order.id} as out for delivery">
@@ -1496,7 +1607,7 @@
             <td data-label="Comment">${sanitizeInput(f.comment)}</td>
             <td data-label="Date">${new Date(f.createdAt).toLocaleDateString()}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f.id}" aria-label="View feedback ${f.id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f.id}" aria-label="View feedback from ${customer.name}">
                 <i class="fas fa-eye"></i> View
               </button>
             </td>
@@ -1518,7 +1629,7 @@
         data: {
           labels: ratings.length ? ratings : ['No Data'],
           datasets: [{
-            label: 'Feedback Ratings',
+            label: 'Number of Ratings',
             data: ratingCounts.length ? ratingCounts : [0],
             backgroundColor: '#ff6b00',
           }],
@@ -1534,6 +1645,7 @@
       document.getElementById('profileName').textContent = sanitizeInput(profile.name);
       document.getElementById('profileEmail').textContent = sanitizeInput(profile.email);
       document.getElementById('profileImage').src = profile.image || FALLBACK_IMAGE;
+      document.getElementById('profileImage').onerror = () => { this.src = FALLBACK_IMAGE; };
     }
 
     async function loadReports() {
@@ -1561,26 +1673,28 @@
       });
     }
 
-    // Navigation and Section Switching
+    // Navigation
     function switchSection(sectionId) {
       document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
       document.getElementById(`admin-${sectionId}`).classList.remove('hidden');
       document.querySelectorAll('.admin-nav').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll(`.admin-nav[data-section="${sectionId}"]`).forEach(btn => btn.classList.add('active'));
-
-      // Reset pagination for the section
       state.currentPage[sectionId] = 1;
 
-      // Load section data
       if (sectionId === 'dashboard') loadDashboard();
-      else if (sectionId === 'orders') loadOrders();
-      else if (sectionId === 'customers') loadCustomers();
-      else if (sectionId === 'menu') loadMenu();
-      else if (sectionId === 'support') loadSupport();
-      else if (sectionId === 'promotions') loadPromotions();
-      else if (sectionId === 'feedback') loadFeedback();
-      else if (sectionId === 'settings') loadSettings();
-      else if (sectionId === 'reports') loadReports();
+      if (sectionId === 'orders') loadOrders();
+      if (sectionId === 'customers') loadCustomers();
+      if (sectionId === 'menu') loadMenu();
+      if (sectionId === 'support') loadSupport();
+      if (sectionId === 'promotions') loadPromotions();
+      if (sectionId === 'feedback') loadFeedback();
+      if (sectionId === 'settings') loadSettings();
+      if (sectionId === 'reports') loadReports();
+
+      if (window.innerWidth < 1024) {
+        state.isNavOpen = false;
+        document.getElementById('sidebar').classList.remove('nav-open');
+      }
     }
 
     // Event Listeners
@@ -1590,50 +1704,66 @@
         document.getElementById('preloader').style.opacity = '0';
         setTimeout(() => {
           document.getElementById('preloader').style.display = 'none';
+          document.getElementById('adminDashboard').classList.remove('hidden');
           document.getElementById('welcomeModal').classList.remove('hidden');
-          document.getElementById('welcomeModal').classList.add('animate-fadeIn');
+          triggerConfetti();
         }, 500);
-      }, 1500);
+      }, 2000);
 
       // Welcome Modal
       document.getElementById('closeWelcomeModal').addEventListener('click', () => {
         document.getElementById('welcomeModal').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-        triggerConfetti();
-        loadDashboard();
       });
 
       // Navigation Toggle
       document.getElementById('navToggle').addEventListener('click', () => {
         state.isNavOpen = !state.isNavOpen;
-        document.getElementById('navModal').classList.toggle('nav-modal-open', state.isNavOpen);
-        document.querySelector('.main-content').classList.toggle('nav-open', state.isNavOpen);
+        document.getElementById('sidebar').classList.toggle('nav-open', state.isNavOpen);
       });
 
       // Section Navigation
       document.querySelectorAll('.admin-nav').forEach(button => {
         button.addEventListener('click', () => {
           const section = button.getAttribute('data-section');
-          if (section) {
-            switchSection(section);
-            if (state.isNavOpen && window.innerWidth <= 1023) {
-              state.isNavOpen = false;
-              document.getElementById('navModal').classList.remove('nav-modal-open');
-              document.querySelector('.main-content').classList.remove('nav-open');
-            }
-          }
+          if (section) switchSection(section);
         });
       });
 
-      // Logout
-      document.getElementById('logout').addEventListener('click', () => {
-        localStorage.removeItem('jwtToken');
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => window.location.reload(), 1000);
+      // Orders Table Actions
+      document.getElementById('ordersTable').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const action = target.getAttribute('data-action');
+        const orderId = target.getAttribute('data-id');
+        if (action === 'view') {
+          const order = state.dataStore.orders.find(o => o.id == orderId);
+          if (order) {
+            const customer = state.dataStore.customers.find(c => c.id === order.userId) || { name: 'Unknown' };
+            document.getElementById('orderId').textContent = order.id;
+            document.getElementById('paymentId').textContent = order.paymentId || 'N/A';
+            document.getElementById('orderCustomer').textContent = sanitizeInput(customer.name);
+            document.getElementById('orderTotal').textContent = order.total || 0;
+            document.getElementById('orderStatus').textContent = sanitizeInput(order.status);
+            document.getElementById('orderCreatedAt').textContent = new Date(order.createdAt).toLocaleString();
+            document.getElementById('orderItems').innerHTML = order.items.map(item => `
+              <li>${sanitizeInput(item.name)} - ${item.quantity} x ₹${item.price}</li>
+            `).join('');
+            document.getElementById('viewOrderModal').classList.remove('hidden');
+          }
+        } else if (action === 'status') {
+          const status = target.getAttribute('data-status');
+          const result = await api.updateOrderStatus(orderId, status);
+          if (result?.success) {
+            showToast(`Order #${orderId} marked as ${status}`, 'success');
+            loadOrders();
+          }
+        }
       });
 
-      // Profile Quick View
-      document.getElementById('profileQuick').addEventListener('click', () => switchSection('settings'));
+      // Close View Order Modal
+      document.getElementById('closeViewOrderModal').addEventListener('click', () => {
+        document.getElementById('viewOrderModal').classList.add('hidden');
+      });
 
       // Order Search and Filter
       document.getElementById('orderSearch').addEventListener('input', () => {
@@ -1651,45 +1781,38 @@
         loadCustomers();
       });
 
-      // View Order Modal
-      document.getElementById('ordersTable').addEventListener('click', async (e) => {
-        const action = e.target.closest('button')?.getAttribute('data-action');
-        const orderId = e.target.closest('button')?.getAttribute('data-id');
-        const status = e.target.closest('button')?.getAttribute('data-status');
-
-        if (action === 'view' && orderId) {
-          const order = state.dataStore.orders.find(o => o.id == orderId);
-          const customer = state.dataStore.customers.find(c => c.id === order.userId) || { name: 'Unknown' };
-          if (order) {
-            document.getElementById('orderId').textContent = `#${order.id}`;
-            document.getElementById('paymentId').textContent = order.paymentId || 'N/A';
-            document.getElementById('orderCustomer').textContent = sanitizeInput(customer.name);
-            document.getElementById('orderTotal').textContent = order.total || 0;
-            document.getElementById('orderStatus').textContent = sanitizeInput(order.status);
-            document.getElementById('orderCreatedAt').textContent = new Date(order.createdAt).toLocaleString();
-            document.getElementById('orderItems').innerHTML = order.items.map(item => `
-              <li>${sanitizeInput(item.name)} - ${item.quantity} x ₹${item.price}</li>
-            `).join('');
-            document.getElementById('viewOrderModal').classList.remove('hidden');
-          }
-        } else if (action === 'status' && orderId && status) {
-          const result = await api.updateOrderStatus(orderId, status);
-          if (result?.success) {
-            showToast(`Order ${status} successfully`, 'success');
-            loadOrders();
-          }
-        }
-      });
-
-      document.getElementById('closeViewOrderModal').addEventListener('click', () => {
-        document.getElementById('viewOrderModal').classList.add('hidden');
-      });
-
-      // Add Menu Item
+      // Menu Actions
       document.getElementById('addMenuItem').addEventListener('click', () => {
+        document.getElementById('addMenuModal').classList.remove('hidden');
         document.getElementById('addMenuForm').reset();
         document.getElementById('menuImagePreview').classList.add('hidden');
-        document.getElementById('addMenuModal').classList.remove('hidden');
+      });
+
+      document.getElementById('menuTable').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const action = target.getAttribute('data-action');
+        const id = target.getAttribute('data-id');
+        if (action === 'edit') {
+          const item = await api.fetchData(`/menu/${id}`);
+          if (item) {
+            document.getElementById('menuName').value = item.name;
+            document.getElementById('menuCategory').value = item.category;
+            document.getElementById('menuPrice').value = item.price;
+            document.getElementById('menuImagePreview').src = item.image || FALLBACK_IMAGE;
+            document.getElementById('menuImagePreview').classList.remove('hidden');
+            document.getElementById('addMenuModal').classList.remove('hidden');
+            document.getElementById('addMenuForm').dataset.editId = id;
+          }
+        } else if (action === 'delete') {
+          if (confirm(`Are you sure you want to delete ${id}?`)) {
+            const result = await api.fetchData(`/menu/${id}`, 'DELETE');
+            if (result?.success) {
+              showToast('Menu item deleted', 'success');
+              loadMenu();
+            }
+          }
+        }
       });
 
       document.getElementById('menuImage').addEventListener('change', (e) => {
@@ -1706,111 +1829,82 @@
 
       document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = sanitizeInput(document.getElementById('menuName').value);
-        const category = document.getElementById('menuCategory').value;
-        const price = parseFloat(document.getElementById('menuPrice').value);
-        const image = document.getElementById('menuImage').files[0];
-
-        if (image) {
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const newItem = {
-              id: MOCK_DATA.menu.length + 1,
-              name,
-              category,
-              price,
-              image: reader.result,
-            };
-            MOCK_DATA.menu.push(newItem);
-            await api.fetchData('/menu', 'POST', newItem);
-            showToast('Menu item added successfully', 'success');
-            document.getElementById('addMenuModal').classList.add('hidden');
-            loadMenu();
-          };
-          reader.readAsDataURL(image);
+        const id = e.target.dataset.editId;
+        const data = {
+          name: sanitizeInput(document.getElementById('menuName').value),
+          category: document.getElementById('menuCategory').value,
+          price: parseFloat(document.getElementById('menuPrice').value),
+          image: document.getElementById('menuImagePreview').src,
+        };
+        const method = id ? 'PUT' : 'POST';
+        const endpoint = id ? `/menu/${id}` : '/menu';
+        const result = await api.fetchData(endpoint, method, data);
+        if (result?.success) {
+          showToast(id ? 'Menu item updated' : 'Menu item added', 'success');
+          document.getElementById('addMenuModal').classList.add('hidden');
+          loadMenu();
         }
+        delete e.target.dataset.editId;
       });
 
       document.getElementById('closeMenuModal').addEventListener('click', () => {
         document.getElementById('addMenuModal').classList.add('hidden');
       });
 
-      // Edit/Delete Menu Item
-      document.getElementById('menuTable').addEventListener('click', async (e) => {
-        const action = e.target.closest('button')?.getAttribute('data-action');
-        const id = e.target.closest('button')?.getAttribute('data-id');
-
-        if (action === 'edit' && id) {
-          const item = await api.fetchData(`/menu/${id}`);
-          if (item) {
-            document.getElementById('menuName').value = item.name;
-            document.getElementById('menuCategory').value = item.category;
-            document.getElementById('menuPrice').value = item.price;
-            document.getElementById('menuImagePreview').src = item.image || FALLBACK_IMAGE;
-            document.getElementById('menuImagePreview').classList.remove('hidden');
-            document.getElementById('addMenuModal').classList.remove('hidden');
-            document.getElementById('addMenuForm').onsubmit = async (e) => {
-              e.preventDefault();
-              const name = sanitizeInput(document.getElementById('menuName').value);
-              const category = document.getElementById('menuCategory').value;
-              const price = parseFloat(document.getElementById('menuPrice').value);
-              const image = document.getElementById('menuImage').files[0];
-
-              if (image) {
-                const reader = new FileReader();
-                reader.onload = async () => {
-                  const updatedItem = { id, name, category, price, image: reader.result };
-                  await api.fetchData(`/menu/${id}`, 'PUT', updatedItem);
-                  showToast('Menu item updated successfully', 'success');
-                  document.getElementById('addMenuModal').classList.add('hidden');
-                  loadMenu();
-                };
-                reader.readAsDataURL(image);
-              } else {
-                const updatedItem = { id, name, category, price, image: item.image };
-                await api.fetchData(`/menu/${id}`, 'PUT', updatedItem);
-                showToast('Menu item updated successfully', 'success');
-                document.getElementById('addMenuModal').classList.add('hidden');
-                loadMenu();
-              }
-            };
-          }
-        } else if (action === 'delete' && id) {
-          if (confirm('Are you sure you want to delete this menu item?')) {
-            await api.fetchData(`/menu/${id}`, 'DELETE');
-            MOCK_DATA.menu = MOCK_DATA.menu.filter(item => item.id != id);
-            showToast('Menu item deleted successfully', 'success');
-            loadMenu();
-          }
-        }
-      });
-
       // Support Chat
       document.getElementById('chatUserSelect').addEventListener('change', loadSupport);
       document.getElementById('sendChat').addEventListener('click', async () => {
         const userId = document.getElementById('chatUserSelect').value;
-        const text = sanitizeInput(document.getElementById('chatInput').value.trim());
+        const text = sanitizeInput(document.getElementById('chatInput').value);
         if (userId && text) {
-          const newMessage = {
-            id: MOCK_DATA.chatMessages.length + 1,
-            userId: parseInt(userId),
+          const result = await api.fetchData('/chat-messages', 'POST', {
+            userId,
             text,
             isAdmin: true,
             createdAt: new Date().toISOString(),
-          };
-          MOCK_DATA.chatMessages.push(newMessage);
-          document.getElementById('chatInput').value = '';
-          await loadSupport();
+          });
+          if (result?.success) {
+            document.getElementById('chatInput').value = '';
+            loadSupport();
+          }
         } else {
           showToast('Please select a customer and enter a message', 'error');
         }
       });
 
-      // Add Promotion
+      // Promotions
       document.getElementById('addPromotion').addEventListener('click', () => {
+        document.getElementById('addPromotionModal').classList.remove('hidden');
         document.getElementById('addPromotionForm').reset();
         document.getElementById('promoImagePreview').classList.add('hidden');
-        document.getElementById('addPromotionModal').classList.remove('hidden');
+      });
+
+      document.getElementById('promotionsGrid').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const action = target.getAttribute('data-action');
+        const id = target.getAttribute('data-id');
+        if (action === 'edit') {
+          const promo = state.dataStore.promotions.find(p => p.id == id);
+          if (promo) {
+            document.getElementById('promoCode').value = promo.code;
+            document.getElementById('promoDiscount').value = promo.discount;
+            document.getElementById('promoValidFrom').value = promo.validFrom;
+            document.getElementById('promoValidUntil').value = promo.validUntil;
+            document.getElementById('promoImagePreview').src = promo.image || FALLBACK_IMAGE;
+            document.getElementById('promoImagePreview').classList.remove('hidden');
+            document.getElementById('addPromotionModal').classList.remove('hidden');
+            document.getElementById('addPromotionForm').dataset.editId = id;
+          }
+        } else if (action === 'delete') {
+          if (confirm(`Are you sure you want to delete ${id}?`)) {
+            const result = await api.fetchData(`/promotions/${id}`, 'DELETE');
+            if (result?.success) {
+              showToast('Promotion deleted', 'success');
+              loadPromotions();
+            }
+          }
+        }
       });
 
       document.getElementById('promoImage').addEventListener('change', (e) => {
@@ -1827,91 +1921,30 @@
 
       document.getElementById('addPromotionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = sanitizeInput(document.getElementById('promoCode').value);
-        const discount = parseInt(document.getElementById('promoDiscount').value);
-        const validFrom = document.getElementById('promoValidFrom').value;
-        const validUntil = document.getElementById('promoValidUntil').value;
-        const image = document.getElementById('promoImage').files[0];
-
-        if (image) {
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const newPromo = {
-              id: MOCK_DATA.promotions.length + 1,
-              code,
-              discount,
-              validFrom,
-              validUntil,
-              image: reader.result,
-              usageCount: 0,
-            };
-            MOCK_DATA.promotions.push(newPromo);
-            await api.fetchData('/promotions', 'POST', newPromo);
-            showToast('Promotion added successfully', 'success');
-            document.getElementById('addPromotionModal').classList.add('hidden');
-            loadPromotions();
-          };
-          reader.readAsDataURL(image);
+        const id = e.target.dataset.editId;
+        const data = {
+          code: sanitizeInput(document.getElementById('promoCode').value),
+          discount: parseInt(document.getElementById('promoDiscount').value),
+          validFrom: document.getElementById('promoValidFrom').value,
+          validUntil: document.getElementById('promoValidUntil').value,
+          image: document.getElementById('promoImagePreview').src,
+        };
+        const method = id ? 'PUT' : 'POST';
+        const endpoint = id ? `/promotions/${id}` : '/promotions';
+        const result = await api.fetchData(endpoint, method, data);
+        if (result?.success) {
+          showToast(id ? 'Promotion updated' : 'Promotion added', 'success');
+          document.getElementById('addPromotionModal').classList.add('hidden');
+          loadPromotions();
         }
+        delete e.target.dataset.editId;
       });
 
       document.getElementById('closePromotionModal').addEventListener('click', () => {
         document.getElementById('addPromotionModal').classList.add('hidden');
       });
 
-      // Edit/Delete Promotion
-      document.getElementById('promotionsGrid').addEventListener('click', async (e) => {
-        const action = e.target.closest('button')?.getAttribute('data-action');
-        const id = e.target.closest('button')?.getAttribute('data-id');
-
-        if (action === 'edit' && id) {
-          const promo = MOCK_DATA.promotions.find(p => p.id == id);
-          if (promo) {
-            document.getElementById('promoCode').value = promo.code;
-            document.getElementById('promoDiscount').value = promo.discount;
-            document.getElementById('promoValidFrom').value = promo.validFrom;
-            document.getElementById('promoValidUntil').value = promo.validUntil;
-            document.getElementById('promoImagePreview').src = promo.image || FALLBACK_IMAGE;
-            document.getElementById('promoImagePreview').classList.remove('hidden');
-            document.getElementById('addPromotionModal').classList.remove('hidden');
-            document.getElementById('addPromotionForm').onsubmit = async (e) => {
-              e.preventDefault();
-              const code = sanitizeInput(document.getElementById('promoCode').value);
-              const discount = parseInt(document.getElementById('promoDiscount').value);
-              const validFrom = document.getElementById('promoValidFrom').value;
-              const validUntil = document.getElementById('promoValidUntil').value;
-              const image = document.getElementById('promoImage').files[0];
-
-              if (image) {
-                const reader = new FileReader();
-                reader.onload = async () => {
-                  const updatedPromo = { id, code, discount, validFrom, validUntil, image: reader.result, usageCount: promo.usageCount };
-                  await api.fetchData(`/promotions/${id}`, 'PUT', updatedPromo);
-                  showToast('Promotion updated successfully', 'success');
-                  document.getElementById('addPromotionModal').classList.add('hidden');
-                  loadPromotions();
-                };
-                reader.readAsDataURL(image);
-              } else {
-                const updatedPromo = { id, code, discount, validFrom, validUntil, image: promo.image, usageCount: promo.usageCount };
-                await api.fetchData(`/promotions/${id}`, 'PUT', updatedPromo);
-                showToast('Promotion updated successfully', 'success');
-                document.getElementById('addPromotionModal').classList.add('hidden');
-                loadPromotions();
-              }
-            };
-          }
-        } else if (action === 'delete' && id) {
-          if (confirm('Are you sure you want to delete this promotion?')) {
-            await api.fetchData(`/promotions/${id}`, 'DELETE');
-            MOCK_DATA.promotions = MOCK_DATA.promotions.filter(p => p.id != id);
-            showToast('Promotion deleted successfully', 'success');
-            loadPromotions();
-          }
-        }
-      });
-
-      // Edit Profile
+      // Settings
       document.getElementById('editProfileBtn').addEventListener('click', () => {
         const profile = state.dataStore.profile;
         document.getElementById('adminName').value = profile.name;
@@ -1935,26 +1968,14 @@
 
       document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = sanitizeInput(document.getElementById('adminName').value);
-        const email = sanitizeInput(document.getElementById('adminEmail').value);
-        const image = document.getElementById('adminImage').files[0];
-
-        if (image) {
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const updatedProfile = { name, email, image: reader.result };
-            await api.fetchData('/profile', 'PUT', updatedProfile);
-            MOCK_DATA.profile = updatedProfile;
-            showToast('Profile updated successfully', 'success');
-            document.getElementById('editProfileModal').classList.add('hidden');
-            loadSettings();
-          };
-          reader.readAsDataURL(image);
-        } else {
-          const updatedProfile = { name, email, image: state.dataStore.profile.image };
-          await api.fetchData('/profile', 'PUT', updatedProfile);
-          MOCK_DATA.profile = updatedProfile;
-          showToast('Profile updated successfully', 'success');
+        const data = {
+          name: sanitizeInput(document.getElementById('adminName').value),
+          email: sanitizeInput(document.getElementById('adminEmail').value),
+          image: document.getElementById('adminImagePreview').src,
+        };
+        const result = await api.fetchData('/profile', 'PUT', data);
+        if (result?.success) {
+          showToast('Profile updated', 'success');
           document.getElementById('editProfileModal').classList.add('hidden');
           loadSettings();
         }
@@ -1965,68 +1986,73 @@
       });
 
       // Reports
-      document.getElementById('generateDailyReport').addEventListener('click', () => {
+      document.getElementById('generateDailyReport').addEventListener('click', async () => {
         const date = document.getElementById('reportDate').value;
-        if (date) {
-          const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
-          const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-          showToast(`Daily Sales for ${date}: ₹${totalSales.toLocaleString()}`, 'success');
-        } else {
+        if (!date) {
           showToast('Please select a date', 'error');
+          return;
         }
+        const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
+        const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+        showToast(`Daily Sales for ${date}: ₹${totalSales.toLocaleString()}`, 'success');
       });
 
       document.getElementById('exportCsv').addEventListener('click', () => {
         const date = document.getElementById('reportDate').value;
-        if (date) {
-          const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
-          const csv = [
-            ['Order ID', 'Customer', 'Total', 'Status', 'Created At'],
-            ...orders.map(o => {
-              const customer = state.dataStore.customers.find(c => c.id === o.userId) || { name: 'Unknown' };
-              return [o.id, customer.name, o.total, o.status, new Date(o.createdAt).toLocaleString()];
-            }),
-          ].map(row => row.join(',')).join('\n');
-          const blob = new Blob([csv], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `orders_${date}.csv`;
-          a.click();
-          URL.revokeObjectURL(url);
-          showToast('CSV exported successfully', 'success');
-        } else {
-          showToast('Please select a date', 'error');
-        }
+        const orders = date ? state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date) : state.dataStore.orders;
+        const csv = [
+          'Order ID,Customer,Total,Status,Date',
+          ...orders.map(o => {
+            const customer = state.dataStore.customers.find(c => c.id === o.userId) || { name: 'Unknown' };
+            return `${o.id},${sanitizeInput(customer.name)},${o.total},${o.status},${new Date(o.createdAt).toLocaleString()}`;
+          }),
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orders_${date || 'all'}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exported', 'success');
+      });
+
+      // Profile Quick View
+      document.getElementById('profileQuick').addEventListener('click', () => switchSection('settings'));
+
+      // Logout
+      document.getElementById('logout').addEventListener('click', () => {
+        localStorage.removeItem('jwtToken');
+        showToast('Logged out successfully', 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       });
 
       // Countdown Timer
       function updateCountdown() {
         const now = new Date();
-        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-        const diff = endOfDay - now;
-        const hours = Math.floor(diff / 1000 / 60 / 60);
-        const minutes = Math.floor((diff / 1000 / 60) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        document.getElementById('countdownTimer').textContent = `Time until close: ${hours}h ${minutes}m ${seconds}s`;
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        const timeLeft = midnight - now;
+        const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+        const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+        document.getElementById('countdownTimer').textContent = `Daily Reset: ${hours}h ${minutes}m ${seconds}s`;
       }
       setInterval(updateCountdown, 1000);
       updateCountdown();
-    });
 
-    // Accessibility Enhancements
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        document.getElementById('viewOrderModal').classList.add('hidden');
-        document.getElementById('addMenuModal').classList.add('hidden');
-        document.getElementById('addPromotionModal').classList.add('hidden');
-        document.getElementById('editProfileModal').classList.add('hidden');
-        if (state.isNavOpen) {
-          state.isNavOpen = false;
-          document.getElementById('navModal').classList.remove('nav-modal-open');
-          document.querySelector('.main-content').classList.remove('nav-open');
-        }
-      }
+      // Initialize Vanilla Tilt
+      VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
+        max: 8,
+        speed: 400,
+        glare: true,
+        'max-glare': 0.2,
+      });
+
+      // Load Dashboard Initially
+      loadDashboard();
     });
   </script>
 </body>
