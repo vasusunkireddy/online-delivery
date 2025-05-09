@@ -16,9 +16,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// Log DATABASE_URL for debugging (mask sensitive parts)
-const maskedDbUrl = process.env.DATABASE_URL.replace(/:[^@]+@/, ':****@');
-console.log(`Using DATABASE_URL: ${maskedDbUrl}`);
+// Log environment variables for debugging
+const maskedDbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/:[^@]+@/, ':****@') : 'Not set';
+console.log('Environment variables:', {
+  DATABASE_URL: maskedDbUrl,
+  JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set',
+  CLIENT_URL: process.env.CLIENT_URL || 'Not set',
+  PORT: process.env.PORT || 'Not set',
+  NODE_ENV: process.env.NODE_ENV || 'Not set'
+});
 
 // Database connection with pooling
 const pool = new Pool({
@@ -28,6 +34,7 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000 // Increased timeout
 });
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -81,10 +88,12 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Initialize database schema with retry
-async function initDb(retries = 3, delay = 5000) {
+async function initDb(retries = 5, delay = 10000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
+    console.log(`Attempting database connection: Attempt ${attempt}`);
     try {
       const client = await pool.connect();
+      console.log('Database connection successful');
       try {
         await client.query('BEGIN');
         await client.query(`
@@ -340,222 +349,222 @@ app.post('/api/promotions', authenticateToken, upload.single('image'), async (re
       'INSERT INTO promotions (code, discount, valid_from, valid_until, image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [code, parseInt(discount), valid_from, valid_until, image]
     );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error('Error adding promotion:', err);
-    if (err.code === '23505') {
-      res.status(409).json({ message: 'Promo code already exists' });
-    } else {
-      res.status(500).json({ message: 'Error adding promotion' });
-    }
-  }
-});
-
-app.put('/api/promotions/:id', authenticateToken, upload.single('image'), async (req, res) => {
-  const { code, discount, valid_from, valid_until } = req.body;
-  const image = req.file ? `${process.env.CLIENT_URL}/uploads/${req.file.filename}` : req.body.image;
-  try {
-    const result = await pool.query(
-      'UPDATE promotions SET code = $1, discount = $2, valid_from = $3, valid_until = $4, image = $5 WHERE id = $6 RETURNING *',
-      [code, parseInt(discount), valid_from, valid_until, image, req.params.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Promotion not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error updating promotion:', err);
-    if (err.code === '23505') {
-      res.status(409).json({ message: 'Promo code already exists' });
-    } else {
-      res.status(500).json({ message: 'Error updating promotion' });
-    }
-  }
-});
-
-app.delete('/api/promotions/:id', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query('DELETE FROM promotions WHERE id = $1 RETURNING *', [req.params.id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Promotion not found' });
-    }
-    res.json({ message: 'Promotion deleted' });
-  } catch (err) {
-    console.error('Error deleting promotion:', err);
-    res.status(500).json({ message: 'Error deleting promotion' });
-  }
-});
-
-// Feedback Routes
-app.get('/api/feedback', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM feedback ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching feedback:', err);
-    res.status(500).json({ message: 'Error fetching feedback' });
-  }
-});
-
-app.post('/api/feedback/:id/respond', authenticateToken, async (req, res) => {
-  const { response } = req.body;
-  try {
-    const result = await pool.query(
-      'UPDATE feedback SET response = $1 WHERE id = $2 RETURNING *',
-      [response, req.params.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Feedback not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error responding to feedback:', err);
-    res.status(500).json({ message: 'Error responding to feedback' });
-  }
-});
-
-// Chat Message Routes
-app.get('/api/chat-messages', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM chat_messages ORDER BY created_at ASC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching chat messages:', err);
-    res.status(500).json({ message: 'Error fetching chat messages' });
-  }
-});
-
-app.post('/api/chat-messages', authenticateToken, async (req, res) => {
-  const { user_id, text, is_admin } = req.body;
-  if (!user_id || !text || is_admin === undefined) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-  try {
-    const result = await pool.query(
-      'INSERT INTO chat_messages (user_id, text, is_admin) VALUES ($1, $2, $3) RETURNING *',
-      [user_id, text, is_admin]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error('Error sending chat message:', err);
-    res.status(500).json({ message: 'Error sending chat message' });
-  }
-});
-
-// Profile Routes
-app.get('/api/profile', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT name, email, image FROM profiles WHERE user_id = (SELECT id FROM users WHERE email = $1)', [req.user.email]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Profile not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error fetching profile:', err);
-    res.status(500).json({ message: 'Error fetching profile' });
-  }
-});
-
-app.put('/api/profile', authenticateToken, upload.single('image'), async (req, res) => {
-  const { name, email } = req.body;
-  const image = req.file ? `${process.env.CLIENT_URL}/uploads/${req.file.filename}` : req.body.image;
-  try {
-    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [req.user.email]);
-    const userId = userResult.rows[0].id;
-    const result = await pool.query(
-      'UPDATE profiles SET name = $1, email = $2, image = $3 WHERE user_id = $4 RETURNING *',
-      [name, email, image, userId]
-    );
-    if (result.rows.length === 0) {
-      const insertResult = await pool.query(
-        'INSERT INTO profiles (user_id, name, email, image) VALUES ($1, $2, $3, $4) RETURNING *',
-        [userId, name, email, image]
-      );
-      return res.json(insertResult.rows[0]);
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).json({ message: 'Error updating profile' });
-  }
-});
-
-// Report Routes
-app.get('/api/reports/daily', authenticateToken, async (req, res) => {
-  const { date } = req.query;
-  if (!date) {
-    return res.status(400).json({ message: 'Date is required' });
-  }
-  try {
-    const result = await pool.query(
-      'SELECT * FROM orders WHERE DATE(created_at) = $1',
-      [date]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error generating report:', err);
-    res.status(500).json({ message: 'Error generating report' });
-  }
-});
-
-// CSV Export Route
-app.get('/api/export/csv', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM orders');
-    const orders = result.rows;
-    let csv = 'ID,User ID,Total,Status,Created At\n';
-    orders.forEach(order => {
-      csv += `${order.id},${order.user_id},${order.total},${order.status},${order.created_at}\n`;
-    });
-    res.header('Content-Type', 'text/csv');
-    res.attachment('orders.csv');
-    res.send(csv);
-  } catch (err) {
-    console.error('Error exporting CSV:', err);
-    res.status(500).json({ message: 'Error exporting CSV' });
-  }
-});
-
-// Start server
-if (process.env.NODE_ENV !== 'production') {
-  // Local development: Try HTTPS, fall back to HTTP if certificates are missing
-  const keyPath = path.join(__dirname, 'key.pem');
-  const certPath = path.join(__dirname, 'cert.pem');
-  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-    const credentials = {
-      key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath)
-    };
-    https.createServer(credentials, app).listen(PORT, async () => {
-      try {
-        await initDb();
-        console.log(`Server running on https://localhost:${PORT}`);
-      } catch (err) {
-        console.error('Failed to start server:', err);
-        process.exit(1);
+    res.status(201).json(result.rows[ K].image);
+    } catch (err) {
+      console.error('Error adding promotion:', err);
+      if (err.code === '23505') {
+        res.status(409).json({ message: 'Promo code already exists' });
+      } else {
+        res.status(500).json({ message: 'Error adding promotion' });
       }
-    });
+    }
+  });
+  
+  app.put('/api/promotions/:id', authenticateToken, upload.single('image'), async (req, res) => {
+    const { code, discount, valid_from, valid_until } = req.body;
+    const image = req.file ? `${process.env.CLIENT_URL}/uploads/${req.file.filename}` : req.body.image;
+    try {
+      const result = await pool.query(
+        'UPDATE promotions SET code = $1, discount = $2, valid_from = $3, valid_until = $4, image = $5 WHERE id = $6 RETURNING *',
+        [code, parseInt(discount), valid_from, valid_until, image, req.params.id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Promotion not found' });
+      }
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error updating promotion:', err);
+      if (err.code === '23505') {
+        res.status(409).json({ message: 'Promo code already exists' });
+      } else {
+        res.status(500).json({ message: 'Error updating promotion' });
+      }
+    }
+  });
+  
+  app.delete('/api/promotions/:id', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('DELETE FROM promotions WHERE id = $1 RETURNING *', [req.params.id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Promotion not found' });
+      }
+      res.json({ message: 'Promotion deleted' });
+    } catch (err) {
+      console.error('Error deleting promotion:', err);
+      res.status(500).json({ message: 'Error deleting promotion' });
+    }
+  });
+  
+  // Feedback Routes
+  app.get('/api/feedback', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM feedback ORDER BY created_at DESC');
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error fetching feedback:', err);
+      res.status(500).json({ message: 'Error fetching feedback' });
+    }
+  });
+  
+  app.post('/api/feedback/:id/respond', authenticateToken, async (req, res) => {
+    const { response } = req.body;
+    try {
+      const result = await pool.query(
+        'UPDATE feedback SET response = $1 WHERE id = $2 RETURNING *',
+        [response, req.params.id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error responding to feedback:', err);
+      res.status(500).json({ message: 'Error responding to feedback' });
+    }
+  });
+  
+  // Chat Message Routes
+  app.get('/api/chat-messages', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM chat_messages ORDER BY created_at ASC');
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error fetching chat messages:', err);
+      res.status(500).json({ message: 'Error fetching chat messages' });
+    }
+  });
+  
+  app.post('/api/chat-messages', authenticateToken, async (req, res) => {
+    const { user_id, text, is_admin } = req.body;
+    if (!user_id || !text || is_admin === undefined) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    try {
+      const result = await pool.query(
+        'INSERT INTO chat_messages (user_id, text, is_admin) VALUES ($1, $2, $3) RETURNING *',
+        [user_id, text, is_admin]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error('Error sending chat message:', err);
+      res.status(500).json({ message: 'Error sending chat message' });
+    }
+  });
+  
+  // Profile Routes
+  app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT name, email, image FROM profiles WHERE user_id = (SELECT id FROM users WHERE email = $1)', [req.user.email]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      res.status(500).json({ message: 'Error fetching profile' });
+    }
+  });
+  
+  app.put('/api/profile', authenticateToken, upload.single('image'), async (req, res) => {
+    const { name, email } = req.body;
+    const image = req.file ? `${process.env.CLIENT_URL}/uploads/${req.file.filename}` : req.body.image;
+    try {
+      const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [req.user.email]);
+      const userId = userResult.rows[0].id;
+      const result = await pool.query(
+        'UPDATE profiles SET name = $1, email = $2, image = $3 WHERE user_id = $4 RETURNING *',
+        [name, email, image, userId]
+      );
+      if (result.rows.length === 0) {
+        const insertResult = await pool.query(
+          'INSERT INTO profiles (user_id, name, email, image) VALUES ($1, $2, $3, $4) RETURNING *',
+          [userId, name, email, image]
+        );
+        return res.json(insertResult.rows[0]);
+      }
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      res.status(500).json({ message: 'Error updating profile' });
+    }
+  });
+  
+  // Report Routes
+  app.get('/api/reports/daily', authenticateToken, async (req, res) => {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
+    }
+    try {
+      const result = await pool.query(
+        'SELECT * FROM orders WHERE DATE(created_at) = $1',
+        [date]
+      );
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error generating report:', err);
+      res.status(500).json({ message: 'Error generating report' });
+    }
+  });
+  
+  // CSV Export Route
+  app.get('/api/export/csv', authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM orders');
+      const orders = result.rows;
+      let csv = 'ID,User ID,Total,Status,Created At\n';
+      orders.forEach(order => {
+        csv += `${order.id},${order.user_id},${order.total},${order.status},${order.created_at}\n`;
+      });
+      res.header('Content-Type', 'text/csv');
+      res.attachment('orders.csv');
+      res.send(csv);
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      res.status(500).json({ message: 'Error exporting CSV' });
+    }
+  });
+  
+  // Start server
+  if (process.env.NODE_ENV !== 'production') {
+    // Local development: Try HTTPS, fall back to HTTP if certificates are missing
+    const keyPath = path.join(__dirname, 'key.pem');
+    const certPath = path.join(__dirname, 'cert.pem');
+    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+      const credentials = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+      };
+      https.createServer(credentials, app).listen(PORT, async () => {
+        try {
+          await initDb();
+          console.log(`Server running on https://localhost:${PORT}`);
+        } catch (err) {
+          console.error('Failed to start server:', err);
+          process.exit(1);
+        }
+      });
+    } else {
+      console.warn('SSL certificates missing, falling back to HTTP');
+      http.createServer(app).listen(PORT, async () => {
+        try {
+          await initDb();
+          console.log(`Server running on http://localhost:${PORT}`);
+        } catch (err) {
+          console.error('Failed to start server:', err);
+          process.exit(1);
+        }
+      });
+    }
   } else {
-    console.warn('SSL certificates missing, falling back to HTTP');
+    // Render.com: Use HTTP (Render handles HTTPS)
     http.createServer(app).listen(PORT, async () => {
       try {
         await initDb();
-        console.log(`Server running on http://localhost:${PORT}`);
+        console.log(`Server running on port ${PORT}`);
       } catch (err) {
         console.error('Failed to start server:', err);
         process.exit(1);
       }
     });
   }
-} else {
-  // Render.com: Use HTTP (Render handles HTTPS)
-  http.createServer(app).listen(PORT, async () => {
-    try {
-      await initDb();
-      console.log(`Server running on port ${PORT}`);
-    } catch (err) {
-      console.error('Failed to start server:', err);
-      process.exit(1);
-    }
-  });
-}
