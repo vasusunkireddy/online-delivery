@@ -8,23 +8,27 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
 const https = require('https');
+const http = require('http');
 
-require('dotenv').config();
+require('dotenv').config({ path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// Database connection
+// Database connection with pooling
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000
 });
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -73,79 +77,95 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Initialize database schema
-async function initDb() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255),
-        phone VARCHAR(20),
-        role VARCHAR(50) DEFAULT 'customer',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+// Initialize database schema with retry
+async function initDb(retries = 3, delay = 5000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255),
+            phone VARCHAR(20),
+            role VARCHAR(50) DEFAULT 'customer',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        total DECIMAL(10, 2) NOT NULL,
-        status VARCHAR(50) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+          CREATE TABLE IF NOT EXISTS orders (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            total DECIMAL(10, 2) NOT NULL,
+            status VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS menu (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        category VARCHAR(100) NOT NULL,
-        price DECIMAL(10, 2) NOT NULL,
-        image VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+          CREATE TABLE IF NOT EXISTS menu (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            price DECIMAL(10, 2) NOT NULL,
+            image VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS promotions (
-        id SERIAL PRIMARY KEY,
-        code VARCHAR(50) UNIQUE NOT NULL,
-        discount INTEGER NOT NULL,
-        valid_from DATE NOT NULL,
-        valid_until DATE NOT NULL,
-        image VARCHAR(255),
-        usage_count INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+          CREATE TABLE IF NOT EXISTS promotions (
+            id SERIAL PRIMARY KEY,
+            code VARCHAR(50) UNIQUE NOT NULL,
+            discount INTEGER NOT NULL,
+            valid_from DATE NOT NULL,
+            valid_until DATE NOT NULL,
+            image VARCHAR(255),
+            usage_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS feedback (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
-        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-        comment TEXT,
-        response TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+          CREATE TABLE IF NOT EXISTS feedback (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+            rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            comment TEXT,
+            response TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS chat_messages (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        text TEXT NOT NULL,
-        is_admin BOOLEAN NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+          CREATE TABLE IF NOT EXISTS chat_messages (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            text TEXT NOT NULL,
+            is_admin BOOLEAN NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
 
-      CREATE TABLE IF NOT EXISTS profiles (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        image VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('Database schema initialized successfully');
-  } catch (err) {
-    console.error('Error initializing database:', err.message, err.stack);
-    throw err; // Re-throw to handle in server startup
+          CREATE TABLE IF NOT EXISTS profiles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            image VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        await client.query('COMMIT');
+        console.log('Database schema initialized successfully');
+        return;
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      console.error(`Database initialization attempt ${attempt} failed:`, err.message, err.stack);
+      if (attempt === retries) {
+        throw new Error('Failed to initialize database after multiple attempts');
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
 }
 
@@ -493,25 +513,40 @@ app.get('/api/export/csv', authenticateToken, async (req, res) => {
   }
 });
 
-// Start server with HTTPS for local development, HTTP for Render.com
+// Start server
 if (process.env.NODE_ENV !== 'production') {
-  // Local HTTPS setup
-  const credentials = {
-    key: fs.readFileSync(path.join(__dirname, 'key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'cert.pem'))
-  };
-  https.createServer(credentials, app).listen(PORT, async () => {
-    try {
-      await initDb();
-      console.log(`Server running on https://localhost:${PORT}`);
-    } catch (err) {
-      console.error('Failed to start server:', err);
-      process.exit(1);
-    }
-  });
+  // Local development: Try HTTPS, fall back to HTTP if certificates are missing
+  const keyPath = path.join(__dirname, 'key.pem');
+  const certPath = path.join(__dirname, 'cert.pem');
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    const credentials = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+    https.createServer(credentials, app).listen(PORT, async () => {
+      try {
+        await initDb();
+        console.log(`Server running on https://localhost:${PORT}`);
+      } catch (err) {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+      }
+    });
+  } else {
+    console.warn('SSL certificates missing, falling back to HTTP');
+    http.createServer(app).listen(PORT, async () => {
+      try {
+        await initDb();
+        console.log(`Server running on http://localhost:${PORT}`);
+      } catch (err) {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+      }
+    });
+  }
 } else {
-  // Render.com HTTP setup
-  app.listen(PORT, async () => {
+  // Render.com: Use HTTP (Render handles HTTPS)
+  http.createServer(app).listen(PORT, async () => {
     try {
       await initDb();
       console.log(`Server running on port ${PORT}`);
