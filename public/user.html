@@ -31,9 +31,9 @@
     .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
 
     .toast {
-      position: fixed; bottom: 20px; right: 20px; background: #f97316; color: white;
+      position: fixed; bottom: 20px; right: 20px; background: #d97706; color: white;
       padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      z-index: 1000; display: none; font-size: 1rem; transition: opacity 0.3s ease;
+      z-index: 1000; display: none; font-size: 1.125rem; transition: opacity 0.3s ease;
     }
 
     .sidebar {
@@ -45,7 +45,7 @@
     .sidebar button {
       color: #e2e8f0; width: 100%; text-align: left; padding: 12px 16px; border-radius: 12px;
       display: flex; align-items: center; gap: 12px; font-size: 1rem; font-weight: 500; 
-      transition: all 0.2s ease; position: relative; overflow: hidden;
+      transition: all 0.2s ease; position: relative; overflow: hidden; min-height: 48px;
     }
     .sidebar button::before {
       content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; 
@@ -72,17 +72,18 @@
     .hamburger.open div:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b;
-      display: none; justify-content: space-around; padding: 12px 0; z-index: 1000;
+      position: sticky; bottom: 0; left: 0; right: 0; background: #1e293b;
+      display: none; justify-content: space-around; padding: 16px 0; z-index: 1000;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
     }
     .bottom-nav button {
-      color: #e2e8f0; font-size: 0.75rem; display: flex; flex-direction: column;
+      color: #e2e8f0; font-size: 0.875rem; display: flex; flex-direction: column;
       align-items: center; gap: 4px; background: none; border: none; padding: 8px;
-      transition: color 0.2s ease;
+      transition: color 0.2s ease, transform 0.1s ease; min-height: 48px;
     }
     .bottom-nav button.active { color: #f97316; }
-    .bottom-nav button i { font-size: 1.5rem; }
+    .bottom-nav button i { font-size: 2rem; }
+    .bottom-nav button:active { transform: scale(0.95); }
 
     header {
       background: linear-gradient(to right, #f97316, #fb923c); padding: 12px 16px;
@@ -90,24 +91,24 @@
     }
 
     .hero-bg {
-      background: linear-gradient(to right, #ffedd5, #fed7aa); position: relative;
-      overflow: hidden; border-radius: 12px; padding: 16px; display: flex; align-items: center;
+      background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative;
+      overflow: hidden; border-radius: 12px; padding: 12px; display: flex; align-items: center;
       gap: 16px;
     }
-    .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+    .particles { display: none; }
 
     .menu-item {
       background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s ease;
     }
     .menu-item:hover { transform: scale(1.02); }
-    .menu-item img { width: 100%; height: 150px; object-fit: cover; display: block; }
+    .menu-item img { width: 100%; height: auto; aspect-ratio: 4/3; max-height: 120px; object-fit: cover; display: block; }
 
     .banner-container {
       position: relative; overflow: hidden; width: 100%; padding: 0 16px;
     }
     .banner-item {
-      background: white; border-radius: 12px; padding: 16px; min-height: 150px;
+      background: white; border-radius: 12px; padding: 12px; min-height: 120px;
       display: flex; align-items: center; justify-content: space-between;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); position: relative;
     }
@@ -117,14 +118,15 @@
       width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;
       z-index: -1; filter: brightness(0.7);
     }
-    .banner-content { z-index: 1; color: white; max-width: 100%; }
+    .banner-content { z-index: 1; color: white; max-width: 90%; }
     .banner-arrow {
       position: absolute; top: 50%; transform: translateY(-50%); background: #f97316;
       color: white; padding: 8px; border-radius: 50%; cursor: pointer; z-index: 10;
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
     }
-    .banner-arrow.left { left: 8px; }
-    .banner-arrow.right { right: 8px; }
+    .banner-arrow.left { left: 12px; }
+    .banner-arrow.right { right: 12px; }
 
     .chat-container {
       max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #e5e7eb;
@@ -151,6 +153,12 @@
       color: #374151;
     }
 
+    button, .add-to-cart, .filter-btn, .banner-arrow {
+      min-height: 48px; padding: 12px 16px;
+    }
+    .filter-btn { margin-right: 8px; }
+    input, select, textarea { padding: 12px; font-size: 1rem; }
+
     @media (min-width: 1024px) {
       .bottom-nav { display: none; }
       .sidebar { transform: translateX(0); }
@@ -161,21 +169,23 @@
       .text-2xl { font-size: 1.5rem; }
       .grid-cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .hamburger { display: none; }
+      .particles { display: block; }
     }
     @media (max-width: 1023px) {
-      .sidebar { transform: translateX(-100%); width: 240px; }
+      .sidebar { transform: translateX(-100%); width: 180px; }
       .main-content { margin-bottom: 80px; }
       .bottom-nav { display: flex; }
-      .text-2xl { font-size: 1.25rem; }
-      .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .text-2xl { font-size: 1.125rem; line-height: 1.5; }
+      .grid-cols-2 { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
-      .sidebar { width: 200px; }
+      .sidebar { width: 180px; }
       .grid-cols-2 { grid-template-columns: 1fr; }
       .banner-item { padding: 12px; }
       .banner-content { max-width: 90%; }
       .hero-bg { flex-direction: column; align-items: flex-start; }
       header img.profile-img { width: 36px; height: 36px; }
+      header .relative.sm:block { display: none; }
     }
   </style>
 </head>
@@ -183,19 +193,15 @@
   <header class="text-white">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <div id="sidebarToggle" class="hamburger">
+        <button id="sidebarToggle" class="hamburger" aria-label="Toggle sidebar">
           <div></div>
           <div></div>
           <div></div>
-        </div>
+        </button>
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
         <div class="text-2xl font-bold">DELICUTE</div>
       </div>
       <div class="flex items-center gap-4">
-        <div class="relative hidden sm:block">
-          <input type="text" id="searchMenu" class="px-4 py-2 rounded-full bg-white text-gray-800 w-48 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Search..." aria-label="Search dishes">
-          <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
-        </div>
         <button id="cartSummary" class="relative" aria-label="View cart">
           <i class="fas fa-cart-shopping text-xl"></i>
           <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-2">0</span>
@@ -216,14 +222,8 @@
       <nav class="space-y-2">
         <button data-section="dashboard" class="user-nav active"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
         <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i> Menu</button>
-        <button data-section="orders" class="user-nav"><i class="fas fa-shopping-cart"></i> Orders</button>
         <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i> Cart</button>
-        <button data-section="favourites" class="user-nav"><i class="fas fa-heart"></i> Favourites</button>
-        <button data-section="addresses" class="user-nav"><i class="fas fa-map-marker-alt"></i> Addresses</button>
-        <button data-section="loyalty" class="user-nav"><i class="fas fa-star"></i> Loyalty</button>
-        <button data-section="referrals" class="user-nav"><i class="fas fa-user-friends"></i> Refer & Earn</button>
-        <button data-section="support" class="user-nav"><i class="fas fa-headset"></i> Support</button>
-        <button data-section="faq" class="user-nav"><i class="fas fa-question-circle"></i> FAQ</button>
+        <button data-section="orders" class="user-nav"><i class="fas fa-shopping-cart"></i> Orders</button>
         <button data-section="profile" class="user-nav"><i class="fas fa-user"></i> Profile</button>
         <button id="logoutBtn" class="text-red-300 hover:bg-red-800 hover:text-white"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </nav>
@@ -240,8 +240,8 @@
               <button class="apply-banner-offer bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Apply Now</button>
             </div>
           </div>
-          <button id="prevBanner" class="banner-arrow left"><i class="fas fa-chevron-left"></i></button>
-          <button id="nextBanner" class="banner-arrow right"><i class="fas fa-chevron-right"></i></button>
+          <button id="prevBanner" class="banner-arrow left" aria-label="Previous banner"><i class="fas fa-chevron-left"></i></button>
+          <button id="nextBanner" class="banner-arrow right" aria-label="Next banner"><i class="fas fa-chevron-right"></i></button>
         </div>
         <div class="hero-bg mb-6">
           <canvas class="particles"></canvas>
@@ -256,9 +256,9 @@
         </div>
         <div class="grid grid-cols-2 gap-4 mb-6">
           <button data-section="orders" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-shopping-cart mr-2"></i> Track Order</button>
-          <button data-section="favourites" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-heart mr-2"></i> Favourites</button>
-          <button data-section="support" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-headset mr-2"></i> Support</button>
-          <button data-section="loyalty" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-star mr-2"></i> Loyalty</button>
+          <button data-section="cart" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-cart-shopping mr-2"></i> Cart</button>
+          <button data-section="profile" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-user mr-2"></i> Profile</button>
+          <button data-section="menu" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-utensils mr-2"></i> Menu</button>
         </div>
         <h3 class="text-xl font-bold mb-4">Popular Picks</h3>
         <div id="popular" class="grid grid-cols-2 gap-4 mb-6"></div>
@@ -368,14 +368,6 @@
         </div>
       </section>
 
-      <section id="user-favourites" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Your Favourites</h2>
-          <button id="backFromFavourites" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <div id="favouritesItems" class="grid grid-cols-2 gap-4"></div>
-      </section>
-
       <section id="user-addresses" class="user-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-orange-600">Your Addresses</h2>
@@ -383,61 +375,6 @@
         </div>
         <button id="addAddress" class="mb-4 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-plus mr-2"></i>Add Address</button>
         <div id="addressItems" class="space-y-4"></div>
-      </section>
-
-      <section id="user-loyalty" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Loyalty Points</h2>
-          <button id="backFromLoyalty" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow">
-          <p class="text-lg font-semibold mb-4">Points: <span id="loyaltyPoints">0</span></p>
-          <h3 class="text-lg font-bold mb-2">History</h3>
-          <div id="loyaltyHistory"></div>
-        </div>
-      </section>
-
-      <section id="user-referrals" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Refer & Earn</h2>
-          <button id="backFromReferrals" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow">
-          <p class="text-sm mb-4">Share your referral code!</p>
-          <p class="text-lg font-semibold">Code: <span id="referralCode"></span></p>
-          <a id="referralLink" href="#" class="mt-4 inline-block bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-share-alt mr-2"></i>Share Link</a>
-        </div>
-      </section>
-
-      <section id="user-support" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Support</h2>
-          <button id="backFromSupport" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <button id="createTicketBtn" class="mb-4 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-ticket-alt mr-2"></i>Create Ticket</button>
-        <div class="bg-white rounded-lg p-4 shadow mb-4">
-          <h3 class="text-lg font-bold mb-2">Tickets</h3>
-          <div id="supportTickets" class="space-y-4"></div>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow">
-          <h3 class="text-lg font-bold mb-2">Live Chat</h3>
-          <div id="chatMessages" class="chat-container mb-4"></div>
-          <div class="typing-indicator text-sm text-gray-500" id="typingIndicator"></div>
-          <div class="flex gap-2">
-            <input type="text" id="chatInput" class="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Type message..." aria-label="Chat message">
-            <button id="sendChat" class="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-paper-plane"></i></button>
-          </div>
-        </div>
-      </section>
-
-      <section id="user-faq" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">FAQ</h2>
-          <button id="backFromFAQ" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow">
-          <div id="faqItems" class="space-y-4"></div>
-        </div>
       </section>
 
       <section id="user-profile" class="user-section hidden animate-slideUp">
@@ -475,7 +412,6 @@
     <button data-section="dashboard" class="user-nav active"><i class="fas fa-home"></i><span>Home</span></button>
     <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i><span>Menu</span></button>
     <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i><span>Cart</span></button>
-    <button data-section="orders" class="user-nav"><i class="fas fa-shopping-bag"></i><span>Orders</span></button>
     <button data-section="profile" class="user-nav"><i class="fas fa-user"></i><span>Profile</span></button>
   </nav>
 
@@ -574,16 +510,20 @@
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.style.display = 'none', 300);
-      }, 3000);
+      }, 5000);
       toast.style.opacity = '1';
     };
 
-    const triggerConfetti = () => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
+    const triggerConfetti = () => {
+      if (window.innerWidth > 640) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
+      }
+    };
 
     // Mock API Fetch
     const apiFetch = async (endpoint, method = 'GET', data = null) => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         if (endpoint === '/status') return MOCK_DATA.status;
         if (endpoint === '/offers') return MOCK_DATA.offers;
         if (endpoint.startsWith('/menu')) {
@@ -708,6 +648,18 @@
 
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
+    // Swipe-to-close sidebar
+    let touchStartX = 0;
+    sidebar.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+    });
+    sidebar.addEventListener('touchmove', e => {
+      const touchX = e.touches[0].clientX;
+      if (touchStartX - touchX > 50 && !sidebar.classList.contains('sidebar-hidden')) {
+        toggleSidebar();
+      }
+    });
+
     document.addEventListener('click', (e) => {
       if (window.innerWidth < 1024 && !sidebar.contains(e.target) && 
           !e.target.closest('#sidebarToggle') && 
@@ -733,12 +685,7 @@
       if (sectionId === 'menu') loadMenu();
       else if (sectionId === 'cart') loadCart();
       else if (sectionId === 'orders') loadOrders();
-      else if (sectionId === 'favourites') loadFavourites();
       else if (sectionId === 'addresses') loadAddresses();
-      else if (sectionId === 'loyalty') loadLoyalty();
-      else if (sectionId === 'referrals') loadReferrals();
-      else if (sectionId === 'support') loadSupport();
-      else if (sectionId === 'faq') loadFAQ();
       else if (sectionId === 'profile') loadProfile();
       if (window.innerWidth < 1024) toggleSidebar();
     };
@@ -1043,49 +990,6 @@
       }
     });
 
-    // Favourites
-    const loadFavourites = async () => {
-      const favourites = await apiFetch('/favourites');
-      state.favourites = favourites || [];
-      const container = document.getElementById('favouritesItems');
-      container.innerHTML = favourites?.length ? favourites.map(i => `
-        <div class="menu-item">
-          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
-          <div class="p-4">
-            <h3 class="text-base font-semibold">${i.name}</h3>
-            <p class="text-gray-600">₹${i.price}</p>
-            <p class="text-sm text-gray-500">${i.description || 'No description'}</p>
-            <div class="flex gap-2 mt-2">
-              <button class="add-to-cart bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700" data-id="${i.id}" data-name="${i.name}" data-price="${i.price}"><i class="fas fa-cart-plus mr-2"></i>Add</button>
-              <button class="toggle-favourite bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300" data-id="${i.id}"><i class="fas fa-heart text-red-500"></i></button>
-            </div>
-          </div>
-        </div>
-      `).join('') : '<p>No favourite items</p>';
-      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 10, speed: 400 });
-    };
-
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.toggle-favourite');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const isFavourite = state.favourites.some(f => f.id === id);
-      const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
-      const data = await apiFetch(endpoint, 'POST', { itemId: id });
-      if (data && data.success) {
-        if (isFavourite) {
-          state.favourites = state.favourites.filter(f => f.id !== id);
-          showToast('Removed from favourites');
-        } else {
-          const item = (await apiFetch('/menu')).find(i => i.id === id);
-          state.favourites.push(item);
-          showToast('Added to favourites');
-        }
-        if (!document.getElementById('user-menu').classList.contains('hidden')) loadMenu();
-        if (!document.getElementById('user-favourites').classList.contains('hidden')) loadFavourites();
-      }
-    });
-
     // Addresses
     const loadAddresses = async () => {
       const addresses = await apiFetch('/addresses');
@@ -1266,105 +1170,6 @@
       }
     });
 
-    // Loyalty
-    const loadLoyalty = async () => {
-      const loyalty = await apiFetch('/loyalty');
-      document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-      document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
-        <div class="border-b py-2">
-          <p>${h.description}</p>
-          <p class="text-sm text-gray-600">${h.points} points on ${new Date(h.date).toLocaleDateString()}</p>
-        </div>
-      `).join('') : '<p>No loyalty history</p>';
-    };
-
-    // Referrals
-    const loadReferrals = async () => {
-      const referrals = await apiFetch('/referrals');
-      state.referral = referrals || { code: '', link: '' };
-      document.getElementById('referralCode').textContent = referrals?.code || 'N/A';
-      const linkEl = document.getElementById('referralLink');
-      linkEl.href = referrals?.link || '#';
-      linkEl.textContent = referrals?.link ? 'Share Link' : 'No referral link';
-    };
-
-    // Support
-    const loadSupport = async () => {
-      const tickets = await apiFetch('/support/tickets');
-      const chat = await apiFetch('/support/chat');
-      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-        <div class="border-b py-2">
-          <p class="font-semibold">${t.subject}</p>
-          <p class="text-sm text-gray-600">Status: ${t.status} | Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
-        </div>
-      `).join('') : '<p>No support tickets</p>';
-      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
-        <div class="chat-message ${m.sender}">
-          <p>${m.content}</p>
-          <p class="text-xs text-gray-500">${new Date(m.timestamp).toLocaleString()}</p>
-        </div>
-      `).join('') : '<p>No messages</p>';
-      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-    };
-
-    document.getElementById('createTicketBtn').addEventListener('click', () => {
-      const modal = document.createElement('div');
-      modal.className = 'share-modal active';
-      modal.innerHTML = `
-        <div class="share-modal-content">
-          <span class="close">×</span>
-          <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
-          <form id="ticketForm" class="space-y-4">
-            <div>
-              <label class="block text-gray-700">Subject</label>
-              <input type="text" id="ticketSubject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">Description</label>
-              <textarea id="ticketDescription" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit Ticket</button>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#ticketForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const ticket = {
-          subject: document.getElementById('ticketSubject').value,
-          description: document.getElementById('ticketDescription').value
-        };
-        const data = await apiFetch('/support/tickets/create', 'POST', ticket);
-        if (data && data.success) {
-          showToast('Ticket created');
-          modal.remove();
-          loadSupport();
-        }
-      });
-    });
-
-    document.getElementById('sendChat').addEventListener('click', async () => {
-      const message = document.getElementById('chatInput').value.trim();
-      if (!message) return showToast('Enter a message');
-      const data = await apiFetch('/support/chat/send', 'POST', { message });
-      if (data && data.success) {
-        document.getElementById('chatInput').value = '';
-        loadSupport();
-      }
-    });
-
-    // FAQ
-    const loadFAQ = async () => {
-      const faq = await apiFetch('/faq');
-      document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
-        <div class="border-b py-2">
-          <p class="font-semibold">${f.question}</p>
-          <p class="text-gray-600">${f.answer}</p>
-        </div>
-      `).join('') : '<p>No FAQs available</p>';
-    };
-
     // Profile
     const loadProfile = async () => {
       const profile = await apiFetch('/profile');
@@ -1380,98 +1185,141 @@
       if (file) {
         const reader = new FileReader();
         reader.onload = () => {
-          state.profileImage = reader.result;
-          document.getElementById('profileImage').src = state.profileImage;
+          state.profileImage = reader.result;          document.getElementById('profileImage').src = state.profileImage;
           document.querySelectorAll('.profile-img').forEach(img => img.src = state.profileImage);
-          showToast('Profile image updated');
         };
         reader.readAsDataURL(file);
       }
     });
 
-    document.getElementById('editProfileBtn').addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#profileName, #profileEmail, #profilePhone');
-      const isEditing = inputs[0].readOnly;
-      inputs.forEach(input => input.readOnly = !isEditing);
-      document.getElementById('editProfileBtn').textContent = isEditing ? 'Save Profile' : 'Edit Profile';
-      if (!isEditing) {
+    document.getElementById('editProfileBtn').addEventListener('click', async () => {
+      const nameInput = document.getElementById('profileName');
+      const emailInput = document.getElementById('profileEmail');
+      const phoneInput = document.getElementById('profilePhone');
+      const isEditable = nameInput.readOnly;
+
+      if (isEditable) {
+        nameInput.readOnly = false;
+        emailInput.readOnly = false;
+        phoneInput.readOnly = false;
+        nameInput.focus();
+        document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-2"></i>Save Profile';
+      } else {
         const updatedProfile = {
-          name: document.getElementById('profileName').value,
-          email: document.getElementById('profileEmail').value,
-          phone: document.getElementById('profilePhone').value
+          name: nameInput.value,
+          email: emailInput.value,
+          phone: phoneInput.value,
+          image: state.profileImage
         };
-        apiFetch('/profile/update', 'POST', updatedProfile).then(data => {
-          if (data && data.success) showToast('Profile updated');
-        });
+        const data = await apiFetch('/profile/update', 'POST', updatedProfile);
+        if (data && data.success) {
+          showToast('Profile updated');
+          nameInput.readOnly = true;
+          emailInput.readOnly = true;
+          phoneInput.readOnly = true;
+          document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Profile';
+        }
       }
     });
 
-    // Filters
-    const setupFilters = () => {
-      const applyFilters = () => {
-        const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
-        const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value || 'all';
-        const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value || '';
-        loadMenu(category, price, query);
-      };
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          applyFilters();
-        });
-      });
-      document.getElementById('priceFilter')?.addEventListener('change', applyFilters);
-      document.getElementById('menuPriceFilter')?.addEventListener('change', applyFilters);
-      document.getElementById('searchMenu')?.addEventListener('input', debounce(applyFilters, 300));
-      document.getElementById('menuSearch')?.addEventListener('input', debounce(applyFilters, 300));
+    // Favourites
+    const loadFavourites = async () => {
+      const favourites = await apiFetch('/favourites');
+      state.favourites = favourites || [];
     };
 
-    // Share Modal
-    const initShareModal = () => {
-      const modal = document.getElementById('shareModal');
-      const openBtn = document.getElementById('shareBtn');
-      const closeBtn = modal.querySelector('.close');
-      openBtn.addEventListener('click', () => {
-        modal.classList.add('active');
-        const shareUrl = state.referral.link || 'https://delicute.com';
-        const shareText = 'Check out DELICUTE for amazing food! Use my referral code: ' + (state.referral.code || 'DEL123');
-        document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
-        document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-        document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-      });
-      closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-      modal.addEventListener('click', e => {
-        if (e.target === modal) modal.classList.remove('active');
-      });
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.toggle-favourite');
+      if (!btn) return;
+      const itemId = btn.dataset.id;
+      const isFavourite = state.favourites.some(f => f.id === itemId);
+      const endpoint = isFavourite ? '/favourites/remove' : '/favourites/add';
+      const data = await apiFetch(endpoint, 'POST', { itemId });
+      if (data && data.success) {
+        await loadFavourites();
+        showToast(isFavourite ? 'Removed from favourites' : 'Added to favourites');
+        btn.querySelector('.fa-heart').classList.toggle('text-red-500', !isFavourite);
+      }
+    });
+
+    // Menu Filters
+    const applyMenuFilters = () => {
+      const category = document.querySelector('#user-menu .filter-btn.active')?.dataset.category || 'all';
+      const price = document.getElementById('menuPriceFilter').value;
+      const query = document.getElementById('menuSearch').value;
+      loadMenu(category, price, query);
     };
+
+    document.querySelectorAll('#user-menu .filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#user-menu .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyMenuFilters();
+      });
+    });
+
+    document.getElementById('menuPriceFilter').addEventListener('change', applyMenuFilters);
+    document.getElementById('menuSearch').addEventListener('input', applyMenuFilters);
+
+    // Dashboard Filters
+    const applyDashboardFilters = () => {
+      const category = document.querySelector('#user-dashboard .filter-btn.active')?.dataset.category || 'all';
+      const price = document.getElementById('priceFilter').value;
+      loadMenu(category, price);
+    };
+
+    document.querySelectorAll('#user-dashboard .filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#user-dashboard .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyDashboardFilters();
+      });
+    });
+
+    document.getElementById('priceFilter').addEventListener('change', applyDashboardFilters);
+
+    // Share Modal
+    const shareModal = document.getElementById('shareModal');
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const referral = await apiFetch('/referrals');
+      state.referral.link = referral?.link || 'https://delicute.com';
+      shareModal.classList.add('active');
+      const shareUrl = encodeURIComponent(state.referral.link);
+      const shareText = encodeURIComponent('Check out DELICUTE for amazing food! Use my referral link: ');
+      document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${shareText}${shareUrl}`;
+      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
+      document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+    });
+
+    shareModal.querySelector('.close').addEventListener('click', () => {
+      shareModal.classList.remove('active');
+    });
 
     // Particles Animation
     const initParticles = () => {
       const canvas = document.querySelector('.particles');
+      if (!canvas) return;
       const ctx = canvas.getContext('2d');
       canvas.width = canvas.parentElement.offsetWidth;
       canvas.height = canvas.parentElement.offsetHeight;
-      const particles = [];
-      for (let i = 0; i < 50; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          radius: Math.random() * 2 + 1,
-          vx: Math.random() * 2 - 1,
-          vy: Math.random() * 2 - 1
-        });
-      }
+      const particles = Array.from({ length: 50 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        speedX: (Math.random() - 0.5) * 2,
+        speedY: (Math.random() - 0.5) * 2
+      }));
+
       const animate = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = '#f97316';
           ctx.fill();
         });
         requestAnimationFrame(animate);
@@ -1479,27 +1327,20 @@
       animate();
     };
 
-    // Debounce
-    const debounce = (fn, ms) => {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), ms);
-      };
-    };
-
     // Initialize
     const init = async () => {
+      if (!state.isLoggedIn) {
+        window.location.href = 'index.html';
+        return;
+      }
       await loadStatusBar();
       await loadBanners();
       await loadOffers();
       await loadMenu();
       await loadCart();
-      await loadProfile();
-      setupFilters();
-      initShareModal();
+      await loadFavourites();
       initParticles();
-      if (!state.isLoggedIn) window.location.href = 'index.html';
+      showSection('dashboard');
     };
 
     init();
