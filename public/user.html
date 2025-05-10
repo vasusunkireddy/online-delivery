@@ -22,49 +22,49 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
-    
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes slideIn { from { transform: translate translateX(-100%); } to { transform: translateX(0); } }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
     .animate-slideUp { animation: slideUp 0.5s ease-out; }
     .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
 
     .toast {
-      position: fixed; bottom: 20px; right: 20px; background: #d97706; color: white;
+      position: fixed; bottom: 20px; right: 20px; background: #f97316; color: white;
       padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      z-index: 1000; display: none; font-size: 1.125rem; transition: opacity 0.3s ease;
+      z-index: 1000; display: none; font-size: 0.9rem; transition: opacity 0.3s ease;
     }
 
     .sidebar {
-      background: linear-gradient(180deg, #1e293b 0%, #334155 100%); width: 280px; height: 100vh; 
-      position: fixed; top: 0; left: 0; padding: 24px 16px; box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2); 
-      z-index: 1000; transition: transform 0.3s ease; border-radius: 0 16px 16px 0; overflow-y: auto;
+      background: linear-gradient(180deg, #1e293b 0%, #334155 100%); width: 260px; height: 100vh;
+      position: fixed; top: 0; left: 0; padding: 16px; box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+      z-index: 1000; transition: transform 0.3s ease; border-radius: 0 12px 12px 0; overflow-y: auto;
     }
     .sidebar-hidden { transform: translateX(-100%); }
     .sidebar button {
-      color: #e2e8f0; width: 100%; text-align: left; padding: 12px 16px; border-radius: 12px;
-      display: flex; align-items: center; gap: 12px; font-size: 1rem; font-weight: 500; 
-      transition: all 0.2s ease; position: relative; overflow: hidden; min-height: 48px;
+      color: #e2e8f0; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px;
+      display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 500;
+      transition: all 0.2s ease; position: relative; overflow: hidden;
     }
     .sidebar button::before {
-      content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; 
+      content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%;
       background: #f97316; transform: translateX(-100%); transition: transform 0.2s ease;
     }
     .sidebar button:hover { background: rgba(71, 85, 105, 0.5); }
     .sidebar button:hover::before { transform: translateX(0); }
     .sidebar button.active { background: #f97316; color: white; }
     .sidebar button.active::before { transform: translateX(0); }
-    .sidebar button i { font-size: 1.2rem; transition: transform 0.2s ease; }
+    .sidebar button i { font-size: 1.1rem; transition: transform 0.2s ease; }
     .sidebar button:hover i { transform: scale(1.1); }
-    .sidebar img.profile-img { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #f97316; object-fit: cover; }
+    .sidebar img.profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #f97316; object-fit: cover; }
 
     .hamburger {
-      display: flex; flex-direction: column; justify-content: space-around; width: 24px; height: 20px; 
+      display: flex; flex-direction: column; justify-content: space-around; width: 24px; height: 18px;
       cursor: pointer; transition: all 0.3s ease; z-index: 1010; padding: 4px;
     }
     .hamburger div {
-      width: 100%; height: 3px; background: white; border-radius: 2px; 
+      width: 100%; height: 3px; background: white; border-radius: 2px;
       transition: all 0.3s ease; transform-origin: center;
     }
     .hamburger.open div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
@@ -72,43 +72,42 @@
     .hamburger.open div:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
     .bottom-nav {
-      position: sticky; bottom: 0; left: 0; right: 0; background: #1e293b;
-      display: none; justify-content: space-around; padding: 16px 0; z-index: 1000;
+      position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b;
+      display: none; justify-content: space-around; padding: 10px 0; z-index: 1000;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
     }
     .bottom-nav button {
-      color: #e2e8f0; font-size: 0.875rem; display: flex; flex-direction: column;
-      align-items: center; gap: 4px; background: none; border: none; padding: 8px;
-      transition: color 0.2s ease, transform 0.1s ease; min-height: 48px;
+      color: #e2e8f0; font-size: 0.7rem; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; background: none; border: none; padding: 6px;
+      transition: color 0.2s ease;
     }
     .bottom-nav button.active { color: #f97316; }
-    .bottom-nav button i { font-size: 2rem; }
-    .bottom-nav button:active { transform: scale(0.95); }
+    .bottom-nav button i { font-size: 1.4rem; }
 
     header {
-      background: linear-gradient(to right, #f97316, #fb923c); padding: 12px 16px;
+      background: linear-gradient(to right, #f97316, #fb923c); padding: 10px 12px;
       position: sticky; top: 0; z-index: 20;
     }
 
     .hero-bg {
-      background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative;
-      overflow: hidden; border-radius: 12px; padding: 12px; display: flex; align-items: center;
-      gap: 16px;
+      background: linear-gradient(to right, #ffedd5, #fed7aa); position: relative;
+      overflow: hidden; border-radius: 10px; padding: 12px; display: flex; align-items: center;
+      gap: 12px;
     }
-    .particles { display: none; }
+    .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 
     .menu-item {
-      background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s ease;
     }
     .menu-item:hover { transform: scale(1.02); }
-    .menu-item img { width: 100%; height: auto; aspect-ratio: 4/3; max-height: 120px; object-fit: cover; display: block; }
+    .menu-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
 
     .banner-container {
-      position: relative; overflow: hidden; width: 100%; padding: 0 16px;
+      position: relative; overflow: hidden; width: 100%; padding: 0 12px;
     }
     .banner-item {
-      background: white; border-radius: 12px; padding: 12px; min-height: 120px;
+      background: white; border-radius: 10px; padding: 12px; min-height: 120px;
       display: flex; align-items: center; justify-content: space-between;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); position: relative;
     }
@@ -118,22 +117,21 @@
       width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;
       z-index: -1; filter: brightness(0.7);
     }
-    .banner-content { z-index: 1; color: white; max-width: 90%; }
+    .banner-content { z-index: 1; color: white; max-width: 100%; }
     .banner-arrow {
       position: absolute; top: 50%; transform: translateY(-50%); background: #f97316;
-      color: white; padding: 8px; border-radius: 50%; cursor: pointer; z-index: 10;
-      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem;
+      color: white; padding: 6px; border-radius: 50%; cursor: pointer; z-index: 10;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
     }
-    .banner-arrow.left { left: 12px; }
-    .banner-arrow.right { right: 12px; }
+    .banner-arrow.left { left: 6px; }
+    .banner-arrow.right { right: 6px; }
 
     .chat-container {
-      max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #e5e7eb;
+      max-height: 250px; overflow-y: auto; padding: 8px; border: 1px solid #e5e7eb;
       border-radius: 8px; background: white;
     }
     .chat-message {
-      margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 70%;
+      margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; max-width: 75%;
     }
     .chat-message.user { background: #f97316; color: white; margin-left: auto; }
     .chat-message.admin { background: #e5e7eb; color: #374151; margin-right: auto; }
@@ -144,70 +142,73 @@
     }
     .share-modal.active { display: flex; opacity: 1; }
     .share-modal-content {
-      background: white; padding: 16px; border-radius: 12px; max-width: 90%; width: 400px;
+      background: white; padding: 12px; border-radius: 10px; max-width: 90%; width: 320px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); transform: scale(0.8); transition: transform 0.3s ease;
     }
     .share-modal.active .share-modal-content { transform: scale(1); }
     .share-modal-content .close {
-      position: absolute; top: 10px; right: 10px; font-size: 1.5rem; cursor: pointer;
+      position: absolute; top: 8px; right: 8px; font-size: 1.2rem; cursor: pointer;
       color: #374151;
     }
-
-    button, .add-to-cart, .filter-btn, .banner-arrow {
-      min-height: 48px; padding: 12px 16px;
-    }
-    .filter-btn { margin-right: 8px; }
-    input, select, textarea { padding: 12px; font-size: 1rem; }
 
     @media (min-width: 1024px) {
       .bottom-nav { display: none; }
       .sidebar { transform: translateX(0); }
-      .main-content { margin-left: 280px; }
-      .menu-item img { height: 200px; }
-      .banner-item { min-height: 200px; }
+      .main-content { margin-left: 260px; }
+      .menu-Item img { height: 180px; }
+      .banner-item { min-height: 180px; }
       .banner-content { max-width: 60%; }
       .text-2xl { font-size: 1.5rem; }
       .grid-cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .hamburger { display: none; }
-      .particles { display: block; }
     }
     @media (max-width: 1023px) {
-      .sidebar { transform: translateX(-100%); width: 180px; }
-      .main-content { margin-bottom: 80px; }
+      .sidebar { transform: translateX(-100%); width: 220px; }
+      .main-content { margin-bottom: 60px; }
       .bottom-nav { display: flex; }
-      .text-2xl { font-size: 1.125rem; line-height: 1.5; }
-      .grid-cols-2 { grid-template-columns: 1fr; }
+      .text-2xl { font-size: 1.25rem; }
+      .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-bg { flex-direction: column; align-items: flex-start; }
+      header img.profile-img { width: 32px; height: 32px; }
     }
     @media (max-width: 640px) {
-      .sidebar { width: 180px; }
+      .sidebar { width: 200px; }
       .grid-cols-2 { grid-template-columns: 1fr; }
-      .banner-item { padding: 12px; }
-      .banner-content { max-width: 90%; }
-      .hero-bg { flex-direction: column; align-items: flex-start; }
-      header img.profile-img { width: 36px; height: 36px; }
-      header .relative.sm:block { display: none; }
+      .banner-item { padding: 10px; min-height: 100px; }
+      .banner-content { max-width: 100%; }
+      .menu-item img { height: 100px; }
+      .text-2xl { font-size: 1.1rem; }
+      .hero-bg { padding: 10px; }
+      header { padding: 8px 10px; }
+      .banner-arrow { width: 24px; height: 24px; padding: 5px; }
+      .chat-container { max-height: 200px; }
+      .share-modal-content { width: 280px; }
     }
   </style>
 </head>
 <body>
   <header class="text-white">
     <div class="container mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <button id="sidebarToggle" class="hamburger" aria-label="Toggle sidebar">
+      <div class="flex items-center gap-2">
+        <div id="sidebarToggle" class="hamburger">
           <div></div>
           <div></div>
           <div></div>
-        </button>
-        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
+        </div>
+        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-7">
         <div class="text-2xl font-bold">DELICUTE</div>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="relative sm:block hidden">
+          <input type="text" id="searchMenu" class="px-3 py-1.5 rounded-full bg-white text-gray-800 w-40 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Search..." aria-label="Search dishes">
+          <i class="fas fa-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"></i>
+        </div>
         <button id="cartSummary" class="relative" aria-label="View cart">
-          <i class="fas fa-cart-shopping text-xl"></i>
-          <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-2">0</span>
+          <i class="fas fa-cart-shopping text-lg"></i>
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5">0</span>
         </button>
         <button id="profileQuick" aria-label="View profile">
-          <img src="https://via.placeholder.com/36" alt="Profile" class="profile-img rounded-full">
+          <img src="https://via.placeholder.com/32" alt="Profile" class="profile-img rounded-full">
         </button>
       </div>
     </div>
@@ -215,119 +216,125 @@
 
   <div class="flex min-h-screen">
     <div id="sidebar" class="sidebar text-white sidebar-hidden">
-      <div class="flex items-center gap-3 mb-8">
-        <img src="https://via.placeholder.com/48" alt="Profile" class="profile-img">
-        <div class="text-xl font-bold">DELICUTE</div>
+      <div class="flex items-center gap-2 mb-6">
+        <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
+        <div class="text-lg font-bold">DELICUTE</div>
       </div>
-      <nav class="space-y-2">
+      <nav class="space-y-1">
         <button data-section="dashboard" class="user-nav active"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
         <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i> Menu</button>
-        <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i> Cart</button>
         <button data-section="orders" class="user-nav"><i class="fas fa-shopping-cart"></i> Orders</button>
+        <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i> Cart</button>
+        <button data-section="favourites" class="user-nav"><i class="fas fa-heart"></i> Favourites</button>
+        <button data-section="addresses" class="user-nav"><i class="fas fa-map-marker-alt"></i> Addresses</button>
+        <button data-section="loyalty" class="user-nav"><i class="fas fa-star"></i> Loyalty</button>
+        <button data-section="referrals" class="user-nav"><i class="fas fa-user-friends"></i> Refer & Earn</button>
+        <button data-section="support" class="user-nav"><i class="fas fa-headset"></i> Support</button>
+        <button data-section="faq" class="user-nav"><i class="fas fa-question-circle"></i> FAQ</button>
         <button data-section="profile" class="user-nav"><i class="fas fa-user"></i> Profile</button>
         <button id="logoutBtn" class="text-red-300 hover:bg-red-800 hover:text-white"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </nav>
     </div>
 
-    <div class="main-content flex-1 p-4">
+    <div class="main-content flex-1 p-3">
       <section id="user-dashboard" class="user-section animate-slideUp">
-        <div id="statusBar" class="bg-yellow-100 text-yellow-800 p-3 rounded-lg mb-4 text-center text-sm">Restaurant: Open | Prep: 30 mins</div>
-        <div class="banner-container mb-6">
+        <div id="statusBar" class="bg-yellow-100 text-yellow-800 p-2 rounded-lg mb-3 text-center text-xs">Restaurant: Open | Prep: 30 mins</div>
+        <div class="banner-container mb-4">
           <div id="banner1" class="banner-item hidden">
             <div class="banner-content">
-              <h3 class="text-lg font-bold">Loading...</h3>
-              <p>Loading...</p>
-              <button class="apply-banner-offer bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Apply Now</button>
+              <h3 class="text-base font-bold">Loading...</h3>
+              <p class="text-xs">Loading...</p>
+              <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm">Apply Now</button>
             </div>
           </div>
-          <button id="prevBanner" class="banner-arrow left" aria-label="Previous banner"><i class="fas fa-chevron-left"></i></button>
-          <button id="nextBanner" class="banner-arrow right" aria-label="Next banner"><i class="fas fa-chevron-right"></i></button>
+          <button id="prevBanner" class="banner-arrow left"><i class="fas fa-chevron-left"></i></button>
+          <button id="nextBanner" class="banner-arrow right"><i class="fas fa-chevron-right"></i></button>
         </div>
-        <div class="hero-bg mb-6">
+        <div class="hero-bg mb-4">
           <canvas class="particles"></canvas>
           <div class="relative z-10">
-            <h2 class="text-2xl font-bold mb-2">Savor the Moment!</h2>
-            <p class="text-sm mb-4">Discover gourmet dishes crafted for you.</p>
-            <div class="flex gap-4">
-              <button data-section="menu" class="user-nav bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Explore Menu</button>
-              <button id="applyOffer" class="bg-white text-orange-600 px-4 py-2 rounded-full hover:bg-gray-100">Check Offers</button>
+            <h2 class="text-2xl font-bold mb-1">Savor the Moment!</h2>
+            <p class="text-xs mb-3">Discover gourmet dishes crafted for you.</p>
+            <div class="flex gap-3">
+              <button data-section="menu" class="user-nav bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Explore Menu</button>
+              <button id="applyOffer" class="bg-white text-orange-600 px-3 py-1.5 rounded-full hover:bg-gray-100 text-sm">Check Offers</button>
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <button data-section="orders" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-shopping-cart mr-2"></i> Track Order</button>
-          <button data-section="cart" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-cart-shopping mr-2"></i> Cart</button>
-          <button data-section="profile" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-user mr-2"></i> Profile</button>
-          <button data-section="menu" class="user-nav bg-orange-100 text-orange-600 p-3 rounded-lg hover:bg-orange-200 flex items-center justify-center"><i class="fas fa-utensils mr-2"></i> Menu</button>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button data-section="orders" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-shopping-cart mr-1"></i> Track Order</button>
+          <button data-section="favourites" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-heart mr-1"></i> Favourites</button>
+          <button data-section="support" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-headset mr-1"></i> Support</button>
+          <button data-section="loyalty" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-star mr-1"></i> Loyalty</button>
         </div>
-        <h3 class="text-xl font-bold mb-4">Popular Picks</h3>
-        <div id="popular" class="grid grid-cols-2 gap-4 mb-6"></div>
-        <h3 class="text-xl font-bold mb-4">Explore Our Menu</h3>
-        <div class="flex flex-col gap-4 mb-6">
+        <h3 class="text-lg font-bold mb-3">Popular Picks</h3>
+        <div id="popular" class="grid grid-cols-2 gap-3 mb-4"></div>
+        <h3 class="text-lg font-bold mb-3">Explore Our Menu</h3>
+        <div class="flex flex-col gap-3 mb-4">
           <div class="flex flex-wrap gap-2">
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full active" data-category="all">All</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Vegetarian">Veg</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Non-Veg">Non-Veg</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Desserts">Desserts</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full active text-sm" data-category="all">All</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Vegetarian">Veg</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Non-Veg">Non-Veg</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Desserts">Desserts</button>
           </div>
-          <select class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" id="priceFilter" aria-label="Filter by price">
+          <select class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" id="priceFilter" aria-label="Filter by price">
             <option value="all">All Prices</option>
             <option value="0-200">₹0 - ₹200</option>
             <option value="200-500">₹200 - ₹500</option>
             <option value="500+">₹500+</option>
           </select>
         </div>
-        <div id="menuPreview" class="grid grid-cols-2 gap-4 mb-6"></div>
+        <div id="menuPreview" class="grid grid-cols-2 gap-3 mb-4"></div>
         <div class="text-center">
-          <button id="shareBtn" class="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-share-alt mr-2"></i>Share DELICUTE</button>
+          <button id="shareBtn" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-share-alt mr-1"></i>Share DELICUTE</button>
         </div>
       </section>
 
       <section id="user-menu" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
           <h2 class="text-2xl font-bold text-orange-600">Our Menu</h2>
-          <button id="backFromMenu" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+          <button id="backFromMenu" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <div class="flex flex-col gap-4 mb-6">
+        <div class="flex flex-col gap-3 mb-4">
           <div class="relative">
-            <input type="text" id="menuSearch" class="w-full px-4 py-2 rounded-full border focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Search dishes..." aria-label="Search dishes">
-            <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+            <input type="text" id="menuSearch" class="w-full px-3 py-1.5 rounded-full border focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Search dishes..." aria-label="Search dishes">
+            <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"></i>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full active" data-category="all">All</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Vegetarian">Veg</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Non-Veg">Non-Veg</button>
-            <button class="filter-btn bg-orange-600 text-white px-4 py-2 rounded-full" data-category="Desserts">Desserts</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full active text-sm" data-category="all">All</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Vegetarian">Veg</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Non-Veg">Non-Veg</button>
+            <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Desserts">Desserts</button>
           </div>
-          <select class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" id="menuPriceFilter" aria-label="Filter by price">
+          <select class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" id="menuPriceFilter" aria-label="Filter by price">
             <option value="all">All Prices</option>
             <option value="0-200">₹0 - ₹200</option>
             <option value="200-500">₹200 - ₹500</option>
             <option value="500+">₹500+</option>
           </select>
         </div>
-        <div id="menuItems" class="grid grid-cols-2 gap-4"></div>
+        <div id="menuItems" class="grid grid-cols-2 gap-3"></div>
       </section>
 
       <section id="user-orders" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
           <h2 class="text-2xl font-bold text-orange-600">Your Orders</h2>
-          <button id="backFromOrders" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+          <button id="backFromOrders" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <div class="bg-white rounded-lg p-4 shadow mb-4">
-          <h3 class="text-lg font-bold mb-2">Cancellation Policy</h3>
-          <p id="cancellationPolicy">Cancel within 10 mins for full refund</p>
+        <div class="bg-white rounded-lg p-3 shadow mb-3">
+          <h3 class="text-base font-bold mb-1">Cancellation Policy</h3>
+          <p id="cancellationPolicy" class="text-sm">Cancel within 10 mins for full refund</p>
         </div>
         <div class="bg-white rounded-lg shadow overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-xs">
             <thead>
               <tr class="bg-orange-100 text-orange-600">
-                <th class="p-3 text-left">Order ID</th>
-                <th class="p-3 text-left">Date</th>
-                <th class="p-3 text-left">Items</th>
-                <th class="p-3 text-left">Total</th>
-                <th class="p-3 text-left">Status</th>
-                <th class="p-3 text-left">Actions</th>
+                <th class="p-2 text-left">Order ID</th>
+                <th class="p-2 text-left">Date</th>
+                <th class="p-2 text-left">Items</th>
+                <th class="p-2 text-left">Total</th>
+                <th class="p-2 text-left">Status</th>
+                <th class="p-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody id="orderItems"></tbody>
@@ -336,73 +343,136 @@
       </section>
 
       <section id="user-cart" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
           <h2 class="text-2xl font-bold text-orange-600">Your Cart</h2>
-          <button id="backFromCart" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+          <button id="backFromCart" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <div class="bg-white rounded-lg p-4 shadow">
-          <div id="cartItems" class="space-y-4"></div>
-          <div class="mt-4 border-t pt-4">
-            <div class="flex justify-between items-center mb-4">
-              <input type="text" id="couponCode" class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 w-2/3" placeholder="Promo code" aria-label="Promo code">
-              <button id="applyCoupon" class="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Apply</button>
+        <div class="bg-white rounded-lg p-3 shadow">
+          <div id="cartItems" class="space-y-3"></div>
+          <div class="mt-3 border-t pt-3">
+            <div class="flex justify-between items-center mb-3">
+              <input type="text" id="couponCode" class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 w-2/3 text-sm" placeholder="Promo code" aria-label="Promo code">
+              <button id="applyCoupon" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Apply</button>
             </div>
-            <p class="flex justify-between"><span>Subtotal:</span> <span id="cartSubtotal">₹0</span></p>
-            <p class="flex justify-between"><span>Discount:</span> <span id="cartDiscount">₹0</span></p>
-            <p class="flex justify-between font-bold"><span>Total:</span> <span id="cartTotal">₹0</span></p>
-            <div class="mt-4">
-              <label class="block text-gray-700 mb-2">Delivery Address</label>
-              <select id="cartAddress" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" aria-label="Select address">
+            <p class="flex justify-between text-sm"><span>Subtotal:</span> <span id="cartSubtotal">₹0</span></p>
+            <p class="flex justify-between text-sm"><span>Discount:</span> <span id="cartDiscount">₹0</span></p>
+            <p class="flex justify-between font-bold text-sm"><span>Total:</span> <span id="cartTotal">₹0</span></p>
+            <div class="mt-3">
+              <label class="block text-gray-700 text-sm mb-1">Delivery Address</label>
+              <select id="cartAddress" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" aria-label="Select address">
                 <option value="">Select Address</option>
               </select>
             </div>
-            <div class="mt-4">
-              <label class="block text-gray-700 mb-2">Payment Method</label>
-              <select id="paymentMethod" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" aria-label="Select payment">
+            <div class="mt-3">
+              <label class="block text-gray-700 text-sm mb-1">Payment Method</label>
+              <select id="paymentMethod" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" aria-label="Select payment">
                 <option value="cod">Cash on Delivery</option>
                 <option value="online">Online Payment</option>
               </select>
             </div>
-            <button id="checkoutBtn" class="mt-4 w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Checkout</button>
+            <button id="checkoutBtn" class="mt-3 w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Checkout</button>
           </div>
         </div>
+      </section>
+
+      <section id="user-favourites" class="user-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-2xl font-bold text-orange-600">Your Favourites</h2>
+          <button id="backFromFavourites" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <div id="favouritesItems" class="grid grid-cols-2 gap-3"></div>
       </section>
 
       <section id="user-addresses" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
           <h2 class="text-2xl font-bold text-orange-600">Your Addresses</h2>
-          <button id="backFromAddresses" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+          <button id="backFromAddresses" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <button id="addAddress" class="mb-4 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-plus mr-2"></i>Add Address</button>
-        <div id="addressItems" class="space-y-4"></div>
+        <button id="addAddress" class="mb-3 bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-plus mr-1"></i>Add Address</button>
+        <div id="addressItems" class="space-y-3"></div>
+      </section>
+
+      <section id="user-loyalty" class="user-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-2xl font-bold text-orange-600">Loyalty Points</h2>
+          <button id="backFromLoyalty" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow">
+          <p class="text-base font-semibold mb-3">Points: <span id="loyaltyPoints">0</span></p>
+          <h3 class="text-base font-bold mb-1">History</h3>
+          <div id="loyaltyHistory"></div>
+        </div>
+      </section>
+
+      <section id="user-referrals" class="user-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-2xl font-bold text-orange-600">Refer & Earn</h2>
+          <button id="backFromReferrals" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow">
+          <p class="text-xs mb-3">Share your referral code!</p>
+          <p class="text-base font-semibold">Code: <span id="referralCode"></span></p>
+          <a id="referralLink" href="#" class="mt-3 inline-block bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-share-alt mr-1"></i>Share Link</a>
+        </div>
+      </section>
+
+      <section id="user-support" class="user-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-2xl font-bold text-orange-600">Support</h2>
+          <button id="backFromSupport" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <button id="createTicketBtn" class="mb-3 bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-ticket-alt mr-1"></i>Create Ticket</button>
+        <div class="bg-white rounded-lg p-3 shadow mb-3">
+          <h3 class="text-base font-bold mb-1">Tickets</h3>
+          <div id="supportTickets" class="space-y-3"></div>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow">
+          <h3 class="text-base font-bold mb-1">Live Chat</h3>
+          <div id="chatMessages" class="chat-container mb-3"></div>
+          <div class="typing-indicator text-xs text-gray-500" id="typingIndicator"></div>
+          <div class="flex gap-2">
+            <input type="text" id="chatInput" class="flex-1 px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Type message..." aria-label="Chat message">
+            <button id="sendChat" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <section id="user-faq" class="user-section hidden animate-slideUp">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-2xl font-bold text-orange-600">FAQ</h2>
+          <button id="backFromFAQ" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow">
+          <div id="faqItems" class="space-y-3"></div>
+        </div>
       </section>
 
       <section id="user-profile" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
           <h2 class="text-2xl font-bold text-orange-600">Your Profile</h2>
-          <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+          <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <div class="bg-white rounded-lg p-4 shadow space-y-4">
+        <div class="bg-white rounded-lg p-3 shadow space-y-3">
           <div class="flex justify-center">
-            <img src="https://via.placeholder.com/96" alt="Profile" id="profileImage" class="profile-img rounded-full w-24 h-24 object-cover">
+            <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img rounded-full w-20 h-20 object-cover">
           </div>
           <div>
-            <label class="block text-gray-700">Upload Profile Image</label>
-            <input type="file" id="profileImageInput" accept="image/*" class="w-full px-4 py-2 border rounded-full">
+            <label class="block text-gray-700 text-sm">Upload Profile Image</label>
+            <input type="file" id="profileImageInput" accept="image/*" class="w-full px-3 py-1.5 border rounded-full text-sm">
           </div>
           <div>
-            <label class="block text-gray-700">Name</label>
-            <input type="text" id="profileName" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" readonly>
+            <label class="block text-gray-700 text-sm">Name</label>
+            <input type="text" id="profileName" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
           </div>
           <div>
-            <label class="block text-gray-700">Email</label>
-            <input type="email" id="profileEmail" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" readonly>
+            <label class="block text-gray-700 text-sm">Email</label>
+            <input type="email" id="profileEmail" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
           </div>
           <div>
-            <label class="block text-gray-700">Phone</label>
-            <input type="tel" id="profilePhone" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" readonly>
+            <label class="block text-gray-700 text-sm">Phone</label>
+            <input type="tel" id="profilePhone" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
           </div>
-          <button id="editProfileBtn" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-edit mr-2"></i>Edit Profile</button>
+          <button id="editProfileBtn" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-edit mr-1"></i>Edit Profile</button>
         </div>
       </section>
     </div>
@@ -412,6 +482,7 @@
     <button data-section="dashboard" class="user-nav active"><i class="fas fa-home"></i><span>Home</span></button>
     <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i><span>Menu</span></button>
     <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i><span>Cart</span></button>
+    <button data-section="orders" class="user-nav"><i class="fas fa-shopping-bag"></i><span>Orders</span></button>
     <button data-section="profile" class="user-nav"><i class="fas fa-user"></i><span>Profile</span></button>
   </nav>
 
@@ -420,11 +491,11 @@
   <div id="shareModal" class="share-modal">
     <div class="share-modal-content">
       <span class="close">×</span>
-      <h3 class="text-lg font-bold text-orange-600">Share DELICUTE!</h3>
+      <h3 class="text-base font-bold text-orange-600">Share DELICUTE!</h3>
       <div class="share-buttons flex flex-wrap gap-2 justify-center">
-        <a href="#" id="shareWhatsApp" class="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600"><i class="fab fa-whatsapp mr-2"></i>WhatsApp</a>
-        <a href="#" id="shareTwitter" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"><i class="fab fa-twitter mr-2"></i>Twitter</a>
-        <a href="#" id="shareFacebook" class="bg-blue-700 text-white px-4 py-2 rounded-full hover:bg-blue-800"><i class="fab fa-facebook mr-2"></i>Facebook</a>
+        <a href="#" id="shareWhatsApp" class="bg-green-500 text-white px-3 py-1.5 rounded-full hover:bg-green-600 text-sm"><i class="fab fa-whatsapp mr-1"></i>WhatsApp</a>
+        <a href="#" id="shareTwitter" class="bg-blue-500 text-white px-3 py-1.5 rounded-full hover:bg-blue-600 text-sm"><i class="fab fa-twitter mr-1"></i>Twitter</a>
+        <a href="#" id="shareFacebook" class="bg-blue-700 text-white px-3 py-1.5 rounded-full hover:bg-blue-800 text-sm"><i class="fab fa-facebook mr-1"></i>Facebook</a>
       </div>
     </div>
   </div>
@@ -510,15 +581,11 @@
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.style.display = 'none', 300);
-      }, 5000);
+      }, 3000);
       toast.style.opacity = '1';
     };
 
-    const triggerConfetti = () => {
-      if (window.innerWidth > 640) {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
-      }
-    };
+    const triggerConfetti = () => confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
 
     // Mock API Fetch
     const apiFetch = async (endpoint, method = 'GET', data = null) => {
@@ -648,21 +715,9 @@
 
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
-    // Swipe-to-close sidebar
-    let touchStartX = 0;
-    sidebar.addEventListener('touchstart', e => {
-      touchStartX = e.touches[0].clientX;
-    });
-    sidebar.addEventListener('touchmove', e => {
-      const touchX = e.touches[0].clientX;
-      if (touchStartX - touchX > 50 && !sidebar.classList.contains('sidebar-hidden')) {
-        toggleSidebar();
-      }
-    });
-
     document.addEventListener('click', (e) => {
-      if (window.innerWidth < 1024 && !sidebar.contains(e.target) && 
-          !e.target.closest('#sidebarToggle') && 
+      if (window.innerWidth < 1024 && !sidebar.contains(e.target) &&
+          !e.target.closest('#sidebarToggle') &&
           !sidebar.classList.contains('sidebar-hidden')) {
         toggleSidebar();
       }
@@ -685,7 +740,12 @@
       if (sectionId === 'menu') loadMenu();
       else if (sectionId === 'cart') loadCart();
       else if (sectionId === 'orders') loadOrders();
+      else if (sectionId === 'favourites') loadFavourites();
       else if (sectionId === 'addresses') loadAddresses();
+      else if (sectionId === 'loyalty') loadLoyalty();
+      else if (sectionId === 'referrals') loadReferrals();
+      else if (sectionId === 'support') loadSupport();
+      else if (sectionId === 'faq') loadFAQ();
       else if (sectionId === 'profile') loadProfile();
       if (window.innerWidth < 1024) toggleSidebar();
     };
@@ -717,7 +777,7 @@
     // Status Bar
     const loadStatusBar = async () => {
       const status = await apiFetch('/status');
-      document.getElementById('statusBar').textContent = status ? 
+      document.getElementById('statusBar').textContent = status ?
         `Restaurant: ${status.isOpen ? 'Open' : 'Closed'} | Prep: ${status.prepTime} mins` : 'Status unavailable';
     };
 
@@ -726,16 +786,16 @@
       const offers = await apiFetch('/offers');
       const carousel = document.getElementById('banner1').parentElement;
       if (!offers || !offers.length) {
-        carousel.innerHTML = `<div class="banner-item"><div class="banner-content"><p>No promotions available</p></div></div>`;
+        carousel.innerHTML = `<div class="banner-item"><div class="banner-content"><p class="text-sm">No promotions available</p></div></div>`;
         return;
       }
       carousel.innerHTML = offers.map((o, i) => `
         <div id="banner${i}" class="banner-item ${i ? 'hidden' : ''}">
           <img src="${o.image}" alt="${o.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">
           <div class="banner-content">
-            <h3 class="text-lg font-bold">${o.title}</h3>
-            <p>${o.description} | Code: ${o.code}</p>
-            <button class="apply-banner-offer bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700" data-code="${o.code}" data-discount="${o.discount}">Claim</button>
+            <h3 class="text-base font-bold">${o.title}</h3>
+            <p class="text-xs">${o.description} | Code: ${o.code}</p>
+            <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm" data-code="${o.code}" data-discount="${o.discount}">Claim</button>
           </div>
         </div>
       `).join('');
@@ -789,21 +849,21 @@
       const renderItem = item => `
         <div class="menu-item">
           <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
-          <div class="p-4">
-            <h3 class="text-base font-semibold">${item.name}</h3>
-            <p class="text-gray-600">₹${item.price}</p>
-            <p class="text-sm text-gray-500">${item.description || 'No description'}</p>
+          <div class="p-3">
+            <h3 class="text-sm font-semibold">${item.name}</h3>
+            <p class="text-gray-600 text-xs">₹${item.price}</p>
+            <p class="text-xs text-gray-500">${item.description || 'No description'}</p>
             <div class="flex gap-2 mt-2">
-              <button class="add-to-cart bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}"><i class="fas fa-cart-plus mr-2"></i>Add</button>
-              <button class="toggle-favourite bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300" data-id="${item.id}"><i class="fas fa-heart ${favouriteIds.includes(item.id) ? 'text-red-500' : ''}"></i></button>
+              <button class="add-to-cart bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}"><i class="fas fa-cart-plus mr-1"></i>Add</button>
+              <button class="toggle-favourite bg-gray-200 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-300 text-xs" data-id="${item.id}"><i class="fas fa-heart ${favouriteIds.includes(item.id) ? 'text-red-500' : ''}"></i></button>
             </div>
           </div>
         </div>
       `;
-      document.getElementById('menuItems').innerHTML = items?.length ? items.map(renderItem).join('') : '<p>No items found</p>';
+      document.getElementById('menuItems').innerHTML = items?.length ? items.map(renderItem).join('') : '<p class="text-sm">No items found</p>';
       document.getElementById('menuPreview').innerHTML = items?.slice(0, 4).map(renderItem).join('') || '';
       document.getElementById('popular').innerHTML = items?.filter(i => i.is_popular).slice(0, 4).map(renderItem).join('') || '';
-      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 10, speed: 400 });
+      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
     };
 
     // Cart
@@ -816,7 +876,7 @@
       const countEl = document.getElementById('cartCount');
       const addressEl = document.getElementById('cartAddress');
       if (!cart || !cart.items?.length) {
-        itemsEl.innerHTML = '<p>Cart is empty</p>';
+        itemsEl.innerHTML = '<p class="text-sm">Cart is empty</p>';
         subtotalEl.textContent = '₹0';
         discountEl.textContent = '₹0';
         totalEl.textContent = '₹0';
@@ -833,13 +893,13 @@
         <div class="flex justify-between items-center p-2 border-b">
           <div>
             <h4 class="text-sm font-semibold">${i.name}</h4>
-            <p class="text-gray-600">₹${i.price} x ${i.quantity}</p>
+            <p class="text-gray-600 text-xs">₹${i.price} x ${i.quantity}</p>
           </div>
           <div class="flex gap-2">
-            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700" data-id="${i.id}" data-action="decrease">-</button>
-            <span>${i.quantity}</span>
-            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700" data-id="${i.id}" data-action="increase">+</button>
-            <button class="remove-from-cart bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700" data-id="${i.id}"><i class="fas fa-trash"></i></button>
+            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-action="decrease">-</button>
+            <span class="text-xs">${i.quantity}</span>
+            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-action="increase">+</button>
+            <button class="remove-from-cart bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${i.id}"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       `).join('');
@@ -906,18 +966,18 @@
       document.getElementById('cancellationPolicy').textContent = policy?.text || 'Cancel within 10 mins for full refund';
       document.getElementById('orderItems').innerHTML = orders?.length ? orders.map(o => `
         <tr>
-          <td class="p-3">${o.id}</td>
-          <td class="p-3">${new Date(o.date).toLocaleDateString()}</td>
-          <td class="p-3">${o.items.map(i => i.name).join(', ')}</td>
-          <td class="p-3">₹${o.total.toFixed(2)}</td>
-          <td class="p-3">${o.status}</td>
-          <td class="p-3 flex gap-2">
-            <button class="track-order bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-order-id="${o.id}"><i class="fas fa-map-marker-alt mr-1"></i>Track</button>
-            <button class="reorder bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700" data-order-id="${o.id}"><i class="fas fa-redo mr-1"></i>Reorder</button>
-            ${o.status === 'Delivered' ? `<button class="rate-order bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700" data-order-id="${o.id}"><i class="fas fa-star mr-1"></i>Rate</button>` : ''}
+          <td class="p-2">${o.id}</td>
+          <td class="p-2">${new Date(o.date).toLocaleDateString()}</td>
+          <td class="p-2">${o.items.map(i => i.name).join(', ')}</td>
+          <td class="p-2">₹${o.total.toFixed(2)}</td>
+          <td class="p-2">${o.status}</td>
+          <td class="p-2 flex gap-2">
+            <button class="track-order bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-order-id="${o.id}"><i class="fas fa-map-marker-alt mr-1"></i>Track</button>
+            <button class="reorder bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-700 text-xs" data-order-id="${o.id}"><i class="fas fa-redo mr-1"></i>Reorder</button>
+            ${o.status === 'Delivered' ? `<button class="rate-order bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs" data-order-id="${o.id}"><i class="fas fa-star mr-1"></i>Rate</button>` : ''}
           </td>
         </tr>
-      `).join('') : '<tr><td colspan="6" class="p-3 text-gray-600">No orders</td></tr>';
+      `).join('') : '<tr><td colspan="6" class="p-2 text-gray-600 text-sm">No orders</td></tr>';
     };
 
     // Order Actions
@@ -933,8 +993,8 @@
           modal.innerHTML = `
             <div class="share-modal-content">
               <span class="close">×</span>
-              <h3>Track Order #${orderId}</h3>
-              <div class="space-y-2">
+              <h3 class="text-base">Track Order #${orderId}</h3>
+              <div class="space-y-2 text-sm">
                 <p>Status: ${data.status}</p>
                 ${data.deliveryPartner ? `<p>Partner: ${data.deliveryPartner.name}</p><p>Contact: ${data.deliveryPartner.contact}</p>` : '<p>No delivery partner assigned</p>'}
               </div>
@@ -956,13 +1016,13 @@
         modal.innerHTML = `
           <div class="share-modal-content">
             <span class="close">×</span>
-            <h3>Rate Order #${orderId}</h3>
-            <div class="space-y-4">
+            <h3 class="text-base">Rate Order #${orderId}</h3>
+            <div class="space-y-3">
               <div class="flex justify-center gap-1">
-                ${[1, 2, 3, 4, 5].map(i => `<i class="fas fa-star text-2xl cursor-pointer" data-rating="${i}" style="color: ${i <= 3 ? '#f97316' : '#d1d5db'}"></i>`).join('')}
+                ${[1, 2, 3, 4, 5].map(i => `<i class="fas fa-star text-xl cursor-pointer" data-rating="${i}" style="color: ${i <= 3 ? '#f97316' : '#d1d5db'}"></i>`).join('')}
               </div>
-              <textarea id="ratingComment" class="w-full px-4 py-2 border rounded-lg" rows="4" placeholder="Your feedback"></textarea>
-              <button id="submitRating" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
+              <textarea id="ratingComment" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="3" placeholder="Your feedback"></textarea>
+              <button id="submitRating" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit</button>
             </div>
           </div>
         `;
@@ -990,360 +1050,489 @@
       }
     });
 
-    // Addresses
-    const loadAddresses = async () => {
-      const addresses = await apiFetch('/addresses');
-      const container = document.getElementById('addressItems');
-      container.innerHTML = addresses?.length ? addresses.map(a => `
-        <div class="bg-white rounded-lg p-4 shadow flex justify-between items-start">
-          <div>
-            <h4 class="text-lg font-semibold">${a.name}</h4>
-            <p class="text-gray-600">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
-            <p class="text-gray-600">Mobile: ${a.mobile}</p>
-            ${a.isDefault ? '<p class="text-green-600">Default Address</p>' : ''}
-          </div>
-          <div class="flex gap-2">
-            <button class="edit-address bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-id="${a.id}"><i class="fas fa-edit"></i></button>
-            <button class="delete-address bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700" data-id="${a.id}"><i class="fas fa-trash"></i></button>
-            ${!a.isDefault ? `<button class="set-default-address bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
-          </div>
-        </div>
-      `).join('') : '<p>No addresses saved</p>';
-    };
-
-    // Address Actions
-    document.getElementById('addAddress').addEventListener('click', () => {
-      const modal = document.createElement('div');
-      modal.className = 'share-modal active';
-      modal.innerHTML = `
-        <div class="share-modal-content">
-          <span class="close">×</span>
-          <h3 class="text-lg font-bold text-orange-600">Add Address</h3>
-          <form id="addressForm" class="space-y-4">
-            <div>
-              <label class="block text-gray-700">Name</label>
-              <input type="text" id="addressName" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">Street</label>
-              <input type="text" id="addressStreet" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">City</label>
-              <input type="text" id="addressCity" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">State</label>
-              <input type="text" id="addressState" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">ZIP Code</label>
-              <input type="text" id="addressZip" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <div>
-              <label class="block text-gray-700">Mobile</label>
-              <input type="tel" id="addressMobile" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save Address</button>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#addressForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const address = {
-          name: document.getElementById('addressName').value,
-          street: document.getElementById('addressStreet').value,
-          city: document.getElementById('addressCity').value,
-          state: document.getElementById('addressState').value,
-          zip: document.getElementById('addressZip').value,
-          mobile: document.getElementById('addressMobile').value,
-          isDefault: MOCK_DATA.addresses.length === 0
-        };
-        const data = await apiFetch('/addresses/add', 'POST', address);
-        if (data && data.success) {
-          showToast('Address added');
-          modal.remove();
-          loadAddresses();
-          loadCart();
-        }
-      });
-    });
-
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      if (btn.classList.contains('edit-address')) {
-        const address = MOCK_DATA.addresses.find(a => a.id === id);
-        const modal = document.createElement('div');
-        modal.className = 'share-modal active';
-        modal.innerHTML = `
-          <div class="share-modal-content">
-            <span class="close">×</span>
-            <h3 class="text-lg font-bold text-orange-600">Edit Address</h3>
-            <form id="addressForm" class="space-y-4">
-              <div>
-                <label class="block text-gray-700">Name</label>
-                <input type="text" id="addressName" value="${address.name}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <div>
-                <label class="block text-gray-700">Street</label>
-                <input type="text" id="addressStreet" value="${address.street}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <div>
-                <label class="block text-gray-700">City</label>
-                <input type="text" id="addressCity" value="${address.city}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <div>
-                <label class="block text-gray-700">State</label>
-                <input type="text" id="addressState" value="${address.state}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <div>
-                <label class="block text-gray-700">ZIP Code</label>
-                <input type="text" id="addressZip" value="${address.zip}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <div>
-                <label class="block text-gray-700">Mobile</label>
-                <input type="tel" id="addressMobile" value="${address.mobile}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-              </div>
-              <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Update Address</button>
-            </form>
-          </div>
-        `;
-        document.body.appendChild(modal);
-        modal.querySelector('.close').addEventListener('click', () => modal.remove());
-        modal.querySelector('#addressForm').addEventListener('submit', async e => {
-          e.preventDefault();
-          const updatedAddress = {
-            id,
-            name: document.getElementById('addressName').value,
-            street: document.getElementById('addressStreet').value,
-            city: document.getElementById('addressCity').value,
-            state: document.getElementById('addressState').value,
-            zip: document.getElementById('addressZip').value,
-            mobile: document.getElementById('addressMobile').value
-          };
-          const data = await apiFetch('/addresses/update', 'POST', updatedAddress);
-          if (data && data.success) {
-            showToast('Address updated');
-            modal.remove();
-            loadAddresses();
-            loadCart();
-          }
-        });
-      } else if (btn.classList.contains('delete-address')) {
-        if (confirm('Are you sure you want to delete this address?')) {
-          const data = await apiFetch('/addresses/delete', 'POST', { id });
-          if (data && data.success) {
-            showToast('Address deleted');
-            loadAddresses();
-            loadCart();
-          }
-        }
-      } else if (btn.classList.contains('set-default-address')) {
-        const data = await apiFetch('/addresses/set-default', 'POST', { id });
-        if (data && data.success) {
-          showToast('Default address updated');
-          loadAddresses();
-          loadCart();
-        }
-      }
-    });
-
-    // Checkout
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
-      const addressId = document.getElementById('cartAddress').value;
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      if (!addressId) return showToast('Please select a delivery address');
-      if (!paymentMethod) return showToast('Please select a payment method');
-      const cart = await apiFetch('/cart');
-      if (!cart.items.length) return showToast('Cart is empty');
-      const data = await apiFetch('/checkout', 'POST', { addressId, paymentMethod });
-      if (data && data.success) {
-        showToast('Order placed successfully!');
-        triggerConfetti();
-        loadCart();
-        loadOrders();
-        showSection('orders');
-      }
-    });
-
-    // Profile
-    const loadProfile = async () => {
-      const profile = await apiFetch('/profile');
-      document.getElementById('profileName').value = profile?.name || '';
-      document.getElementById('profileEmail').value = profile?.email || '';
-      document.getElementById('profilePhone').value = profile?.phone || '';
-      document.getElementById('profileImage').src = state.profileImage;
-      document.querySelectorAll('.profile-img').forEach(img => img.src = state.profileImage);
-    };
-
-    document.getElementById('profileImageInput').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          state.profileImage = reader.result;          document.getElementById('profileImage').src = state.profileImage;
-          document.querySelectorAll('.profile-img').forEach(img => img.src = state.profileImage);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('editProfileBtn').addEventListener('click', async () => {
-      const nameInput = document.getElementById('profileName');
-      const emailInput = document.getElementById('profileEmail');
-      const phoneInput = document.getElementById('profilePhone');
-      const isEditable = nameInput.readOnly;
-
-      if (isEditable) {
-        nameInput.readOnly = false;
-        emailInput.readOnly = false;
-        phoneInput.readOnly = false;
-        nameInput.focus();
-        document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-2"></i>Save Profile';
-      } else {
-        const updatedProfile = {
-          name: nameInput.value,
-          email: emailInput.value,
-          phone: phoneInput.value,
-          image: state.profileImage
-        };
-        const data = await apiFetch('/profile/update', 'POST', updatedProfile);
-        if (data && data.success) {
-          showToast('Profile updated');
-          nameInput.readOnly = true;
-          emailInput.readOnly = true;
-          phoneInput.readOnly = true;
-          document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Profile';
-        }
-      }
-    });
-
     // Favourites
     const loadFavourites = async () => {
       const favourites = await apiFetch('/favourites');
       state.favourites = favourites || [];
+      const container = document.getElementById('favouritesItems');
+      container.innerHTML = favourites?.length ? favourites.map(i => `
+        <div class="menu-item">
+          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold">${i.name}</h3>
+            <p class="text-gray-600 text-xs">₹${i.price}</p>
+            <p class="text-xs text-gray-500">${i.description || 'No description'}</p>
+            <div class="flex gap-2 mt-2">
+              <button class="add-to-cart bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-name="${i.name}" data-price="${i.price}"><i class="fas fa-cart-plus mr-1"></i>Add</button>
+              <button class="toggle-favourite bg-gray-200 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-300 text-xs" data-id="${i.id}"><i class="fas fa-heart text-red-500"></i></button>
+            </div>
+          </div>
+        </div>
+      `).join('') : '<p class="text-sm">No favourite items</p>';
+      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
     };
 
     document.addEventListener('click', async e => {
       const btn = e.target.closest('.toggle-favourite');
       if (!btn) return;
-      const itemId = btn.dataset.id;
-      const isFavourite = state.favourites.some(f => f.id === itemId);
-      const endpoint = isFavourite ? '/favourites/remove' : '/favourites/add';
-      const data = await apiFetch(endpoint, 'POST', { itemId });
+      const id = btn.dataset.id;
+      const isFavourite = state.favourites.some(f => f.id === id);
+      const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
+      const data = await apiFetch(endpoint, 'POST', { itemId: id });
       if (data && data.success) {
-        await loadFavourites();
-        showToast(isFavourite ? 'Removed from favourites' : 'Added to favourites');
-        btn.querySelector('.fa-heart').classList.toggle('text-red-500', !isFavourite);
+        if (isFavourite) {
+          state.favourites = state.favourites.filter(f => f.id !== id);
+          showToast('Removed from favourites');
+        } else {
+          const item = (await apiFetch('/menu')).find(i => i.id === id);
+          state.favourites.push(item);
+          showToast('Added to favourites');
+        }
+        if (!document.getElementById('user-menu').classList.contains('hidden')) loadMenu();
+        if (!document.getElementById('user-favourites').classList.contains('hidden')) loadFavourites();
       }
     });
 
-    // Menu Filters
-    const applyMenuFilters = () => {
-      const category = document.querySelector('#user-menu .filter-btn.active')?.dataset.category || 'all';
-      const price = document.getElementById('menuPriceFilter').value;
-      const query = document.getElementById('menuSearch').value;
-      loadMenu(category, price, query);
+    // Addresses
+const loadAddresses = async () => {
+  const addresses = await apiFetch('/addresses');
+  const container = document.getElementById('addressItems');
+  container.innerHTML = addresses?.length ? addresses.map(a => `
+    <div class="bg-white rounded-lg p-3 shadow flex justify-between items-start">
+      <div>
+        <h4 class="text-sm font-semibold">${a.name}</h4>
+        <p class="text-gray-600 text-xs">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
+        <p class="text-gray-600 text-xs">Mobile: ${a.mobile}</p>
+        ${a.isDefault ? '<p class="text-green-600 text-xs">Default Address</p>' : ''}
+      </div>
+      <div class="flex gap-2">
+        <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
+        <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+        ${!a.isDefault ? `<button class="set-default-address bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
+      </div>
+    </div>
+  `).join('') : '<p class="text-sm">No addresses saved</p>';
+};
+
+document.getElementById('addAddress').addEventListener('click', () => {
+  const modal = document.createElement('div');
+  modal.className = 'share-modal active';
+  modal.innerHTML = `
+    <div class="share-modal-content">
+      <span class="close">×</span>
+      <h3 class="text-base">Add Address</h3>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-gray-700 text-sm">Name</label>
+          <input type="text" id="addressName" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="e.g., Home">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">Street</label>
+          <input type="text" id="addressStreet" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Street address">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">City</label>
+          <input type="text" id="addressCity" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="City">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">State</label>
+          <input type="text" id="addressState" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="State">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">ZIP Code</label>
+          <input type="text" id="addressZip" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="ZIP Code">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">Mobile</label>
+          <input type="tel" id="addressMobile" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Mobile number">
+        </div>
+        <button id="saveAddress" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.close').addEventListener('click', () => modal.remove());
+  modal.querySelector('#saveAddress').addEventListener('click', async () => {
+    const address = {
+      name: document.getElementById('addressName').value,
+      street: document.getElementById('addressStreet').value,
+      city: document.getElementById('addressCity').value,
+      state: document.getElementById('addressState').value,
+      zip: document.getElementById('addressZip').value,
+      mobile: document.getElementById('addressMobile').value,
+      isDefault: false
     };
+    if (!address.name || !address.street || !address.city || !address.state || !address.zip || !address.mobile) {
+      return showToast('Please fill all fields');
+    }
+    const data = await apiFetch('/addresses/add', 'POST', address);
+    if (data && data.success) {
+      showToast('Address added');
+      modal.remove();
+      loadAddresses();
+      loadCart();
+    }
+  });
+});
 
-    document.querySelectorAll('#user-menu .filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#user-menu .filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyMenuFilters();
-      });
-    });
-
-    document.getElementById('menuPriceFilter').addEventListener('change', applyMenuFilters);
-    document.getElementById('menuSearch').addEventListener('input', applyMenuFilters);
-
-    // Dashboard Filters
-    const applyDashboardFilters = () => {
-      const category = document.querySelector('#user-dashboard .filter-btn.active')?.dataset.category || 'all';
-      const price = document.getElementById('priceFilter').value;
-      loadMenu(category, price);
-    };
-
-    document.querySelectorAll('#user-dashboard .filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#user-dashboard .filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyDashboardFilters();
-      });
-    });
-
-    document.getElementById('priceFilter').addEventListener('change', applyDashboardFilters);
-
-    // Share Modal
-    const shareModal = document.getElementById('shareModal');
-    document.getElementById('shareBtn').addEventListener('click', async () => {
-      const referral = await apiFetch('/referrals');
-      state.referral.link = referral?.link || 'https://delicute.com';
-      shareModal.classList.add('active');
-      const shareUrl = encodeURIComponent(state.referral.link);
-      const shareText = encodeURIComponent('Check out DELICUTE for amazing food! Use my referral link: ');
-      document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${shareText}${shareUrl}`;
-      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
-      document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
-    });
-
-    shareModal.querySelector('.close').addEventListener('click', () => {
-      shareModal.classList.remove('active');
-    });
-
-    // Particles Animation
-    const initParticles = () => {
-      const canvas = document.querySelector('.particles');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      canvas.width = canvas.parentElement.offsetWidth;
-      canvas.height = canvas.parentElement.offsetHeight;
-      const particles = Array.from({ length: 50 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        speedX: (Math.random() - 0.5) * 2,
-        speedY: (Math.random() - 0.5) * 2
-      }));
-
-      const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = '#f97316';
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.classList.contains('edit-address')) {
+    const addresses = await apiFetch('/addresses');
+    const address = addresses.find(a => a.id === id);
+    const modal = document.createElement('div');
+    modal.className = 'share-modal active';
+    modal.innerHTML = `
+      <div class="share-modal-content">
+        <span class="close">×</span>
+        <h3 class="text-base">Edit Address</h3>
+        <div class="space-y-3 text-sm">
+          <div>
+            <label class="block text-gray-700 text-sm">Name</label>
+            <input type="text" id="addressName" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.name}">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">Street</label>
+            <input type="text" id="addressStreet" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.street}">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">City</label>
+            <input type="text" id="addressCity" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.city}">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">State</label>
+            <input type="text" id="addressState" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.state}">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">ZIP Code</label>
+            <input type="text" id="addressZip" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.zip}">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">Mobile</label>
+            <input type="tel" id="addressMobile" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.mobile}">
+          </div>
+          <button id="updateAddress" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#updateAddress').addEventListener('click', async () => {
+      const updatedAddress = {
+        id,
+        name: document.getElementById('addressName').value,
+        street: document.getElementById('addressStreet').value,
+        city: document.getElementById('addressCity').value,
+        state: document.getElementById('addressState').value,
+        zip: document.getElementById('addressZip').value,
+        mobile: document.getElementById('addressMobile').value
       };
-      animate();
-    };
-
-    // Initialize
-    const init = async () => {
-      if (!state.isLoggedIn) {
-        window.location.href = 'index.html';
-        return;
+      if (!updatedAddress.name || !updatedAddress.street || !updatedAddress.city || !updatedAddress.state || !updatedAddress.zip || !updatedAddress.mobile) {
+        return showToast('Please fill all fields');
       }
-      await loadStatusBar();
-      await loadBanners();
-      await loadOffers();
-      await loadMenu();
-      await loadCart();
-      await loadFavourites();
-      initParticles();
-      showSection('dashboard');
-    };
+      const data = await apiFetch('/addresses/update', 'POST', updatedAddress);
+      if (data && data.success) {
+        showToast('Address updated');
+        modal.remove();
+        loadAddresses();
+        loadCart();
+      }
+    });
+  } else if (btn.classList.contains('delete-address')) {
+    if (confirm('Delete this address?')) {
+      const data = await apiFetch('/addresses/delete', 'POST', { id });
+      if (data && data.success) {
+        showToast('Address deleted');
+        loadAddresses();
+        loadCart();
+      }
+    }
+  } else if (btn.classList.contains('set-default-address')) {
+    const data = await apiFetch('/addresses/set-default', 'POST', { id });
+    if (data && data.success) {
+      showToast('Default address set');
+      loadAddresses();
+      loadCart();
+    }
+  }
+});
 
-    init();
+// Checkout
+document.getElementById('checkoutBtn').addEventListener('click', async () => {
+  const addressId = document.getElementById('cartAddress').value;
+  const paymentMethod = document.getElementById('paymentMethod').value;
+  if (!addressId) return showToast('Please select a delivery address');
+  if (!paymentMethod) return showToast('Please select a payment method');
+  const cart = await apiFetch('/cart');
+  if (!cart.items.length) return showToast('Cart is empty');
+  const data = await apiFetch('/checkout', 'POST', { addressId, paymentMethod });
+  if (data && data.success) {
+    showToast('Order placed successfully!');
+    triggerConfetti();
+    loadCart();
+    loadOrders();
+    showSection('orders');
+  }
+});
+
+// Loyalty
+const loadLoyalty = async () => {
+  const loyalty = await apiFetch('/loyalty');
+  document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+  document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
+    <div class="border-b py-2 text-sm">
+      <p>${h.description}</p>
+      <p class="text-gray-600">${h.points} points on ${new Date(h.date).toLocaleDateString()}</p>
+    </div>
+  `).join('') : '<p class="text-sm">No history</p>';
+};
+
+// Referrals
+const loadReferrals = async () => {
+  const referrals = await apiFetch('/referrals');
+  state.referral = referrals || { code: '', link: '' };
+  document.getElementById('referralCode').textContent = referrals?.code || 'N/A';
+  document.getElementById('referralLink').href = referrals?.link || '#';
+};
+
+// Support
+const loadSupport = async () => {
+  const tickets = await apiFetch('/support/tickets');
+  document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+    <div class="border-b py-2 text-sm">
+      <p class="font-semibold">${t.subject}</p>
+      <p class="text-gray-600">Status: ${t.status}</p>
+      <p class="text-gray-600">Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
+    </div>
+  `).join('') : '<p class="text-sm">No tickets</p>';
+
+  const chat = await apiFetch('/support/chat');
+  document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
+    <div class="chat-message ${m.sender}">
+      <p class="text-xs">${m.content}</p>
+      <p class="text-xs text-gray-500">${new Date(m.timestamp).toLocaleTimeString()}</p>
+    </div>
+  `).join('') : '<p class="text-sm">No messages</p>';
+  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+};
+
+document.getElementById('createTicketBtn').addEventListener('click', () => {
+  const modal = document.createElement('div');
+  modal.className = 'share-modal active';
+  modal.innerHTML = `
+    <div class="share-modal-content">
+      <span class="close">×</span>
+      <h3 class="text-base">Create Support Ticket</h3>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-gray-700 text-sm">Subject</label>
+          <input type="text" id="ticketSubject" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Issue subject">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm">Description</label>
+          <textarea id="ticketDescription" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" placeholder="Describe your issue"></textarea>
+        </div>
+        <button id="submitTicket" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.close').addEventListener('click', () => modal.remove());
+  modal.querySelector('#submitTicket').addEventListener('click', async () => {
+    const ticket = {
+      subject: document.getElementById('ticketSubject').value,
+      description: document.getElementById('ticketDescription').value
+    };
+    if (!ticket.subject || !ticket.description) return showToast('Please fill all fields');
+    const data = await apiFetch('/support/tickets/create', 'POST', ticket);
+    if (data && data.success) {
+      showToast('Ticket created');
+      modal.remove();
+      loadSupport();
+    }
+  });
+});
+
+document.getElementById('sendChat').addEventListener('click', async () => {
+  const message = document.getElementById('chatInput').value.trim();
+  if (!message) return;
+  document.getElementById('typingIndicator').textContent = 'Admin is typing...';
+  const data = await apiFetch('/support/chat/send', 'POST', { message });
+  if (data && data.success) {
+    document.getElementById('chatInput').value = '';
+    loadSupport();
+    setTimeout(() => {
+      document.getElementById('typingIndicator').textContent = '';
+      MOCK_DATA.support.chat.push({
+        sender: 'admin',
+        content: 'Thank you for your message. How can I assist you further?',
+        timestamp: new Date().toISOString()
+      });
+      loadSupport();
+    }, 2000);
+  }
+});
+
+// FAQ
+const loadFAQ = async () => {
+  const faq = await apiFetch('/faq');
+  document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
+    <div class="border-b py-2 text-sm">
+      <p class="font-semibold">${f.question}</p>
+      <p class="text-gray-600">${f.answer}</p>
+    </div>
+  `).join('') : '<p class="text-sm">No FAQs available</p>';
+};
+
+// Profile
+const loadProfile = async () => {
+  const profile = await apiFetch('/profile');
+  document.getElementById('profileImage').src = state.profileImage;
+  document.getElementById('profileName').value = profile?.name || '';
+  document.getElementById('profileEmail').value = profile?.email || '';
+  document.getElementById('profilePhone').value = profile?.phone || '';
+};
+
+document.getElementById('profileImageInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.profileImage = reader.result;
+      document.getElementById('profileImage').src = state.profileImage;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+document.getElementById('editProfileBtn').addEventListener('click', async () => {
+  const nameInput = document.getElementById('profileName');
+  const emailInput = document.getElementById('profileEmail');
+  const phoneInput = document.getElementById('profilePhone');
+  const isEditing = nameInput.readOnly;
+  if (isEditing) {
+    nameInput.readOnly = false;
+    emailInput.readOnly = false;
+    phoneInput.readOnly = false;
+    nameInput.focus();
+    document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-1"></i>Save Profile';
+  } else {
+    const profile = {
+      name: nameInput.value,
+      email: emailInput.value,
+      phone: phoneInput.value,
+      image: state.profileImage
+    };
+    if (!profile.name || !profile.email || !profile.phone) return showToast('Please fill all fields');
+    const data = await apiFetch('/profile/update', 'POST', profile);
+    if (data && data.success) {
+      showToast('Profile updated');
+      nameInput.readOnly = true;
+      emailInput.readOnly = true;
+      phoneInput.readOnly = true;
+      document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
+    }
+  }
+});
+
+// Filters
+const applyFilters = async (section = 'menu') => {
+  const category = document.querySelector(`#user-${section} .filter-btn.active`)?.dataset.category || 'all';
+  const price = document.getElementById(section === 'menu' ? 'menuPriceFilter' : 'priceFilter').value;
+  const query = document.getElementById(section === 'menu' ? 'menuSearch' : 'searchMenu').value;
+  await loadMenu(category, price, query);
+};
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters(btn.closest('#user-menu') ? 'menu' : 'dashboard');
+  });
+});
+
+document.getElementById('priceFilter').addEventListener('change', () => applyFilters('dashboard'));
+document.getElementById('menuPriceFilter').addEventListener('change', () => applyFilters('menu'));
+document.getElementById('searchMenu').addEventListener('input', () => applyFilters('dashboard'));
+document.getElementById('menuSearch').addEventListener('input', () => applyFilters('menu'));
+
+// Share
+document.getElementById('shareBtn').addEventListener('click', () => {
+  document.getElementById('shareModal').classList.add('active');
+});
+
+document.getElementById('shareModal').querySelector('.close').addEventListener('click', () => {
+  document.getElementById('shareModal').classList.remove('active');
+});
+
+const shareData = {
+  title: 'Discover DELICUTE!',
+  text: 'Order delicious meals with DELICUTE! Use my referral code DEL123 for exclusive offers.',
+  url: 'https://delicute.com/refer/DEL123'
+};
+
+document.getElementById('shareWhatsApp').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+});
+
+document.getElementById('shareTwitter').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}`, '_blank');
+});
+
+document.getElementById('shareFacebook').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`, '_blank');
+});
+
+// Particles Animation for Hero Section
+const initParticles = () => {
+  const canvas = document.querySelector('.particles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = canvas.parentElement.offsetHeight;
+
+  const particles = Array.from({ length: 50 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: Math.random() * 2 + 1,
+    vx: Math.random() * 0.5 - 0.25,
+    vy: Math.random() * 0.5 - 0.25
+  }));
+
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  };
+  animate();
+};
+
+// Initialize
+const init = async () => {
+  await loadStatusBar();
+  await loadBanners();
+  await loadOffers();
+  await loadMenu();
+  await loadCart();
+  initParticles();
+  if (!state.isLoggedIn) window.location.href = 'index.html';
+};
+
+document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
