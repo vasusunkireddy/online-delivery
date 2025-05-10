@@ -1384,68 +1384,70 @@
         </div>
       `).join('');
     };
-
     // Profile
-    const loadProfile = async () => {
-      const profile = await apiFetch('/profile');
-      if (profile) {
-        document.getElementById('profileName').value = profile.name;
-        document.getElementById('profileEmail').value = profile.email;
-        document.getElementById('profilePhone').value = profile.phone;
-        document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
-      }
+const loadProfile = async () => {
+  const profile = await apiFetch('/profile');
+  if (profile) {
+    document.getElementById('profileName').value = profile.name;
+    document.getElementById('profileEmail').value = profile.email;
+    document.getElementById('profilePhone').value = profile.phone;
+    document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
+  }
+};
+
+document.getElementById('editProfileBtn').addEventListener('click', async () => {
+  const inputs = document.querySelectorAll('#user-profile input:not(#profileImageInput)');
+  const isEditable = inputs[0].hasAttribute('readonly');
+  inputs.forEach(i => i.toggleAttribute('readonly', !isEditable));
+  const btn = document.getElementById('editProfileBtn');
+  btn.innerHTML = isEditable ? '<i class="fas fa-save mr-1"></i>Save Profile' : '<i class="fas fa-edit mr-1"></i>Edit Profile';
+  if (!isEditable) {
+    const data = {
+      name: document.getElementById('profileName').value,
+      email: document.getElementById('profileEmail').value,
+      phone: document.getElementById('profilePhone').value
     };
+    const result = await apiFetch('/profile/update', 'POST', data);
+    if (result && result.success) {
+      showToast('Profile updated');
+      await loadProfile();
+    } else {
+      showToast('Failed to update profile');
+    }
+  }
+});
 
-    document.getElementById('editProfileBtn').addEventListener('click', async () => {
-      const inputs = document.querySelectorAll('#user-profile input:not(#profileImageInput)');
-      const isEditable = inputs[0].hasAttribute('readonly');
-      inputs.forEach(i => i.toggleAttribute('readonly', !isEditable));
-      const btn = document.getElementById('editProfileBtn');
-      btn.innerHTML = isEditable ? '<i class="fas fa-save mr-1"></i>Save Profile' : '<i class="fas fa-edit mr-1"></i>Edit Profile';
-      if (!isEditable) {
-        const data = {
-          name: document.getElementById('profileName').value,
-          email: document.getElementById('profileEmail').value,
-          phone: document.getElementById('profilePhone').value
-        };
-        const result = await apiFetch('/profile/update', 'POST', data);
-        if (result && result.success) {
-          showToast('Profile updated');
-          await loadProfile();
-        }
+document.getElementById('profileImageInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+    showToast('Please upload a valid image (JPEG, PNG, or GIF)');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image size must be less than 5MB');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const imageData = reader.result;
+    try {
+      const data = await apiFetch('/profile/upload-image', 'POST', { image: imageData });
+      if (data && data.success) {
+        document.getElementById('profileImage').src = data.imageUrl;
+        MOCK_DATA.profile.image = data.imageUrl; // Update mock data
+        showToast('Profile image updated');
+        await loadProfile();
+      } else {
+        showToast('Failed to upload image');
       }
-    });
-
-    document.getElementById('profileImageInput').addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-        showToast('Please upload a valid image (JPEG, PNG, or GIF)');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Image size must be less than 5MB');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const imageData = reader.result;
-        try {
-          const data = await apiFetch('/profile/upload-image', 'POST', { image: imageData });
-          if (data && data.success) {
-            document.getElementById('profileImage').src = data.imageUrl;
-            showToast('Profile image updated');
-            await loadProfile();
-          } else {
-            showToast('Failed to upload image');
-          }
-        } catch (err) {
-          showToast('Error uploading image');
-        }
-      };
-      reader.onerror = () => showToast('Error reading image file');
-      reader.readAsDataURL(file);
-    });
+    } catch (err) {
+      showToast('Error uploading image');
+    }
+  };
+  reader.onerror = () => showToast('Error reading image file');
+  reader.readAsDataURL(file);
+});
 
     // Share Modal
     document.getElementById('shareBtn').addEventListener('click', () => {
