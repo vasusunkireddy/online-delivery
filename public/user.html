@@ -1392,6 +1392,8 @@ const loadProfile = async () => {
     document.getElementById('profileEmail').value = profile.email;
     document.getElementById('profilePhone').value = profile.phone;
     document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
+    document.getElementById('profileQuick').querySelector('img').src = profile.image || 'https://via.placeholder.com/32';
+    document.querySelector('.sidebar .profile-img').src = profile.image || 'https://via.placeholder.com/40';
   }
 };
 
@@ -1434,8 +1436,10 @@ document.getElementById('profileImageInput').addEventListener('change', async e 
     try {
       const data = await apiFetch('/profile/upload-image', 'POST', { image: imageData });
       if (data && data.success) {
-        document.getElementById('profileImage').src = data.imageUrl;
         MOCK_DATA.profile.image = data.imageUrl; // Update mock data
+        document.getElementById('profileImage').src = data.imageUrl;
+        document.getElementById('profileQuick').querySelector('img').src = data.imageUrl;
+        document.querySelector('.sidebar .profile-img').src = data.imageUrl;
         showToast('Profile image updated');
         await loadProfile();
       } else {
