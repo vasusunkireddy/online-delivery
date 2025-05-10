@@ -12,6 +12,8 @@
     body {
       font-family: 'Arial', sans-serif;
       overscroll-behavior-y: none;
+      margin: 0;
+      padding: 0;
     }
     .section {
       min-height: calc(100vh - 64px);
@@ -50,6 +52,22 @@
       #menuItems img {
         height: 10rem;
       }
+      .nav-link {
+        font-size: 1rem;
+      }
+      .text-3xl {
+        font-size: 1.5rem;
+      }
+      .text-xl {
+        font-size: 1rem;
+      }
+      .text-lg {
+        font-size: 0.875rem;
+      }
+      #googleSignInButton div {
+        width: 100% !important;
+        max-width: 300px !important;
+      }
     }
     #toast {
       transform: translateX(100%);
@@ -57,6 +75,11 @@
     }
     #toast:not(.hidden) {
       transform: translateX(0);
+    }
+    #googleSignInButton {
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   </style>
 </head>
@@ -84,6 +107,7 @@
       <a href="#" data-section="privacy" class="nav-link block py-2 hover:underline">Privacy</a>
     </div>
   </nav>
+
   <section id="login" class="section py-16 bg-gray-100">
     <div class="container mx-auto max-w-md">
       <div class="bg-white rounded-lg shadow-lg p-8">
@@ -197,7 +221,7 @@
         <div class="text-center mt-6">
           <p class="text-gray-600">Or continue with</p>
           <div class="flex justify-center mt-4">
-            <div id="googleSignInButton"></div>
+            <div id="googleSignInButton" class="w-full max-w-xs sm:max-w-sm"></div>
           </div>
         </div>
         <div id="forgotPasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -217,6 +241,7 @@
               </div>
               <div>
                 <label for="newPassword" class="block text-gray-700 font-medium">New Password</label>
+                <input type="password" id="newPassword" class="form-input w-full px-3 py-2 border rounded-lg focus:outline-none" placeholder="Enter new password" required aria-required="true">
               </div>
               <div class="flex justify-between items-center">
                 <button id="resendResetOtp" class="text-sm text-orange-600 hover:underline focus:outline-none" disabled>Resend OTP (<span id="resendResetTimer">30</span>s)</button>
@@ -232,6 +257,7 @@
       </div>
     </div>
   </section>
+
   <section id="home" class="section hidden py-16">
     <div class="bg-orange-100 py-16 text-center">
       <div class="container mx-auto">
@@ -264,24 +290,17 @@
       </div>
     </div>
     <div class="py-16">
-      <div class="container mx-auto text-center">
-        <h2 class="text-3xl font-bold text-orange-600 mb-8">Special Offers</h2>
-        <p class="text-xl text-gray-700">Get ₹100 off your first order! Use code: DELICUTE100</p>
+      <div class="container mx-auto">
+        <h2 class="text-3xl font-bold text-center text-orange-600 mb-8">Special Offers</h2>
+        <div id="specialOffersContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <!-- Offers will be dynamically inserted here -->
+        </div>
       </div>
     </div>
     <div class="py-16 bg-gray-200">
       <div class="container mx-auto">
         <h2 class="text-3xl font-bold text-center text-orange-600 mb-8">What Our Customers Say</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <p class="text-gray-600">"The Butter Chicken was absolutely delicious!"</p>
-            <p class="mt-4 font-semibold text-orange-600">- Priya S.</p>
-          </div>
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <p class="text-gray-600">"Fast delivery and amazing Gulab Jamun!"</p>
-            <p class="mt-4 font-semibold text-orange-600">- Rahul M.</p>
-          </div>
-        </div>
+        <div id="testimonials" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
       </div>
     </div>
     <footer class="bg-orange-600 text-white py-8">
@@ -290,65 +309,77 @@
         <div class="mt-4 space-x-4">
           <a href="#" data-section="terms" class="nav-link hover:underline">Terms</a>
           <a href="#" data-section="privacy" class="nav-link hover:underline">Privacy Policy</a>
-          <a href="/cdn-cgi/l/email-protection#5d2e282d2d322f291d393831343e282938733e3230" class="hover:underline">Contact</a>
+          <a href="/cdn-cgi/l/email-protection#8af9fffafae5f8fecaeeefe6e3e9fffeefa4e9e5e7" class="hover:underline">Contact</a>
           <a href="#" class="hover:underline">About</a>
         </div>
       </div>
     </footer>
   </section>
+
   <section id="terms" class="section hidden py-16">
     <div class="container mx-auto max-w-3xl">
       <div class="flex items-center space-x-2 mb-6">
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
         <h1 class="text-3xl font-bold text-orange-600">Terms of Service</h1>
       </div>
-      <p class="text-gray-700 mb-4">Welcome to DELICUTE. By using our services, you agree to the following terms and conditions:</p>
-      <ul class="list-disc pl-6 text-gray-700">
-        <li class="mb-2">You must provide accurate information during signup.</li>
-        <li class="mb-2">Orders are subject to availability and confirmation.</li>
-        <li class="mb-2">DELICUTE reserves the right to cancel orders due to unforeseen circumstances.</li>
-        <li class="mb-2">All payments are processed securely through our payment gateway.</li>
-        <li class="mb-2">We comply with the Information Technology Act, 2000 for data protection.</li>
-      </ul>
-      <p class="text-gray-700 mt-4">For any questions, contact us at <a href="/cdn-cgi/l/email-protection#b0838580809f8284b094959c9993858495de939f9d" class="text-orange-600 hover:underline"><span class="__cf_email__" data-cfemail="c1b2b4b1b1aeb3b581a5a4ada8a2b4b5a4efa2aeac">[email&#160;protected]</span></a>.</p>
+      <div id="termsContent">
+        <p class="text-gray-700 mb-4">Welcome to DELICUTE. By using our services, you agree to the following terms and conditions:</p>
+        <ul class="list-disc pl-6 text-gray-700">
+          <li class="mb-2">You must provide accurate information during signup.</li>
+          <li class="mb-2">Orders are subject to availability and confirmation.</li>
+          <li class="mb-2">DELICUTE reserves the right to cancel orders due to unforeseen circumstances.</li>
+          <li class="mb-2">All payments are processed securely through our payment gateway.</li>
+          <li class="mb-2">We comply with the Information Technology Act, 2000 for data protection.</li>
+        </ul>
+        <p class="text-gray-700 mt-4">For any questions, contact us at <a href="/cdn-cgi/l/email-protection#fecdcbceced1cccafedadbd2d7ddcbcadb90ddd1d3" class="text-orange-600 hover:underline"><span class="__cf_email__" data-cfemail="edbeb8bdbda2bfb9ad898881848eb8b9a8e3aea2a0">[email&#160;protected]</span></a>.</p>
+      </div>
       <a href="#" data-section="home" class="nav-link mt-4 inline-block text-orange-600 hover:underline">Back to Home</a>
     </div>
   </section>
+
   <section id="privacy" class="section hidden py-16">
     <div class="container mx-auto max-w-3xl">
       <div class="flex items-center space-x-2 mb-6">
         <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-8">
         <h1 class="text-3xl font-bold text-orange-600">Privacy Policy</h1>
       </div>
-      <p class="text-gray-700 mb-4">At DELICUTE, we value your privacy. This policy outlines how we handle your data:</p>
-      <ul class="list-disc pl-6 text-gray-700">
-        <li class="mb-2">We collect personal information (name, email, phone, address) to process orders.</li>
-        <li class="mb-2">Your data is stored securely and not shared with third parties, except for payment processing.</li>
-        <li class="mb-2">We use cookies to enhance your browsing experience.</li>
-        <li class="mb-2">You can request deletion of your data by contacting us.</li>
-        <li class="mb-2">We comply with the Information Technology Act, 2000.</li>
-      </ul>
-      <p class="text-gray-700 mt-4">For more details, email us at <a href="/cdn-cgi/l/email-protection#b0838580809f8284b094959c9993858495de939f9d" class="text-orange-600 hover:underline"><span class="__cf_email__" data-cfemail="c1b2b4b1b1aeb3b581a5a4ada8a2b4b5a4efa2aeac">[email&#160;protected]</span></a>.</p>
+      <div id="privacyContent">
+        <p class="text-gray-700 mb-4">At DELICUTE, we value your privacy. This policy outlines how we handle your data:</p>
+        <ul class="list-disc pl-6 text-gray-700">
+          <li class="mb-2">We collect personal information (name, email, phone, address) to process orders.</li>
+          <li class="mb-2">Your data is stored securely and not shared with third parties, except for payment processing.</li>
+          <li class="mb-2">We use cookies to enhance your browsing experience.</li>
+          <li class="mb-2">You can request deletion of your data by contacting us.</li>
+          <li class="mb-2">We comply with the Information Technology Act, 2000.</li>
+        </ul>
+        <p class="text-gray-700 mt-4">For more details, email us at <a href="/cdn-cgi/l/email-protection#8ebdbbbebea1bcba8eaaaba2a7adbbbaabe0ada1a3" class="text-orange-600 hover:underline"><span class="__cf_email__" data-cfemail="2b181e1b1b04191f2b0f0e0702081e1f0e45080406">[email&#160;protected]</span></a>.</p>
+      </div>
       <a href="#" data-section="home" class="nav-link mt-4 inline-block text-orange-600 hover:underline">Back to Home</a>
     </div>
   </section>
-  <div id="toast" class="fixed top-4 right-4 bg-orange-600 text-white p-3 rounded-lg shadow-lg hidden z-50"></div>
+
+  <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white p-3 rounded-lg shadow-lg hidden z-50"></div>
+
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
-    const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api/users' : 'https://delicute.onrender.com/api/users';
+    const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://delicute.onrender.com/api';
     const GOOGLE_CLIENT_ID = '1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com';
     let isLoggedIn = !!localStorage.getItem('jwtToken');
     const disposableDomains = [
       'tempmail.com', 'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'yopmail.com',
       'getnada.com', 'dispostable.com', 'throwawaymail.com', 'temp-mail.org', 'fakemail.com'
     ];
+
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.className = `fixed top-4 right-4 p-3 rounded-lg shadow-lg z-50 text-white ${type === 'error' ? 'bg-red-500' : 'bg-orange-600'}`;
+      toast.className = `fixed top-4 right-4 p-3 rounded-lg shadow-lg z-50 text-white ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+      }`;
       toast.classList.remove('hidden');
       setTimeout(() => toast.classList.add('hidden'), 3000);
     }
+
     function decodeJWT(token) {
       try {
         const base64Url = token.split('.')[1];
@@ -362,12 +393,19 @@
         return null;
       }
     }
+
     async function fetchData(endpoint, method = 'GET', data = null, includeToken = true) {
       const headers = {
         'Content-Type': 'application/json',
       };
-      if (includeToken && localStorage.getItem('jwtToken')) {
-        headers['Authorization'] = `Bearer ${localStorage.getItem('jwtToken')}`;
+      if (includeToken) {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          showToast('Please login to continue', 'error');
+          showSection('login');
+          throw new Error('No token provided');
+        }
+        headers['Authorization'] = `Bearer ${token}`;
       }
       const config = {
         method,
@@ -383,12 +421,10 @@
         clearTimeout(timeoutId);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('Fetch response:', response.status, errorData);
           throw new Error(errorData.message || `HTTP ${response.status}`);
         }
         return await response.json();
       } catch (error) {
-        console.error('Fetch error:', error);
         if (error.name === 'AbortError') {
           showToast('Request timed out. Please try again.', 'error');
         } else {
@@ -397,31 +433,54 @@
         throw error;
       }
     }
-    function initializeGoogleSignIn() {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleLogin,
-        auto_select: false,
-        context: 'signin',
-        ux_mode: 'popup',
-      });
-      google.accounts.id.renderButton(
-        document.getElementById('googleSignInButton'),
-        {
-          theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'left',
-        }
-      );
+
+    async function initializeGoogleSignIn() {
+      try {
+        await new Promise((resolve) => {
+          const checkGoogle = setInterval(() => {
+            if (window.google && window.google.accounts) {
+              clearInterval(checkGoogle);
+              resolve();
+            }
+          }, 100);
+        });
+
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+          auto_select: false,
+          context: 'signin',
+          ux_mode: 'popup',
+        });
+
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInButton'),
+          {
+            theme: 'filled_blue', // Modern look with HD logo
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: window.innerWidth <= 640 ? 300 : 400, // Responsive width
+          }
+        );
+
+        const googleButton = document.getElementById('googleSignInButton');
+        googleButton.style.display = 'flex';
+        googleButton.style.justifyContent = 'center';
+        googleButton.style.opacity = '1';
+      } catch (error) {
+        console.error('Google Sign-In initialization failed:', error);
+        showToast('Failed to load Google Sign-In. Please try again.', 'error');
+      }
     }
+
     async function handleGoogleLogin(response) {
       try {
         if (!response.credential) {
           throw new Error('No credential received from Google');
         }
-        const res = await fetchData('/google', 'POST', { id_token: response.credential }, false);
+        const res = await fetchData('/users/google', 'POST', { id_token: response.credential }, false);
         if (res && res.token) {
           localStorage.setItem('jwtToken', res.token);
           isLoggedIn = true;
@@ -437,12 +496,13 @@
           throw new Error('No token received from backend');
         }
       } catch (error) {
-        console.error('Google login error:', error);
         showToast(`Google login failed: ${error.message}`, 'error');
       }
     }
+
     const sections = document.querySelectorAll('.section');
     const navLinks = document.querySelectorAll('.nav-link');
+
     function showSection(sectionId) {
       sections.forEach(section => section.classList.add('hidden'));
       document.getElementById(sectionId).classList.remove('hidden');
@@ -452,6 +512,7 @@
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -459,15 +520,18 @@
         showSection(sectionId);
       });
     });
+
     const menuToggle = document.getElementById('menuToggle');
     const mobileMenu = document.getElementById('mobileMenu');
     menuToggle.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
+
     const loginTab = document.getElementById('loginTab');
     const signupTab = document.getElementById('signupTab');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+
     loginTab.addEventListener('click', () => {
       loginForm.classList.remove('hidden');
       signupForm.classList.add('hidden');
@@ -476,6 +540,7 @@
       signupTab.classList.add('text-gray-600');
       resetSignupForm();
     });
+
     signupTab.addEventListener('click', () => {
       signupForm.classList.remove('hidden');
       loginForm.classList.add('hidden');
@@ -483,14 +548,17 @@
       loginTab.classList.remove('border-orange-600', 'text-orange-600');
       loginTab.classList.add('text-gray-600');
     });
+
     function isDisposableEmail(email) {
       const domain = email.split('@')[1]?.toLowerCase();
       return disposableDomains.includes(domain);
     }
+
     function validateEmailFormat(email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     }
+
     function validateSignupForm() {
       let isValid = true;
       const name = document.getElementById('signupName').value.trim();
@@ -501,6 +569,7 @@
       } else {
         nameError.classList.add('hidden');
       }
+
       const email = document.getElementById('signupEmail').value.trim();
       const emailError = document.getElementById('signupEmailError');
       if (!validateEmailFormat(email) || isDisposableEmail(email)) {
@@ -509,6 +578,7 @@
       } else {
         emailError.classList.add('hidden');
       }
+
       const phone = document.getElementById('signupPhone').value.trim();
       const phoneError = document.getElementById('signupPhoneError');
       const phoneRegex = /^\d{10}$/;
@@ -518,6 +588,7 @@
       } else {
         phoneError.classList.add('hidden');
       }
+
       const password = document.getElementById('signupPassword').value;
       const passwordError = document.getElementById('signupPasswordError');
       if (password.length < 8) {
@@ -526,6 +597,7 @@
       } else {
         passwordError.classList.add('hidden');
       }
+
       const address = document.getElementById('signupAddress').value.trim();
       const addressError = document.getElementById('signupAddressError');
       if (address.length === 0) {
@@ -534,6 +606,7 @@
       } else {
         addressError.classList.add('hidden');
       }
+
       const otp = document.getElementById('signupOtp').value.trim();
       const otpError = document.getElementById('signupOtpError');
       const otpRegex = /^\d{6}$/;
@@ -543,14 +616,17 @@
       } else {
         otpError.classList.add('hidden');
       }
+
       return isValid;
     }
+
     function resetSignupForm() {
       signupForm.reset();
       document.querySelectorAll('#signupForm .text-red-500').forEach(error => error.classList.add('hidden'));
       stopLoadingState();
       resetOtpButton();
     }
+
     function startLoadingState() {
       const signupButton = document.getElementById('signupButton');
       const signupButtonText = document.getElementById('signupButtonText');
@@ -559,6 +635,7 @@
       signupButtonText.textContent = 'Signing Up...';
       signupLoadingSpinner.classList.remove('hidden');
     }
+
     function stopLoadingState() {
       const signupButton = document.getElementById('signupButton');
       const signupButtonText = document.getElementById('signupButtonText');
@@ -567,6 +644,7 @@
       signupButtonText.textContent = 'Sign Up';
       signupLoadingSpinner.classList.add('hidden');
     }
+
     function startOtpLoading() {
       const sendOtpButton = document.getElementById('sendOtpButton');
       const sendOtpButtonText = document.getElementById('sendOtpButtonText');
@@ -575,6 +653,7 @@
       sendOtpButtonText.textContent = 'Sending...';
       otpLoadingSpinner.classList.remove('hidden');
     }
+
     function stopOtpLoading() {
       const sendOtpButton = document.getElementById('sendOtpButton');
       const sendOtpButtonText = document.getElementById('sendOtpButtonText');
@@ -583,6 +662,7 @@
       sendOtpButtonText.textContent = 'Send OTP';
       otpLoadingSpinner.classList.add('hidden');
     }
+
     function startOtpTimer() {
       let timeLeft = 30;
       const sendOtpButton = document.getElementById('sendOtpButton');
@@ -607,6 +687,7 @@
         }
       }, 1000);
     }
+
     function resetOtpButton() {
       const sendOtpButton = document.getElementById('sendOtpButton');
       const sendOtpButtonText = document.getElementById('sendOtpButtonText');
@@ -620,6 +701,7 @@
         clearInterval(window.otpTimerInterval);
       }
     }
+
     document.getElementById('sendOtpButton').addEventListener('click', async () => {
       const email = document.getElementById('signupEmail').value.trim();
       const emailError = document.getElementById('signupEmailError');
@@ -635,7 +717,7 @@
       emailError.classList.add('hidden');
       startOtpLoading();
       try {
-        const otpData = await fetchData('/request-otp', 'POST', { email }, false);
+        const otpData = await fetchData('/users/request-otp', 'POST', { email }, false);
         stopOtpLoading();
         if (otpData) {
           showToast(`A 6-digit OTP has been sent to ${email}. Please check your inbox or spam folder.`);
@@ -646,12 +728,13 @@
         showToast(`Failed to send OTP: ${error.message}`, 'error');
       }
     });
+
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
       try {
-        const data = await fetchData('/login', 'POST', { email, password }, false);
+        const data = await fetchData('/users/login', 'POST', { email, password }, false);
         if (data && data.token) {
           localStorage.setItem('jwtToken', data.token);
           isLoggedIn = true;
@@ -670,6 +753,7 @@
         showToast(`Login error: ${error.message}`, 'error');
       }
     });
+
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!validateSignupForm()) {
@@ -684,7 +768,7 @@
       const otp = document.getElementById('signupOtp').value;
       startLoadingState();
       try {
-        const signupData = await fetchData('/signup', 'POST', { name, email, phone, password, address, otp }, false);
+        const signupData = await fetchData('/users/signup', 'POST', { name, email, phone, password, address, otp }, false);
         if (signupData && signupData.token) {
           localStorage.setItem('jwtToken', signupData.token);
           isLoggedIn = true;
@@ -699,6 +783,7 @@
       }
       stopLoadingState();
     });
+
     const forgotPasswordLink = document.getElementById('forgotPassword');
     const forgotPasswordModal = document.getElementById('forgotPasswordModal');
     const closeModal = document.getElementById('closeModal');
@@ -707,10 +792,12 @@
     const emailStep = document.getElementById('emailStep');
     const otpStep = document.getElementById('otpStep');
     const resendResetOtp = document.getElementById('resendResetOtp');
+
     forgotPasswordLink.addEventListener('click', (e) => {
       e.preventDefault();
       forgotPasswordModal.classList.remove('hidden');
     });
+
     closeModal.addEventListener('click', () => {
       forgotPasswordModal.classList.add('hidden');
       emailStep.classList.remove('hidden');
@@ -719,10 +806,11 @@
       document.getElementById('otpInput').value = '';
       document.getElementById('newPassword').value = '';
     });
+
     sendOtp.addEventListener('click', async () => {
       const email = document.getElementById('resetEmail').value;
       try {
-        const data = await fetchData('/request-otp', 'POST', { email }, false);
+        const data = await fetchData('/users/request-otp', 'POST', { email }, false);
         if (data) {
           showToast('OTP sent to your email. Check your inbox or spam folder.');
           emailStep.classList.add('hidden');
@@ -733,10 +821,11 @@
         showToast(`Failed to send OTP: ${error.message}`, 'error');
       }
     });
+
     resendResetOtp.addEventListener('click', async () => {
       const email = document.getElementById('resetEmail').value;
       try {
-        const data = await fetchData('/request-otp', 'POST', { email }, false);
+        const data = await fetchData('/users/request-otp', 'POST', { email }, false);
         if (data) {
           showToast('OTP resent to your email. Check your inbox or spam folder.');
           startResendTimer('resendResetOtp', 'resendResetTimer');
@@ -745,12 +834,13 @@
         showToast(`Failed to resend OTP: ${error.message}`, 'error');
       }
     });
+
     resetPassword.addEventListener('click', async () => {
       const email = document.getElementById('resetEmail').value;
       const otp = document.getElementById('otpInput').value;
       const newPassword = document.getElementById('newPassword').value;
       try {
-        const data = await fetchData('/reset-password', 'POST', { email, otp, newPassword }, false);
+        const data = await fetchData('/users/reset-password', 'POST', { email, otp, newPassword }, false);
         if (data) {
           showToast('Password reset successful!');
           forgotPasswordModal.classList.add('hidden');
@@ -764,6 +854,7 @@
         showToast(`Password reset failed: ${error.message}`, 'error');
       }
     });
+
     function startResendTimer(buttonId, timerId) {
       let timeLeft = 30;
       const button = document.getElementById(buttonId);
@@ -780,6 +871,7 @@
         }
       }, 1000);
     }
+
     function updateMenuVisibility() {
       const menuSection = document.getElementById('menuSection');
       const loginPrompt = document.getElementById('loginPrompt');
@@ -792,6 +884,7 @@
         loginPrompt.classList.remove('hidden');
       }
     }
+
     function updateNav() {
       const loginNav = document.getElementById('loginNav');
       const mobileLoginNav = document.getElementById('mobileLoginNav');
@@ -813,6 +906,7 @@
         };
       }
     }
+
     function logout(e) {
       e.preventDefault();
       localStorage.removeItem('jwtToken');
@@ -821,9 +915,10 @@
       showSection('login');
       showToast('Logged out!');
     }
+
     async function loadMenu(category = '') {
       try {
-        const data = await fetchData(`/menu${category ? `?category=${category}` : ''}`);
+        const data = await fetchData(`/menu${category ? `?category=${category}` : ''}`, 'GET', null, true);
         if (!data) return;
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = data
@@ -836,16 +931,67 @@
             </div>
           `).join('');
       } catch (error) {
-        showToast(`Failed to load menu: ${error.message}`, 'error');
+        // Error handling already managed in fetchData
       }
     }
+
+    async function loadDynamicContent() {
+      try {
+        // Load Admin-Posted Offers (with images)
+        const offersData = await fetchData('/offers', 'GET', null, true);
+        const offersContainer = document.getElementById('specialOffersContainer');
+        if (offersData && offersData.length > 0) {
+          offersContainer.innerHTML = offersData
+            .map(offer => `
+              <div class="bg-white rounded-lg shadow-lg p-4 hover:shadow-xl transition">
+                <img src="${offer.image || 'https://images.unsplash.com/photo-1513104890138-7c2e77c26e5e?w=500&auto=format&fit=crop&q=60'}" alt="${offer.title}" class="w-full h-48 object-cover rounded-lg mb-4">
+                <h3 class="text-xl font-semibold text-orange-600">${offer.title}</h3>
+                <p class="text-gray-600 mt-2">${offer.description}</p>
+                <p class="text-gray-700 mt-2"><strong>Discount:</strong> ${offer.discount}%</p>
+                <p class="text-gray-700"><strong>Code:</strong> ${offer.code}</p>
+              </div>
+            `).join('');
+        } else {
+          offersContainer.innerHTML = '<p class="text-gray-600 text-center col-span-full">No special offers available at the moment.</p>';
+        }
+
+        // Load Testimonials
+        const testimonialData = await fetchData('/content/testimonials', 'GET', null, true);
+        const testimonialsContainer = document.getElementById('testimonials');
+        if (testimonialData && testimonialData.length > 0) {
+          testimonialsContainer.innerHTML = testimonialData
+            .map(testimonial => `
+              <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p class="text-gray-600">"${testimonial.text}"</p>
+                <p class="mt-4 font-semibold text-orange-600">- ${testimonial.author}</p>
+              </div>
+            `).join('');
+        } else {
+          testimonialsContainer.innerHTML = '<p class="text-gray-600 text-center col-span-2">No testimonials available at the moment.</p>';
+        }
+
+        // Optionally load Terms and Privacy content if dynamic
+        const termsData = await fetchData('/content/terms', 'GET', null, false);
+        const privacyData = await fetchData('/content/privacy', 'GET', null, false);
+        
+        if (termsData && termsData.content) {
+          document.getElementById('termsContent').innerHTML = termsData.content;
+        }
+        if (privacyData && privacyData.content) {
+          document.getElementById('privacyContent').innerHTML = privacyData.content;
+        }
+      } catch (error) {
+        // Error handling already managed in fetchData
+      }
+    }
+
     const orderNow = document.getElementById('orderNow');
     orderNow.addEventListener('click', () => {
       if (!isLoggedIn) {
         showToast('Please login to place an order');
         showSection('login');
       } else {
-                showToast('Redirecting to order page...');
+        showToast('Redirecting to order page...');
         showSection('home');
       }
     });
@@ -863,10 +1009,10 @@
           price: e.target.dataset.itemPrice,
         };
         try {
-          await fetchData('/cart/add', 'POST', { item });
+          await fetchData('/cart/add', 'POST', { item }, true);
           showToast(`${item.name} added to cart!`);
         } catch (error) {
-          showToast(`Failed to add to cart: ${error.message}`, 'error');
+          // Error handling already managed in fetchData
         }
       }
     });
@@ -875,7 +1021,7 @@
     searchDishes.addEventListener('input', async () => {
       const searchTerm = searchDishes.value.trim();
       try {
-        const data = await fetchData(`/menu?search=${encodeURIComponent(searchTerm)}`);
+        const data = await fetchData(`/menu?search=${encodeURIComponent(searchTerm)}`, 'GET', null, true);
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = data
           .map(item => `
@@ -887,7 +1033,7 @@
             </div>
           `).join('');
       } catch (error) {
-        showToast(`Search failed: ${error.message}`, 'error');
+        // Error handling already managed in fetchData
       }
     });
 
@@ -903,9 +1049,9 @@
     updateNav();
     showSection('login');
     initializeGoogleSignIn();
-
-    // Ensure menu visibility on page load
+    loadDynamicContent();
     updateMenuVisibility();
   </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93da464fc875afef',t:'MTc0Njg4ODg5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

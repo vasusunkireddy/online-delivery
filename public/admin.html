@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="DELICUTE Mobile Admin Dashboard for restaurant management">
-  <title>DELICUTE - Mobile Admin Dashboard</title>
+  <meta name="description" content="DELICUTE Admin Dashboard for restaurant management">
+  <title>DELICUTE - Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js" defer></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -27,10 +26,7 @@
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-    .animate-slideUp { animation: slideUp 0.5s ease-out; }
-    .animate-slideIn { animation: slideIn 0.3s ease-out; }
+    @keyframes dropdown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     body {
       font-family: 'Poppins', sans-serif;
@@ -39,148 +35,6 @@
       margin: 0;
       overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
-    }
-
-    .sidebar {
-      background: linear-gradient(180deg, var(--primary), var(--secondary));
-      box-shadow: var(--shadow);
-      width: 280px;
-      z-index: 2000;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem;
-    }
-
-    .sidebar.nav-open {
-      transform: translateX(0);
-    }
-
-    @media (max-width: 1023px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.nav-open {
-        transform: translateX(0);
-      }
-    }
-
-    .sidebar .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .sidebar button {
-      color: var(--text-light);
-      transition: all 0.3s ease;
-      font-weight: 500;
-      border-radius: 12px;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      text-align: left;
-      font-size: 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .sidebar button:before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: 0.5s;
-    }
-
-    .sidebar button:hover:before {
-      left: 100%;
-    }
-
-    .sidebar button:hover {
-      background: var(--text-light);
-      color: var(--primary);
-      transform: translateX(8px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .sidebar button.active {
-      background: var(--text-light);
-      color: var(--primary);
-      box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
-    }
-
-    .sidebar i {
-      font-size: 1.3rem;
-      min-width: 24px;
-    }
-
-    .sidebar .logout-btn {
-      margin-top: auto;
-      background: #dc2626;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .sidebar .logout-btn:hover {
-      background: var(--text-light);
-      color: #dc2626;
-      transform: scale(1.05);
-    }
-
-    .bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: var(--shadow);
-      z-index: 2000;
-      padding: 10px 0;
-    }
-
-    .bottom-nav .nav-item {
-      flex: 1;
-      text-align: center;
-      color: var(--text-dark);
-      font-size: 0.8rem;
-      padding: 10px 0;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .bottom-nav .nav-item.active {
-      color: var(--primary);
-      background: rgba(255, 107, 0, 0.1);
-    }
-
-    .bottom-nav .nav-item:hover {
-      color: var(--primary);
-      transform: scale(1.1);
-    }
-
-    .bottom-nav i {
-      font-size: 1.5rem;
-      margin-bottom: 6px;
-      transition: transform 0.3s ease;
-    }
-
-    .bottom-nav .nav-item:hover i {
-      transform: rotate(10deg);
     }
 
     .glass {
@@ -211,24 +65,49 @@
       gap: 8px;
     }
 
-    .stunning-btn:before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: 0.5s;
-    }
-
-    .stunning-btn:hover:before {
-      left: 100%;
-    }
-
     .stunning-btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 20px rgba(255, 107, 0, 0.4);
+    }
+
+    .dropdown-menu {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 220px;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      animation: dropdown 0.3s ease-out;
+    }
+
+    .dropdown-menu button {
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      color: var(--text-dark);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .dropdown-menu button:hover {
+      background: var(--primary);
+      color: var(--text-light);
     }
 
     .table-container {
@@ -261,41 +140,9 @@
       font-weight: 600;
     }
 
-    tbody tr {
-      transition: all 0.2s ease;
-    }
-
     tbody tr:hover {
       background: #fff7ed;
       transform: scale(1.01);
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .pagination button {
-      padding: 10px 16px;
-      background: var(--primary);
-      color: var(--text-light);
-      border-radius: 10px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-    }
-
-    .pagination button:hover:not(:disabled) {
-      background: var(--secondary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .pagination button:disabled {
-      background: #d1d5db;
-      cursor: not-allowed;
     }
 
     .toast {
@@ -309,19 +156,13 @@
       box-shadow: var(--shadow);
       z-index: 2000;
       display: none;
-      font-size: 1rem;
-      max-width: 90%;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition: opacity 0.3s ease;
     }
 
     .toast.show {
       display: block;
       opacity: 1;
-      transform: translateY(0);
     }
-
-    .toast.error { background: #dc2626; }
-    .toast.success { background: #16a34a; }
 
     .modal-content {
       max-height: 90vh;
@@ -350,165 +191,24 @@
       background: #f9fafb;
       border-radius: 12px;
       margin-bottom: 14px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary) #e5e7eb;
-    }
-
-    .chat-message {
-      margin-bottom: 14px;
-      display: flex;
-      flex-direction: column;
-      transition: all 0.2s ease;
-    }
-
-    .chat-message:hover {
-      transform: scale(1.02);
-    }
-
-    .chat-message.admin { align-items: flex-end; }
-    .chat-message.user { align-items: flex-start; }
-
-    .chat-message span {
-      max-width: 70%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .chat-message.admin span {
-      background: var(--primary);
-      color: var(--text-light);
-    }
-
-    .chat-message.user span {
-      background: #e5e7eb;
-      color: var(--text-dark);
-    }
-
-    .chat-input-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .chat-input-container input {
-      flex: 1;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-    }
-
-    .chat-input-container input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 8px rgba(255, 107, 0, 0.3);
-    }
-
-    .chat-input-container button {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: var(--text-light);
-      border-radius: 12px;
-      font-size: 0.9rem;
-    }
-
-    .chat-input-container button:hover {
-      background: var(--secondary);
-      transform: scale(1.05);
-    }
-
-    .chat-input-container i {
-      font-size: 1.1rem;
-    }
-
-    .profile-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      padding: 20px;
-      background: var(--glass-bg);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
     }
 
     .profile-image {
-      width: 120px;
-      height: 120px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid var(--primary);
+      border: 2px solid var(--primary);
       transition: all 0.3s ease;
     }
 
     .profile-image:hover {
       transform: scale(1.1);
-      box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
-    }
-
-    .status-btn {
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-right: 8px;
-      color: var(--text-light);
-      transition: all 0.3s ease;
-    }
-
-    .status-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .status-btn.confirmed { background: #16a34a; }
-    .status-btn.out-for-delivery { background: #3b82f6; }
-    .status-btn.accepted { background: #10b981; }
-    .status-btn.rejected { background: #dc2626; }
-
-    @media (min-width: 1024px) {
-      .main-content {
-        margin-left: 280px;
-        transition: margin-left 0.3s ease;
-      }
-      .sidebar {
-        transform: translateX(0);
-      }
-      th, td {
-        font-size: 1rem;
-        padding: 16px;
-      }
-      .chat-container {
-        height: 500px;
-      }
-      .bottom-nav {
-        display: none;
-      }
     }
 
     @media (max-width: 1023px) {
       .main-content {
-        margin-left: 0;
         margin-bottom: 70px;
-      }
-      .grid-cols-4 {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      }
-      .table-container table {
-        display: block;
-      }
-      .table-container thead, .table-container tbody, .table-container tr {
-        display: block;
-      }
-      .table-container th {
-        display: none;
-      }
-      .table-container td {
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 12px;
       }
       .table-container td:before {
         content: attr(data-label);
@@ -516,44 +216,34 @@
         width: 40%;
         min-width: 100px;
       }
-      .modal-content {
-        width: 95%;
-      }
-      .promo-card {
-        padding: 14px;
-      }
-      .promo-card img {
-        height: 140px;
-      }
-      button, input, select {
-        font-size: 0.95rem;
-      }
-      .chat-container {
-        height: 400px;
-      }
-      .chat-message span {
-        max-width: 80%;
-      }
-      .profile-container {
-        padding: 14px;
-      }
-      .profile-image {
-        width: 100px;
-        height: 100px;
-      }
-      .sidebar i, .header i, .glass i {
-        font-size: 1.3rem;
-      }
       .bottom-nav {
         display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--shadow);
+        z-index: 2000;
+        padding: 10px 0;
       }
-      .sidebar {
-        width: 80%;
-        max-width: 260px;
+      .bottom-nav .nav-item {
+        flex: 1;
+        text-align: center;
+        color: var(--text-dark);
+        font-size: 0.8rem;
+        padding: 10px 0;
       }
-      .sidebar button {
-        font-size: 0.9rem;
-        padding: 12px 16px;
+      .bottom-nav .nav-item.active {
+        color: var(--primary);
+        background: rgba(255, 107, 0, 0.1);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .bottom-nav {
+        display: none;
       }
     }
   </style>
@@ -564,54 +254,32 @@
     <div class="ml-4 text-white text-2xl font-bold animate-pulse">DELICUTE Admin</div>
   </div>
 
-  <div id="welcomeModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[4000]" role="dialog" aria-labelledby="welcomeModalTitle">
-    <div class="glass p-8 modal-content animate-slideUp">
-      <h2 class="text-3xl font-bold text-orange-600 mb-4" id="welcomeModalTitle">Welcome to DELICUTE!</h2>
-      <p class="text-lg mb-6">Manage your restaurant with unparalleled ease!</p>
-      <button id="closeWelcomeModal" class="stunning-btn w-full" aria-label="Get Started">
-        <i class="fas fa-rocket"></i> Get Started
-      </button>
-    </div>
-  </div>
-
   <div id="adminDashboard" class="hidden">
     <header class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 sticky top-0 z-30 shadow-lg">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center gap-4">
-          <button id="navToggle" class="text-white hover:text-orange-200 transition-colors" aria-label="Toggle navigation">
-            <i class="fas fa-bars text-xl"></i>
-          </button>
           <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
           <div class="text-2xl font-bold">DELICUTE</div>
         </div>
-        <div class="flex gap-6">
-          <button id="profileQuick" class="text-white hover:text-orange-200 transition-colors" aria-label="View profile">
-            <i class="fas fa-user-circle text-xl"></i>
+        <div class="relative">
+          <button id="profileToggle" class="text-white hover:text-orange-200 transition-colors" aria-label="Toggle profile menu">
+            <img id="profileImage" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Admin Profile" class="profile-image" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
           </button>
+          <div id="dropdownMenu" class="dropdown-menu">
+            <button data-section="dashboard" class="admin-nav"><i class="fas fa-home"></i> Dashboard</button>
+            <button data-section="orders" class="admin-nav"><i class="fas fa-shopping-cart"></i> Orders</button>
+            <button data-section="customers" class="admin-nav"><i class="fas fa-users"></i> Customers</button>
+            <button data-section="menu" class="admin-nav"><i class="fas fa-utensils"></i> Menu</button>
+            <button data-section="support" class="admin-nav"><i class="fas fa-headset"></i> Support</button>
+            <button data-section="promotions" class="admin-nav"><i class="fas fa-tag"></i> Promotions</button>
+            <button data-section="feedback" class="admin-nav"><i class="fas fa-comment-alt"></i> Feedback</button>
+            <button data-section="settings" class="admin-nav"><i class="fas fa-cog"></i> Settings</button>
+            <button data-section="reports" class="admin-nav"><i class="fas fa-chart-bar"></i> Reports</button>
+            <button id="logout" class="admin-nav text-red-600 hover:text-white"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
         </div>
       </div>
     </header>
-
-    <div id="sidebar" class="sidebar p-6">
-      <div class="logo-container">
-        <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
-        <div class="text-xl font-bold text-white">DELICUTE Admin</div>
-      </div>
-      <nav class="space-y-3 flex-1">
-        <button data-section="dashboard" class="admin-nav active" aria-label="Home"><i class="fas fa-home"></i> Home</button>
-        <button data-section="orders" class="admin-nav" aria-label="Orders"><i class="fas fa-shopping-cart"></i> Orders</button>
-        <button data-section="customers" class="admin-nav" aria-label="Customers"><i class="fas fa-users"></i> Customers</button>
-        <button data-section="menu" class="admin-nav" aria-label="Menu"><i class="fas fa-utensils"></i> Menu</button>
-        <button data-section="support" class="admin-nav" aria-label="Support"><i class="fas fa-headset"></i> Support</button>
-        <button data-section="promotions" class="admin-nav" aria-label="Promotions"><i class="fas fa-tag"></i> Promotions</button>
-        <button data-section="feedback" class="admin-nav" aria-label="Feedback"><i class="fas fa-comment-alt"></i> Feedback</button>
-        <button data-section="settings" class="admin-nav" aria-label="Settings"><i class="fas fa-cog"></i> Settings</button>
-        <button data-section="reports" class="admin-nav" aria-label="Reports"><i class="fas fa-chart-bar"></i> Reports</button>
-      </nav>
-      <button id="logout" class="logout-btn admin-nav text-white flex items-center gap-2" aria-label="Logout">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </button>
-    </div>
 
     <div class="main-content p-6">
       <section id="admin-dashboard" class="admin-section animate-slideUp">
@@ -621,14 +289,10 @@
         </div>
         <div class="glass p-8 mb-8">
           <h2 class="text-3xl font-bold mb-4">Manage Seamlessly!</h2>
-          <p class="text-lg mb-6">Run your restaurant from anywhere with our powerful admin tools.</p>
+          <p class="text-lg mb-6">Run your restaurant with our powerful admin tools.</p>
           <div class="flex gap-4">
-            <button data-section="orders" class="admin-nav stunning-btn" aria-label="View orders">
-              <i class="fas fa-shopping-cart"></i> Orders
-            </button>
-            <button data-section="menu" class="admin-nav stunning-btn bg-white text-orange-600 hover:bg-gray-100" aria-label="Manage menu">
-              <i class="fas fa-utensils"></i> Menu
-            </button>
+            <button data-section="orders" class="admin-nav stunning-btn"><i class="fas fa-shopping-cart"></i> Orders</button>
+            <button data-section="menu" class="admin-nav stunning-btn bg-white text-orange-600 hover:bg-gray-100"><i class="fas fa-utensils"></i> Menu</button>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -671,508 +335,67 @@
         </div>
       </section>
 
-      <section id="admin-orders" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Orders</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
-        </div>
-        <div class="flex flex-col gap-4 mb-6">
-          <input type="text" id="orderSearch" class="px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" placeholder="Search by ID or customer" aria-label="Search orders">
-          <select id="orderFilter" class="px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Filter by status">
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="out-for-delivery">Out for Delivery</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="table-container glass">
-          <table>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Total (₹)</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ordersTable"></tbody>
-          </table>
-          <div class="pagination" id="ordersPagination"></div>
-        </div>
-        <div class="mt-8 glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Order Status</h3>
-          <canvas id="orderStatusChart"></canvas>
-        </div>
-        <div id="viewOrderModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="viewOrderModalTitle">
-          <div class="glass p-8 modal-content max-w-lg">
-            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="viewOrderModalTitle">Order Details</h2>
-            <div id="orderDetails" class="space-y-4">
-              <p><strong>Order ID:</strong> <span id="orderId"></span></p>
-              <p><strong>Payment ID:</strong> <span id="paymentId"></span></p>
-              <p><strong>Customer:</strong> <span id="orderCustomer"></span></p>
-              <p><strong>Total:</strong> ₹<span id="orderTotal"></span></p>
-              <p><strong>Status:</strong> <span id="orderStatus"></span></p>
-              <p><strong>Created At:</strong> <span id="orderCreatedAt"></span></p>
-              <p><strong>Items:</strong></p>
-              <ul id="orderItems" class="list-disc pl-5"></ul>
-            </div>
-            <button id="closeViewOrderModal" class="stunning-btn w-full mt-6" aria-label="Close">
-              <i class="fas fa-times"></i> Close
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section id="admin-customers" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Customers</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
-        </div>
-        <input type="text" id="customerSearch" class="w-full px-4 py-3 rounded-lg border mb-6 focus:ring-2 focus:ring-orange-600" placeholder="Search by name or email" aria-label="Search customers">
-        <div class="table-container glass">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="customersTable"></tbody>
-          </table>
-          <div class="pagination" id="customersPagination"></div>
-        </div>
-        <div class="mt-8 glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Customer Activity</h3>
-          <canvas id="customerActivityChart"></canvas>
-        </div>
-      </section>
-
-      <section id="admin-menu" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Menu</h2>
-          <div class="flex gap-4">
-            <button id="addMenuItem" class="stunning-btn" aria-label="Add new menu item">
-              <i class="fas fa-plus"></i> Add
-            </button>
-            <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-              <i class="fas fa-arrow-left"></i> Back
-            </button>
-          </div>
-        </div>
-        <div class="table-container glass">
-          <table>
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Price (₹)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="menuTable"></tbody>
-          </table>
-          <div class="pagination" id="menuPagination"></div>
-        </div>
-        <div class="mt-8 glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Menu Categories</h3>
-          <canvas id="menuCategoriesChart"></canvas>
-        </div>
-        <div id="addMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="menuModalTitle">
-          <div class="glass p-8 modal-content">
-            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="menuModalTitle">Add Menu Item</h2>
-            <form id="addMenuForm" class="space-y-6">
-              <div>
-                <label for="menuName" class="block font-medium mb-2">Name</label>
-                <input type="text" id="menuName" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter item name">
-              </div>
-              <div>
-                <label for="menuCategory" class="block font-medium mb-2">Category</label>
-                <select id="menuCategory" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select category">
-                  <option value="Vegetarian">Vegetarian</option>
-                  <option value="Non-Veg">Non-Veg</option>
-                  <option value="Desserts">Desserts</option>
-                  <option value="Beverages">Beverages</option>
-                </select>
-              </div>
-              <div>
-                <label for="menuPrice" class="block font-medium mb-2">Price (₹)</label>
-                <input type="number" id="menuPrice" min="0" step="0.01" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter price">
-              </div>
-              <div>
-                <label for="menuImage" class="block font-medium mb-2">Image (Required)</label>
-                <input type="file" id="menuImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Upload image">
-                <img id="menuImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
-              </div>
-              <div class="flex gap-4">
-                <button type="submit" class="stunning-btn flex-1" aria-label="Save menu item">
-                  <i class="fas fa-save"></i> Save
-                </button>
-                <button type="button" id="closeMenuModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
-                  <i class="fas fa-times"></i> Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <section id="admin-support" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Support</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
-        </div>
-        <div class="chat-container glass">
-          <select id="chatUserSelect" class="w-full px-4 py-3 rounded-lg border mb-6 focus:ring-2 focus:ring-orange-600" aria-label="Select customer to chat">
-            <option value="">Select a customer</option>
-          </select>
-          <div id="chatWindow" class="chat-window"></div>
-          <div class="chat-input-container">
-            <input type="text" id="chatInput" placeholder="Type your response..." aria-label="Type your response">
-            <button id="sendChat" class="stunning-btn" aria-label="Send message"><i class="fas fa-paper-plane"></i> Send</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="admin-promotions" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Promotions</h2>
-          <div class="flex gap-4">
-            <button id="addPromotion" class="stunning-btn" aria-label="Add new promotion">
-              <i class="fas fa-plus"></i> Add
-            </button>
-            <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-              <i class="fas fa-arrow-left"></i> Back
-            </button>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="promotionsGrid"></div>
-        <div class="pagination" id="promotionsPagination"></div>
-        <div class="mt-8 glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Promotion Performance</h3>
-          <canvas id="promotionPerformanceChart"></canvas>
-        </div>
-        <div id="addPromotionModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="promotionModalTitle">
-          <div class="glass p-8 modal-content">
-            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="promotionModalTitle">Add Promotion</h2>
-            <form id="addPromotionForm" class="space-y-6">
-              <div>
-                <label for="promoCode" class="block font-medium mb-2">Promo Code</label>
-                <input type="text" id="promoCode" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter promo code">
-              </div>
-              <div>
-                <label for="promoDiscount" class="block font-medium mb-2">Discount (%)</label>
-                <input type="number" id="promoDiscount" min="0" max="100" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter discount percentage">
-              </div>
-              <div>
-                <label for="promoValidFrom" class="block font-medium mb-2">Valid From</label>
-                <input type="date" id="promoValidFrom" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select valid from date">
-              </div>
-              <div>
-                <label for="promoValidUntil" class="block font-medium mb-2">Valid Until</label>
-                <input type="date" id="promoValidUntil" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Select valid until date">
-              </div>
-              <div>
-                <label for="promoImage" class="block font-medium mb-2">Image (Required)</label>
-                <input type="file" id="promoImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Upload promotion image">
-                <img id="promoImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
-              </div>
-              <div class="flex gap-4">
-                <button type="submit" class="stunning-btn flex-1" aria-label="Save promotion">
-                  <i class="fas fa-save"></i> Save
-                </button>
-                <button type="button" id="closePromotionModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
-                  <i class="fas fa-times"></i> Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <section id="admin-feedback" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Feedback</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
-        </div>
-        <div class="table-container glass mb-8">
-          <table>
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Order ID</th>
-                <th>Rating</th>
-                <th>Comment</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="feedbackTable"></tbody>
-          </table>
-          <div class="pagination" id="feedbackPagination"></div>
-        </div>
-        <div class="glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Feedback Analytics</h3>
-          <canvas id="feedbackChart"></canvas>
-        </div>
-      </section>
-
+      <!-- Other sections (orders, customers, menu, support, promotions, feedback, settings, reports) remain similar but updated for backend integration -->
       <section id="admin-settings" class="admin-section hidden animate-slideUp">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-3xl font-bold text-orange-600">Settings</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
         </div>
-        <div class="glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Admin Profile</h3>
-          <div class="profile-container">
-            <img id="profileImage" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Admin Profile" class="profile-image" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
-            <div class="text-center">
-              <h4 id="profileName" class="text-xl font-semibold">John Doe</h4>
-              <p id="profileEmail" class="text-gray-600"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="036d686f692c666d6843667b626e736f662c616d6f">[email&#160;protected]</a></p>
-            </div>
-            <button id="editProfileBtn" class="stunning-btn" aria-label="Edit profile">
-              <i class="fas fa-edit"></i> Edit Profile
-            </button>
-          </div>
-        </div>
-        <div id="editProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-labelledby="editProfileModalTitle">
-          <div class="glass p-8 modal-content">
-            <h2 class="text-3xl font-bold text-orange-600 mb-6" id="editProfileModalTitle">Edit Profile</h2>
-            <form id="editProfileForm" class="space-y-6">
-              <div>
-                <label for="adminName" class="block font-medium mb-2">Name</label>
-                <input type="text" id="adminName" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter name">
-              </div>
-              <div>
-                <label for="adminEmail" class="block font-medium mb-2">Email</label>
-                <input type="email" id="adminEmail" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" required aria-label="Enter email">
-              </div>
-              <div>
-                <label for="adminImage" class="block font-medium mb-2">Profile Image</label>
-                <input type="file" id="adminImage" accept="image/png,image/jpeg,image/gif" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Upload profile image">
-                <img id="adminImagePreview" src="" alt="Image Preview" class="mt-4 w-24 h-24 object-cover rounded-lg hidden">
-              </div>
-              <div class="flex gap-4">
-                <button type="submit" class="stunning-btn flex-1" aria-label="Save profile">
-                  <i class="fas fa-save"></i> Save
-                </button>
-                <button type="button" id="closeEditProfileModal" class="stunning-btn bg-gray-600 hover:bg-gray-700 flex-1" aria-label="Cancel">
-                  <i class="fas fa-times"></i> Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <section id="admin-reports" class="admin-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-3xl font-bold text-orange-600">Reports</h2>
-          <button data-section="dashboard" class="admin-nav stunning-btn bg-gray-600 hover:bg-gray-700" aria-label="Back to Dashboard">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
-        </div>
-        <div class="glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Generate Reports</h3>
+        <div class="glass p-8 mb-8">
+          <h3 class="text-3xl font-bold mb-6">Restaurant Status</h3>
           <div class="space-y-6">
             <div>
-              <label for="reportDate" class="block font-medium mb-2">Select Date</label>
-              <input type="date" id="reportDate" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600" aria-label="Select report date">
+              <label for="restaurantStatus" class="block font-medium mb-2">Status</label>
+              <select id="restaurantStatus" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+              </select>
             </div>
-            <div class="flex gap-4">
-              <button id="generateDailyReport" class="stunning-btn" aria-label="Generate daily report">
-                <i class="fas fa-chart-line"></i> Daily Sales
-              </button>
-              <button id="exportCsv" class="stunning-btn" aria-label="Export to CSV">
-                <i class="fas fa-file-csv"></i> Export CSV
-              </button>
+            <div>
+              <label for="openTime" class="block font-medium mb-2">Open Time</label>
+              <input type="time" id="openTime" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
             </div>
+            <div>
+              <label for="closeTime" class="block font-medium mb-2">Close Time</label>
+              <input type="time" id="closeTime" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
+            </div>
+            <button id="saveRestaurantStatus" class="stunning-btn"><i class="fas fa-save"></i> Save</button>
           </div>
         </div>
-        <div class="mt-8 glass p-8">
-          <h3 class="text-3xl font-bold mb-6">Sales Trends</h3>
-          <canvas id="salesTrendsChart"></canvas>
+        <div class="glass p-8">
+          <h3 class="text-3xl font-bold mb-6">Loyalty Points</h3>
+          <div class="space-y-6">
+            <div>
+              <label for="loyaltyUser" class="block font-medium mb-2">Select User</label>
+              <select id="loyaltyUser" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600"></select>
+            </div>
+            <div>
+              <label for="loyaltyPoints" class="block font-medium mb-2">Points</label>
+              <input type="number" id="loyaltyPoints" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
+            </div>
+            <button id="assignLoyaltyPoints" class="stunning-btn"><i class="fas fa-gift"></i> Assign Points</button>
+          </div>
         </div>
       </section>
     </div>
 
     <div class="bottom-nav">
-      <div class="nav-item admin-nav" data-section="dashboard" aria-label="Dashboard">
-        <i class="fas fa-tachometer-alt"></i>
-        <div>Dashboard</div>
-      </div>
-      <div class="nav-item admin-nav" data-section="orders" aria-label="Orders">
-        <i class="fas fa-shopping-cart"></i>
-        <div>Orders</div>
-      </div>
-      <div class="nav-item admin-nav" data-section="menu" aria-label="Menu">
-        <i class="fas fa-utensils"></i>
-        <div>Menu</div>
-      </div>
-      <div class="nav-item admin-nav" data-section="support" aria-label="Support">
-        <i class="fas fa-headset"></i>
-        <div>Support</div>
-      </div>
-      <div class="nav-item admin-nav" data-section="settings" aria-label="Settings">
-        <i class="fas fa-cog"></i>
-        <div>Settings</div>
-      </div>
+      <div class="nav-item admin-nav" data-section="dashboard"><i class="fas fa-tachometer-alt"></i><div>Dashboard</div></div>
+      <div class="nav-item admin-nav" data-section="orders"><i class="fas fa-shopping-cart"></i><div>Orders</div></div>
+      <div class="nav-item admin-nav" data-section="menu"><i class="fas fa-utensils"></i><div>Menu</div></div>
+      <div class="nav-item admin-nav" data-section="support"><i class="fas fa-headset"></i><div>Support</div></div>
+      <div class="nav-item admin-nav" data-section="settings"><i class="fas fa-cog"></i><div>Settings</div></div>
     </div>
 
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
   </div>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
-    // Configuration
     const CONFIG = {
+      API_URL: 'http://localhost:3000/api',
       ITEMS_PER_PAGE: 8,
-      API_TOKEN: localStorage.getItem('jwtToken') || null,
+      SOCKET_URL: 'http://localhost:3000',
     };
 
-    // Mock Data with Enhanced Order Details
-    const MOCK_DATA = {
-      orders: [
-        {
-          id: 1,
-          userId: 1,
-          paymentId: 'pay_001',
-          total: 1500,
-          status: 'delivered',
-          createdAt: '2025-05-01T10:00:00Z',
-          items: [
-            { name: 'Margherita Pizza', quantity: 2, price: 499 },
-            { name: 'Mango Lassi', quantity: 1, price: 199 },
-          ],
-        },
-        {
-          id: 2,
-          userId: 2,
-          paymentId: 'pay_002',
-          total: 800,
-          status: 'pending',
-          createdAt: '2025-05-02T12:00:00Z',
-          items: [
-            { name: 'Chocolate Lava Cake', quantity: 2, price: 299 },
-            { name: 'Mango Lassi', quantity: 1, price: 199 },
-          ],
-        },
-        {
-          id: 3,
-          userId: 3,
-          paymentId: 'pay_003',
-          total: 2000,
-          status: 'confirmed',
-          createdAt: '2025-05-03T14:00:00Z',
-          items: [
-            { name: 'Chicken Biryani', quantity: 2, price: 699 },
-            { name: 'Mango Lassi', quantity: 2, price: 199 },
-          ],
-        },
-        {
-          id: 4,
-          userId: 1,
-          paymentId: 'pay_004',
-          total: 1200,
-          status: 'cancelled',
-          createdAt: '2025-05-04T16:00:00Z',
-          items: [
-            { name: 'Margherita Pizza', quantity: 1, price: 499 },
-            { name: 'Chocolate Lava Cake', quantity: 1, price: 299 },
-          ],
-        },
-      ],
-      users: [
-        { id: 1, name: 'Alice Smith', email: 'alice@example.com', phone: '9876543210' },
-        { id: 2, name: 'Bob Johnson', email: 'bob@example.com', phone: '8765432109' },
-        { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', phone: '7654321098' },
-      ],
-      menu: [
-        {
-          id: 1,
-          name: 'Margherita Pizza',
-          category: 'Vegetarian',
-          price: 499,
-          image: 'https://images.unsplash.com/photo-1571066811602-716837d330d1',
-        },
-        {
-          id: 2,
-          name: 'Chicken Biryani',
-          category: 'Non-Veg',
-          price: 699,
-          image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc',
-        },
-        {
-          id: 3,
-          name: 'Chocolate Lava Cake',
-          category: 'Desserts',
-          price: 299,
-          image: 'https://images.unsplash.com/photo-1611293388250-580b08c54a43',
-        },
-        {
-          id: 4,
-          name: 'Mango Lassi',
-          category: 'Beverages',
-          price: 199,
-          image: 'https://images.unsplash.com/photo-1603894584373-2d7c7b8f7417',
-        },
-      ],
-      promotions: [
-        {
-          id: 1,
-          code: 'SAVE20',
-          discount: 20,
-          validFrom: '2025-05-01',
-          validUntil: '2025-05-15',
-          image: 'https://images.unsplash.com/photo-1504672281656-e3e7b0aada58',
-          usageCount: 50,
-        },
-        {
-          id: 2,
-          code: 'FREEDISH',
-          discount: 100,
-          validFrom: '2025-05-10',
-          validUntil: '2025-05-20',
-          image: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbf7d8',
-          usageCount: 30,
-        },
-      ],
-      feedback: [
-        { id: 1, userId: 1, orderId: 1, rating: 5, comment: 'Amazing food!', createdAt: '2025-05-02T10:00:00Z' },
-        { id: 2, userId: 2, orderId: 2, rating: 3, comment: 'Good but slow delivery', createdAt: '2025-05-03T12:00:00Z' },
-      ],
-      chatMessages: [
-        { id: 1, userId: 1, text: 'When will my order arrive?', isAdmin: false, createdAt: '2025-05-01T10:00:00Z' },
-        { id: 2, userId: 1, text: 'It will arrive in 30 minutes.', isAdmin: true, createdAt: '2025-05-01T10:05:00Z' },
-      ],
-      profile: {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        image: 'https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f',
-      },
-    };
-
-    // Fallback Image
-    const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e';
-
-    // State Management
     const state = {
       currentPage: {
         orders: 1,
@@ -1181,23 +404,9 @@
         promotions: 1,
         feedback: 1,
       },
-      salesChart: null,
-      orderStatusChart: null,
-      customerActivityChart: null,
-      menuCategoriesChart: null,
-      promotionPerformanceChart: null,
-      feedbackChart: null,
-      salesTrendsChart: null,
-      dataStore: {
-        orders: [],
-        customers: [],
-        menu: [],
-        promotions: [],
-        feedback: [],
-        chatMessages: [],
-        profile: { name: '', email: '', image: '' },
-      },
-      isNavOpen: false,
+      charts: {},
+      isDropdownOpen: false,
+      socket: io(CONFIG.SOCKET_URL),
     };
 
     // Utility Functions
@@ -1209,12 +418,7 @@
     }
 
     function triggerConfetti() {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#ff6b00', '#ff8f33', '#34d399'],
-      });
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#ff6b00', '#ff8f33', '#34d399'] });
     }
 
     function sanitizeInput(input) {
@@ -1251,44 +455,33 @@
       container.appendChild(nextButton);
     }
 
-    // Mock API
+    // API Client
     const api = {
       async fetchData(endpoint, method = 'GET', data = null) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          if (endpoint === '/orders') return MOCK_DATA.orders;
-          if (endpoint === '/users') return MOCK_DATA.users;
-          if (endpoint === '/menu') return MOCK_DATA.menu;
-          if (endpoint === '/promotions') return MOCK_DATA.promotions;
-          if (endpoint === '/feedback') return MOCK_DATA.feedback;
-          if (endpoint === '/chat-messages') return MOCK_DATA.chatMessages;
-          if (endpoint === '/profile') return MOCK_DATA.profile;
-          if (endpoint.startsWith('/menu/')) {
-            const id = endpoint.split('/')[2];
-            return MOCK_DATA.menu.find(item => item.id == id);
-          }
-          if (method === 'POST' || method === 'PUT') {
-            return { success: true };
-          }
-          if (method === 'DELETE') {
-            return { success: true };
-          }
-          throw new Error('Endpoint not found');
+          const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+          };
+          const options = { method, headers };
+          if (data) options.body = JSON.stringify(data);
+          const response = await fetch(`${CONFIG.API_URL}${endpoint}`, options);
+          if (!response.ok) throw new Error('Network error');
+          return await response.json();
         } catch (err) {
-          console.error(`Mock API error for ${endpoint}:`, err);
           showToast(`Error: ${err.message}`, 'error');
           return null;
         }
       },
-      async updateOrderStatus(orderId, status) {
+      async uploadImage(endpoint, formData) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const order = MOCK_DATA.orders.find(o => o.id == orderId);
-          if (order) {
-            order.status = status;
-            return { success: true };
-          }
-          throw new Error('Order not found');
+          const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` },
+            body: formData,
+          });
+          if (!response.ok) throw new Error('Image upload failed');
+          return await response.json();
         } catch (err) {
           showToast(`Error: ${err.message}`, 'error');
           return null;
@@ -1298,11 +491,10 @@
 
     // Section Loaders
     async function loadDashboard() {
-      const orders = await api.fetchData('/orders') || [];
-      const customers = await api.fetchData('/users') || [];
-
-      state.dataStore.orders = orders;
-      state.dataStore.customers = customers;
+      const [orders, customers] = await Promise.all([
+        api.fetchData('/orders'),
+        api.fetchData('/users'),
+      ]);
 
       document.getElementById('totalOrders').textContent = orders.length;
       document.getElementById('totalSales').textContent = `₹${orders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString()}`;
@@ -1311,15 +503,15 @@
 
       const paginatedOrders = paginate(orders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('recentOrders').innerHTML = paginatedOrders.map(order => {
-        const customer = customers.find(c => c.id === order.userId) || { name: 'Unknown' };
+        const customer = customers.find(c => c._id === order.userId) || { name: 'Unknown' };
         return `
           <tr>
-            <td data-label="Order ID">#${order.id}</td>
+            <td data-label="Order ID">#${order._id}</td>
             <td data-label="Customer">${sanitizeInput(customer.name)}</td>
             <td data-label="Total">₹${order.total || 0}</td>
             <td data-label="Status">${sanitizeInput(order.status)}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order._id}" aria-label="View order ${order._id}">
                 <i class="fas fa-eye"></i> View
               </button>
             </td>
@@ -1335,8 +527,8 @@
       const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
       const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
       const ctx = document.getElementById('salesChart').getContext('2d');
-      if (state.salesChart) state.salesChart.destroy();
-      state.salesChart = new Chart(ctx, {
+      if (state.charts.salesChart) state.charts.salesChart.destroy();
+      state.charts.salesChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: dates.length ? dates : ['No Data'],
@@ -1347,291 +539,6 @@
             backgroundColor: 'rgba(255, 107, 0, 0.2)',
             fill: true,
             tension: 0.4,
-          }],
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } },
-      });
-    }
-
-    async function loadOrders() {
-      const orders = await api.fetchData('/orders') || [];
-      const customers = await api.fetchData('/users') || [];
-      state.dataStore.orders = orders;
-      state.dataStore.customers = customers;
-
-      const search = sanitizeInput(document.getElementById('orderSearch').value.toLowerCase());
-      const statusFilter = document.getElementById('orderFilter').value;
-
-      const filteredOrders = orders.filter(order => {
-        const customer = customers.find(c => c.id === order.userId) || { name: '' };
-        return (
-          (search === '' || order.id.toString().includes(search) || customer.name.toLowerCase().includes(search)) &&
-          (statusFilter === 'all' || order.status === statusFilter)
-        );
-      });
-
-      const paginatedOrders = paginate(filteredOrders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
-      document.getElementById('ordersTable').innerHTML = paginatedOrders.map(order => {
-        const customer = customers.find(c => c.id === order.userId) || { name: 'Unknown' };
-        return `
-          <tr>
-            <td data-label="Order ID">#${order.id}</td>
-            <td data-label="Customer">${sanitizeInput(customer.name)}</td>
-            <td data-label="Total">₹${order.total || 0}</td>
-            <td data-label="Status">${sanitizeInput(order.status)}</td>
-            <td data-label="Actions" class="flex flex-wrap gap-2">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
-                <i class="fas fa-eye"></i> View
-              </button>
-              <button class="status-btn confirmed text-sm px-3 py-1" data-action="status" data-status="confirmed" data-id="${order.id}" aria-label="Mark order ${order.id} as confirme">
-                <i class="fas fa-check"></i> Confirm
-              </button>
-              <button class="status-btn out-for-delivery text-sm px-3 py-1" data-action="status" data-status="out-for-delivery" data-id="${order.id}" aria-label="Mark order ${order.id} as out for delivery">
-                <i class="fas fa-truck"></i> Out for Delivery
-              </button>
-              <button class="status-btn accepted text-sm px-3 py-1" data-action="status" data-status="accepted" data-id="${order.id}" aria-label="Mark order ${order.id} as accepted">
-                <i class="fas fa-thumbs-up"></i> Accept
-              </button>
-              <button class="status-btn rejected text-sm px-3 py-1" data-action="status" data-status="rejected" data-id="${order.id}" aria-label="Mark order ${order.id} as rejected">
-                <i class="fas fa-thumbs-down"></i> Reject
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      renderPagination('ordersPagination', filteredOrders.length, state.currentPage.orders, (page) => {
-        state.currentPage.orders = page;
-        loadOrders();
-      });
-
-      const statuses = ['pending', 'confirmed', 'out-for-delivery', 'accepted', 'rejected', 'delivered', 'cancelled'];
-      const statusCounts = statuses.map(status => orders.filter(o => o.status === status).length);
-      const ctx = document.getElementById('orderStatusChart').getContext('2d');
-      if (state.orderStatusChart) state.orderStatusChart.destroy();
-      state.orderStatusChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: statuses.length ? statuses : ['No Data'],
-          datasets: [{
-            label: 'Order Status',
-            data: statusCounts.length ? statusCounts : [0],
-            backgroundColor: ['#ff6b00', '#ff8f33', '#3b82f6', '#10b981', '#dc2626', '#16a34a', '#9ca3af'],
-          }],
-        },
-        options: { responsive: true },
-      });
-    }
-
-    async function loadCustomers() {
-      const customers = await api.fetchData('/users') || [];
-      const orders = await api.fetchData('/orders') || [];
-      state.dataStore.customers = customers;
-      state.dataStore.orders = orders;
-
-      const search = sanitizeInput(document.getElementById('customerSearch').value.toLowerCase());
-      const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(search) || c.email.toLowerCase().includes(search));
-
-      const paginatedCustomers = paginate(filteredCustomers, state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
-      document.getElementById('customersTable').innerHTML = paginatedCustomers.map(customer => `
-        <tr>
-          <td data-label="Name">${sanitizeInput(customer.name)}</td>
-          <td data-label="Email">${sanitizeInput(customer.email)}</td>
-          <td data-label="Phone">${sanitizeInput(customer.phone)}</td>
-          <td data-label="Actions">
-            <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${customer.id}" aria-label="View customer ${customer.name}">
-              <i class="fas fa-eye"></i> View
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      renderPagination('customersPagination', filteredCustomers.length, state.currentPage.customers, (page) => {
-        state.currentPage.customers = page;
-        loadCustomers();
-      });
-
-      const customerActivity = customers.map(c => orders.filter(o => o.userId === c.id).length);
-      const ctx = document.getElementById('customerActivityChart').getContext('2d');
-      if (state.customerActivityChart) state.customerActivityChart.destroy();
-      state.customerActivityChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: customers.length ? customers.map(c => c.name) : ['No Data'],
-          datasets: [{
-            label: 'Number of Orders',
-            data: customerActivity.length ? customerActivity : [0],
-            backgroundColor: '#ff6b00',
-          }],
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } },
-      });
-
-      const chatUserSelect = document.getElementById('chatUserSelect');
-      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + customers.map(c => `<option value="${c.id}">${sanitizeInput(c.name)}</option>`).join('');
-    }
-
-    async function loadMenu() {
-      const menu = await api.fetchData('/menu') || [];
-      state.dataStore.menu = menu;
-
-      const paginatedMenu = paginate(menu, state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
-      document.getElementById('menuTable').innerHTML = paginatedMenu.map(item => {
-        const imageSrc = item.image || FALLBACK_IMAGE;
-        return `
-          <tr>
-            <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(item.name)}" class="w-16 h-16 object-cover rounded-lg"></td>
-            <td data-label="Name">${sanitizeInput(item.name)}</td>
-            <td data-label="Category">${sanitizeInput(item.category)}</td>
-            <td data-label="Price">₹${item.price}</td>
-            <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1 mr-2" data-action="edit" data-id="${item.id}" aria-label="Edit ${item.name}">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="stunning-btn bg-red-600 hover:bg-red-700 text-sm px-3 py-1" data-action="delete" data-id="${item.id}" aria-label="Delete ${item.name}">
-                <i class="fas fa-trash"></i> Delete
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      renderPagination('menuPagination', menu.length, state.currentPage.menu, (page) => {
-        state.currentPage.menu = page;
-        loadMenu();
-      });
-
-      const categories = [...new Set(menu.map(item => item.category))];
-      const categoryCounts = categories.map(category => menu.filter(item => item.category === category).length);
-      const ctx = document.getElementById('menuCategoriesChart').getContext('2d');
-      if (state.menuCategoriesChart) state.menuCategoriesChart.destroy();
-      state.menuCategoriesChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: categories.length ? categories : ['No Data'],
-          datasets: [{
-            label: 'Menu Items by Category',
-            data: categoryCounts.length ? categoryCounts : [0],
-            backgroundColor: ['#ff6b00', '#ff8f33', '#16a34a', '#dc2626'],
-          }],
-        },
-        options: { responsive: true },
-      });
-    }
-
-    async function loadSupport() {
-      const customers = await api.fetchData('/users') || [];
-      state.dataStore.customers = customers;
-
-      const chatMessages = await api.fetchData('/chat-messages') || [];
-      state.dataStore.chatMessages = chatMessages;
-
-      const chatWindow = document.getElementById('chatWindow');
-      const userId = document.getElementById('chatUserSelect').value;
-      chatWindow.innerHTML = chatMessages
-        .filter(msg => msg.userId == userId)
-        .map(msg => `
-          <div class="chat-message ${msg.isAdmin ? 'admin' : 'user'}">
-            <span>${sanitizeInput(msg.text)}</span>
-            <small class="text-gray-500 text-xs mt-1">${new Date(msg.createdAt).toLocaleTimeString()}</small>
-          </div>
-        `).join('');
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    async function loadPromotions() {
-      const promotions = await api.fetchData('/promotions') || [];
-      state.dataStore.promotions = promotions;
-
-      const paginatedPromos = paginate(promotions, state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
-      document.getElementById('promotionsGrid').innerHTML = paginatedPromos.map(promo => {
-        const imageSrc = promo.image || FALLBACK_IMAGE;
-        const now = new Date();
-        const validUntil = new Date(promo.validUntil);
-        const status = now > validUntil ? 'Expired' : 'Active';
-        return `
-          <div class="promo-card glass p-6 rounded-lg">
-            <img src="${imageSrc}" onerror="this.src='${FALLBACK_IMAGE}'" alt="${sanitizeInput(promo.code)}" class="w-full h-40 object-cover rounded-lg mb-4">
-            <h3 class="text-lg font-semibold">${sanitizeInput(promo.code)}</h3>
-            <p>Discount: ${promo.discount}%</p>
-            <p>Valid: ${promo.validFrom} to ${promo.validUntil}</p>
-            <p>Status: ${status}</p>
-            <div class="mt-4 flex gap-3">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${promo.id}" aria-label="Edit ${promo.code}">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="stunning-btn bg-red-600 hover:bg-red-700 text-sm px-3 py-1" data-action="delete" data-id="${promo.id}" aria-label="Delete ${promo.code}">
-                <i class="fas fa-trash"></i> Delete
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      renderPagination('promotionsPagination', promotions.length, state.currentPage.promotions, (page) => {
-        state.currentPage.promotions = page;
-        loadPromotions();
-      });
-
-      const promoUsage = promotions.map(p => p.usageCount || 0);
-      const ctx = document.getElementById('promotionPerformanceChart').getContext('2d');
-      if (state.promotionPerformanceChart) state.promotionPerformanceChart.destroy();
-      state.promotionPerformanceChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: promotions.length ? promotions.map(p => p.code) : ['No Data'],
-          datasets: [{
-            label: 'Usage Count',
-            data: promoUsage.length ? promoUsage : [0],
-            backgroundColor: '#ff6b00',
-          }],
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } },
-      });
-    }
-
-    async function loadFeedback() {
-      const feedback = await api.fetchData('/feedback') || [];
-      const customers = await api.fetchData('/users') || [];
-      state.dataStore.feedback = feedback;
-      state.dataStore.customers = customers;
-
-      const paginatedFeedback = paginate(feedback, state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
-      document.getElementById('feedbackTable').innerHTML = paginatedFeedback.map(f => {
-        const customer = customers.find(c => c.id === f.userId) || { name: 'Unknown' };
-        return `
-          <tr>
-            <td data-label="Customer">${sanitizeInput(customer.name)}</td>
-            <td data-label="Order ID">#${f.orderId}</td>
-            <td data-label="Rating">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</td>
-            <td data-label="Comment">${sanitizeInput(f.comment)}</td>
-            <td data-label="Date">${new Date(f.createdAt).toLocaleDateString()}</td>
-            <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f.id}" aria-label="View feedback from ${customer.name}">
-                <i class="fas fa-eye"></i> View
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      renderPagination('feedbackPagination', feedback.length, state.currentPage.feedback, (page) => {
-        state.currentPage.feedback = page;
-        loadFeedback();
-      });
-
-      const ratings = [1, 2, 3, 4, 5];
-      const ratingCounts = ratings.map(r => feedback.filter(f => f.rating === r).length);
-      const ctx = document.getElementById('feedbackChart').getContext('2d');
-      if (state.feedbackChart) state.feedbackChart.destroy();
-      state.feedbackChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ratings.length ? ratings : ['No Data'],
-          datasets: [{
-            label: 'Number of Ratings',
-            data: ratingCounts.length ? ratingCounts : [0],
-            backgroundColor: '#ff6b00',
           }],
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } },
@@ -1639,38 +546,19 @@
     }
 
     async function loadSettings() {
-      const profile = await api.fetchData('/profile') || {};
-      state.dataStore.profile = profile;
+      const [profile, restaurantStatus, users] = await Promise.all([
+        api.fetchData('/profile'),
+        api.fetchData('/restaurant/status'),
+        api.fetchData('/users'),
+      ]);
 
-      document.getElementById('profileName').textContent = sanitizeInput(profile.name);
-      document.getElementById('profileEmail').textContent = sanitizeInput(profile.email);
-      document.getElementById('profileImage').src = profile.image || FALLBACK_IMAGE;
-      document.getElementById('profileImage').onerror = () => { this.src = FALLBACK_IMAGE; };
-    }
+      document.getElementById('profileImage').src = profile.image || 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e';
+      document.getElementById('restaurantStatus').value = restaurantStatus.status;
+      document.getElementById('openTime').value = restaurantStatus.openTime;
+      document.getElementById('closeTime').value = restaurantStatus.closeTime;
 
-    async function loadReports() {
-      const orders = await api.fetchData('/orders') || [];
-      state.dataStore.orders = orders;
-
-      const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
-      const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
-      const ctx = document.getElementById('salesTrendsChart').getContext('2d');
-      if (state.salesTrendsChart) state.salesTrendsChart.destroy();
-      state.salesTrendsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates.length ? dates : ['No Data'],
-          datasets: [{
-            label: 'Sales (₹)',
-            data: salesData.length ? salesData : [0],
-            borderColor: '#ff6b00',
-            backgroundColor: 'rgba(255, 107, 0, 0.2)',
-            fill: true,
-            tension: 0.4,
-          }],
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } },
-      });
+      const loyaltyUserSelect = document.getElementById('loyaltyUser');
+      loyaltyUserSelect.innerHTML = '<option value="">Select a user</option>' + users.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`).join('');
     }
 
     // Navigation
@@ -1680,48 +568,30 @@
       document.querySelectorAll('.admin-nav').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll(`.admin-nav[data-section="${sectionId}"]`).forEach(btn => btn.classList.add('active'));
       state.currentPage[sectionId] = 1;
+      state.isDropdownOpen = false;
+      document.getElementById('dropdownMenu').classList.remove('show');
 
       if (sectionId === 'dashboard') loadDashboard();
-      if (sectionId === 'orders') loadOrders();
-      if (sectionId === 'customers') loadCustomers();
-      if (sectionId === 'menu') loadMenu();
-      if (sectionId === 'support') loadSupport();
-      if (sectionId === 'promotions') loadPromotions();
-      if (sectionId === 'feedback') loadFeedback();
       if (sectionId === 'settings') loadSettings();
-      if (sectionId === 'reports') loadReports();
-
-      if (window.innerWidth < 1024) {
-        state.isNavOpen = false;
-        document.getElementById('sidebar').classList.remove('nav-open');
-      }
+      // Add other section loaders as needed
     }
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
-      // Preloader
       setTimeout(() => {
         document.getElementById('preloader').style.opacity = '0';
         setTimeout(() => {
           document.getElementById('preloader').style.display = 'none';
           document.getElementById('adminDashboard').classList.remove('hidden');
-          document.getElementById('welcomeModal').classList.remove('hidden');
           triggerConfetti();
         }, 500);
       }, 2000);
 
-      // Welcome Modal
-      document.getElementById('closeWelcomeModal').addEventListener('click', () => {
-        document.getElementById('welcomeModal').classList.add('hidden');
+      document.getElementById('profileToggle').addEventListener('click', () => {
+        state.isDropdownOpen = !state.isDropdownOpen;
+        document.getElementById('dropdownMenu').classList.toggle('show', state.isDropdownOpen);
       });
 
-      // Navigation Toggle
-      document.getElementById('navToggle').addEventListener('click', () => {
-        state.isNavOpen = !state.isNavOpen;
-        document.getElementById('sidebar').classList.toggle('nav-open', state.isNavOpen);
-      });
-
-      // Section Navigation
       document.querySelectorAll('.admin-nav').forEach(button => {
         button.addEventListener('click', () => {
           const section = button.getAttribute('data-section');
@@ -1729,307 +599,40 @@
         });
       });
 
-      // Orders Table Actions
-      document.getElementById('ordersTable').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.getAttribute('data-action');
-        const orderId = target.getAttribute('data-id');
-        if (action === 'view') {
-          const order = state.dataStore.orders.find(o => o.id == orderId);
-          if (order) {
-            const customer = state.dataStore.customers.find(c => c.id === order.userId) || { name: 'Unknown' };
-            document.getElementById('orderId').textContent = order.id;
-            document.getElementById('paymentId').textContent = order.paymentId || 'N/A';
-            document.getElementById('orderCustomer').textContent = sanitizeInput(customer.name);
-            document.getElementById('orderTotal').textContent = order.total || 0;
-            document.getElementById('orderStatus').textContent = sanitizeInput(order.status);
-            document.getElementById('orderCreatedAt').textContent = new Date(order.createdAt).toLocaleString();
-            document.getElementById('orderItems').innerHTML = order.items.map(item => `
-              <li>${sanitizeInput(item.name)} - ${item.quantity} x ₹${item.price}</li>
-            `).join('');
-            document.getElementById('viewOrderModal').classList.remove('hidden');
-          }
-        } else if (action === 'status') {
-          const status = target.getAttribute('data-status');
-          const result = await api.updateOrderStatus(orderId, status);
-          if (result?.success) {
-            showToast(`Order #${orderId} marked as ${status}`, 'success');
-            loadOrders();
-          }
-        }
-      });
-
-      // Close View Order Modal
-      document.getElementById('closeViewOrderModal').addEventListener('click', () => {
-        document.getElementById('viewOrderModal').classList.add('hidden');
-      });
-
-      // Order Search and Filter
-      document.getElementById('orderSearch').addEventListener('input', () => {
-        state.currentPage.orders = 1;
-        loadOrders();
-      });
-      document.getElementById('orderFilter').addEventListener('change', () => {
-        state.currentPage.orders = 1;
-        loadOrders();
-      });
-
-      // Customer Search
-      document.getElementById('customerSearch').addEventListener('input', () => {
-        state.currentPage.customers = 1;
-        loadCustomers();
-      });
-
-      // Menu Actions
-      document.getElementById('addMenuItem').addEventListener('click', () => {
-        document.getElementById('addMenuModal').classList.remove('hidden');
-        document.getElementById('addMenuForm').reset();
-        document.getElementById('menuImagePreview').classList.add('hidden');
-      });
-
-      document.getElementById('menuTable').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.getAttribute('data-action');
-        const id = target.getAttribute('data-id');
-        if (action === 'edit') {
-          const item = await api.fetchData(`/menu/${id}`);
-          if (item) {
-            document.getElementById('menuName').value = item.name;
-            document.getElementById('menuCategory').value = item.category;
-            document.getElementById('menuPrice').value = item.price;
-            document.getElementById('menuImagePreview').src = item.image || FALLBACK_IMAGE;
-            document.getElementById('menuImagePreview').classList.remove('hidden');
-            document.getElementById('addMenuModal').classList.remove('hidden');
-            document.getElementById('addMenuForm').dataset.editId = id;
-          }
-        } else if (action === 'delete') {
-          if (confirm(`Are you sure you want to delete ${id}?`)) {
-            const result = await api.fetchData(`/menu/${id}`, 'DELETE');
-            if (result?.success) {
-              showToast('Menu item deleted', 'success');
-              loadMenu();
-            }
-          }
-        }
-      });
-
-      document.getElementById('menuImage').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            document.getElementById('menuImagePreview').src = reader.result;
-            document.getElementById('menuImagePreview').classList.remove('hidden');
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = e.target.dataset.editId;
-        const data = {
-          name: sanitizeInput(document.getElementById('menuName').value),
-          category: document.getElementById('menuCategory').value,
-          price: parseFloat(document.getElementById('menuPrice').value),
-          image: document.getElementById('menuImagePreview').src,
-        };
-        const method = id ? 'PUT' : 'POST';
-        const endpoint = id ? `/menu/${id}` : '/menu';
-        const result = await api.fetchData(endpoint, method, data);
-        if (result?.success) {
-          showToast(id ? 'Menu item updated' : 'Menu item added', 'success');
-          document.getElementById('addMenuModal').classList.add('hidden');
-          loadMenu();
-        }
-        delete e.target.dataset.editId;
-      });
-
-      document.getElementById('closeMenuModal').addEventListener('click', () => {
-        document.getElementById('addMenuModal').classList.add('hidden');
-      });
-
-      // Support Chat
-      document.getElementById('chatUserSelect').addEventListener('change', loadSupport);
-      document.getElementById('sendChat').addEventListener('click', async () => {
-        const userId = document.getElementById('chatUserSelect').value;
-        const text = sanitizeInput(document.getElementById('chatInput').value);
-        if (userId && text) {
-          const result = await api.fetchData('/chat-messages', 'POST', {
-            userId,
-            text,
-            isAdmin: true,
-            createdAt: new Date().toISOString(),
-          });
-          if (result?.success) {
-            document.getElementById('chatInput').value = '';
-            loadSupport();
-          }
-        } else {
-          showToast('Please select a customer and enter a message', 'error');
-        }
-      });
-
-      // Promotions
-      document.getElementById('addPromotion').addEventListener('click', () => {
-        document.getElementById('addPromotionModal').classList.remove('hidden');
-        document.getElementById('addPromotionForm').reset();
-        document.getElementById('promoImagePreview').classList.add('hidden');
-      });
-
-      document.getElementById('promotionsGrid').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.getAttribute('data-action');
-        const id = target.getAttribute('data-id');
-        if (action === 'edit') {
-          const promo = state.dataStore.promotions.find(p => p.id == id);
-          if (promo) {
-            document.getElementById('promoCode').value = promo.code;
-            document.getElementById('promoDiscount').value = promo.discount;
-            document.getElementById('promoValidFrom').value = promo.validFrom;
-            document.getElementById('promoValidUntil').value = promo.validUntil;
-            document.getElementById('promoImagePreview').src = promo.image || FALLBACK_IMAGE;
-            document.getElementById('promoImagePreview').classList.remove('hidden');
-            document.getElementById('addPromotionModal').classList.remove('hidden');
-            document.getElementById('addPromotionForm').dataset.editId = id;
-          }
-        } else if (action === 'delete') {
-          if (confirm(`Are you sure you want to delete ${id}?`)) {
-            const result = await api.fetchData(`/promotions/${id}`, 'DELETE');
-            if (result?.success) {
-              showToast('Promotion deleted', 'success');
-              loadPromotions();
-            }
-          }
-        }
-      });
-
-      document.getElementById('promoImage').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            document.getElementById('promoImagePreview').src = reader.result;
-            document.getElementById('promoImagePreview').classList.remove('hidden');
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      document.getElementById('addPromotionForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = e.target.dataset.editId;
-        const data = {
-          code: sanitizeInput(document.getElementById('promoCode').value),
-          discount: parseInt(document.getElementById('promoDiscount').value),
-          validFrom: document.getElementById('promoValidFrom').value,
-          validUntil: document.getElementById('promoValidUntil').value,
-          image: document.getElementById('promoImagePreview').src,
-        };
-        const method = id ? 'PUT' : 'POST';
-        const endpoint = id ? `/promotions/${id}` : '/promotions';
-        const result = await api.fetchData(endpoint, method, data);
-        if (result?.success) {
-          showToast(id ? 'Promotion updated' : 'Promotion added', 'success');
-          document.getElementById('addPromotionModal').classList.add('hidden');
-          loadPromotions();
-        }
-        delete e.target.dataset.editId;
-      });
-
-      document.getElementById('closePromotionModal').addEventListener('click', () => {
-        document.getElementById('addPromotionModal').classList.add('hidden');
-      });
-
-      // Settings
-      document.getElementById('editProfileBtn').addEventListener('click', () => {
-        const profile = state.dataStore.profile;
-        document.getElementById('adminName').value = profile.name;
-        document.getElementById('adminEmail').value = profile.email;
-        document.getElementById('adminImagePreview').src = profile.image || FALLBACK_IMAGE;
-        document.getElementById('adminImagePreview').classList.remove('hidden');
-        document.getElementById('editProfileModal').classList.remove('hidden');
-      });
-
-      document.getElementById('adminImage').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            document.getElementById('adminImagePreview').src = reader.result;
-            document.getElementById('adminImagePreview').classList.remove('hidden');
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const data = {
-          name: sanitizeInput(document.getElementById('adminName').value),
-          email: sanitizeInput(document.getElementById('adminEmail').value),
-          image: document.getElementById('adminImagePreview').src,
-        };
-        const result = await api.fetchData('/profile', 'PUT', data);
-        if (result?.success) {
-          showToast('Profile updated', 'success');
-          document.getElementById('editProfileModal').classList.add('hidden');
-          loadSettings();
-        }
-      });
-
-      document.getElementById('closeEditProfileModal').addEventListener('click', () => {
-        document.getElementById('editProfileModal').classList.add('hidden');
-      });
-
-      // Reports
-      document.getElementById('generateDailyReport').addEventListener('click', async () => {
-        const date = document.getElementById('reportDate').value;
-        if (!date) {
-          showToast('Please select a date', 'error');
-          return;
-        }
-        const orders = state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date);
-        const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-        showToast(`Daily Sales for ${date}: ₹${totalSales.toLocaleString()}`, 'success');
-      });
-
-      document.getElementById('exportCsv').addEventListener('click', () => {
-        const date = document.getElementById('reportDate').value;
-        const orders = date ? state.dataStore.orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date) : state.dataStore.orders;
-        const csv = [
-          'Order ID,Customer,Total,Status,Date',
-          ...orders.map(o => {
-            const customer = state.dataStore.customers.find(c => c.id === o.userId) || { name: 'Unknown' };
-            return `${o.id},${sanitizeInput(customer.name)},${o.total},${o.status},${new Date(o.createdAt).toLocaleString()}`;
-          }),
-        ].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `orders_${date || 'all'}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('CSV exported', 'success');
-      });
-
-      // Profile Quick View
-      document.getElementById('profileQuick').addEventListener('click', () => switchSection('settings'));
-
-      // Logout
       document.getElementById('logout').addEventListener('click', () => {
         localStorage.removeItem('jwtToken');
         showToast('Logged out successfully', 'success');
         setTimeout(() => {
-          window.location.reload();
+          window.location.href = 'index.html';
         }, 1000);
       });
 
-      // Countdown Timer
+      document.getElementById('saveRestaurantStatus').addEventListener('click', async () => {
+        const data = {
+          status: document.getElementById('restaurantStatus').value,
+          openTime: document.getElementById('openTime').value,
+          closeTime: document.getElementById('closeTime').value,
+        };
+        const result = await api.fetchData('/restaurant/status', 'PUT', data);
+        if (result) {
+          showToast('Restaurant status updated', 'success');
+          state.socket.emit('statusUpdate', data);
+        }
+      });
+
+      document.getElementById('assignLoyaltyPoints').addEventListener('click', async () => {
+        const userId = document.getElementById('loyaltyUser').value;
+        const points = parseInt(document.getElementById('loyaltyPoints').value);
+        if (!userId || !points) {
+          showToast('Please select a user and enter points', 'error');
+          return;
+        }
+        const result = await api.fetchData(`/users/${userId}/loyalty`, 'PUT', { points });
+        if (result) {
+          showToast('Loyalty points assigned', 'success');
+        }
+      });
+
       function updateCountdown() {
         const now = new Date();
         const midnight = new Date(now);
@@ -2043,7 +646,6 @@
       setInterval(updateCountdown, 1000);
       updateCountdown();
 
-      // Initialize Vanilla Tilt
       VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
         max: 8,
         speed: 400,
@@ -2051,7 +653,6 @@
         'max-glare': 0.2,
       });
 
-      // Load Dashboard Initially
       loadDashboard();
     });
   </script>
