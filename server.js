@@ -117,44 +117,28 @@ app.post('/api/users/request-otp', async (req, res) => {
     text: `Your OTP is ${otp}. Valid for 10 minutes. Check your spam folder if not received.`,
   };
 
-  let client;
   try {
-    client = await pool.connect();
-    // Ensure otps table exists
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS otps (
-        email VARCHAR(255) PRIMARY KEY,
-        otp VARCHAR(6) NOT NULL,
-        expires TIMESTAMP NOT NULL
-      )
-    `);
-    // Delete existing OTP
+    const client = await pool.connect();
+    // Delete existing OTP for this email
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
     // Insert new OTP
     await client.query(
       'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3)',
       [email, otp, expires]
     );
-  } catch (err) {
-    console.error('Database error in OTP request:', err.message);
-    if (client) client.release();
-    return res.status(500).json({ message: 'Failed to store OTP: Database error' });
-  } finally {
-    if (client) client.release();
-  }
+    client.release();
 
-  try {
     await transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error('Email sending error:', error.message);
-        return res.status(500).json({ message: 'Failed to send OTP: Email error' });
+        return res.status(500).json({ message: 'Failed to send OTP' });
       }
       console.log(`OTP sent to ${email}: ${info.response}`);
     });
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Email error in OTP request:', err.message);
-    return res.status(500).json({ message: 'Failed to send OTP: Email error' });
+    console.error('OTP request error:', err.message);
+    res.status(500).json({ message: 'Failed to send OTP' });
   }
 });
 
@@ -183,23 +167,25 @@ app.post('/api/users/signup', async (req, res) => {
     return res.status(400).json({ message: 'OTP must be 6 digits' });
   }
 
-  let client;
   try {
-    client = await pool.connect();
+    const client = await pool.connect();
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
+      client.release();
       console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const userExists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
+      client.release();
       console.log(`User already exists: ${email}`);
       return res.status(400).json({ message: 'User already exists' });
     }
 
     const phoneExists = await client.query('SELECT * FROM users WHERE phone = $1', [phone]);
     if (phoneExists.rows.length > 0) {
+      client.release();
       console.log(`Phone number already in use: ${phone}`);
       return res.status(400).json({ message: 'Phone number already in use' });
     }
@@ -213,13 +199,13 @@ app.post('/api/users/signup', async (req, res) => {
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
-    res.status(201).json({ token });
+    client.release();
+
     console.log(`Signup successful: ${email}`);
+    res.status(201).json({ token });
   } catch (err) {
     console.error('Signup error:', err.message);
     res.status(500).json({ message: 'Signup failed: ' + err.message });
-  } finally {
-    if (client) client.release();
   }
 });
 
@@ -228,11 +214,11 @@ app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
   console.log(`Login attempt: ${email}`);
 
-  let client;
   try {
-    client = await pool.connect();
+    const client = await pool.connect();
     const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
+    client.release();
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       console.log(`Invalid credentials for ${email}`);
@@ -245,8 +231,6 @@ app.post('/api/users/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ message: 'Login failed' });
-  } finally {
-    if (client) client.release();
   }
 });
 
@@ -300,17 +284,18 @@ app.post('/api/users/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
   console.log(`Password reset attempt: ${email}`);
 
-  let client;
   try {
-    client = await pool.connect();
+    const client = await pool.connect();
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
+      client.release();
       console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
     if (!user) {
+      client.release();
       console.log(`User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
@@ -318,13 +303,13 @@ app.post('/api/users/reset-password', async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await client.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
+    client.release();
+
     console.log(`Password reset successful: ${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (err) {
     console.error('Reset password error:', err.message);
     res.status(500).json({ message: 'Reset password failed' });
-  } finally {
-    if (client) client.release();
   }
 });
 
@@ -332,9 +317,7 @@ app.post('/api/users/reset-password', async (req, res) => {
 app.get('/api/users/menu', authenticateToken, async (req, res) => {
   const { search, category } = req.query;
 
-  let client;
   try {
-    client = await pool.connect();
     let query = 'SELECT * FROM menu_items';
     const params = [];
     let conditions = [];
@@ -351,14 +334,15 @@ app.get('/api/users/menu', authenticateToken, async (req, res) => {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
+    const client = await pool.connect();
     const result = await client.query(query, params);
+    client.release();
+
     console.log(`Menu fetched for user ${req.user.email}`);
     res.json(result.rows);
   } catch (err) {
     console.error('Menu fetch error:', err.message);
     res.status(500).json({ message: 'Failed to fetch menu' });
-  } finally {
-    if (client) client.release();
   }
 });
 
@@ -372,11 +356,11 @@ app.post('/api/users/cart/add', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: 'Invalid item data' });
   }
 
-  let client;
   try {
-    client = await pool.connect();
+    const client = await pool.connect();
     const itemExists = await client.query('SELECT * FROM menu_items WHERE id = $1', [item.id]);
     if (itemExists.rows.length === 0) {
+      client.release();
       console.log(`Item not found: ${item.id}`);
       return res.status(404).json({ message: 'Item not found' });
     }
@@ -396,13 +380,13 @@ app.post('/api/users/cart/add', authenticateToken, async (req, res) => {
         [userId, item.id, 1]
       );
     }
+    client.release();
+
     console.log(`Item added to cart for user ${req.user.email}: ${item.id}`);
     res.json({ message: 'Item added to cart' });
   } catch (err) {
     console.error('Add to cart error:', err.message);
     res.status(500).json({ message: 'Failed to add to cart' });
-  } finally {
-    if (client) client.release();
   }
 });
 

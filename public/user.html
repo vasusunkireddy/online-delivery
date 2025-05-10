@@ -8,7 +8,7 @@
     script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline';
     style-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline';
     img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com;
-    connect-src 'self' https://api.delicute.com;
+    connect-src 'self';
     font-src 'self' https://cdnjs.cloudflare.com;
     object-src 'none';
     base-uri 'self';
@@ -57,7 +57,7 @@
     .sidebar button.active::before { transform: translateX(0); }
     .sidebar button i { font-size: 1.2rem; transition: transform 0.2s ease; }
     .sidebar button:hover i { transform: scale(1.1); }
-    .sidebar img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #f97316; }
+    .sidebar img.profile-img { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #f97316; object-fit: cover; }
 
     .hamburger {
       display: flex; flex-direction: column; justify-content: space-around; width: 24px; height: 20px; 
@@ -83,7 +83,6 @@
     }
     .bottom-nav button.active { color: #f97316; }
     .bottom-nav button i { font-size: 1.5rem; }
-    .bottom-nav img { width: 24px; height: 24px; }
 
     header {
       background: linear-gradient(to right, #f97316, #fb923c); padding: 12px 16px;
@@ -176,6 +175,7 @@
       .banner-item { padding: 12px; }
       .banner-content { max-width: 90%; }
       .hero-bg { flex-direction: column; align-items: flex-start; }
+      header img.profile-img { width: 36px; height: 36px; }
     }
   </style>
 </head>
@@ -200,7 +200,9 @@
           <i class="fas fa-cart-shopping text-xl"></i>
           <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-2">0</span>
         </button>
-        <button id="profileQuick" aria-label="View profile"><i class="fas fa-user-circle text-xl"></i></button>
+        <button id="profileQuick" aria-label="View profile">
+          <img src="https://via.placeholder.com/36" alt="Profile" class="profile-img rounded-full">
+        </button>
       </div>
     </div>
   </header>
@@ -208,7 +210,7 @@
   <div class="flex min-h-screen">
     <div id="sidebar" class="sidebar text-white sidebar-hidden">
       <div class="flex items-center gap-3 mb-8">
-        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10">
+        <img src="https://via.placeholder.com/48" alt="Profile" class="profile-img">
         <div class="text-xl font-bold">DELICUTE</div>
       </div>
       <nav class="space-y-2">
@@ -223,7 +225,6 @@
         <button data-section="support" class="user-nav"><i class="fas fa-headset"></i> Support</button>
         <button data-section="faq" class="user-nav"><i class="fas fa-question-circle"></i> FAQ</button>
         <button data-section="profile" class="user-nav"><i class="fas fa-user"></i> Profile</button>
-        <button data-section="settings" class="user-nav"><i class="fas fa-cog"></i> Settings</button>
         <button id="logoutBtn" class="text-red-300 hover:bg-red-800 hover:text-white"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </nav>
     </div>
@@ -244,11 +245,6 @@
         </div>
         <div class="hero-bg mb-6">
           <canvas class="particles"></canvas>
-          <div id="heroSidebarToggle" class="hamburger">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
           <div class="relative z-10">
             <h2 class="text-2xl font-bold mb-2">Savor the Moment!</h2>
             <p class="text-sm mb-4">Discover gourmet dishes crafted for you.</p>
@@ -450,6 +446,13 @@
           <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
         </div>
         <div class="bg-white rounded-lg p-4 shadow space-y-4">
+          <div class="flex justify-center">
+            <img src="https://via.placeholder.com/96" alt="Profile" id="profileImage" class="profile-img rounded-full w-24 h-24 object-cover">
+          </div>
+          <div>
+            <label class="block text-gray-700">Upload Profile Image</label>
+            <input type="file" id="profileImageInput" accept="image/*" class="w-full px-4 py-2 border rounded-full">
+          </div>
           <div>
             <label class="block text-gray-700">Name</label>
             <input type="text" id="profileName" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" readonly>
@@ -465,26 +468,15 @@
           <button id="editProfileBtn" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"><i class="fas fa-edit mr-2"></i>Edit Profile</button>
         </div>
       </section>
-
-      <section id="user-settings" class="user-section hidden animate-slideUp">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-orange-600">Settings</h2>
-          <button id="backFromSettings" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back</button>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow space-y-4">
-          <h3 class="text-lg font-semibold">Account</h3>
-          <button id="logoutBtnSettings" class="w-full bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700"><i class="fas fa-sign-out-alt mr-2"></i>Logout</button>
-        </div>
-      </section>
     </div>
   </div>
 
   <nav class="bottom-nav">
-    <button data-section="dashboard" class="user-nav active"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Home Icon"><span>Home</span></button>
-    <button data-section="menu" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Menu Icon"><span>Menu</span></button>
-    <button data-section="cart" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Cart Icon"><span>Cart</span></button>
-    <button data-section="orders" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Orders Icon"><span>Orders</span></button>
-    <button data-section="profile" class="user-nav"><img src="https://i.imgur.com/ZbhzFqT.png" alt="Profile Icon"><span>Profile</span></button>
+    <button data-section="dashboard" class="user-nav active"><i class="fas fa-home"></i><span>Home</span></button>
+    <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i><span>Menu</span></button>
+    <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i><span>Cart</span></button>
+    <button data-section="orders" class="user-nav"><i class="fas fa-shopping-bag"></i><span>Orders</span></button>
+    <button data-section="profile" class="user-nav"><i class="fas fa-user"></i><span>Profile</span></button>
   </nav>
 
   <div id="toast" class="toast"></div>
@@ -502,17 +494,76 @@
   </div>
 
   <script>
-    // Base URL for the backend API (replace with your actual backend URL)
-    const BASE_URL = 'https://api.delicute.com';
+    // Mock Data
+    const MOCK_DATA = {
+      status: { isOpen: true, prepTime: 30 },
+      offers: [
+        { id: 1, title: '20% Off First Order', description: 'Use code FIRST20', code: 'FIRST20', discount: 20, image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6' },
+        { id: 2, title: 'Free Delivery', description: 'On orders above ₹500', code: 'FREEDEL', discount: 10, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38' }
+      ],
+      menu: [
+        { id: '1', name: 'Margherita Pizza', price: 250, description: 'Classic pizza with tomato and mozzarella', category: 'Vegetarian', image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6', is_popular: true },
+        { id: '2', name: 'Butter Chicken', price: 350, description: 'Creamy chicken curry', category: 'Non-Veg', image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398', is_popular: true },
+        { id: '3', name: 'Chocolate Lava Cake', price: 150, description: 'Warm cake with molten center', category: 'Desserts', image: 'https://images.unsplash.com/photo-1617303421954-0db7df940ce3', is_popular: false }
+      ],
+      cart: {
+        items: [
+          { id: '1', name: 'Margherita Pizza', price: 250, quantity: 2 },
+          { id: '3', name: 'Chocolate Lava Cake', price: 150, quantity: 1 }
+        ]
+      },
+      orders: [
+        { id: 'ORD001', date: '2025-05-01', items: [{ name: 'Margherita Pizza' }, { name: 'Butter Chicken' }], total: 600, status: 'Delivered' },
+        { id: 'ORD002', date: '2025-05-02', items: [{ name: 'Chocolate Lava Cake' }], total: 150, status: 'In Transit' }
+      ],
+      cancellationPolicy: { text: 'Cancel within 10 mins for full refund' },
+      favourites: [
+        { id: '1', name: 'Margherita Pizza', price: 250, description: 'Classic pizza', image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6' }
+      ],
+      addresses: [
+        { id: '1', name: 'Home', street: '123 MG Road', city: 'Mumbai', state: 'MH', zip: '400001', mobile: '9876543210', isDefault: true },
+        { id: '2', name: 'Office', street: '456 Corporate Park', city: 'Mumbai', state: 'MH', zip: '400002', mobile: '9876543211', isDefault: false }
+      ],
+      loyalty: {
+        points: 150,
+        history: [
+          { description: 'Order #ORD001', points: 50, date: '2025-05-01' },
+          { description: 'Referral Bonus', points: 100, date: '2025-05-02' }
+        ]
+      },
+      referrals: { code: 'DEL123', link: 'https://delicute.com/refer/DEL123' },
+      support: {
+        tickets: [
+          { id: 'TCK001', subject: 'Order Issue', status: 'Open', createdAt: '2025-05-01' }
+        ],
+        chat: [
+          { sender: 'user', content: 'I have an issue with my order', timestamp: '2025-05-01T10:00:00Z' },
+          { sender: 'admin', content: 'Please provide order ID', timestamp: '2025-05-01T10:01:00Z' }
+        ]
+      },
+      faq: [
+        { question: 'How do I track my order?', answer: 'Go to the Orders section and click Track.' },
+        { question: 'What is the cancellation policy?', answer: 'Cancel within 10 mins for a full refund.' }
+      ],
+      profile: {
+        id: 'USR001',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        phone: '9876543210',
+        image: 'https://via.placeholder.com/96'
+      }
+    };
 
     // State
     let state = {
       isLoggedIn: true,
-      userId: null, // Will be set after fetching profile
+      userId: null,
       navigationHistory: ['dashboard'],
       appliedCoupon: null,
-      favourites: [], // Cache favourites to avoid extra calls
-      referral: { link: '' } // Initialize referral link
+      favourites: [],
+      referral: { link: '' },
+      profileImage: MOCK_DATA.profile.image,
+      currentSection: 'dashboard'
     };
 
     // Utilities
@@ -529,40 +580,119 @@
 
     const triggerConfetti = () => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
 
-    // Real API fetch function
+    // Mock API Fetch
     const apiFetch = async (endpoint, method = 'GET', data = null) => {
       try {
-        const options = {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            // Add authentication headers if required, e.g., Authorization: Bearer <token>
-          },
-        };
-        if (data) {
-          options.body = JSON.stringify(data);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+        if (endpoint === '/status') return MOCK_DATA.status;
+        if (endpoint === '/offers') return MOCK_DATA.offers;
+        if (endpoint.startsWith('/menu')) {
+          const params = new URLSearchParams(endpoint.split('?')[1] || '');
+          let items = MOCK_DATA.menu;
+          const category = params.get('category');
+          const price = params.get('price');
+          const query = params.get('query')?.toLowerCase();
+          if (category && category !== 'all') items = items.filter(i => i.category === category);
+          if (price && price !== 'all') {
+            const [min, max] = price.split('-').map(Number);
+            items = items.filter(i => i.price >= min && (max ? i.price <= max : true));
+          }
+          if (query) items = items.filter(i => i.name.toLowerCase().includes(query));
+          return items;
         }
-        const response = await fetch(`${BASE_URL}${endpoint}`, options);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (endpoint === '/cart') return MOCK_DATA.cart;
+        if (endpoint === '/cart/apply-coupon') return { success: true, discount: data.code === 'FIRST20' ? 20 : 10 };
+        if (endpoint === '/cart/add') {
+          const existing = MOCK_DATA.cart.items.find(i => i.id === data.item.id);
+          if (existing) existing.quantity += 1;
+          else MOCK_DATA.cart.items.push(data.item);
+          return { success: true };
         }
-        return await response.json();
+        if (endpoint === '/cart/update') {
+          const item = MOCK_DATA.cart.items.find(i => i.id === data.itemId);
+          if (item) {
+            if (data.action === 'increase') item.quantity += 1;
+            if (data.action === 'decrease' && item.quantity > 1) item.quantity -= 1;
+          }
+          return { success: true };
+        }
+        if (endpoint === '/cart/remove') {
+          MOCK_DATA.cart.items = MOCK_DATA.cart.items.filter(i => i.id !== data.itemId);
+          return { success: true };
+        }
+        if (endpoint === '/orders') return MOCK_DATA.orders;
+        if (endpoint === '/cancellation-policy') return MOCK_DATA.cancellationPolicy;
+        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/track')) {
+          const orderId = endpoint.split('/')[2];
+          return { status: MOCK_DATA.orders.find(o => o.id === orderId)?.status, deliveryPartner: { name: 'Jane Doe', contact: '9876543212' } };
+        }
+        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/reorder')) {
+          MOCK_DATA.cart.items = MOCK_DATA.orders.find(o => o.id === endpoint.split('/')[2]).items.map(i => ({ ...i, id: '1', price: 250, quantity: 1 }));
+          return { success: true };
+        }
+        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/rate')) return { success: true };
+        if (endpoint === '/favourites') return MOCK_DATA.favourites;
+        if (endpoint === '/favourites/add') {
+          MOCK_DATA.favourites.push(MOCK_DATA.menu.find(i => i.id === data.itemId));
+          return { success: true };
+        }
+        if (endpoint === '/favourites/remove') {
+          MOCK_DATA.favourites = MOCK_DATA.favourites.filter(f => f.id !== data.itemId);
+          return { success: true };
+        }
+        if (endpoint === '/addresses') return MOCK_DATA.addresses;
+        if (endpoint === '/addresses/add') {
+          MOCK_DATA.addresses.push({ id: `ADD${MOCK_DATA.addresses.length + 1}`, ...data });
+          return { success: true };
+        }
+        if (endpoint === '/addresses/update') {
+          const index = MOCK_DATA.addresses.findIndex(a => a.id === data.id);
+          MOCK_DATA.addresses[index] = { ...MOCK_DATA.addresses[index], ...data };
+          return { success: true };
+        }
+        if (endpoint === '/addresses/delete') {
+          MOCK_DATA.addresses = MOCK_DATA.addresses.filter(a => a.id !== data.id);
+          return { success: true };
+        }
+        if (endpoint === '/addresses/set-default') {
+          MOCK_DATA.addresses.forEach(a => a.isDefault = a.id === data.id);
+          return { success: true };
+        }
+        if (endpoint === '/checkout') {
+          MOCK_DATA.cart.items = [];
+          MOCK_DATA.orders.push({
+            id: `ORD00${MOCK_DATA.orders.length + 3}`,
+            date: new Date().toISOString(),
+            items: MOCK_DATA.cart.items,
+            total: MOCK_DATA.cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+            status: 'Confirmed'
+          });
+          return { success: true };
+        }
+        if (endpoint === '/loyalty') return MOCK_DATA.loyalty;
+        if (endpoint === '/referrals') return MOCK_DATA.referrals;
+        if (endpoint === '/support/tickets') return MOCK_DATA.support.tickets;
+        if (endpoint === '/support/chat') return MOCK_DATA.support.chat;
+        if (endpoint === '/support/chat/send') {
+          MOCK_DATA.support.chat.push({ sender: 'user', content: data.message, timestamp: new Date().toISOString() });
+          return { success: true };
+        }
+        if (endpoint === '/support/tickets/create') {
+          MOCK_DATA.support.tickets.push({ id: `TCK00${MOCK_DATA.support.tickets.length + 2}`, ...data, status: 'Open', createdAt: new Date().toISOString() });
+          return { success: true };
+        }
+        if (endpoint === '/faq') return MOCK_DATA.faq;
+        if (endpoint === '/profile') return MOCK_DATA.profile;
+        if (endpoint === '/profile/update') {
+          MOCK_DATA.profile = { ...MOCK_DATA.profile, ...data };
+          return { success: true };
+        }
+        if (endpoint === '/logout') return { success: true };
+        throw new Error('Endpoint not found');
       } catch (err) {
         showToast(`Error: ${err.message}`);
         return null;
       }
-    };
-
-    // Simulated WebSocket (replace with real WebSocket if available)
-    const simulateWebSocket = () => {
-      setInterval(async () => {
-        // Fetch updates or use a real WebSocket connection
-        const orders = await apiFetch('/orders');
-        if (orders && orders.length) {
-          const order = orders[0];
-          showToast(`Order #${order.id}: ${order.status}`);
-        }
-      }, 30000);
     };
 
     // Sidebar Toggle
@@ -577,11 +707,10 @@
     };
 
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
-    document.getElementById('heroSidebarToggle').addEventListener('click', toggleSidebar);
 
     document.addEventListener('click', (e) => {
       if (window.innerWidth < 1024 && !sidebar.contains(e.target) && 
-          !e.target.closest('#sidebarToggle') && !e.target.closest('#heroSidebarToggle') && 
+          !e.target.closest('#sidebarToggle') && 
           !sidebar.classList.contains('sidebar-hidden')) {
         toggleSidebar();
       }
@@ -591,6 +720,10 @@
     const sections = document.querySelectorAll('.user-section');
     const navButtons = document.querySelectorAll('.user-nav');
     const showSection = (sectionId) => {
+      if (state.currentSection === sectionId && sectionId !== 'dashboard') {
+        sectionId = 'dashboard';
+      }
+      state.currentSection = sectionId;
       sections.forEach(s => s.classList.add('hidden'));
       const target = document.getElementById(`user-${sectionId}`);
       target.classList.remove('hidden');
@@ -616,7 +749,8 @@
 
     const goBack = () => {
       state.navigationHistory.pop();
-      showSection(state.navigationHistory[state.navigationHistory.length - 1] || 'dashboard');
+      state.currentSection = state.navigationHistory[state.navigationHistory.length - 1] || 'dashboard';
+      showSection(state.currentSection);
     };
 
     document.querySelectorAll('[id^="backFrom"]').forEach(btn => btn.addEventListener('click', goBack));
@@ -625,13 +759,13 @@
     const handleLogout = async () => {
       const data = await apiFetch('/logout', 'POST');
       if (data && data.success) {
-        showToast('Logged out');
-        window.location.href = 'index.html';
+        showToast('Logged out successfully');
+        state.isLoggedIn = false;
+        setTimeout(() => window.location.href = 'index.html', 1000);
       }
     };
 
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    document.getElementById('logoutBtnSettings').addEventListener('click', handleLogout);
 
     // Status Bar
     const loadStatusBar = async () => {
@@ -839,14 +973,6 @@
       `).join('') : '<tr><td colspan="6" class="p-3 text-gray-600">No orders</td></tr>';
     };
 
-    const updateOrderTracker = (orderId, status, partner) => {
-      if (!document.getElementById('user-orders').classList.contains('hidden')) {
-        const row = document.querySelector(`.track-order[data-order-id="${orderId}"]`)?.closest('tr');
-        if (row) row.cells[4].textContent = status;
-        showToast(`Order #${orderId}: ${status}${partner ? ` | Delivery by ${partner.name}` : ''}`);
-      }
-    };
-
     // Order Actions
     document.addEventListener('click', async e => {
       const btn = e.target.closest('.track-order, .reorder, .rate-order');
@@ -970,17 +1096,18 @@
             <h4 class="text-lg font-semibold">${a.name}</h4>
             <p class="text-gray-600">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
             <p class="text-gray-600">Mobile: ${a.mobile}</p>
-            ${a.isDefault ? '<p class="text-green-600">Default</p>' : ''}
+            ${a.isDefault ? '<p class="text-green-600">Default Address</p>' : ''}
           </div>
           <div class="flex gap-2">
             <button class="edit-address bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-id="${a.id}"><i class="fas fa-edit"></i></button>
             <button class="delete-address bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700" data-id="${a.id}"><i class="fas fa-trash"></i></button>
-            ${!a.isDefault ? `<button class="set-default-address bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
+            ${!a.isDefault ? `<button class="set-default-address bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
           </div>
         </div>
       `).join('') : '<p>No addresses saved</p>';
     };
 
+    // Address Actions
     document.getElementById('addAddress').addEventListener('click', () => {
       const modal = document.createElement('div');
       modal.className = 'share-modal active';
@@ -991,33 +1118,29 @@
           <form id="addressForm" class="space-y-4">
             <div>
               <label class="block text-gray-700">Name</label>
-              <input type="text" name="name" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <input type="text" id="addressName" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
             <div>
               <label class="block text-gray-700">Street</label>
-              <input type="text" name="street" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <input type="text" id="addressStreet" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
             <div>
               <label class="block text-gray-700">City</label>
-              <input type="text" name="city" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <input type="text" id="addressCity" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
             <div>
               <label class="block text-gray-700">State</label>
-              <input type="text" name="state" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <input type="text" id="addressState" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
             <div>
-              <label class="block text-gray-700">ZIP</label>
-              <input type="text" name="zip" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <label class="block text-gray-700">ZIP Code</label>
+              <input type="text" id="addressZip" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
             <div>
               <label class="block text-gray-700">Mobile</label>
-              <input type="tel" name="mobile" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              <input type="tel" id="addressMobile" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
             </div>
-            <div class="flex items-center gap-2">
-              <input type="checkbox" name="isDefault" id="isDefault" class="h-4 w-4">
-              <label for="isDefault">Set as default</label>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
+            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save Address</button>
           </form>
         </div>
       `;
@@ -1025,15 +1148,14 @@
       modal.querySelector('.close').addEventListener('click', () => modal.remove());
       modal.querySelector('#addressForm').addEventListener('submit', async e => {
         e.preventDefault();
-        const formData = new FormData(e.target);
         const address = {
-          name: formData.get('name'),
-          street: formData.get('street'),
-          city: formData.get('city'),
-          state: formData.get('state'),
-          zip: formData.get('zip'),
-          mobile: formData.get('mobile'),
-          isDefault: formData.get('isDefault') === 'on'
+          name: document.getElementById('addressName').value,
+          street: document.getElementById('addressStreet').value,
+          city: document.getElementById('addressCity').value,
+          state: document.getElementById('addressState').value,
+          zip: document.getElementById('addressZip').value,
+          mobile: document.getElementById('addressMobile').value,
+          isDefault: MOCK_DATA.addresses.length === 0
         };
         const data = await apiFetch('/addresses/add', 'POST', address);
         if (data && data.success) {
@@ -1050,9 +1172,7 @@
       if (!btn) return;
       const id = btn.dataset.id;
       if (btn.classList.contains('edit-address')) {
-        const addresses = await apiFetch('/addresses');
-        const address = addresses.find(a => a.id === id);
-        if (!address) return;
+        const address = MOCK_DATA.addresses.find(a => a.id === id);
         const modal = document.createElement('div');
         modal.className = 'share-modal active';
         modal.innerHTML = `
@@ -1062,33 +1182,29 @@
             <form id="addressForm" class="space-y-4">
               <div>
                 <label class="block text-gray-700">Name</label>
-                <input type="text" name="name" value="${address.name}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <input type="text" id="addressName" value="${address.name}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
               <div>
                 <label class="block text-gray-700">Street</label>
-                <input type="text" name="street" value="${address.street}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <input type="text" id="addressStreet" value="${address.street}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
               <div>
                 <label class="block text-gray-700">City</label>
-                <input type="text" name="city" value="${address.city}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <input type="text" id="addressCity" value="${address.city}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
               <div>
                 <label class="block text-gray-700">State</label>
-                <input type="text" name="state" value="${address.state}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <input type="text" id="addressState" value="${address.state}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
               <div>
-                <label class="block text-gray-700">ZIP</label>
-                <input type="text" name="zip" value="${address.zip}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <label class="block text-gray-700">ZIP Code</label>
+                <input type="text" id="addressZip" value="${address.zip}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
               <div>
                 <label class="block text-gray-700">Mobile</label>
-                <input type="tel" name="mobile" value="${address.mobile}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                <input type="tel" id="addressMobile" value="${address.mobile}" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
               </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" name="isDefault" id="isDefault" class="h-4 w-4" ${address.isDefault ? 'checked' : ''}>
-                <label for="isDefault">Set as default</label>
-              </div>
-              <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Save</button>
+              <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Update Address</button>
             </form>
           </div>
         `;
@@ -1096,18 +1212,16 @@
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
         modal.querySelector('#addressForm').addEventListener('submit', async e => {
           e.preventDefault();
-          const formData = new FormData(e.target);
-          const addressData = {
+          const updatedAddress = {
             id,
-            name: formData.get('name'),
-            street: formData.get('street'),
-            city: formData.get('city'),
-            state: formData.get('state'),
-            zip: formData.get('zip'),
-            mobile: formData.get('mobile'),
-            isDefault: formData.get('isDefault') === 'on'
+            name: document.getElementById('addressName').value,
+            street: document.getElementById('addressStreet').value,
+            city: document.getElementById('addressCity').value,
+            state: document.getElementById('addressState').value,
+            zip: document.getElementById('addressZip').value,
+            mobile: document.getElementById('addressMobile').value
           };
-          const data = await apiFetch('/addresses/update', 'POST', addressData);
+          const data = await apiFetch('/addresses/update', 'POST', updatedAddress);
           if (data && data.success) {
             showToast('Address updated');
             modal.remove();
@@ -1116,11 +1230,13 @@
           }
         });
       } else if (btn.classList.contains('delete-address')) {
-        const data = await apiFetch('/addresses/delete', 'POST', { id });
-        if (data && data.success) {
-          showToast('Address deleted');
-          loadAddresses();
-          loadCart();
+        if (confirm('Are you sure you want to delete this address?')) {
+          const data = await apiFetch('/addresses/delete', 'POST', { id });
+          if (data && data.success) {
+            showToast('Address deleted');
+            loadAddresses();
+            loadCart();
+          }
         }
       } else if (btn.classList.contains('set-default-address')) {
         const data = await apiFetch('/addresses/set-default', 'POST', { id });
@@ -1133,310 +1249,260 @@
     });
 
     // Checkout
-document.getElementById('checkoutBtn').addEventListener('click', async () => {
-  const addressId = document.getElementById('cartAddress').value;
-  const paymentMethod = document.getElementById('paymentMethod').value;
-  if (!addressId) return showToast('Please select a delivery address');
-  const cart = await apiFetch('/cart');
-  if (!cart || !cart.items?.length) return showToast('Cart is empty');
-  const order = {
-    addressId,
-    paymentMethod,
-    couponCode: state.appliedCoupon?.code,
-  };
-  const data = await apiFetch('/checkout', 'POST', order);
-  if (data && data.success) {
-    showToast('Order placed successfully!');
-    triggerConfetti();
-    state.appliedCoupon = null;
-    loadCart();
-    showSection('orders');
-  }
-});
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const addressId = document.getElementById('cartAddress').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      if (!addressId) return showToast('Please select a delivery address');
+      if (!paymentMethod) return showToast('Please select a payment method');
+      const cart = await apiFetch('/cart');
+      if (!cart.items.length) return showToast('Cart is empty');
+      const data = await apiFetch('/checkout', 'POST', { addressId, paymentMethod });
+      if (data && data.success) {
+        showToast('Order placed successfully!');
+        triggerConfetti();
+        loadCart();
+        loadOrders();
+        showSection('orders');
+      }
+    });
 
-// Loyalty
-const loadLoyalty = async () => {
-  const loyalty = await apiFetch('/loyalty');
-  document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-  const history = loyalty?.history || [];
-  document.getElementById('loyaltyHistory').innerHTML = history.length
-    ? history
-        .map(
-          (h) => `
+    // Loyalty
+    const loadLoyalty = async () => {
+      const loyalty = await apiFetch('/loyalty');
+      document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+      document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
         <div class="border-b py-2">
           <p>${h.description}</p>
-          <p class="text-sm text-gray-600">${new Date(
-            h.date
-          ).toLocaleDateString()}: ${h.points > 0 ? '+' : ''}${h.points} points</p>
+          <p class="text-sm text-gray-600">${h.points} points on ${new Date(h.date).toLocaleDateString()}</p>
         </div>
-      `
-        )
-        .join('')
-    : '<p>No loyalty history</p>';
-};
-
-// Referrals
-const loadReferrals = async () => {
-  const referral = await apiFetch('/referrals');
-  state.referral.link = referral?.link || '';
-  document.getElementById('referralCode').textContent = referral?.code || 'N/A';
-  document.getElementById('referralLink').href = state.referral.link;
-};
-
-// Support
-const loadSupport = async () => {
-  const tickets = await apiFetch('/support/tickets');
-  document.getElementById('supportTickets').innerHTML = tickets?.length
-    ? tickets
-        .map(
-          (t) => `
-        <div class="border-b py-2">
-          <p class="font-semibold">Ticket #${t.id}: ${t.subject}</p>
-          <p class="text-sm text-gray-600">Status: ${t.status}</p>
-          <p class="text-sm text-gray-600">${new Date(
-            t.createdAt
-          ).toLocaleDateString()}</p>
-        </div>
-      `
-        )
-        .join('')
-    : '<p>No support tickets</p>';
-  loadChat();
-};
-
-const loadChat = async () => {
-  const messages = await apiFetch('/support/chat');
-  const chatContainer = document.getElementById('chatMessages');
-  chatContainer.innerHTML = messages?.length
-    ? messages
-        .map(
-          (m) => `
-        <div class="chat-message ${m.sender === 'user' ? 'user' : 'admin'}">
-          <p>${m.content}</p>
-          <p class="text-xs text-gray-400">${new Date(
-            m.timestamp
-          ).toLocaleTimeString()}</p>
-        </div>
-      `
-        )
-        .join('')
-    : '<p>No messages</p>';
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  // Simulate typing indicator
-  const typingIndicator = document.getElementById('typingIndicator');
-  const simulateTyping = () => {
-    typingIndicator.textContent = 'Support is typing...';
-    setTimeout(() => (typingIndicator.textContent = ''), 2000);
-  };
-  setInterval(simulateTyping, 10000);
-};
-
-document.getElementById('sendChat').addEventListener('click', async () => {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  if (!message) return showToast('Please enter a message');
-  const data = await apiFetch('/support/chat/send', 'POST', { message });
-  if (data && data.success) {
-    input.value = '';
-    loadChat();
-  }
-});
-
-document.getElementById('createTicketBtn').addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'share-modal active';
-  modal.innerHTML = `
-    <div class="share-modal-content">
-      <span class="close">×</span>
-      <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
-      <form id="ticketForm" class="space-y-4">
-        <div>
-          <label class="block text-gray-700">Subject</label>
-          <input type="text" name="subject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
-        </div>
-        <div>
-          <label class="block text-gray-700">Description</label>
-          <textarea name="description" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
-        </div>
-        <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit</button>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelector('.close').addEventListener('click', () => modal.remove());
-  modal.querySelector('#ticketForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const ticket = {
-      subject: formData.get('subject'),
-      description: formData.get('description'),
+      `).join('') : '<p>No loyalty history</p>';
     };
-    const data = await apiFetch('/support/tickets/create', 'POST', ticket);
-    if (data && data.success) {
-      showToast('Ticket created');
-      modal.remove();
-      loadSupport();
-    }
-  });
-});
 
-// FAQ
-const loadFAQ = async () => {
-  const faqs = await apiFetch('/faq');
-  document.getElementById('faqItems').innerHTML = faqs?.length
-    ? faqs
-        .map(
-          (f) => `
+    // Referrals
+    const loadReferrals = async () => {
+      const referrals = await apiFetch('/referrals');
+      state.referral = referrals || { code: '', link: '' };
+      document.getElementById('referralCode').textContent = referrals?.code || 'N/A';
+      const linkEl = document.getElementById('referralLink');
+      linkEl.href = referrals?.link || '#';
+      linkEl.textContent = referrals?.link ? 'Share Link' : 'No referral link';
+    };
+
+    // Support
+    const loadSupport = async () => {
+      const tickets = await apiFetch('/support/tickets');
+      const chat = await apiFetch('/support/chat');
+      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+        <div class="border-b py-2">
+          <p class="font-semibold">${t.subject}</p>
+          <p class="text-sm text-gray-600">Status: ${t.status} | Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
+        </div>
+      `).join('') : '<p>No support tickets</p>';
+      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
+        <div class="chat-message ${m.sender}">
+          <p>${m.content}</p>
+          <p class="text-xs text-gray-500">${new Date(m.timestamp).toLocaleString()}</p>
+        </div>
+      `).join('') : '<p>No messages</p>';
+      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    };
+
+    document.getElementById('createTicketBtn').addEventListener('click', () => {
+      const modal = document.createElement('div');
+      modal.className = 'share-modal active';
+      modal.innerHTML = `
+        <div class="share-modal-content">
+          <span class="close">×</span>
+          <h3 class="text-lg font-bold text-orange-600">Create Support Ticket</h3>
+          <form id="ticketForm" class="space-y-4">
+            <div>
+              <label class="block text-gray-700">Subject</label>
+              <input type="text" id="ticketSubject" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Description</label>
+              <textarea id="ticketDescription" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">Submit Ticket</button>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.querySelector('#ticketForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const ticket = {
+          subject: document.getElementById('ticketSubject').value,
+          description: document.getElementById('ticketDescription').value
+        };
+        const data = await apiFetch('/support/tickets/create', 'POST', ticket);
+        if (data && data.success) {
+          showToast('Ticket created');
+          modal.remove();
+          loadSupport();
+        }
+      });
+    });
+
+    document.getElementById('sendChat').addEventListener('click', async () => {
+      const message = document.getElementById('chatInput').value.trim();
+      if (!message) return showToast('Enter a message');
+      const data = await apiFetch('/support/chat/send', 'POST', { message });
+      if (data && data.success) {
+        document.getElementById('chatInput').value = '';
+        loadSupport();
+      }
+    });
+
+    // FAQ
+    const loadFAQ = async () => {
+      const faq = await apiFetch('/faq');
+      document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
         <div class="border-b py-2">
           <p class="font-semibold">${f.question}</p>
           <p class="text-gray-600">${f.answer}</p>
         </div>
-      `
-        )
-        .join('')
-    : '<p>No FAQs available</p>';
-};
-
-// Profile
-const loadProfile = async () => {
-  const profile = await apiFetch('/profile');
-  if (profile) {
-    state.userId = profile.id;
-    document.getElementById('profileName').value = profile.name || '';
-    document.getElementById('profileEmail').value = profile.email || '';
-    document.getElementById('profilePhone').value = profile.phone || '';
-  }
-};
-
-document.getElementById('editProfileBtn').addEventListener('click', () => {
-  const inputs = document.querySelectorAll('#user-profile input');
-  const isEditing = inputs[0].readOnly;
-  inputs.forEach((input) => (input.readOnly = !isEditing));
-  const btn = document.getElementById('editProfileBtn');
-  btn.innerHTML = isEditing
-    ? `<i class="fas fa-save mr-2"></i>Save`
-    : `<i class="fas fa-edit mr-2"></i>Edit Profile`;
-  if (!isEditing) {
-    const profile = {
-      name: document.getElementById('profileName').value,
-      email: document.getElementById('profileEmail').value,
-      phone: document.getElementById('profilePhone').value,
+      `).join('') : '<p>No FAQs available</p>';
     };
-    apiFetch('/profile/update', 'POST', profile).then((data) => {
-      if (data && data.success) {
-        showToast('Profile updated');
+
+    // Profile
+    const loadProfile = async () => {
+      const profile = await apiFetch('/profile');
+      document.getElementById('profileName').value = profile?.name || '';
+      document.getElementById('profileEmail').value = profile?.email || '';
+      document.getElementById('profilePhone').value = profile?.phone || '';
+      document.getElementById('profileImage').src = state.profileImage;
+      document.querySelectorAll('.profile-img').forEach(img => img.src = state.profileImage);
+    };
+
+    document.getElementById('profileImageInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.profileImage = reader.result;
+          document.getElementById('profileImage').src = state.profileImage;
+          document.querySelectorAll('.profile-img').forEach(img => img.src = state.profileImage);
+          showToast('Profile image updated');
+        };
+        reader.readAsDataURL(file);
       }
     });
-  }
-});
 
-// Filters and Search
-const applyFilters = (section = 'dashboard') => {
-  const category =
-    document
-      .querySelector(`#user-${section} .filter-btn.active`)
-      ?.dataset.category || 'all';
-  const price =
-    document.getElementById(
-      section === 'menu' ? 'menuPriceFilter' : 'priceFilter'
-    )?.value || 'all';
-  const query =
-    document.getElementById(
-      section === 'menu' ? 'menuSearch' : 'searchMenu'
-    )?.value || '';
-  loadMenu(category, price, query);
-};
-
-document.querySelectorAll('.filter-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    btn.parentElement
-      .querySelectorAll('.filter-btn')
-      .forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilters(btn.closest('.user-section').id.replace('user-', ''));
-  });
-});
-
-document.getElementById('priceFilter')?.addEventListener('change', () => applyFilters('dashboard'));
-document.getElementById('menuPriceFilter')?.addEventListener('change', () => applyFilters('menu'));
-document.getElementById('searchMenu')?.addEventListener('input', () => applyFilters('dashboard'));
-document.getElementById('menuSearch')?.addEventListener('input', () => applyFilters('menu'));
-
-// Share Modal
-const shareModal = document.getElementById('shareModal');
-document.getElementById('shareBtn').addEventListener('click', () => {
-  shareModal.classList.add('active');
-});
-shareModal.querySelector('.close').addEventListener('click', () => {
-  shareModal.classList.remove('active');
-});
-
-const shareContent = encodeURIComponent(
-  'Discover delicious meals with DELICUTE! ' + state.referral.link
-);
-document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${shareContent}`;
-document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${shareContent}`;
-document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-  state.referral.link
-)}`;
-
-// Particles Animation
-const initParticles = () => {
-  const canvas = document.querySelector('.particles');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.parentElement.offsetWidth;
-  canvas.height = canvas.parentElement.offsetHeight;
-  const particles = [];
-  for (let i = 0; i < 50; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 3 + 1,
-      vx: Math.random() * 2 - 1,
-      vy: Math.random() * 2 - 1,
+    document.getElementById('editProfileBtn').addEventListener('click', () => {
+      const inputs = document.querySelectorAll('#profileName, #profileEmail, #profilePhone');
+      const isEditing = inputs[0].readOnly;
+      inputs.forEach(input => input.readOnly = !isEditing);
+      document.getElementById('editProfileBtn').textContent = isEditing ? 'Save Profile' : 'Edit Profile';
+      if (!isEditing) {
+        const updatedProfile = {
+          name: document.getElementById('profileName').value,
+          email: document.getElementById('profileEmail').value,
+          phone: document.getElementById('profilePhone').value
+        };
+        apiFetch('/profile/update', 'POST', updatedProfile).then(data => {
+          if (data && data.success) showToast('Profile updated');
+        });
+      }
     });
-  }
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#f97316';
-      ctx.fill();
-    });
-    requestAnimationFrame(animate);
-  };
-  animate();
-};
 
-// Initialization
-const init = async () => {
-  if (!state.isLoggedIn) {
-    window.location.href = 'login.html';
-    return;
-  }
-  await Promise.all([
-    loadStatusBar(),
-    loadBanners(),
-    loadOffers(),
-    loadMenu(),
-    loadCart(),
-    loadProfile(),
-    loadFavourites(),
-    loadReferrals(),
-  ]);
-  initParticles();
-  simulateWebSocket();
-  showSection('dashboard');
-};
+    // Filters
+    const setupFilters = () => {
+      const applyFilters = () => {
+        const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+        const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value || 'all';
+        const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value || '';
+        loadMenu(category, price, query);
+      };
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          applyFilters();
+        });
+      });
+      document.getElementById('priceFilter')?.addEventListener('change', applyFilters);
+      document.getElementById('menuPriceFilter')?.addEventListener('change', applyFilters);
+      document.getElementById('searchMenu')?.addEventListener('input', debounce(applyFilters, 300));
+      document.getElementById('menuSearch')?.addEventListener('input', debounce(applyFilters, 300));
+    };
 
-init();
-</script>
+    // Share Modal
+    const initShareModal = () => {
+      const modal = document.getElementById('shareModal');
+      const openBtn = document.getElementById('shareBtn');
+      const closeBtn = modal.querySelector('.close');
+      openBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+        const shareUrl = state.referral.link || 'https://delicute.com';
+        const shareText = 'Check out DELICUTE for amazing food! Use my referral code: ' + (state.referral.code || 'DEL123');
+        document.getElementById('shareWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      });
+      closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+      modal.addEventListener('click', e => {
+        if (e.target === modal) modal.classList.remove('active');
+      });
+    };
+
+    // Particles Animation
+    const initParticles = () => {
+      const canvas = document.querySelector('.particles');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = canvas.parentElement.offsetHeight;
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 1,
+          vx: Math.random() * 2 - 1,
+          vy: Math.random() * 2 - 1
+        });
+      }
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      };
+      animate();
+    };
+
+    // Debounce
+    const debounce = (fn, ms) => {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), ms);
+      };
+    };
+
+    // Initialize
+    const init = async () => {
+      await loadStatusBar();
+      await loadBanners();
+      await loadOffers();
+      await loadMenu();
+      await loadCart();
+      await loadProfile();
+      setupFilters();
+      initShareModal();
+      initParticles();
+      if (!state.isLoggedIn) window.location.href = 'index.html';
+    };
+
+    init();
+  </script>
 </body>
 </html>
