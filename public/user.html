@@ -1392,11 +1392,11 @@
         document.getElementById('profileName').value = profile.name;
         document.getElementById('profileEmail').value = profile.email;
         document.getElementById('profilePhone').value = profile.phone;
-        document.getElementById('profileImage').src = state.profileImage || profile.image;
+        document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
       }
     };
 
-    document.getElementById('editProfileBtn').addEventListener('click', () => {
+    document.getElementById('editProfileBtn').addEventListener('click', async () => {
       const inputs = document.querySelectorAll('#user-profile input:not(#profileImageInput)');
       const isEditable = inputs[0].hasAttribute('readonly');
       inputs.forEach(i => i.toggleAttribute('readonly', !isEditable));
@@ -1408,22 +1408,42 @@
           email: document.getElementById('profileEmail').value,
           phone: document.getElementById('profilePhone').value
         };
-        apiFetch('/profile/update', 'POST', data).then(result => {
-          if (result && result.success) showToast('Profile updated');
-        });
+        const result = await apiFetch('/profile/update', 'POST', data);
+        if (result && result.success) {
+          showToast('Profile updated');
+          await loadProfile();
+        }
       }
     });
 
     document.getElementById('profileImageInput').addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        showToast('Please upload a valid image (JPEG, PNG, or GIF)');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image size must be less than 5MB');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = async () => {
-        state.profileImage = reader.result;
-        document.getElementById('profileImage').src = state.profileImage;
-        const data = await apiFetch('/profile/upload-image', 'POST', { image: state.profileImage });
-        if (data && data.success) showToast('Profile image updated');
+        const imageData = reader.result;
+        try {
+          const data = await apiFetch('/profile/upload-image', 'POST', { image: imageData });
+          if (data && data.success) {
+            document.getElementById('profileImage').src = data.imageUrl;
+            showToast('Profile image updated');
+            await loadProfile();
+          } else {
+            showToast('Failed to upload image');
+          }
+        } catch (err) {
+          showToast('Error uploading image');
+        }
       };
+      reader.onerror = () => showToast('Error reading image file');
       reader.readAsDataURL(file);
     });
 
