@@ -25,7 +25,7 @@
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideIn { from { transform: translate translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
     .animate-slideUp { animation: slideUp 0.5s ease-out; }
     .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
@@ -151,11 +151,19 @@
       color: #374151;
     }
 
+    .profile-img-upload {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .profile-img-upload:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+    }
+
     @media (min-width: 1024px) {
       .bottom-nav { display: none; }
       .sidebar { transform: translateX(0); }
       .main-content { margin-left: 260px; }
-      .menu-Item img { height: 180px; }
+      .menu-item img { height: 180px; }
       .banner-item { min-height: 180px; }
       .banner-content { max-width: 60%; }
       .text-2xl { font-size: 1.5rem; }
@@ -454,11 +462,11 @@
         </div>
         <div class="bg-white rounded-lg p-3 shadow space-y-3">
           <div class="flex justify-center">
-            <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img rounded-full w-20 h-20 object-cover">
+            <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img profile-img-upload rounded-full w-20 h-20 object-cover">
           </div>
           <div>
             <label class="block text-gray-700 text-sm">Upload Profile Image</label>
-            <input type="file" id="profileImageInput" accept="image/*" class="w-full px-3 py-1.5 border rounded-full text-sm">
+            <input type="file" id="profileImageInput" accept="image/*" class="w-full px-3 py-1.5 border rounded-full text-sm" required>
           </div>
           <div>
             <label class="block text-gray-700 text-sm">Name</label>
@@ -548,10 +556,6 @@
           { sender: 'admin', content: 'Please provide order ID', timestamp: '2025-05-01T10:01:00Z' }
         ]
       },
-      faq: [
-        { question: 'How do I track my order?', answer: 'Go to the Orders section and click Track.' },
-        { question: 'What is the cancellation policy?', answer: 'Cancel within 10 mins for a full refund.' }
-      ],
       profile: {
         id: 'USR001',
         name: 'John Doe',
@@ -560,6 +564,15 @@
         image: 'https://via.placeholder.com/96'
       }
     };
+
+    // Static FAQ Data (Frontend Only)
+    const STATIC_FAQ = [
+      { question: 'How do I track my order?', answer: 'Visit the Orders section, select your order, and click Track to view real-time updates.' },
+      { question: 'What is the cancellation policy?', answer: 'You can cancel within 10 minutes of placing the order for a full refund.' },
+      { question: 'How do I apply a promo code?', answer: 'Enter the promo code in the cart section and click Apply to see the discount.' },
+      { question: 'Can I change my delivery address?', answer: 'Yes, you can update your address in the Addresses section before checkout.' },
+      { question: 'How do loyalty points work?', answer: 'Earn points on every order and redeem them for discounts in the Loyalty section.' }
+    ];
 
     // State
     let state = {
@@ -578,14 +591,19 @@
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.style.display = 'block';
+      toast.style.opacity = '1';
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.style.display = 'none', 300);
       }, 3000);
-      toast.style.opacity = '1';
     };
 
-    const triggerConfetti = () => confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#f97316', '#fb923c', '#fff'] });
+    const triggerConfetti = () => confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#f97316', '#fb923c', '#fff']
+    });
 
     // Mock API Fetch
     const apiFetch = async (endpoint, method = 'GET', data = null) => {
@@ -688,11 +706,14 @@
           MOCK_DATA.support.tickets.push({ id: `TCK00${MOCK_DATA.support.tickets.length + 2}`, ...data, status: 'Open', createdAt: new Date().toISOString() });
           return { success: true };
         }
-        if (endpoint === '/faq') return MOCK_DATA.faq;
         if (endpoint === '/profile') return MOCK_DATA.profile;
         if (endpoint === '/profile/update') {
           MOCK_DATA.profile = { ...MOCK_DATA.profile, ...data };
           return { success: true };
+        }
+        if (endpoint === '/profile/upload-image') {
+          MOCK_DATA.profile.image = data.image;
+          return { success: true, imageUrl: data.image };
         }
         if (endpoint === '/logout') return { success: true };
         throw new Error('Endpoint not found');
@@ -1088,451 +1109,419 @@
           state.favourites.push(item);
           showToast('Added to favourites');
         }
-        if (!document.getElementById('user-menu').classList.contains('hidden')) loadMenu();
         if (!document.getElementById('user-favourites').classList.contains('hidden')) loadFavourites();
+        btn.querySelector('i').classList.toggle('text-red-500');
       }
     });
 
     // Addresses
-const loadAddresses = async () => {
-  const addresses = await apiFetch('/addresses');
-  const container = document.getElementById('addressItems');
-  container.innerHTML = addresses?.length ? addresses.map(a => `
-    <div class="bg-white rounded-lg p-3 shadow flex justify-between items-start">
-      <div>
-        <h4 class="text-sm font-semibold">${a.name}</h4>
-        <p class="text-gray-600 text-xs">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
-        <p class="text-gray-600 text-xs">Mobile: ${a.mobile}</p>
-        ${a.isDefault ? '<p class="text-green-600 text-xs">Default Address</p>' : ''}
-      </div>
-      <div class="flex gap-2">
-        <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
-        <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
-        ${!a.isDefault ? `<button class="set-default-address bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
-      </div>
-    </div>
-  `).join('') : '<p class="text-sm">No addresses saved</p>';
-};
-
-document.getElementById('addAddress').addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'share-modal active';
-  modal.innerHTML = `
-    <div class="share-modal-content">
-      <span class="close">×</span>
-      <h3 class="text-base">Add Address</h3>
-      <div class="space-y-3 text-sm">
-        <div>
-          <label class="block text-gray-700 text-sm">Name</label>
-          <input type="text" id="addressName" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="e.g., Home">
+    const loadAddresses = async () => {
+      const addresses = await apiFetch('/addresses');
+      const container = document.getElementById('addressItems');
+      container.innerHTML = addresses?.length ? addresses.map(a => `
+        <div class="bg-white rounded-lg p-3 shadow flex justify-between items-start">
+          <div>
+            <h4 class="text-sm font-semibold">${a.name} ${a.isDefault ? '<span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">Default</span>' : ''}</h4>
+            <p class="text-xs text-gray-600">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
+            <p class="text-xs text-gray-600">Mobile: ${a.mobile}</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
+            <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+            ${!a.isDefault ? `<button class="set-default-address bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs" data-id="${a.id}"><i class="fas fa-check"></i></button>` : ''}
+          </div>
         </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Street</label>
-          <input type="text" id="addressStreet" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Street address">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm">City</label>
-          <input type="text" id="addressCity" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="City">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm">State</label>
-          <input type="text" id="addressState" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="State">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm">ZIP Code</label>
-          <input type="text" id="addressZip" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="ZIP Code">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Mobile</label>
-          <input type="tel" id="addressMobile" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Mobile number">
-        </div>
-        <button id="saveAddress" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelector('.close').addEventListener('click', () => modal.remove());
-  modal.querySelector('#saveAddress').addEventListener('click', async () => {
-    const address = {
-      name: document.getElementById('addressName').value,
-      street: document.getElementById('addressStreet').value,
-      city: document.getElementById('addressCity').value,
-      state: document.getElementById('addressState').value,
-      zip: document.getElementById('addressZip').value,
-      mobile: document.getElementById('addressMobile').value,
-      isDefault: false
+      `).join('') : '<p class="text-sm">No addresses saved</p>';
     };
-    if (!address.name || !address.street || !address.city || !address.state || !address.zip || !address.mobile) {
-      return showToast('Please fill all fields');
-    }
-    const data = await apiFetch('/addresses/add', 'POST', address);
-    if (data && data.success) {
-      showToast('Address added');
-      modal.remove();
-      loadAddresses();
-      loadCart();
-    }
-  });
-});
 
-document.addEventListener('click', async e => {
-  const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  if (btn.classList.contains('edit-address')) {
-    const addresses = await apiFetch('/addresses');
-    const address = addresses.find(a => a.id === id);
-    const modal = document.createElement('div');
-    modal.className = 'share-modal active';
-    modal.innerHTML = `
-      <div class="share-modal-content">
-        <span class="close">×</span>
-        <h3 class="text-base">Edit Address</h3>
-        <div class="space-y-3 text-sm">
-          <div>
-            <label class="block text-gray-700 text-sm">Name</label>
-            <input type="text" id="addressName" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.name}">
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm">Street</label>
-            <input type="text" id="addressStreet" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.street}">
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm">City</label>
-            <input type="text" id="addressCity" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.city}">
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm">State</label>
-            <input type="text" id="addressState" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.state}">
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm">ZIP Code</label>
-            <input type="text" id="addressZip" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.zip}">
-          </div>
-          <div>
-            <label class="block text-gray-700 text-sm">Mobile</label>
-            <input type="tel" id="addressMobile" class="w-full px-3 py-1.5 border rounded-full text-sm" value="${address.mobile}">
-          </div>
-          <button id="updateAddress" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update</button>
+    // Address Actions
+    document.getElementById('addAddress').addEventListener('click', () => {
+      const modal = document.createElement('div');
+      modal.className = 'share-modal active';
+      modal.innerHTML = `
+        <div class="share-modal-content">
+          <span class="close">×</span>
+          <h3 class="text-base font-bold text-orange-600">Add Address</h3>
+          <form id="addressForm" class="space-y-3 text-sm">
+            <div>
+              <label class="block text-gray-700">Name</label>
+              <input type="text" name="name" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Street</label>
+              <input type="text" name="street" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">City</label>
+              <input type="text" name="city" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">State</label>
+              <input type="text" name="state" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">ZIP Code</label>
+              <input type="text" name="zip" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Mobile</label>
+              <input type="tel" name="mobile" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700">Save</button>
+          </form>
         </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    modal.querySelector('.close').addEventListener('click', () => modal.remove());
-    modal.querySelector('#updateAddress').addEventListener('click', async () => {
-      const updatedAddress = {
-        id,
-        name: document.getElementById('addressName').value,
-        street: document.getElementById('addressStreet').value,
-        city: document.getElementById('addressCity').value,
-        state: document.getElementById('addressState').value,
-        zip: document.getElementById('addressZip').value,
-        mobile: document.getElementById('addressMobile').value
-      };
-      if (!updatedAddress.name || !updatedAddress.street || !updatedAddress.city || !updatedAddress.state || !updatedAddress.zip || !updatedAddress.mobile) {
-        return showToast('Please fill all fields');
-      }
-      const data = await apiFetch('/addresses/update', 'POST', updatedAddress);
-      if (data && data.success) {
-        showToast('Address updated');
-        modal.remove();
-        loadAddresses();
-        loadCart();
-      }
-    });
-  } else if (btn.classList.contains('delete-address')) {
-    if (confirm('Delete this address?')) {
-      const data = await apiFetch('/addresses/delete', 'POST', { id });
-      if (data && data.success) {
-        showToast('Address deleted');
-        loadAddresses();
-        loadCart();
-      }
-    }
-  } else if (btn.classList.contains('set-default-address')) {
-    const data = await apiFetch('/addresses/set-default', 'POST', { id });
-    if (data && data.success) {
-      showToast('Default address set');
-      loadAddresses();
-      loadCart();
-    }
-  }
-});
-
-// Checkout
-document.getElementById('checkoutBtn').addEventListener('click', async () => {
-  const addressId = document.getElementById('cartAddress').value;
-  const paymentMethod = document.getElementById('paymentMethod').value;
-  if (!addressId) return showToast('Please select a delivery address');
-  if (!paymentMethod) return showToast('Please select a payment method');
-  const cart = await apiFetch('/cart');
-  if (!cart.items.length) return showToast('Cart is empty');
-  const data = await apiFetch('/checkout', 'POST', { addressId, paymentMethod });
-  if (data && data.success) {
-    showToast('Order placed successfully!');
-    triggerConfetti();
-    loadCart();
-    loadOrders();
-    showSection('orders');
-  }
-});
-
-// Loyalty
-const loadLoyalty = async () => {
-  const loyalty = await apiFetch('/loyalty');
-  document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-  document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
-    <div class="border-b py-2 text-sm">
-      <p>${h.description}</p>
-      <p class="text-gray-600">${h.points} points on ${new Date(h.date).toLocaleDateString()}</p>
-    </div>
-  `).join('') : '<p class="text-sm">No history</p>';
-};
-
-// Referrals
-const loadReferrals = async () => {
-  const referrals = await apiFetch('/referrals');
-  state.referral = referrals || { code: '', link: '' };
-  document.getElementById('referralCode').textContent = referrals?.code || 'N/A';
-  document.getElementById('referralLink').href = referrals?.link || '#';
-};
-
-// Support
-const loadSupport = async () => {
-  const tickets = await apiFetch('/support/tickets');
-  document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-    <div class="border-b py-2 text-sm">
-      <p class="font-semibold">${t.subject}</p>
-      <p class="text-gray-600">Status: ${t.status}</p>
-      <p class="text-gray-600">Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
-    </div>
-  `).join('') : '<p class="text-sm">No tickets</p>';
-
-  const chat = await apiFetch('/support/chat');
-  document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
-    <div class="chat-message ${m.sender}">
-      <p class="text-xs">${m.content}</p>
-      <p class="text-xs text-gray-500">${new Date(m.timestamp).toLocaleTimeString()}</p>
-    </div>
-  `).join('') : '<p class="text-sm">No messages</p>';
-  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-};
-
-document.getElementById('createTicketBtn').addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'share-modal active';
-  modal.innerHTML = `
-    <div class="share-modal-content">
-      <span class="close">×</span>
-      <h3 class="text-base">Create Support Ticket</h3>
-      <div class="space-y-3 text-sm">
-        <div>
-          <label class="block text-gray-700 text-sm">Subject</label>
-          <input type="text" id="ticketSubject" class="w-full px-3 py-1.5 border rounded-full text-sm" placeholder="Issue subject">
-        </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Description</label>
-          <textarea id="ticketDescription" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" placeholder="Describe your issue"></textarea>
-        </div>
-        <button id="submitTicket" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelector('.close').addEventListener('click', () => modal.remove());
-  modal.querySelector('#submitTicket').addEventListener('click', async () => {
-    const ticket = {
-      subject: document.getElementById('ticketSubject').value,
-      description: document.getElementById('ticketDescription').value
-    };
-    if (!ticket.subject || !ticket.description) return showToast('Please fill all fields');
-    const data = await apiFetch('/support/tickets/create', 'POST', ticket);
-    if (data && data.success) {
-      showToast('Ticket created');
-      modal.remove();
-      loadSupport();
-    }
-  });
-});
-
-document.getElementById('sendChat').addEventListener('click', async () => {
-  const message = document.getElementById('chatInput').value.trim();
-  if (!message) return;
-  document.getElementById('typingIndicator').textContent = 'Admin is typing...';
-  const data = await apiFetch('/support/chat/send', 'POST', { message });
-  if (data && data.success) {
-    document.getElementById('chatInput').value = '';
-    loadSupport();
-    setTimeout(() => {
-      document.getElementById('typingIndicator').textContent = '';
-      MOCK_DATA.support.chat.push({
-        sender: 'admin',
-        content: 'Thank you for your message. How can I assist you further?',
-        timestamp: new Date().toISOString()
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.querySelector('#addressForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        const result = await apiFetch('/addresses/add', 'POST', data);
+        if (result && result.success) {
+          showToast('Address added');
+          modal.remove();
+          loadAddresses();
+        }
       });
-      loadSupport();
-    }, 2000);
-  }
-});
-
-// FAQ
-const loadFAQ = async () => {
-  const faq = await apiFetch('/faq');
-  document.getElementById('faqItems').innerHTML = faq?.length ? faq.map(f => `
-    <div class="border-b py-2 text-sm">
-      <p class="font-semibold">${f.question}</p>
-      <p class="text-gray-600">${f.answer}</p>
-    </div>
-  `).join('') : '<p class="text-sm">No FAQs available</p>';
-};
-
-// Profile
-const loadProfile = async () => {
-  const profile = await apiFetch('/profile');
-  document.getElementById('profileImage').src = state.profileImage;
-  document.getElementById('profileName').value = profile?.name || '';
-  document.getElementById('profileEmail').value = profile?.email || '';
-  document.getElementById('profilePhone').value = profile?.phone || '';
-};
-
-document.getElementById('profileImageInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      state.profileImage = reader.result;
-      document.getElementById('profileImage').src = state.profileImage;
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-document.getElementById('editProfileBtn').addEventListener('click', async () => {
-  const nameInput = document.getElementById('profileName');
-  const emailInput = document.getElementById('profileEmail');
-  const phoneInput = document.getElementById('profilePhone');
-  const isEditing = nameInput.readOnly;
-  if (isEditing) {
-    nameInput.readOnly = false;
-    emailInput.readOnly = false;
-    phoneInput.readOnly = false;
-    nameInput.focus();
-    document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-1"></i>Save Profile';
-  } else {
-    const profile = {
-      name: nameInput.value,
-      email: emailInput.value,
-      phone: phoneInput.value,
-      image: state.profileImage
-    };
-    if (!profile.name || !profile.email || !profile.phone) return showToast('Please fill all fields');
-    const data = await apiFetch('/profile/update', 'POST', profile);
-    if (data && data.success) {
-      showToast('Profile updated');
-      nameInput.readOnly = true;
-      emailInput.readOnly = true;
-      phoneInput.readOnly = true;
-      document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
-    }
-  }
-});
-
-// Filters
-const applyFilters = async (section = 'menu') => {
-  const category = document.querySelector(`#user-${section} .filter-btn.active`)?.dataset.category || 'all';
-  const price = document.getElementById(section === 'menu' ? 'menuPriceFilter' : 'priceFilter').value;
-  const query = document.getElementById(section === 'menu' ? 'menuSearch' : 'searchMenu').value;
-  await loadMenu(category, price, query);
-};
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilters(btn.closest('#user-menu') ? 'menu' : 'dashboard');
-  });
-});
-
-document.getElementById('priceFilter').addEventListener('change', () => applyFilters('dashboard'));
-document.getElementById('menuPriceFilter').addEventListener('change', () => applyFilters('menu'));
-document.getElementById('searchMenu').addEventListener('input', () => applyFilters('dashboard'));
-document.getElementById('menuSearch').addEventListener('input', () => applyFilters('menu'));
-
-// Share
-document.getElementById('shareBtn').addEventListener('click', () => {
-  document.getElementById('shareModal').classList.add('active');
-});
-
-document.getElementById('shareModal').querySelector('.close').addEventListener('click', () => {
-  document.getElementById('shareModal').classList.remove('active');
-});
-
-const shareData = {
-  title: 'Discover DELICUTE!',
-  text: 'Order delicious meals with DELICUTE! Use my referral code DEL123 for exclusive offers.',
-  url: 'https://delicute.com/refer/DEL123'
-};
-
-document.getElementById('shareWhatsApp').addEventListener('click', (e) => {
-  e.preventDefault();
-  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
-});
-
-document.getElementById('shareTwitter').addEventListener('click', (e) => {
-  e.preventDefault();
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url)}`, '_blank');
-});
-
-document.getElementById('shareFacebook').addEventListener('click', (e) => {
-  e.preventDefault();
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`, '_blank');
-});
-
-// Particles Animation for Hero Section
-const initParticles = () => {
-  const canvas = document.querySelector('.particles');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.parentElement.offsetWidth;
-  canvas.height = canvas.parentElement.offsetHeight;
-
-  const particles = Array.from({ length: 50 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 2 + 1,
-    vx: Math.random() * 0.5 - 0.25,
-    vy: Math.random() * 0.5 - 0.25
-  }));
-
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
-      ctx.fill();
     });
-    requestAnimationFrame(animate);
-  };
-  animate();
-};
 
-// Initialize
-const init = async () => {
-  await loadStatusBar();
-  await loadBanners();
-  await loadOffers();
-  await loadMenu();
-  await loadCart();
-  initParticles();
-  if (!state.isLoggedIn) window.location.href = 'index.html';
-};
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.classList.contains('edit-address')) {
+        const address = (await apiFetch('/addresses')).find(a => a.id === id);
+        const modal = document.createElement('div');
+        modal.className = 'share-modal active';
+        modal.innerHTML = `
+          <div class="share-modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Edit Address</h3>
+            <form id="editAddressForm" class="space-y-3 text-sm">
+              <input type="hidden" name="id" value="${id}">
+              <div>
+                <label class="block text-gray-700">Name</label>
+                <input type="text" name="name" value="${address.name}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">Street</label>
+                <input type="text" name="street" value="${address.street}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">City</label>
+                <input type="text" name="city" value="${address.city}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">State</label>
+                <input type="text" name="state" value="${address.state}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">ZIP Code</label>
+                <input type="text" name="zip" value="${address.zip}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <div>
+                <label class="block text-gray-700">Mobile</label>
+                <input type="tel" name="mobile" value="${address.mobile}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+              </div>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700">Save</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        modal.querySelector('#editAddressForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData);
+          const result = await apiFetch('/addresses/update', 'POST', data);
+          if (result && result.success) {
+            showToast('Address updated');
+            modal.remove();
+            loadAddresses();
+          }
+        });
+      } else if (btn.classList.contains('delete-address')) {
+        if (confirm('Delete this address?')) {
+          const data = await apiFetch('/addresses/delete', 'POST', { id });
+          if (data && data.success) {
+            showToast('Address deleted');
+            loadAddresses();
+          }
+        }
+      } else if (btn.classList.contains('set-default-address')) {
+        const data = await apiFetch('/addresses/set-default', 'POST', { id });
+        if (data && data.success) {
+          showToast('Default address set');
+          loadAddresses();
+        }
+      }
+    });
 
-document.addEventListener('DOMContentLoaded', init);
+    // Checkout
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const addressId = document.getElementById('cartAddress').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      if (!addressId) return showToast('Select a delivery address');
+      if (!paymentMethod) return showToast('Select a payment method');
+      const cart = await apiFetch('/cart');
+      if (!cart.items.length) return showToast('Cart is empty');
+      const data = await apiFetch('/checkout', 'POST', { addressId, paymentMethod });
+      if (data && data.success) {
+        showToast('Order placed successfully');
+        triggerConfetti();
+        loadCart();
+        loadOrders();
+        showSection('orders');
+      }
+    });
+
+    // Loyalty
+    const loadLoyalty = async () => {
+      const loyalty = await apiFetch('/loyalty');
+      document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+      document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
+        <div class="border-b py-2 text-sm">
+          <p>${h.description}</p>
+          <p class="text-gray-600">Points: ${h.points} | ${new Date(h.date).toLocaleDateString()}</p>
+        </div>
+      `).join('') : '<p class="text-sm">No loyalty history</p>';
+    };
+
+    // Referrals
+    const loadReferrals = async () => {
+      const referrals = await apiFetch('/referrals');
+      state.referral = referrals || { code: 'N/A', link: '#' };
+      document.getElementById('referralCode').textContent = state.referral.code;
+      document.getElementById('referralLink').href = state.referral.link;
+      document.getElementById('shareWhatsApp').href = `https://wa.me/?text=Join DELICUTE with my code ${state.referral.code}! ${state.referral.link}`;
+      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=Join DELICUTE with my code ${state.referral.code}! ${state.referral.link}`;
+      document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(state.referral.link)}`;
+    };
+
+    // Support
+    const loadSupport = async () => {
+      const tickets = await apiFetch('/support/tickets');
+      const chat = await apiFetch('/support/chat');
+      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+        <div class="border-b py-2 text-sm">
+          <p class="font-semibold">${t.subject}</p>
+          <p class="text-gray-600">Status: ${t.status} | Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
+        </div>
+      `).join('') : '<p class="text-sm">No tickets</p>';
+      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
+        <div class="chat-message ${m.sender}">
+          <p class="text-xs">${m.content}</p>
+          <span class="text-xs text-gray-400">${new Date(m.timestamp).toLocaleString()}</span>
+        </div>
+      `).join('') : '<p class="text-sm">Start a conversation</p>';
+      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    };
+
+    document.getElementById('createTicketBtn').addEventListener('click', () => {
+      const modal = document.createElement('div');
+      modal.className = 'share-modal active';
+      modal.innerHTML = `
+        <div class="share-modal-content">
+          <span class="close">×</span>
+          <h3 class="text-base font-bold text-orange-600">Create Support Ticket</h3>
+          <form id="ticketForm" class="space-y-3 text-sm">
+            <div>
+              <label class="block text-gray-700">Subject</label>
+              <input type="text" name="subject" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+            </div>
+            <div>
+              <label class="block text-gray-700">Description</label>
+              <textarea name="description" class="w-full px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700">Submit</button>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.querySelector('#ticketForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        const result = await apiFetch('/support/tickets/create', 'POST', data);
+        if (result && result.success) {
+          showToast('Ticket created');
+          modal.remove();
+          loadSupport();
+        }
+      });
+    });
+
+    document.getElementById('sendChat').addEventListener('click', async () => {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return showToast('Enter a message');
+      const data = await apiFetch('/support/chat/send', 'POST', { message });
+      if (data && data.success) {
+        input.value = '';
+        loadSupport();
+        // Simulate admin typing
+        document.getElementById('typingIndicator').textContent = 'Admin is typing...';
+        setTimeout(() => {
+          document.getElementById('typingIndicator').textContent = '';
+          MOCK_DATA.support.chat.push({
+            sender: 'admin',
+            content: 'Thank you for your message. How can we assist you further?',
+            timestamp: new Date().toISOString()
+          });
+          loadSupport();
+        }, 2000);
+      }
+    });
+
+    // FAQ
+    const loadFAQ = () => {
+      document.getElementById('faqItems').innerHTML = STATIC_FAQ.map(f => `
+        <div class="border-b py-2">
+          <h4 class="text-sm font-semibold text-orange-600">${f.question}</h4>
+          <p class="text-xs text-gray-600">${f.answer}</p>
+        </div>
+      `).join('');
+    };
+
+    // Profile
+    const loadProfile = async () => {
+      const profile = await apiFetch('/profile');
+      if (profile) {
+        document.getElementById('profileName').value = profile.name;
+        document.getElementById('profileEmail').value = profile.email;
+        document.getElementById('profilePhone').value = profile.phone;
+        document.getElementById('profileImage').src = state.profileImage || profile.image;
+      }
+    };
+
+    document.getElementById('editProfileBtn').addEventListener('click', () => {
+      const inputs = document.querySelectorAll('#user-profile input:not(#profileImageInput)');
+      const isEditable = inputs[0].hasAttribute('readonly');
+      inputs.forEach(i => i.toggleAttribute('readonly', !isEditable));
+      const btn = document.getElementById('editProfileBtn');
+      btn.innerHTML = isEditable ? '<i class="fas fa-save mr-1"></i>Save Profile' : '<i class="fas fa-edit mr-1"></i>Edit Profile';
+      if (!isEditable) {
+        const data = {
+          name: document.getElementById('profileName').value,
+          email: document.getElementById('profileEmail').value,
+          phone: document.getElementById('profilePhone').value
+        };
+        apiFetch('/profile/update', 'POST', data).then(result => {
+          if (result && result.success) showToast('Profile updated');
+        });
+      }
+    });
+
+    document.getElementById('profileImageInput').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        state.profileImage = reader.result;
+        document.getElementById('profileImage').src = state.profileImage;
+        const data = await apiFetch('/profile/upload-image', 'POST', { image: state.profileImage });
+        if (data && data.success) showToast('Profile image updated');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Share Modal
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const modal = document.getElementById('shareModal');
+      modal.classList.add('active');
+    });
+
+    document.getElementById('shareModal').addEventListener('click', e => {
+      if (e.target.classList.contains('close') || e.target === document.getElementById('shareModal')) {
+        document.getElementById('shareModal').classList.remove('active');
+      }
+    });
+
+    // Filters
+    const applyFilters = async (containerId, searchId, priceId, category = 'all') => {
+      const query = document.getElementById(searchId)?.value.trim() || '';
+      const price = document.getElementById(priceId)?.value || 'all';
+      await loadMenu(category, price, query);
+    };
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const section = btn.closest('#user-menu') ? 'menu' : 'dashboard';
+        applyFilters(section === 'menu' ? 'menuItems' : 'menuPreview',
+                    section === 'menu' ? 'menuSearch' : 'searchMenu',
+                    section === 'menu' ? 'menuPriceFilter' : 'priceFilter',
+                    btn.dataset.category);
+      });
+    });
+
+    document.getElementById('priceFilter')?.addEventListener('change', () => {
+      const activeCategory = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+      applyFilters('menuPreview', 'searchMenu', 'priceFilter', activeCategory);
+    });
+
+    document.getElementById('menuPriceFilter')?.addEventListener('change', () => {
+      const activeCategory = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+      applyFilters('menuItems', 'menuSearch', 'menuPriceFilter', activeCategory);
+    });
+
+    document.getElementById('searchMenu')?.addEventListener('input', () => {
+      const activeCategory = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+      applyFilters('menuPreview', 'searchMenu', 'priceFilter', activeCategory);
+    });
+
+    document.getElementById('menuSearch')?.addEventListener('input', () => {
+      const activeCategory = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+      applyFilters('menuItems', 'menuSearch', 'menuPriceFilter', activeCategory);
+    });
+
+    // Particles
+    const initParticles = () => {
+      const canvas = document.querySelector('.particles');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = canvas.parentElement.offsetHeight;
+      const particles = Array.from({ length: 50 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 5 + 2,
+        speedX: Math.random() * 1 - 0.5,
+        speedY: Math.random() * 1 - 0.5
+      }));
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
+          ctx.fill();
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+        });
+        requestAnimationFrame(animate);
+      };
+      animate();
+    };
+
+    // Initialize
+    const init = async () => {
+      await loadStatusBar();
+      await loadBanners();
+      await loadOffers();
+      await loadMenu();
+      await loadCart();
+      initParticles();
+      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
+      showSection('dashboard');
+    };
+
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
