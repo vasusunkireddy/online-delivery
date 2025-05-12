@@ -360,13 +360,13 @@
     <header class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 sticky top-0 z-30 shadow-lg">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center gap-4">
-          <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
+          <img src="https://imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-10" loading="lazy" onerror="this.src='https://via.placeholder.com/100.png?text=Logo+Not+Found'">
           <div class="text-2xl font-bold">DELICUTE</div>
         </div>
         <div class="relative flex items-center gap-2">
           <span id="welcomeNameHeader" class="text-lg font-semibold hidden md:block"></span>
           <button id="profileToggle" class="text-white hover:text-orange-200 transition-colors" aria-label="Toggle profile menu">
-            <img id="profileImage" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Admin Profile" class="profile-image" onerror="this.src='https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'">
+            <img id="profileImage" src="/assets/fallback-profile.png" alt="Admin Profile" class="profile-image" onerror="this.src='https://via.placeholder.com/100.png?text=Profile+Not+Found'">
           </button>
           <div id="dropdownMenu" class="dropdown-menu">
             <button data-section="dashboard" class="admin-nav"><i class="fas fa-home"></i> Dashboard</button>
@@ -451,7 +451,7 @@
           <h3 class="text-2xl font-bold mb-6">Update Profile</h3>
           <div class="space-y-6">
             <div class="flex justify-center mb-6">
-              <img id="profileImageEdit" src="https://images.unsplash.com/photo-1506794778202-6d6d8c4f7e0f" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-orange-600">
+              <img id="profileImageEdit" src="/assets/fallback-profile.png" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-orange-600" onerror="this.src='https://via.placeholder.com/100.png?text=Profile+Not+Found'">
             </div>
             <div>
               <label for="profileImageInput" class="block font-medium mb-2">Profile Image</label>
@@ -625,7 +625,7 @@
         </div>
         <div class="glass p-8 mb-8">
           <h3 class="text-3xl font-bold mb-6">Restaurant Status</h3>
-          <div class פר="space-y-6">
+          <div class="space-y-6">
             <div>
               <label for="restaurantStatus" class="block font-medium mb-2">Status</label>
               <select id="restaurantStatus" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
@@ -849,6 +849,7 @@
       API_URL: 'http://localhost:3000/api',
       ITEMS_PER_PAGE: 8,
       SOCKET_URL: 'http://localhost:3000',
+      FALLBACK_IMAGE: 'https://via.placeholder.com/100.png?text=Image+Not+Found'
     };
 
     const state = {
@@ -882,7 +883,7 @@
 
     function sanitizeInput(input) {
       const div = document.createElement('div');
-      div.textContent = input;
+      div.textContent = input || '';
       return div.innerHTML;
     }
 
@@ -962,21 +963,22 @@
     // Section Loaders
     async function loadDashboard() {
       const [profile, orders, customers] = await Promise.all([
-        api.fetchData('/profile'),
+        api.fetchData('/admin/profile'),
         api.fetchData('/orders'),
         api.fetchData('/users'),
       ]);
 
-      document.getElementById('welcomeName').textContent = profile.name || 'Admin';
-      document.getElementById('welcomeNameHeader').textContent = profile.name || 'Admin';
-      document.getElementById('totalOrders').textContent = orders.length;
-      document.getElementById('totalSales').textContent = `₹${orders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('en-IN')}`;
-      document.getElementById('activeCustomers').textContent = customers.length;
-      document.getElementById('pendingRefunds').textContent = orders.filter(o => o.status === 'cancelled' || o.status === 'refunded').length;
+      document.getElementById('welcomeName').textContent = profile?.name || 'Admin';
+      document.getElementById('welcomeNameHeader').textContent = profile?.name || 'Admin';
+      document.getElementById('profileImage').src = profile?.image || CONFIG.FALLBACK_IMAGE;
+      document.getElementById('totalOrders').textContent = orders?.length || 0;
+      document.getElementById('totalSales').textContent = `₹${orders?.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('en-IN') || 0}`;
+      document.getElementById('activeCustomers').textContent = customers?.length || 0;
+      document.getElementById('pendingRefunds').textContent = orders?.filter(o => o.status === 'cancelled' || o.status === 'refunded').length || 0;
 
-      const paginatedOrders = paginate(orders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
+      const paginatedOrders = paginate(orders || [], state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('recentOrders').innerHTML = paginatedOrders.map(order => {
-        const customer = customers.find(c => c._id === order.userId) || { name: 'Unknown' };
+        const customer = customers?.find(c => c._id === order.userId) || { name: 'Unknown' };
         return `
           <tr>
             <td data-label="Order ID">#${order._id}</td>
@@ -999,13 +1001,13 @@
         `;
       }).join('');
 
-      renderPagination('recentOrdersPagination', orders.length, state.currentPage.orders, (page) => {
+      renderPagination('recentOrdersPagination', orders?.length || 0, state.currentPage.orders, (page) => {
         state.currentPage.orders = page;
         loadDashboard();
       });
 
-      const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
-      const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
+      const dates = [...new Set(orders?.map(o => new Date(o.createdAt).toISOString().split('T')[0]) || [])].sort();
+      const salesData = dates.map(date => orders?.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
       const ctx = document.getElementById('salesChart').getContext('2d');
       if (state.charts.salesChart) state.charts.salesChart.destroy();
       state.charts.salesChart = new Chart(ctx, {
@@ -1026,11 +1028,11 @@
     }
 
     async function loadProfile() {
-      const profile = await api.fetchData('/profile');
-      document.getElementById('profileImage').src = profile.image || 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e';
-      document.getElementById('profileImageEdit').src = profile.image || 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e';
-      document.getElementById('profileName').value = profile.name || '';
-      document.getElementById('profileEmail').value = profile.email || '';
+      const profile = await api.fetchData('/admin/profile');
+      document.getElementById('profileImage').src = profile?.image || CONFIG.FALLBACK_IMAGE;
+      document.getElementById('profileImageEdit').src = profile?.image || CONFIG.FALLBACK_IMAGE;
+      document.getElementById('profileName').value = profile?.name || '';
+      document.getElementById('profileEmail').value = profile?.email || '';
     }
 
     async function loadOrders() {
@@ -1039,9 +1041,9 @@
         api.fetchData('/users'),
       ]);
 
-      const paginatedOrders = paginate(orders, state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
+      const paginatedOrders = paginate(orders || [], state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('ordersList').innerHTML = paginatedOrders.map(order => {
-        const customer = customers.find(c => c._id === order.userId) || { name: 'Unknown' };
+        const customer = customers?.find(c => c._id === order.userId) || { name: 'Unknown' };
         return `
           <tr>
             <td data-label="Order ID">#${order._id}</td>
@@ -1065,7 +1067,7 @@
         `;
       }).join('');
 
-      renderPagination('ordersPagination', orders.length, state.currentPage.orders, (page) => {
+      renderPagination('ordersPagination', orders?.length || 0, state.currentPage.orders, (page) => {
         state.currentPage.orders = page;
         loadOrders();
       });
@@ -1077,9 +1079,9 @@
         api.fetchData('/orders'),
       ]);
 
-      const paginatedCustomers = paginate(customers, state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
+      const paginatedCustomers = paginate(customers || [], state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('customersList').innerHTML = paginatedCustomers.map(customer => {
-        const customerOrders = orders.filter(o => o.userId === customer._id);
+        const customerOrders = orders?.filter(o => o.userId === customer._id) || [];
         return `
           <tr>
             <td data-label="Customer ID">#${customer._id}</td>
@@ -1097,7 +1099,7 @@
         `;
       }).join('');
 
-      renderPagination('customersPagination', customers.length, state.currentPage.customers, (page) => {
+      renderPagination('customersPagination', customers?.length || 0, state.currentPage.customers, (page) => {
         state.currentPage.customers = page;
         loadCustomers();
       });
@@ -1105,13 +1107,13 @@
 
     async function loadMenu() {
       const menuItems = await api.fetchData('/menu');
-      const paginatedMenu = paginate(menuItems, state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
+      const paginatedMenu = paginate(menuItems || [], state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('menuList').innerHTML = paginatedMenu.map(item => `
         <tr>
-          <td data-label="Image"><img src="${item.image || 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'}" alt="${item.name}" class="menu-image"></td>
+          <td data-label="Image"><img src="${item.image || CONFIG.FALLBACK_IMAGE}" alt="${sanitizeInput(item.name)}" class="menu-image" onerror="this.src='${CONFIG.FALLBACK_IMAGE}'"></td>
           <td data-label="Name">${sanitizeInput(item.name)}</td>
           <td data-label="Category">${sanitizeInput(item.category)}</td>
-          <td data-label="Price">₹${item.price.toLocaleString('en-IN')}</td>
+          <td data-label="Price">₹${item.price?.toLocaleString('en-IN') || 0}</td>
           <td data-label="Description">${sanitizeInput(item.description)}</td>
           <td data-label="Availability">${item.available ? 'Yes' : 'No'}</td>
           <td data-label="Actions">
@@ -1125,7 +1127,7 @@
         </tr>
       `).join('');
 
-      renderPagination('menuPagination', menuItems.length, state.currentPage.menu, (page) => {
+      renderPagination('menuPagination', menuItems?.length || 0, state.currentPage.menu, (page) => {
         state.currentPage.menu = page;
         loadMenu();
       });
@@ -1134,13 +1136,13 @@
     async function loadSupport() {
       const users = await api.fetchData('/users');
       const chatUserSelect = document.getElementById('chatUser');
-      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + users.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`).join('');
+      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + (users?.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`) || []).join('');
     }
 
     async function loadChatMessages(userId) {
       const messages = await api.fetchData(`/chat/${userId}`);
       const chatWindow = document.getElementById('chatWindow');
-      chatWindow.innerHTML = messages.map(msg => `
+      chatWindow.innerHTML = (messages || []).map(msg => `
         <div class="chat-message ${msg.sender === 'admin' ? 'admin' : 'user'}">
           <p>${sanitizeInput(msg.content)}</p>
           <small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
@@ -1151,10 +1153,10 @@
 
     async function loadPromotions() {
       const promotions = await api.fetchData('/promotions');
-      const paginatedPromotions = paginate(promotions, state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
+      const paginatedPromotions = paginate(promotions || [], state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('promotionsList').innerHTML = paginatedPromotions.map(promo => `
         <tr>
-          <td data-label="Image"><img src="${promo.image || 'https://images.unsplash.com/photo-1624726170933-5cc6eab32e0e'}" alt="${promo.title}" class="menu-image"></td>
+          <td data-label="Image"><img src="${promo.image || CONFIG.FALLBACK_IMAGE}" alt="${sanitizeInput(promo.title)}" class="menu-image" onerror="this.src='${CONFIG.FALLBACK_IMAGE}'"></td>
           <td data-label="Title">${sanitizeInput(promo.title)}</td>
           <td data-label="Code">${sanitizeInput(promo.code)}</td>
           <td data-label="Discount">${promo.discount}%</td>
@@ -1171,7 +1173,7 @@
         </tr>
       `).join('');
 
-      renderPagination('promotionsPagination', promotions.length, state.currentPage.promotions, (page) => {
+      renderPagination('promotionsPagination', promotions?.length || 0, state.currentPage.promotions, (page) => {
         state.currentPage.promotions = page;
         loadPromotions();
       });
@@ -1183,9 +1185,9 @@
         api.fetchData('/users'),
       ]);
 
-      const paginatedFeedback = paginate(feedback, state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
+      const paginatedFeedback = paginate(feedback || [], state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('feedbackList').innerHTML = paginatedFeedback.map(f => {
-        const user = users.find(u => u._id === f.userId) || { name: 'Unknown' };
+        const user = users?.find(u => u._id === f.userId) || { name: 'Unknown' };
         return `
           <tr>
             <td data-label="Feedback ID">#${f._id}</td>
@@ -1202,7 +1204,7 @@
         `;
       }).join('');
 
-      renderPagination('feedbackPagination', feedback.length, state.currentPage.feedback, (page) => {
+      renderPagination('feedbackPagination', feedback?.length || 0, state.currentPage.feedback, (page) => {
         state.currentPage.feedback = page;
         loadFeedback();
       });
@@ -1214,18 +1216,18 @@
         api.fetchData('/users'),
       ]);
 
-      document.getElementById('restaurantStatus').value = restaurantStatus.status;
-      document.getElementById('openTime').value = restaurantStatus.openTime;
-      document.getElementById('closeTime').value = restaurantStatus.closeTime;
+      document.getElementById('restaurantStatus').value = restaurantStatus?.status || 'open';
+      document.getElementById('openTime').value = restaurantStatus?.openTime || '';
+      document.getElementById('closeTime').value = restaurantStatus?.closeTime || '';
 
       const loyaltyUserSelect = document.getElementById('loyaltyUser');
-      loyaltyUserSelect.innerHTML = '<option value="">Select a user</option>' + users.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`).join('');
+      loyaltyUserSelect.innerHTML = '<option value="">Select a user</option>' + (users?.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`) || []).join('');
     }
 
     async function loadReports() {
       const orders = await api.fetchData('/orders');
-      const dates = [...new Set(orders.map(o => new Date(o.createdAt).toISOString().split('T')[0]))].sort();
-      const salesData = dates.map(date => orders.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0));
+      const dates = [...new Set(orders?.map(o => new Date(o.createdAt).toISOString().split('T')[0]) || [])].sort();
+      const salesData = dates.map(date => orders?.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
       const ctx = document.getElementById('reportsChart').getContext('2d');
       if (state.charts.reportsChart) state.charts.reportsChart.destroy();
       state.charts.reportsChart = new Chart(ctx, {
@@ -1293,13 +1295,13 @@
         localStorage.removeItem('jwtToken');
         showToast('Logged out successfully', 'success');
         setTimeout(() => {
-          window.location.href = 'index.html';
+          window.location.href = '/index.html';
         }, 1000);
       });
 
       document.getElementById('saveProfile').addEventListener('click', async () => {
-        const name = document.getElementById('profileName').value;
-        const email = document.getElementById('profileEmail').value;
+        const name = document.getElementById('profileName').value.trim();
+        const email = document.getElementById('profileEmail').value.trim();
         const imageInput = document.getElementById('profileImageInput').files[0];
         
         if (!name || !email) {
@@ -1312,16 +1314,16 @@
           const formData = new FormData();
           formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/profile', formData);
-          if (uploadResult) data.image = uploadResult.url;
+          if (uploadResult?.url) data.image = uploadResult.url;
         }
 
-        const result = await api.fetchData('/profile', 'PUT', data);
+        const result = await api.fetchData('/admin/profile', 'PUT', data);
         if (result) {
           showToast('Profile updated successfully', 'success');
           document.getElementById('welcomeName').textContent = name;
           document.getElementById('welcomeNameHeader').textContent = name;
-          document.getElementById('profileImage').src = data.image || document.getElementById('profileImage').src;
-          document.getElementById('profileImageEdit').src = data.image || document.getElementById('profileImageEdit').src;
+          document.getElementById('profileImage').src = data.image || CONFIG.FALLBACK_IMAGE;
+          document.getElementById('profileImageEdit').src = data.image || CONFIG.FALLBACK_IMAGE;
         }
       });
 
@@ -1336,10 +1338,10 @@
       });
 
       document.getElementById('saveMenuItem').addEventListener('click', async () => {
-        const name = document.getElementById('menuName').value;
-        const category = document.getElementById('menuCategory').value;
+        const name = document.getElementById('menuName').value.trim();
+        const category = document.getElementById('menuCategory').value.trim();
         const price = parseFloat(document.getElementById('menuPrice').value);
-        const description = document.getElementById('menuDescription').value;
+        const description = document.getElementById('menuDescription').value.trim();
         const available = document.getElementById('menuAvailable').value === 'true';
         const imageInput = document.getElementById('menuImage').files[0];
 
@@ -1351,7 +1353,7 @@
         const formData = new FormData();
         formData.append('image', imageInput);
         const uploadResult = await api.uploadImage('/upload/menu', formData);
-        if (uploadResult) {
+        if (uploadResult?.url) {
           const result = await api.fetchData('/menu', 'POST', {
             name, category, price, description, available, image: uploadResult.url
           });
@@ -1372,11 +1374,11 @@
         if (action === 'edit') {
           const item = await api.fetchData(`/menu/${id}`);
           state.currentEditMenuItem = id;
-          document.getElementById('editMenuName').value = item.name;
-          document.getElementById('editMenuCategory').value = item.category;
-          document.getElementById('editMenuPrice').value = item.price;
-          document.getElementById('editMenuDescription').value = item.description;
-          document.getElementById('editMenuAvailable').value = item.available.toString();
+          document.getElementById('editMenuName').value = item?.name || '';
+          document.getElementById('editMenuCategory').value = item?.category || '';
+          document.getElementById('editMenuPrice').value = item?.price || '';
+          document.getElementById('editMenuDescription').value = item?.description || '';
+          document.getElementById('editMenuAvailable').value = item?.available?.toString() || 'true';
           document.getElementById('editMenuImage').value = '';
           openModal('editMenuItemModal');
         } else if (action === 'delete') {
@@ -1391,10 +1393,10 @@
       });
 
       document.getElementById('updateMenuItem').addEventListener('click', async () => {
-        const name = document.getElementById('editMenuName').value;
-        const category = document.getElementById('editMenuCategory').value;
+        const name = document.getElementById('editMenuName').value.trim();
+        const category = document.getElementById('editMenuCategory').value.trim();
         const price = parseFloat(document.getElementById('editMenuPrice').value);
-        const description = document.getElementById('editMenuDescription').value;
+        const description = document.getElementById('editMenuDescription').value.trim();
         const available = document.getElementById('editMenuAvailable').value === 'true';
         const imageInput = document.getElementById('editMenuImage').files[0];
 
@@ -1408,7 +1410,7 @@
           const formData = new FormData();
           formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/menu', formData);
-          if (uploadResult) data.image = uploadResult.url;
+          if (uploadResult?.url) data.image = uploadResult.url;
         }
 
         const result = await api.fetchData(`/menu/${state.currentEditMenuItem}`, 'PUT', data);
@@ -1430,8 +1432,8 @@
       });
 
       document.getElementById('savePromotion').addEventListener('click', async () => {
-        const title = document.getElementById('promoTitle').value;
-        const code = document.getElementById('promoCode').value;
+        const title = document.getElementById('promoTitle').value.trim();
+        const code = document.getElementById('promoCode').value.trim();
         const discount = parseInt(document.getElementById('promoDiscount').value);
         const startDate = document.getElementById('promoStartDate').value;
         const endDate = document.getElementById('promoEndDate').value;
@@ -1445,7 +1447,7 @@
         const formData = new FormData();
         formData.append('image', imageInput);
         const uploadResult = await api.uploadImage('/upload/promotion', formData);
-        if (uploadResult) {
+        if (uploadResult?.url) {
           const result = await api.fetchData('/promotions', 'POST', {
             title, code, discount, startDate, endDate, image: uploadResult.url
           });
@@ -1465,12 +1467,12 @@
 
         if (action === 'edit') {
           const promo = await api.fetchData(`/promotions/${id}`);
-          state.currentEditPromotion = id;
-          document.getElementById('editPromoTitle').value = promo.title;
-          document.getElementById('editPromoCode').value = promo.code;
-          document.getElementById('editPromoDiscount').value = promo.discount;
-          document.getElementById('editPromoStartDate').value = promo.startDate.split('T')[0];
-          document.getElementById('editPromoEndDate').value = promo.endDate.split('T')[0];
+                    state.currentEditPromotion = id;
+          document.getElementById('editPromoTitle').value = promo?.title || '';
+          document.getElementById('editPromoCode').value = promo?.code || '';
+          document.getElementById('editPromoDiscount').value = promo?.discount || '';
+          document.getElementById('editPromoStartDate').value = promo?.startDate ? new Date(promo.startDate).toISOString().split('T')[0] : '';
+          document.getElementById('editPromoEndDate').value = promo?.endDate ? new Date(promo.endDate).toISOString().split('T')[0] : '';
           document.getElementById('editPromoImage').value = '';
           openModal('editPromotionModal');
         } else if (action === 'delete') {
@@ -1485,8 +1487,8 @@
       });
 
       document.getElementById('updatePromotion').addEventListener('click', async () => {
-        const title = document.getElementById('editPromoTitle').value;
-        const code = document.getElementById('editPromoCode').value;
+        const title = document.getElementById('editPromoTitle').value.trim();
+        const code = document.getElementById('editPromoCode').value.trim();
         const discount = parseInt(document.getElementById('editPromoDiscount').value);
         const startDate = document.getElementById('editPromoStartDate').value;
         const endDate = document.getElementById('editPromoEndDate').value;
@@ -1502,7 +1504,7 @@
           const formData = new FormData();
           formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/promotion', formData);
-          if (uploadResult) data.image = uploadResult.url;
+          if (uploadResult?.url) data.image = uploadResult.url;
         }
 
         const result = await api.fetchData(`/promotions/${state.currentEditPromotion}`, 'PUT', data);
@@ -1513,70 +1515,19 @@
         }
       });
 
-      document.getElementById('chatUser').addEventListener('change', (e) => {
-        state.currentChatUser = e.target.value;
-        if (state.currentChatUser) {
-          loadChatMessages(state.currentChatUser);
-          state.socket.emit('joinChat', state.currentChatUser);
-        }
-      });
-
-      document.getElementById('sendMessage').addEventListener('click', async () => {
-        const message = document.getElementById('chatInput').value.trim();
-        if (!message || !state.currentChatUser) {
-          showToast('Please select a user and type a message', 'error');
-          return;
-        }
-
-        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', { content: message, sender: 'admin' });
-        if (result) {
-          state.socket.emit('chatMessage', { userId: state.currentChatUser, content: message, sender: 'admin' });
-          document.getElementById('chatInput').value = '';
-          loadChatMessages(state.currentChatUser);
-        }
-      });
-
-      state.socket.on('chatMessage', (msg) => {
-        if (msg.userId === state.currentChatUser) {
-          loadChatMessages(state.currentChatUser);
-        }
-      });
-
-      document.getElementById('saveRestaurantStatus').addEventListener('click', async () => {
-        const status = document.getElementById('restaurantStatus').value;
-        const openTime = document.getElementById('openTime').value;
-        const closeTime = document.getElementById('closeTime').value;
-
-        const result = await api.fetchData('/restaurant/status', 'PUT', { status, openTime, closeTime });
-        if (result) showToast('Restaurant status updated', 'success');
-      });
-
-      document.getElementById('assignLoyaltyPoints').addEventListener('click', async () => {
-        const userId = document.getElementById('loyaltyUser').value;
-        const points = parseInt(document.getElementById('loyaltyPoints').value);
-
-        if (!userId || !points) {
-          showToast('Please select a user and specify points', 'error');
-          return;
-        }
-
-        const result = await api.fetchData(`/users/${userId}/loyalty`, 'PUT', { points });
-        if (result) {
-          showToast('Loyalty points assigned', 'success');
-          document.getElementById('loyaltyPoints').value = '';
-        }
-      });
-
       document.getElementById('ordersList').addEventListener('click', async (e) => {
         const target = e.target.closest('button');
         if (!target) return;
         const action = target.dataset.action;
         const id = target.dataset.id;
 
-        if (action === 'refund') {
+        if (action === 'view') {
+          const order = await api.fetchData(`/orders/${id}`);
+          alert(`Order #${id}\nCustomer: ${order.customer?.name || 'Unknown'}\nTotal: ₹${order.total?.toLocaleString('en-IN') || 0}\nStatus: ${order.status}\nItems: ${order.items?.map(i => i.name).join(', ') || 'None'}`);
+        } else if (action === 'refund') {
           const order = await api.fetchData(`/orders/${id}`);
           state.currentRefundOrder = id;
-          document.getElementById('refundAmount').value = order.total;
+          document.getElementById('refundAmount').value = order.total || 0;
           document.getElementById('refundReason').value = '';
           openModal('refundModal');
         }
@@ -1588,10 +1539,13 @@
         const action = target.dataset.action;
         const id = target.dataset.id;
 
-        if (action === 'refund') {
+        if (action === 'view') {
+          const order = await api.fetchData(`/orders/${id}`);
+          alert(`Order #${id}\nCustomer: ${order.customer?.name || 'Unknown'}\nTotal: ₹${order.total?.toLocaleString('en-IN') || 0}\nStatus: ${order.status}\nItems: ${order.items?.map(i => i.name).join(', ') || 'None'}`);
+        } else if (action === 'refund') {
           const order = await api.fetchData(`/orders/${id}`);
           state.currentRefundOrder = id;
-          document.getElementById('refundAmount').value = order.total;
+          document.getElementById('refundAmount').value = order.total || 0;
           document.getElementById('refundReason').value = '';
           openModal('refundModal');
         }
@@ -1613,20 +1567,114 @@
         }
       });
 
+      document.getElementById('customersList').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const id = target.dataset.id;
+        const customer = await api.fetchData(`/users/${id}`);
+        alert(`Customer: ${customer.name}\nEmail: ${customer.email}\nPhone: ${customer.phone || 'N/A'}\nOrders: ${customer.orders?.length || 0}\nLoyalty Points: ${customer.loyaltyPoints || 0}`);
+      });
+
+      document.getElementById('feedbackList').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const id = target.dataset.id;
+        const feedback = await api.fetchData(`/feedback/${id}`);
+        alert(`Feedback #${id}\nCustomer: ${feedback.customer?.name || 'Unknown'}\nRating: ${feedback.rating}/5\nComment: ${feedback.comment}\nDate: ${new Date(feedback.createdAt).toLocaleDateString()}`);
+      });
+
+      document.getElementById('chatUser').addEventListener('change', (e) => {
+        state.currentChatUser = e.target.value;
+        if (state.currentChatUser) loadChatMessages(state.currentChatUser);
+      });
+
+      document.getElementById('sendMessage').addEventListener('click', async () => {
+        const message = document.getElementById('chatInput').value.trim();
+        if (!message || !state.currentChatUser) {
+          showToast('Please select a user and type a message', 'error');
+          return;
+        }
+
+        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', { content: message });
+        if (result) {
+          document.getElementById('chatInput').value = '';
+          loadChatMessages(state.currentChatUser);
+          state.socket.emit('chatMessage', { userId: state.currentChatUser, message: { content: message, sender: 'admin', timestamp: new Date() } });
+        }
+      });
+
+      document.getElementById('saveRestaurantStatus').addEventListener('click', async () => {
+        const status = document.getElementById('restaurantStatus').value;
+        const openTime = document.getElementById('openTime').value;
+        const closeTime = document.getElementById('closeTime').value;
+
+        const result = await api.fetchData('/restaurant/status', 'PUT', { status, openTime, closeTime });
+        if (result) {
+          showToast('Restaurant status updated', 'success');
+        }
+      });
+
+      document.getElementById('assignLoyaltyPoints').addEventListener('click', async () => {
+        const userId = document.getElementById('loyaltyUser').value;
+        const points = parseInt(document.getElementById('loyaltyPoints').value);
+
+        if (!userId || !points) {
+          showToast('Please select a user and specify points', 'error');
+          return;
+        }
+
+        const result = await api.fetchData(`/users/${userId}/loyalty`, 'PUT', { points });
+        if (result) {
+          showToast('Loyalty points assigned', 'success');
+          document.getElementById('loyaltyPoints').value = '';
+        }
+      });
+
+      // Socket Events
+      state.socket.on('chatMessage', (data) => {
+        if (data.userId === state.currentChatUser) {
+          loadChatMessages(state.currentChatUser);
+        }
+      });
+
+      state.socket.on('newOrder', () => {
+        showToast('New order received!', 'success');
+        triggerConfetti();
+        loadDashboard();
+        loadOrders();
+      });
+
+      state.socket.on('orderStatus', (data) => {
+        showToast(`Order #${data.orderId} updated to ${data.status}`, 'success');
+        loadDashboard();
+        loadOrders();
+      });
+
       // Countdown Timer
-      const timerElement = document.getElementById('countdownTimer');
-      let timeLeft = 24 * 60 * 60; // 24 hours in seconds
-      setInterval(() => {
-        const hours = Math.floor(timeLeft / 3600);
-        const minutes = Math.floor((timeLeft % 3600) / 60);
-        const seconds = timeLeft % 60;
-        timerElement.textContent = `Next Update In: ${hours}h ${minutes}m ${seconds}s`;
-        timeLeft--;
-        if (timeLeft < 0) timeLeft = 24 * 60 * 60;
-      }, 1000);
+      function updateCountdown() {
+        const now = new Date();
+        const target = new Date();
+        target.setHours(23, 59, 59, 999);
+        const diff = target - now;
+        if (diff <= 0) {
+          document.getElementById('countdownTimer').textContent = 'Day ended!';
+          return;
+        }
+        const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        document.getElementById('countdownTimer').textContent = `${hours}:${minutes}:${seconds} until day ends`;
+      }
+
+      setInterval(updateCountdown, 1000);
+      updateCountdown();
 
       // Initialize
-      switchSection('dashboard');
+      if (!localStorage.getItem('jwtToken')) {
+        window.location.href = '/index.html';
+      } else {
+        loadDashboard();
+      }
     });
   </script>
 </body>

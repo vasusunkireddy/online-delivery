@@ -6,13 +6,24 @@ const cors = require('cors');
 const { OAuth2Client } = require('google-auth-library');
 const { Pool } = require('pg');
 const path = require('path');
-const multer = require('multer'); // For handling file uploads
+const { Server } = require('socket.io');
+const http = require('http');
+const multer = require('multer');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [process.env.CLIENT_URL, 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  },
+});
 
 // Google OAuth2 Client
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 if (!GOOGLE_CLIENT_ID) {
   console.error('GOOGLE_CLIENT_ID is not set in .env');
   process.exit(1);
@@ -23,24 +34,51 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 5000,
+  max: 20,
+  idleTimeoutMillis: 30000,
+});
+// Log pool errors
+pool.on('error', (err) => {
+  console.error('PostgreSQL pool error:', err.message, err.stack);
 });
 
 // Multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    if (['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'), false);
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.chmodSync(uploadDir, 0o755);
+}
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    if (!file || !file.originalname) {
+      return cb(new Error('No file or invalid file name provided'), null);
     }
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
   },
 });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (!file) {
+      return cb(new Error('No file uploaded'), false);
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'), false);
+    }
+    cb(null, true);
+  },
+}).single('image');
 
 // Middleware
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://delicute.onrender.com'],
+  origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'http://localhost:3000', process.env.RENDER_URL].filter(Boolean),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -48,13 +86,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
+app.use('/uploads', express.static(uploadDir));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Request logging
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${JSON.stringify(req.body)}`);
-  next();
-});
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -68,15 +101,13 @@ const transporter = nodemailer.createTransport({
 // Authentication middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+  const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
-    console.log('No token provided in request');
     return res.status(401).json({ message: 'No token provided' });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      console.log('Token verification failed:', err.message);
       return res.status(403).json({ message: 'Invalid token' });
     }
     req.user = user;
@@ -84,200 +115,317 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Admin middleware
+function authenticateAdmin(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+}
+
 // Generate OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Initialize database
+// Initialize database with retries
 async function initializeDatabase() {
-  try {
-    const adminEmail = 'svasudevareddy18604@gmail.com';
-    const adminPassword = 'vasudev';
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  let retries = 15;
+  while (retries > 0) {
+    try {
+      console.log('Attempting database connection with DATABASE_URL:', process.env.DATABASE_URL.replace(/:\/\//, '://<user>:<pass>@'));
+      const client = await pool.connect();
+      console.log('Database connected successfully');
 
-    const client = await pool.connect();
+      const adminEmail = 'svasudevareddy18604@gmail.com';
+      const adminPassword = 'vasudev';
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    // Create tables
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        phone VARCHAR(20),
-        password VARCHAR(255),
-        address TEXT,
-        role VARCHAR(50) DEFAULT 'user',
-        google_id VARCHAR(255),
-        profile_image TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS otps (
-        email VARCHAR(255) PRIMARY KEY,
-        otp VARCHAR(6) NOT NULL,
-        expires TIMESTAMP NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS menu_items (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        price NUMERIC(10,2) NOT NULL,
-        category VARCHAR(15) NOT NULL,
-        image VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT menu_items_category_check CHECK (category IN ('Non-Veg', 'Vegetarian', 'Desserts'))
-      );
-
-      CREATE TABLE IF NOT EXISTS cart (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        item_id INTEGER REFERENCES menu_items(id),
-        quantity INTEGER NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        total DECIMAL(10,2) NOT NULL,
-        status VARCHAR(50) DEFAULT 'Confirmed',
-        address_id INTEGER,
-        payment_method VARCHAR(50)
-      );
-
-      CREATE TABLE IF NOT EXISTS order_items (
-        id SERIAL PRIMARY KEY,
-        order_id INTEGER REFERENCES orders(id),
-        item_id INTEGER REFERENCES menu_items(id),
-        name VARCHAR(255),
-        price DECIMAL(10,2),
-        quantity INTEGER
-      );
-
-      CREATE TABLE IF NOT EXISTS favourites (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        item_id INTEGER REFERENCES menu_items(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS addresses (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        name VARCHAR(255) NOT NULL,
-        street TEXT NOT NULL,
-        city VARCHAR(100) NOT NULL,
-        state VARCHAR(100) NOT NULL,
-        zip VARCHAR(20) NOT NULL,
-        mobile VARCHAR(20) NOT NULL,
-        is_default BOOLEAN DEFAULT FALSE
-      );
-
-      CREATE TABLE IF NOT EXISTS loyalty (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        points INTEGER DEFAULT 0
-      );
-
-      CREATE TABLE IF NOT EXISTS loyalty_history (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        description VARCHAR(255),
-        points INTEGER,
-        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS referrals (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        code VARCHAR(50) UNIQUE,
-        link TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS support_tickets (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        subject VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        status VARCHAR(50) DEFAULT 'Open',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS support_chat (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        sender VARCHAR(50),
-        content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS offers (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        code VARCHAR(50) UNIQUE,
-        discount INTEGER,
-        image TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS testimonials (
-        id SERIAL PRIMARY KEY,
-        text TEXT NOT NULL,
-        author VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Seed admin user
-    const userExists = await client.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
-    if (userExists.rows.length === 0) {
-      await client.query(
-        'INSERT INTO users (name, email, phone, password, address, role) VALUES ($1, $2, $3, $4, $5, $6)',
-        ['Admin', adminEmail, '1234567890', hashedPassword, 'Admin Address', 'admin']
-      );
-      console.log('Admin user seeded');
-    }
-
-    // Seed sample menu items
-    const menuExists = await client.query('SELECT COUNT(*) FROM menu_items');
-    if (menuExists.rows[0].count == 0) {
+      // Create tables
       await client.query(`
-        INSERT INTO menu_items (name, price, category, image) VALUES
-        ('Margherita Pizza', 250.00, 'Vegetarian', 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6'),
-        ('Butter Chicken', 350.00, 'Non-Veg', 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398'),
-        ('Chocolate Lava Cake', 150.00, 'Desserts', 'https://images.unsplash.com/photo-1617303421954-0db7df940ce3');
-      `);
-      console.log('Sample menu items seeded');
-    }
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          phone VARCHAR(20),
+          password VARCHAR(255),
+          address TEXT,
+          role VARCHAR(50) DEFAULT 'user',
+          google_id VARCHAR(255),
+          image TEXT,
+          loyalty_points INTEGER DEFAULT 0
+        );
 
-    // Seed sample offers
-    const offersExist = await client.query('SELECT COUNT(*) FROM offers');
-    if (offersExist.rows[0].count == 0) {
+        CREATE TABLE IF NOT EXISTS addresses (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          address_line TEXT NOT NULL,
+          city VARCHAR(100),
+          state VARCHAR(100),
+          postal_code VARCHAR(20),
+          country VARCHAR(100),
+          is_default BOOLEAN DEFAULT FALSE
+        );
+
+        CREATE TABLE IF NOT EXISTS admin (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          permissions JSONB
+        );
+
+        CREATE TABLE IF NOT EXISTS otps (
+          email VARCHAR(255) PRIMARY KEY,
+          otp VARCHAR(6) NOT NULL,
+          expires TIMESTAMP NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS menu (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          price NUMERIC(10,2) NOT NULL,
+          category VARCHAR(100) NOT NULL,
+          description TEXT,
+          image TEXT,
+          available BOOLEAN DEFAULT TRUE
+        );
+
+        CREATE TABLE IF NOT EXISTS cart (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          item_id INTEGER REFERENCES menu(id) ON DELETE CASCADE,
+          quantity INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS orders (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          items JSONB NOT NULL,
+          total NUMERIC(10,2) NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          payment_method VARCHAR(50),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS order_items (
+          id SERIAL PRIMARY KEY,
+          order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+          item_id INTEGER REFERENCES menu(id) ON DELETE CASCADE,
+          quantity INTEGER NOT NULL,
+          price NUMERIC(10,2) NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS offers (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          code VARCHAR(50) UNIQUE,
+          discount INTEGER NOT NULL,
+          description TEXT,
+          start_date DATE NOT NULL,
+          end_date DATE NOT NULL,
+          image TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS testimonials (
+          id SERIAL PRIMARY KEY,
+          text TEXT NOT NULL,
+          author VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS feedback (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          rating INTEGER NOT NULL,
+          comment TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS support_chat (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          sender VARCHAR(50) NOT NULL,
+          content TEXT NOT NULL,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS support_tickets (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          subject VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS restaurant_status (
+          id SERIAL PRIMARY KEY,
+          status VARCHAR(50) NOT NULL,
+          open_time TIME,
+          close_time TIME
+        );
+
+        CREATE TABLE IF NOT EXISTS favourites (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          item_id INTEGER REFERENCES menu(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS loyalty (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          points INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS loyalty_history (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          points INTEGER NOT NULL,
+          action VARCHAR(50) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS referrals (
+          id SERIAL PRIMARY KEY,
+          referrer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          referred_email VARCHAR(255) NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Fix restaurant_status schema
       await client.query(`
-        INSERT INTO offers (title, description, code, discount, image) VALUES
-        ('20% Off First Order', 'Use code FIRST20 to get 20% off your first order!', 'FIRST20', 20, 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6'),
-        ('Free Delivery', 'On orders above ₹500', 'FREEDEL', 10, 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38');
+        ALTER TABLE restaurant_status ALTER COLUMN status TYPE VARCHAR(50);
       `);
-      console.log('Sample offers seeded');
-    }
 
-    // Seed sample testimonials
-    const testimonialsExist = await client.query('SELECT COUNT(*) FROM testimonials');
-    if (testimonialsExist.rows[0].count == 0) {
+      // Drop conflicting tables
+      await client.query('DROP TABLE IF EXISTS menu_items CASCADE;');
+      await client.query('DROP TABLE IF EXISTS promotions CASCADE;');
+
+      // Remove CHECK constraint on menu.category
       await client.query(`
-        INSERT INTO testimonials (text, author) VALUES
-        ('The Butter Chicken was absolutely delicious!', 'Priya S.'),
-        ('Fast delivery and great packaging!', 'Rahul M.'),
-        ('Loved the Margherita Pizza, will order again!', 'Anita K.');
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'menu_category_check'
+            AND conrelid = 'menu'::regclass
+          ) THEN
+            ALTER TABLE menu DROP CONSTRAINT menu_category_check;
+          END IF;
+        END $$;
       `);
-      console.log('Sample testimonials seeded');
-    }
 
-    client.release();
-  } catch (err) {
-    console.error('Database initialization error:', err.message);
-    throw err;
+      // Add missing columns
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'image') THEN
+            ALTER TABLE users ADD COLUMN image TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'loyalty_points') THEN
+            ALTER TABLE users ADD COLUMN loyalty_points INTEGER DEFAULT 0;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'menu' AND column_name = 'description') THEN
+            ALTER TABLE menu ADD COLUMN description TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'menu' AND column_name = 'image') THEN
+            ALTER TABLE menu ADD COLUMN image TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'menu' AND column_name = 'available') THEN
+            ALTER TABLE menu ADD COLUMN available BOOLEAN DEFAULT TRUE;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'orders' AND column_name = 'items') THEN
+            ALTER TABLE orders ADD COLUMN items JSONB NOT NULL DEFAULT '[]'::jsonb;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'orders' AND column_name = 'created_at') THEN
+            ALTER TABLE orders ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'offers' AND column_name = 'start_date') THEN
+            ALTER TABLE offers ADD COLUMN start_date DATE NOT NULL DEFAULT CURRENT_DATE;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'offers' AND column_name = 'end_date') THEN
+            ALTER TABLE offers ADD COLUMN end_date DATE NOT NULL DEFAULT CURRENT_DATE + INTERVAL '30 days';
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'offers' AND column_name = 'image') THEN
+            ALTER TABLE offers ADD COLUMN image TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'offers' AND column_name = 'description') THEN
+            ALTER TABLE offers ADD COLUMN description TEXT;
+          END IF;
+        END $$;
+      `);
+
+      // Seed admin user
+      const userExists = await client.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
+      if (userExists.rows.length === 0) {
+        const userResult = await client.query(
+          'INSERT INTO users (name, email, phone, password, address, role, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+          ['Admin', adminEmail, '1234567890', hashedPassword, 'Admin Address', 'admin', '/assets/fallback-profile.png']
+        );
+        const adminUserId = userResult.rows[0].id;
+        await client.query(
+          'INSERT INTO admin (user_id, permissions) VALUES ($1, $2)',
+          [adminUserId, JSON.stringify(['all'])]
+        );
+      }
+
+      // Seed restaurant status
+      const statusExists = await client.query('SELECT * FROM restaurant_status WHERE id = 1');
+      if (statusExists.rows.length === 0) {
+        await client.query(
+          'INSERT INTO restaurant_status (id, status, open_time, close_time) VALUES ($1, $2, $3, $4)',
+          [1, 'closed', '09:00:00', '21:00:00']
+        );
+      }
+
+      client.release();
+      console.log('Database initialized successfully');
+      return true;
+    } catch (err) {
+      console.error(`Database connection attempt failed (${retries} retries left):`, err.message, err.stack);
+      retries -= 1;
+      if (retries === 0) {
+        console.error('All database connection attempts failed. Retrying in 30 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 30000));
+        retries = 15; // Reset retries for continuous attempts
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 15000));
+      }
+    }
   }
 }
+
+// Socket.IO Events
+io.on('connection', (socket) => {
+  console.log('Socket.IO client connected');
+  socket.on('chatMessage', async (data) => {
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        'INSERT INTO support_chat (user_id, sender, content) VALUES ($1, $2, $3) RETURNING *',
+        [data.userId, data.sender, data.content]
+      );
+      client.release();
+      io.emit('chatMessage', result.rows[0]);
+    } catch (err) {
+      console.error('Socket.IO chat message error:', err.message);
+    }
+  });
+
+  socket.on('newOrder', (order) => {
+    io.emit('newOrder', order);
+  });
+
+  socket.on('orderStatus', (data) => {
+    io.emit('orderStatus', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Socket.IO client disconnected');
+  });
+});
 
 // Routes
 
@@ -285,12 +433,11 @@ async function initializeDatabase() {
 app.post('/api/users/request-otp', async (req, res) => {
   const { email } = req.body;
   if (!email) {
-    console.log('No email provided');
     return res.status(400).json({ message: 'Email required' });
   }
 
   const otp = generateOTP();
-  const expires = new Date(Date.now() + 10 * 60 * 1000); // 10-minute expiry
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -309,7 +456,6 @@ app.post('/api/users/request-otp', async (req, res) => {
     client.release();
 
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
     res.json({ message: 'OTP sent' });
   } catch (err) {
     console.error('OTP request error:', err.message);
@@ -320,7 +466,6 @@ app.post('/api/users/request-otp', async (req, res) => {
 // Signup
 app.post('/api/users/signup', async (req, res) => {
   const { name, email, phone, password, address, otp } = req.body;
-  console.log(`Signup attempt: ${email}, OTP: ${otp}`);
 
   if (!name || name.length < 3) {
     return res.status(400).json({ message: 'Name must be at least 3 characters' });
@@ -346,61 +491,42 @@ app.post('/api/users/signup', async (req, res) => {
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
       client.release();
-      console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const userExists = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
       client.release();
-      console.log(`User already exists: ${email}`);
       return res.status(400).json({ message: 'User already exists' });
     }
 
     const phoneExists = await client.query('SELECT * FROM users WHERE phone = $1', [phone]);
     if (phoneExists.rows.length > 0) {
       client.release();
-      console.log(`Phone number already in use: ${phone}`);
       return res.status(400).json({ message: 'Phone number already in use' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await client.query(
-      'INSERT INTO users (name, email, phone, password, address, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, role',
-      [name, email, phone, hashedPassword, address, 'user']
+      'INSERT INTO users (name, email, phone, password, address, role, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
+      [name, email, phone, hashedPassword, address, 'user', '/assets/fallback-profile.png']
     );
     const user = result.rows[0];
-
-    // Initialize referral code and link
-    const referralCode = `DEL${Math.floor(100 + Math.random() * 900)}`;
-    const referralLink = `https://delicute.onrender.com/refer/${referralCode}`;
-    await client.query(
-      'INSERT INTO referrals (user_id, code, link) VALUES ($1, $2, $3)',
-      [user.id, referralCode, referralLink]
-    );
-
-    // Initialize loyalty points
-    await client.query(
-      'INSERT INTO loyalty (user_id, points) VALUES ($1, $2)',
-      [user.id, 0]
-    );
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
     client.release();
 
-    console.log(`Signup successful: ${email}`);
     res.status(201).json({ token });
   } catch (err) {
     console.error('Signup error:', err.message);
-    res.status(500).json({ message: 'Signup failed: ' + err.message });
+    res.status(500).json({ message: 'Signup failed' });
   }
 });
 
 // Login
 app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log(`Login attempt: ${email}`);
 
   try {
     const client = await pool.connect();
@@ -409,37 +535,32 @@ app.post('/api/users/login', async (req, res) => {
     client.release();
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      console.log(`Invalid credentials for ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    console.log(`Login successful: ${email}`);
     res.json({ token });
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ message: 'Login failed' });
+    res.status(500).json({ message: 'Login failed due to server error' });
   }
 });
 
 // Google Login
 app.post('/api/users/google', async (req, res) => {
   const { id_token } = req.body;
-  console.log('Google login attempt');
 
   if (!id_token) {
-    console.log('No id_token provided');
     return res.status(400).json({ message: 'id_token required' });
   }
 
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: id_token,
-      audience: GOOGLE_CLIENT_ID,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     if (!payload) {
-      console.log('Invalid Google token: No payload');
       return res.status(400).json({ message: 'Invalid Google token' });
     }
 
@@ -451,60 +572,39 @@ app.post('/api/users/google', async (req, res) => {
     if (!user) {
       const hashedPassword = await bcrypt.hash('google_dummy_' + Math.random(), 10);
       const result = await client.query(
-        'INSERT INTO users (name, email, phone, password, address, role, google_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, role',
-        [name || 'Google User', email, null, hashedPassword, 'Google Address', 'user', google_id]
+        'INSERT INTO users (name, email, phone, password, address, role, google_id, image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, email, role',
+        [name || 'Google User', email, null, hashedPassword, 'Google Address', 'user', google_id, '/assets/fallback-profile.png']
       );
       user = result.rows[0];
-
-      // Initialize referral code and link
-      const referralCode = `DEL${Math.floor(100 + Math.random() * 900)}`;
-      const referralLink = `https://delicute.onrender.com/refer/${referralCode}`;
-      await client.query(
-        'INSERT INTO referrals (user_id, code, link) VALUES ($1, $2, $3)',
-        [user.id, referralCode, referralLink]
-      );
-
-      // Initialize loyalty points
-      await client.query(
-        'INSERT INTO loyalty (user_id, points) VALUES ($1, $2)',
-        [user.id, 0]
-      );
-
-      console.log(`New Google user created: ${email}`);
     } else if (!user.google_id) {
       await client.query('UPDATE users SET google_id = $1 WHERE email = $2', [google_id, email]);
-      console.log(`Linked Google ID to existing user: ${email}`);
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     client.release();
 
-    console.log(`Google login successful: ${email}`);
     res.json({ token });
   } catch (err) {
-    console.error('Google login error:', err.message, err.stack);
-    res.status(500).json({ message: 'Google login failed: ' + err.message });
+    console.error('Google login error:', err.message);
+    res.status(500).json({ message: 'Google login failed' });
   }
 });
 
 // Reset Password
 app.post('/api/users/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
-  console.log(`Password reset attempt: ${email}`);
 
   try {
     const client = await pool.connect();
     const otpRecord = await client.query('SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires > NOW()', [email, otp]);
     if (otpRecord.rows.length === 0) {
       client.release();
-      console.log(`Invalid or expired OTP for ${email}`);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     const user = (await client.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
     if (!user) {
       client.release();
-      console.log(`User not found: ${email}`);
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -513,7 +613,6 @@ app.post('/api/users/reset-password', async (req, res) => {
     await client.query('DELETE FROM otps WHERE email = $1', [email]);
     client.release();
 
-    console.log(`Password reset successful: ${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (err) {
     console.error('Reset password error:', err.message);
@@ -521,22 +620,513 @@ app.post('/api/users/reset-password', async (req, res) => {
   }
 });
 
-// Dynamic Content Endpoints for index.html
-app.get('/api/content/offers', async (req, res) => {
+// Admin Profile
+app.get('/api/admin/profile', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT description FROM offers WHERE code = $1', ['FIRST20']);
+    const result = await client.query('SELECT id, name, email, image FROM users WHERE id = $1', [req.user.id]);
     client.release();
     if (result.rows.length === 0) {
-      return res.json({ offerText: 'Check back soon for exciting offers!' });
+      return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ offerText: result.rows[0].description });
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error('Offers content fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch offers content' });
+    console.error('Admin profile fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch profile' });
   }
 });
 
+app.put('/api/admin/profile', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { name, email, image } = req.body;
+
+  try {
+    const client = await pool.connect();
+    await client.query(
+      'UPDATE users SET name = $1, email = $2, image = COALESCE($3, image) WHERE id = $4',
+      [name, email, image, req.user.id]
+    );
+    client.release();
+    res.json({ message: 'Profile updated' });
+  } catch (err) {
+    console.error('Admin profile update error:', err.message);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+// Image Upload
+app.post('/api/upload/:type', authenticateToken, (req, res) => {
+  const type = req.params.type;
+  if (!['profile', 'menu', 'offer'].includes(type)) {
+    return res.status(400).json({ message: 'Invalid upload type' });
+  }
+
+  upload(req, res, (err) => {
+    if (err) {
+      console.error('Image upload error:', err.message);
+      return res.status(400).json({ message: err.message || 'File upload failed' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  });
+});
+
+// Menu
+app.get('/api/menu', authenticateToken, async (req, res) => {
+  const { category, search } = req.query;
+  try {
+    const client = await pool.connect();
+    let query = 'SELECT id, name, price, category, description, image FROM menu WHERE available = TRUE';
+    const params = [];
+
+    if (category) {
+      query += ' AND category = $1';
+      params.push(category);
+    }
+    if (search) {
+      query += params.length ? ' AND' : ' WHERE';
+      query += ' name ILIKE $' + (params.length + 1);
+      params.push(`%${search}%`);
+    }
+    query += ' LIMIT 100';
+
+    const result = await client.query(query, params);
+    client.release();
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Menu fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch menu due to server error' });
+  }
+});
+
+app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid menu item ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT * FROM menu WHERE id = $1', [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Menu item not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Menu item fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch menu item' });
+  }
+});
+
+app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { name, category, price, description, available, image } = req.body;
+
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return res.status(400).json({ message: 'Name is required and must be a non-empty string' });
+  }
+  if (!category || typeof category !== 'string' || category.trim() === '') {
+    return res.status(400).json({ message: 'Category is required and must be a non-empty string' });
+  }
+  if (!price || isNaN(price) || price <= 0) {
+    return res.status(400).json({ message: 'Price must be a positive number' });
+  }
+  if (available !== undefined && typeof available !== 'boolean') {
+    return res.status(400).json({ message: 'Available must be a boolean' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'INSERT INTO menu (name, category, price, description, available, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name.trim(), category.trim(), price, description, available ?? true, image]
+    );
+    client.release();
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Menu item create error:', err.message);
+    res.status(500).json({ message: 'Failed to create menu item' });
+  }
+});
+
+app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name, category, price, description, available, image } = req.body;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid menu item ID is required' });
+  }
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return res.status(400).json({ message: 'Name is required and must be a non-empty string' });
+  }
+  if (!category || typeof category !== 'string' || category.trim() === '') {
+    return res.status(400).json({ message: 'Category is required and must be a non-empty string' });
+  }
+  if (!price || isNaN(price) || price <= 0) {
+    return res.status(400).json({ message: 'Price must be a positive number' });
+  }
+  if (available !== undefined && typeof available !== 'boolean') {
+    return res.status(400).json({ message: 'Available must be a boolean' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'UPDATE menu SET name = $1, category = $2, price = $3, description = $4, available = $5, image = COALESCE($6, image) WHERE id = $7 RETURNING *',
+      [name.trim(), category.trim(), price, description, available ?? true, image, id]
+    );
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Menu item not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Menu item update error:', err.message);
+    res.status(500).json({ message: 'Failed to update menu item' });
+  }
+});
+
+app.delete('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid menu item ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query('DELETE FROM menu WHERE id = $1 RETURNING *', [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Menu item not found' });
+    }
+    res.json({ message: 'Menu item deleted' });
+  } catch (err) {
+    console.error('Menu item delete error:', err.message);
+    res.status(500).json({ message: 'Failed to delete menu item' });
+  }
+});
+
+// Cart
+app.post('/api/cart/add', authenticateToken, async (req, res) => {
+  const { item } = req.body;
+  if (!item || !item.id) {
+    return res.status(400).json({ message: 'Item ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const menuItem = await client.query('SELECT * FROM menu WHERE id = $1 AND available = TRUE', [item.id]);
+    if (menuItem.rows.length === 0) {
+      client.release();
+      return res.status(404).json({ message: 'Menu item not found or unavailable' });
+    }
+
+    const existingCartItem = await client.query('SELECT * FROM cart WHERE user_id = $1 AND item_id = $2', [req.user.id, item.id]);
+    if (existingCartItem.rows.length > 0) {
+      await client.query('UPDATE cart SET quantity = quantity + 1 WHERE user_id = $1 AND item_id = $2', [req.user.id, item.id]);
+    } else {
+      await client.query('INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)', [req.user.id, item.id, 1]);
+    }
+    client.release();
+    res.json({ message: 'Item added to cart' });
+  } catch (err) {
+    console.error('Add to cart error:', err.message);
+    res.status(500).json({ message: 'Failed to add item to cart' });
+  }
+});
+
+// Orders
+app.get('/api/orders', authenticateToken, authenticateAdmin, async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT o.id, o.user_id, o.items, o.total, o.status, o.payment_method, o.created_at,
+             u.name as customer_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      ORDER BY o.created_at DESC
+    `);
+    client.release();
+    res.json(result.rows.map(row => ({
+      _id: row.id,
+      userId: row.user_id,
+      customer: { name: row.customer_name },
+      items: row.items,
+      total: row.total,
+      status: row.status,
+      paymentMethod: row.payment_method,
+      createdAt: row.created_at
+    })));
+  } catch (err) {
+    console.error('Orders fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch orders' });
+  }
+});
+
+app.get('/api/orders/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid order ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT o.id, o.user_id, o.items, o.total, o.status, o.payment_method, o.created_at,
+             u.name as customer_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      WHERE o.id = $1
+    `, [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    const row = result.rows[0];
+    res.json({
+      _id: row.id,
+      userId: row.user_id,
+      customer: { name: row.customer_name },
+      items: row.items,
+      total: row.total,
+      status: row.status,
+      paymentMethod: row.payment_method,
+      createdAt: row.created_at
+    });
+  } catch (err) {
+    console.error('Order fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch order' });
+  }
+});
+
+app.post('/api/orders', authenticateToken, async (req, res) => {
+  const { items, total, paymentMethod } = req.body;
+
+  if (!items || !total || !paymentMethod) {
+    return res.status(400).json({ message: 'Items, total, and payment method required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'INSERT INTO orders (user_id, items, total, status, payment_method) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [req.user.id, JSON.stringify(items), total, 'pending', paymentMethod]
+    );
+    await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
+    client.release();
+
+    const order = result.rows[0];
+    io.emit('newOrder', order);
+    res.status(201).json(order);
+  } catch (err) {
+    console.error('Order create error:', err.message);
+    res.status(500).json({ message: 'Failed to create order' });
+  }
+});
+
+app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid order ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const order = await client.query('SELECT * FROM orders WHERE id = $1', [id]);
+    if (order.rows.length === 0) {
+      client.release();
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.rows[0].status !== 'completed' || order.rows[0].payment_method === 'cash') {
+      client.release();
+      return res.status(400).json({ message: 'Cannot refund this order' });
+    }
+
+    await client.query('UPDATE orders SET status = $1 WHERE id = $2', ['refunded', id]);
+    client.release();
+
+    io.emit('orderStatus', { orderId: id, status: 'refunded' });
+    res.json({ message: 'Refund processed' });
+  } catch (err) {
+    console.error('Refund process error:', err.message);
+    res.status(500).json({ message: 'Failed to process refund' });
+  }
+});
+
+// Offers
+app.get('/api/offers', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT id, title, code, discount, description, start_date, end_date, image
+      FROM offers
+      WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE
+    `);
+    client.release();
+    res.json(result.rows.map(p => ({
+      _id: p.id,
+      title: p.title,
+      code: p.code,
+      discount: p.discount,
+      description: p.description,
+      startDate: p.start_date,
+      endDate: p.end_date,
+      image: p.image
+    })));
+  } catch (err) {
+    console.error('Offers fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch offers' });
+  }
+});
+
+app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid offer ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT * FROM offers WHERE id = $1', [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Offer not found' });
+    }
+    const p = result.rows[0];
+    res.json({
+      _id: p.id,
+      title: p.title,
+      code: p.code,
+      discount: p.discount,
+      description: p.description,
+      startDate: p.start_date,
+      endDate: p.end_date,
+      image: p.image
+    });
+  } catch (err) {
+    console.error('Offer fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch offer' });
+  }
+});
+
+app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { title, code, discount, description, startDate, endDate, image } = req.body;
+
+  if (!title || typeof title !== 'string' || title.trim() === '') {
+    return res.status(400).json({ message: 'Title is required and must be a non-empty string' });
+  }
+  if (!code || typeof code !== 'string' || code.trim() === '') {
+    return res.status(400).json({ message: 'Code is required and must be a non-empty string' });
+  }
+  if (!discount || isNaN(discount) || discount <= 0) {
+    return res.status(400).json({ message: 'Discount must be a positive number' });
+  }
+  if (!startDate || isNaN(Date.parse(startDate))) {
+    return res.status(400).json({ message: 'Start date is required and must be a valid date' });
+  }
+  if (!endDate || isNaN(Date.parse(endDate))) {
+    return res.status(400).json({ message: 'End date is required and must be a valid date' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'INSERT INTO offers (title, code, discount, description, start_date, end_date, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [title.trim(), code.trim(), discount, description, startDate, endDate, image]
+    );
+    client.release();
+    res.status(201).json({
+      _id: result.rows[0].id,
+      title: result.rows[0].title,
+      code: result.rows[0].code,
+      discount: result.rows[0].discount,
+      description: result.rows[0].description,
+      startDate: result.rows[0].start_date,
+      endDate: result.rows[0].end_date,
+      image: result.rows[0].image
+    });
+  } catch (err) {
+    console.error('Offer create error:', err.message);
+    res.status(500).json({ message: 'Failed to create offer' });
+  }
+});
+
+app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { title, code, discount, description, startDate, endDate, image } = req.body;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid offer ID is required' });
+  }
+  if (!title || typeof title !== 'string' || title.trim() === '') {
+    return res.status(400).json({ message: 'Title is required and must be a non-empty string' });
+  }
+  if (!code || typeof code !== 'string' || code.trim() === '') {
+    return res.status(400).json({ message: 'Code is required and must be a non-empty string' });
+  }
+  if (!discount || isNaN(discount) || discount <= 0) {
+    return res.status(400).json({ message: 'Discount must be a positive number' });
+  }
+  if (!startDate || isNaN(Date.parse(startDate))) {
+    return res.status(400).json({ message: 'Start date is required and must be a valid date' });
+  }
+  if (!endDate || isNaN(Date.parse(endDate))) {
+    return res.status(400).json({ message: 'End date is required and must be a valid date' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'UPDATE offers SET title = $1, code = $2, discount = $3, description = $4, start_date = $5, end_date = $6, image = COALESCE($7, image) WHERE id = $8 RETURNING *',
+      [title.trim(), code.trim(), discount, description, startDate, endDate, image, id]
+    );
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Offer not found' });
+    }
+    res.json({
+      _id: result.rows[0].id,
+      title: result.rows[0].title,
+      code: result.rows[0].code,
+      discount: result.rows[0].discount,
+      description: result.rows[0].description,
+      startDate: result.rows[0].start_date,
+      endDate: result.rows[0].end_date,
+      image: result.rows[0].image
+    });
+  } catch (err) {
+    console.error('Offer update error:', err.message);
+    res.status(500).json({ message: 'Failed to update offer' });
+  }
+});
+
+app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid offer ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query('DELETE FROM offers WHERE id = $1 RETURNING *', [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Offer not found' });
+    }
+    res.json({ message: 'Offer deleted' });
+  } catch (err) {
+    console.error('Offer delete error:', err.message);
+    res.status(500).json({ message: 'Failed to delete offer' });
+  }
+});
+
+// Testimonials
 app.get('/api/content/testimonials', async (req, res) => {
   try {
     const client = await pool.connect();
@@ -549,534 +1139,364 @@ app.get('/api/content/testimonials', async (req, res) => {
   }
 });
 
-app.get('/api/content/terms', async (req, res) => {
-  try {
-    res.json({
-      content: `
-        <p class="text-gray-700 mb-4">Welcome to DELICUTE. By using our services, you agree to the following terms and conditions:</p>
-        <ul class="list-disc pl-6 text-gray-700">
-          <li class="mb-2">You must provide accurate information during signup.</li>
-          <li class="mb-2">Orders are subject to availability and confirmation.</li>
-          <li class="mb-2">DELICUTE reserves the right to cancel orders due to unforeseen circumstances.</li>
-          <li class="mb-2">All payments are processed securely through our payment gateway.</li>
-          <li class="mb-2">We comply with the Information Technology Act, 2000 for data protection.</li>
-        </ul>
-        <p class="text-gray-700 mt-4">For any questions, contact us at <a href="mailto:support@delicute.com" class="text-orange-600 hover:underline">support@delicute.com</a>.</p>
-      `
-    });
-  } catch (err) {
-    console.error('Terms fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch terms' });
-  }
-});
-
-app.get('/api/content/privacy', async (req, res) => {
-  try {
-    res.json({
-      content: `
-        <p class="text-gray-700 mb-4">At DELICUTE, we value your privacy. This policy outlines how we handle your data:</p>
-        <ul class="list-disc pl-6 text-gray-700">
-          <li class="mb-2">We collect personal information (name, email, phone, address) to process orders.</li>
-          <li class="mb-2">Your data is stored securely and not shared with third parties, except for payment processing.</li>
-          <li class="mb-2">We use cookies to enhance your browsing experience.</li>
-          <li class="mb-2">You can request deletion of your data by contacting us.</li>
-          <li class="mb-2">We comply with the Information Technology Act, 2000.</li>
-        </ul>
-        <p class="text-gray-700 mt-4">For more details, email us at <a href="mailto:support@delicute.com" class="text-orange-600 hover:underline">support@delicute.com</a>.</p>
-      `
-    });
-  } catch (err) {
-    console.error('Privacy fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch privacy policy' });
-  }
-});
-
-// Status
-app.get('/api/status', authenticateToken, async (req, res) => {
-  try {
-    res.json({ isOpen: true, prepTime: 30 });
-  } catch (err) {
-    console.error('Status fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch status' });
-  }
-});
-
-// Offers
-app.get('/api/offers', authenticateToken, async (req, res) => {
+// Users
+app.get('/api/users', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT id, title, description, code, discount, image FROM offers');
+    const result = await client.query('SELECT id, name, email, phone, loyalty_points FROM users WHERE role = $1', ['user']);
+    const orders = await client.query('SELECT user_id, COUNT(*) as order_count FROM orders GROUP BY user_id');
     client.release();
-    res.json(result.rows);
+
+    const users = result.rows.map(user => ({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      loyaltyPoints: user.loyalty_points,
+      orders: orders.rows.find(o => o.user_id == user.id)?.order_count || 0
+    }));
+    res.json(users);
   } catch (err) {
-    console.error('Offers fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch offers' });
+    console.error('Users fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch users' });
   }
 });
 
-// Menu
-app.get('/api/menu', authenticateToken, async (req, res) => {
-  const { category, price, search } = req.query;
+app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid user ID is required' });
+  }
 
   try {
-    let sql = 'SELECT id, name, price, category, image FROM menu_items';
-    const params = [];
-    let conditions = [];
-
-    if (search) {
-      conditions.push('LOWER(name) LIKE LOWER($' + (params.length + 1) + ')');
-      params.push(`%${search}%`);
-    }
-    if (category && category !== 'all') {
-      conditions.push('category = $' + (params.length + 1));
-      params.push(category);
-    }
-    if (price && price !== 'all') {
-      const [min, max] = price.split('-').map(Number);
-      conditions.push('price >= $' + (params.length + 1));
-      params.push(min);
-      if (max) {
-        conditions.push('price <= $' + (params.length + 1));
-        params.push(max);
-      }
-    }
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-
     const client = await pool.connect();
-    const result = await client.query(sql, params);
+    const userResult = await client.query('SELECT id, name, email, phone, loyalty_points FROM users WHERE id = $1 AND role = $2', [id, 'user']);
+    const ordersResult = await client.query('SELECT COUNT(*) as order_count FROM orders WHERE user_id = $1', [id]);
     client.release();
 
-    console.log(`Menu fetched for user ${req.user.email}`);
-    res.json(result.rows);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const user = userResult.rows[0];
+    res.json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      loyaltyPoints: user.loyalty_points,
+      orders: parseInt(ordersResult.rows[0].order_count)
+    });
   } catch (err) {
-    console.error('Menu fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch menu' });
+    console.error('User fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
 
-// Cart
-app.get('/api/cart', authenticateToken, async (req, res) => {
+app.put('/api/users/:id/loyalty', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { points } = req.body;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid user ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'UPDATE users SET loyalty_points = loyalty_points + $1 WHERE id = $2 AND role = $3 RETURNING *',
+      [points, id, 'user']
+    );
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'Loyalty points updated' });
+  } catch (err) {
+    console.error('Loyalty points update error:', err.message);
+    res.status(500).json({ message: 'Failed to update loyalty points' });
+  }
+});
+
+// Support Chat
+app.get('/api/support/chat/:userId', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { userId } = req.params;
+  if (!userId || isNaN(userId)) {
+    return res.status(400).json({ message: 'Valid user ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT id, user_id, sender, content, timestamp FROM support_chat WHERE user_id = $1 ORDER BY timestamp',
+      [userId]
+    );
+    client.release();
+    res.json(result.rows.map(msg => ({
+      _id: msg.id,
+      userId: msg.user_id,
+      sender: msg.sender,
+      content: msg.content,
+      timestamp: msg.timestamp
+    })));
+  } catch (err) {
+    console.error('Support chat fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch chat messages' });
+  }
+});
+
+app.post('/api/support/chat/:userId', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { userId } = req.params;
+  const { content } = req.body;
+
+  if (!userId || isNaN(userId)) {
+    return res.status(400).json({ message: 'Valid user ID is required' });
+  }
+  if (!content || typeof content !== 'string' || content.trim() === '') {
+    return res.status(400).json({ message: 'Content is required and must be a non-empty string' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const userExists = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (userExists.rows.length === 0) {
+      client.release();
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const result = await client.query(
+      'INSERT INTO support_chat (user_id, sender, content) VALUES ($1, $2, $3) RETURNING *',
+      [userId, 'admin', content.trim()]
+    );
+    client.release();
+
+    io.emit('chatMessage', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Support chat send error:', err.message);
+    res.status(500).json({ message: 'Failed to send message' });
+  }
+});
+
+// Support Tickets
+app.get('/api/support/tickets', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const client = await pool.connect();
     const result = await client.query(`
-      SELECT c.id, c.quantity, m.id AS item_id, m.name, m.price
-      FROM cart c
-      JOIN menu_items m ON c.item_id = m.id
-      WHERE c.user_id = $1
-    `, [req.user.id]);
+      SELECT t.id, t.user_id, t.subject, t.description, t.status, t.created_at,
+             u.name as customer_name
+      FROM support_tickets t
+      JOIN users u ON t.user_id = u.id
+      ORDER BY t.created_at DESC
+    `);
     client.release();
-    res.json({ items: result.rows });
-  } catch (err) {
-    console.error('Cart fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch cart' });
-  }
-});
-
-app.post('/api/cart/add', authenticateToken, async (req, res) => {
-  const { item } = req.body;
-  if (!item || !item.id) {
-    console.log('Invalid item data');
-    return res.status(400).json({ message: 'Invalid item data' });
-  }
-
-  try {
-    const client = await pool.connect();
-    const itemExists = await client.query('SELECT * FROM menu_items WHERE id = $1', [item.id]);
-    if (itemExists.rows.length === 0) {
-      client.release();
-      console.log(`Item not found: ${item.id}`);
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
-    const existingCartItem = await client.query(
-      'SELECT * FROM cart WHERE user_id = $1 AND item_id = $2',
-      [req.user.id, item.id]
-    );
-    if (existingCartItem.rows.length > 0) {
-      await client.query(
-        'UPDATE cart SET quantity = quantity + 1 WHERE user_id = $1 AND item_id = $2',
-        [req.user.id, item.id]
-      );
-    } else {
-      await client.query(
-        'INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)',
-        [req.user.id, item.id, 1]
-      );
-    }
-    client.release();
-
-    console.log(`Item added to cart for user ${req.user.email}: ${item.id}`);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Add to cart error:', err.message);
-    res.status(500).json({ message: 'Failed to add to cart' });
-  }
-});
-
-app.post('/api/cart/update', authenticateToken, async (req, res) => {
-  const { itemId, action } = req.body;
-  if (!itemId || !['increase', 'decrease'].includes(action)) {
-    return res.status(400).json({ message: 'Invalid request' });
-  }
-
-  try {
-    const client = await pool.connect();
-    const cartItem = await client.query(
-      'SELECT * FROM cart WHERE user_id = $1 AND item_id = $2',
-      [req.user.id, itemId]
-    );
-    if (cartItem.rows.length === 0) {
-      client.release();
-      return res.status(404).json({ message: 'Item not in cart' });
-    }
-
-    if (action === 'increase') {
-      await client.query(
-        'UPDATE cart SET quantity = quantity + 1 WHERE user_id = $1 AND item_id = $2',
-        [req.user.id, itemId]
-      );
-    } else if (action === 'decrease') {
-      if (cartItem.rows[0].quantity > 1) {
-        await client.query(
-          'UPDATE cart SET quantity = quantity - 1 WHERE user_id = $1 AND item_id = $2',
-          [req.user.id, itemId]
-        );
-      } else {
-        await client.query(
-          'DELETE FROM cart WHERE user_id = $1 AND item_id = $2',
-          [req.user.id, itemId]
-        );
-      }
-    }
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Cart update error:', err.message);
-    res.status(500).json({ message: 'Failed to update cart' });
-  }
-});
-
-app.post('/api/cart/remove', authenticateToken, async (req, res) => {
-  const { itemId } = req.body;
-  if (!itemId) {
-    return res.status(400).json({ message: 'Item ID required' });
-  }
-
-  try {
-    const client = await pool.connect();
-    await client.query(
-      'DELETE FROM cart WHERE user_id = $1 AND item_id = $2',
-      [req.user.id, itemId]
-    );
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Cart remove error:', err.message);
-    res.status(500).json({ message: 'Failed to remove item' });
-  }
-});
-
-app.post('/api/cart/apply-coupon', authenticateToken, async (req, res) => {
-  const { code } = req.body;
-  if (!code) {
-    return res.status(400).json({ message: 'Coupon code required' });
-  }
-
-  try {
-    const client = await pool.connect();
-    const offer = await client.query('SELECT * FROM offers WHERE code = $1', [code]);
-    client.release();
-    if (offer.rows.length === 0) {
-      return res.status(404).json({ message: 'Invalid coupon code' });
-    }
-    res.json({ success: true, discount: offer.rows[0].discount });
-  } catch (err) {
-    console.error('Coupon apply error:', err.message);
-    res.status(500).json({ message: 'Failed to apply coupon' });
-  }
-});
-
-// Orders
-app.get('/api/orders', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const orders = await client.query(`
-      SELECT o.id, o.date, o.total, o.status,
-             json_agg(json_build_object('name', oi.name)) AS items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.user_id = $1
-      GROUP BY o.id, o.date, o.total, o.status
-    `, [req.user.id]);
-    client.release();
-    res.json(orders.rows.map(o => ({
-      id: o.id,
-      date: o.date,
-      items: o.items,
-      total: o.total,
-      status: o.status
+    res.json(result.rows.map(t => ({
+      _id: t.id,
+      userId: t.user_id,
+      customer: { name: t.customer_name },
+      subject: t.subject,
+      description: t.description,
+      status: t.status,
+      createdAt: t.created_at
     })));
   } catch (err) {
-    console.error('Orders fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch orders' });
+    console.error('Support tickets fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch support tickets' });
   }
 });
 
-app.get('/api/cancellation-policy', authenticateToken, async (req, res) => {
-  try {
-    res.json({ text: 'Cancel within 10 mins for full refund' });
-  } catch (err) {
-    console.error('Cancellation policy fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch cancellation policy' });
-  }
-});
+app.post('/api/support/tickets', authenticateToken, async (req, res) => {
+  const { subject, description } = req.body;
 
-app.get('/api/orders/:orderId/track', authenticateToken, async (req, res) => {
-  const { orderId } = req.params;
+  if (!subject || typeof subject !== 'string' || subject.trim() === '') {
+    return res.status(400).json({ message: 'Subject is required and must be a non-empty string' });
+  }
+  if (!description || typeof description !== 'string' || description.trim() === '') {
+    return res.status(400).json({ message: 'Description is required and must be a non-empty string' });
+  }
+
   try {
     const client = await pool.connect();
-    const order = await client.query('SELECT * FROM orders WHERE id = $1 AND user_id = $2', [orderId, req.user.id]);
+    const result = await client.query(
+      'INSERT INTO support_tickets (user_id, subject, description, status) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.user.id, subject.trim(), description.trim(), 'open']
+    );
     client.release();
-    if (order.rows.length === 0) {
-      return res.status(404).json({ message: 'Order not found' });
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Support ticket create error:', err.message);
+    res.status(500).json({ message: 'Failed to create support ticket' });
+  }
+});
+
+// Feedback
+app.get('/api/feedback', authenticateToken, authenticateAdmin, async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT f.id, f.user_id, f.rating, f.comment, f.created_at,
+             u.name as customer_name
+      FROM feedback f
+      JOIN users u ON f.user_id = u.id
+      ORDER BY f.created_at DESC
+    `);
+    client.release();
+    res.json(result.rows.map(f => ({
+      _id: f.id,
+      userId: f.user_id,
+      customer: { name: f.customer_name },
+      rating: f.rating,
+      comment: f.comment,
+      createdAt: f.created_at
+    })));
+  } catch (err) {
+    console.error('Feedback fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch feedback' });
+  }
+});
+
+app.get('/api/feedback/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Valid feedback ID is required' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT f.id, f.user_id, f.rating, f.comment, f.created_at,
+             u.name as customer_name
+      FROM feedback f
+      JOIN users u ON f.user_id = u.id
+      WHERE f.id = $1
+    `, [id]);
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Feedback not found' });
     }
+    const f = result.rows[0];
     res.json({
-      status: order.rows[0].status,
-      deliveryPartner: { name: 'Jane Doe', contact: '9876543212' }
+      _id: f.id,
+      userId: f.user_id,
+      customer: { name: f.customer_name },
+      rating: f.rating,
+      comment: f.comment,
+      createdAt: f.created_at
     });
   } catch (err) {
-    console.error('Order track error:', err.message);
-    res.status(500).json({ message: 'Failed to track order' });
+    console.error('Feedback fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch feedback' });
   }
 });
 
-app.post('/api/orders/:orderId/reorder', authenticateToken, async (req, res) => {
-  const { orderId } = req.params;
+app.post('/api/feedback', authenticateToken, async (req, res) => {
+  const { rating, comment } = req.body;
+
+  if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'Rating must be a number between 1 and 5' });
+  }
+
   try {
     const client = await pool.connect();
-    const orderItems = await client.query('SELECT item_id, quantity FROM order_items WHERE order_id = $1', [orderId]);
-    for (const item of orderItems.rows) {
-      const existingCartItem = await client.query(
-        'SELECT * FROM cart WHERE user_id = $1 AND item_id = $2',
-        [req.user.id, item.item_id]
-      );
-      if (existingCartItem.rows.length > 0) {
-        await client.query(
-          'UPDATE cart SET quantity = quantity + $1 WHERE user_id = $2 AND item_id = $3',
-          [item.quantity, req.user.id, item.item_id]
-        );
-      } else {
-        await client.query(
-          'INSERT INTO cart (user_id, item_id, quantity) VALUES ($1, $2, $3)',
-          [req.user.id, item.item_id, item.quantity]
-        );
-      }
-    }
+    const result = await client.query(
+      'INSERT INTO feedback (user_id, rating, comment) VALUES ($1, $2, $3) RETURNING *',
+      [req.user.id, rating, comment]
+    );
     client.release();
-    res.json({ success: true });
+    res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Reorder error:', err.message);
-    res.status(500).json({ message: 'Failed to reorder' });
+    console.error('Feedback create error:', err.message);
+    res.status(500).json({ message: 'Failed to create feedback' });
   }
 });
 
-app.post('/api/orders/:orderId/rate', authenticateToken, async (req, res) => {
-  const { orderId } = req.params;
-  const { rating, comment } = req.body;
+// Restaurant Status
+app.get('/api/restaurant/status', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
-    // Assuming a ratings table could be added in the future
-    res.json({ success: true });
+    const client = await pool.connect();
+    const result = await client.query('SELECT status, open_time, close_time FROM restaurant_status WHERE id = 1');
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Restaurant status not found' });
+    }
+    res.json({
+      status: result.rows[0].status,
+      openTime: result.rows[0].open_time,
+      closeTime: result.rows[0].close_time
+    });
   } catch (err) {
-    console.error('Order rate error:', err.message);
-    res.status(500).json({ message: 'Failed to rate order' });
+    console.error('Restaurant status fetch error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch restaurant status' });
+  }
+});
+
+app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { status, openTime, closeTime } = req.body;
+
+  if (!status || !['open', 'closed'].includes(status)) {
+    return res.status(400).json({ message: 'Status must be "open" or "closed"' });
+  }
+  if (!openTime || !/^\d{2}:\d{2}(:\d{2})?$/.test(openTime)) {
+    return res.status(400).json({ message: 'openTime must be in HH:MM or HH:MM:SS format' });
+  }
+  if (!closeTime || !/^\d{2}:\d{2}(:\d{2})?$/.test(closeTime)) {
+    return res.status(400).json({ message: 'closeTime must be in HH:MM or HH:MM:SS format' });
+  }
+
+  const normalizedOpenTime = openTime.length === 5 ? `${openTime}:00` : openTime;
+  const normalizedCloseTime = closeTime.length === 5 ? `${closeTime}:00` : closeTime;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'UPDATE restaurant_status SET status = $1, open_time = $2, close_time = $3 WHERE id = 1 RETURNING *',
+      [status, normalizedOpenTime, normalizedCloseTime]
+    );
+    client.release();
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Restaurant status not found' });
+    }
+    res.json({
+      message: 'Restaurant status updated',
+      data: {
+        status: result.rows[0].status,
+        openTime: result.rows[0].open_time,
+        closeTime: result.rows[0].close_time
+      }
+    });
+  } catch (err) {
+    console.error('Restaurant status update error:', err.message);
+    res.status(500).json({ message: 'Failed to update restaurant status' });
   }
 });
 
 // Favourites
-app.get('/api/favourites', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query(`
-      SELECT m.id, m.name, m.price, m.image
-      FROM favourites f
-      JOIN menu_items m ON f.item_id = m.id
-      WHERE f.user_id = $1
-    `, [req.user.id]);
-    client.release();
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Favourites fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch favourites' });
-  }
-});
-
-app.post('/api/favourites/add', authenticateToken, async (req, res) => {
+app.post('/api/favourites', authenticateToken, async (req, res) => {
   const { itemId } = req.body;
+
+  if (!itemId || isNaN(itemId)) {
+    return res.status(400).json({ message: 'Valid item ID is required' });
+  }
+
   try {
     const client = await pool.connect();
-    const itemExists = await client.query('SELECT * FROM menu_items WHERE id = $1', [itemId]);
-    if (itemExists.rows.length === 0) {
+    const menuItem = await client.query('SELECT * FROM menu WHERE id = $1', [itemId]);
+    if (menuItem.rows.length === 0) {
       client.release();
-      return res.status(404).json({ message: 'Item not found' });
+      return res.status(404).json({ message: 'Menu item not found' });
     }
-    await client.query(
-      'INSERT INTO favourites (user_id, item_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-      [req.user.id, itemId]
-    );
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Add favourite error:', err.message);
-    res.status(500).json({ message: 'Failed to add favourite' });
-  }
-});
 
-app.post('/api/favourites/remove', authenticateToken, async (req, res) => {
-  const { itemId } = req.body;
-  try {
-    const client = await pool.connect();
-    await client.query(
-      'DELETE FROM favourites WHERE user_id = $1 AND item_id = $2',
-      [req.user.id, itemId]
-    );
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Remove favourite error:', err.message);
-    res.status(500).json({ message: 'Failed to remove favourite' });
-  }
-});
-
-// Addresses
-app.get('/api/addresses', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT * FROM addresses WHERE user_id = $1', [req.user.id]);
-    client.release();
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Addresses fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch addresses' });
-  }
-});
-
-app.post('/api/addresses/add', authenticateToken, async (req, res) => {
-  const { name, street, city, state, zip, mobile } = req.body;
-  try {
-    const client = await pool.connect();
-    const result = await client.query(
-      'INSERT INTO addresses (user_id, name, street, city, state, zip, mobile) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [req.user.id, name, street, city, state, zip, mobile]
-    );
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Add address error:', err.message);
-    res.status(500).json({ message: 'Failed to add address' });
-  }
-});
-
-app.post('/api/addresses/update', authenticateToken, async (req, res) => {
-  const { id, name, street, city, state, zip, mobile } = req.body;
-  try {
-    const client = await pool.connect();
-    const result = await client.query(
-      'UPDATE addresses SET name = $1, street = $2, city = $3, state = $4, zip = $5, mobile = $6 WHERE id = $7 AND user_id = $8 RETURNING *',
-      [name, street, city, state, zip, mobile, id, req.user.id]
-    );
-    client.release();
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Address not found' });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Update address error:', err.message);
-    res.status(500).json({ message: 'Failed to update address' });
-  }
-});
-
-app.post('/api/addresses/delete', authenticateToken, async (req, res) => {
-  const { id } = req.body;
-  try {
-    const client = await pool.connect();
-    await client.query('DELETE FROM addresses WHERE id = $1 AND user_id = $2', [id, req.user.id]);
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Delete address error:', err.message);
-    res.status(500).json({ message: 'Failed to delete address' });
-  }
-});
-
-app.post('/api/addresses/set-default', authenticateToken, async (req, res) => {
-  const { id } = req.body;
-  try {
-    const client = await pool.connect();
-    await client.query('UPDATE addresses SET is_default = FALSE WHERE user_id = $1', [req.user.id]);
-    await client.query('UPDATE addresses SET is_default = TRUE WHERE id = $1 AND user_id = $2', [id, req.user.id]);
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Set default address error:', err.message);
-    res.status(500).json({ message: 'Failed to set default address' });
-  }
-});
-
-// Checkout
-app.post('/api/checkout', authenticateToken, async (req, res) => {
-  const { addressId, paymentMethod } = req.body;
-  if (!addressId || !paymentMethod) {
-    return res.status(400).json({ message: 'Address and payment method required' });
-  }
-
-  try {
-    const client = await pool.connect();
-    const cart = await client.query(`
-      SELECT c.quantity, m.id, m.name, m.price
-      FROM cart c
-      JOIN menu_items m ON c.item_id = m.id
-      WHERE c.user_id = $1
-    `, [req.user.id]);
-
-    if (cart.rows.length === 0) {
+    const existingFavourite = await client.query('SELECT * FROM favourites WHERE user_id = $1 AND item_id = $2', [req.user.id, itemId]);
+    if (existingFavourite.rows.length > 0) {
       client.release();
-      return res.status(400).json({ message: 'Cart is empty' });
+      return res.status(400).json({ message: 'Item already in favourites' });
     }
 
-    const total = cart.rows.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const orderResult = await client.query(
-      'INSERT INTO orders (user_id, total, address_id, payment_method) VALUES ($1, $2, $3, $4) RETURNING id',
-      [req.user.id, total, addressId, paymentMethod]
-    );
-    const orderId = orderResult.rows[0].id;
-
-    for (const item of cart.rows) {
-      await client.query(
-        'INSERT INTO order_items (order_id, item_id, name, price, quantity) VALUES ($1, $2, $3, $4, $5)',
-        [orderId, item.id, item.name, item.price, item.quantity]
-      );
-    }
-
-    await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
-
-    // Award loyalty points (e.g., 1 point per ₹100 spent)
-    const points = Math.floor(total / 100);
-    await client.query(
-      'UPDATE loyalty SET points = points + $1 WHERE user_id = $2',
-      [points, req.user.id]
-    );
-    await client.query(
-      'INSERT INTO loyalty_history (user_id, description, points) VALUES ($1, $2, $3)',
-      [req.user.id, `Order #${orderId}`, points]
-    );
-
+    await client.query('INSERT INTO favourites (user_id, item_id) VALUES ($1, $2)', [req.user.id, itemId]);
     client.release();
-    res.json({ success: true });
+    res.json({ message: 'Item added to favourites' });
   } catch (err) {
-    console.error('Checkout error:', err.message);
-    res.status(500).json({ message: 'Failed to checkout' });
+    console.error('Add to favourites error:', err.message);
+    res.status(500).json({ message: 'Failed to add item to favourites' });
   }
 });
 
@@ -1084,182 +1504,79 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
 app.get('/api/loyalty', authenticateToken, async (req, res) => {
   try {
     const client = await pool.connect();
-    const loyalty = await client.query('SELECT points FROM loyalty WHERE user_id = $1', [req.user.id]);
-    const history = await client.query('SELECT description, points, date FROM loyalty_history WHERE user_id = $1', [req.user.id]);
+    const result = await client.query('SELECT points FROM loyalty WHERE user_id = $1', [req.user.id]);
     client.release();
-    res.json({
-      points: loyalty.rows[0]?.points || 0,
-      history: history.rows
-    });
+    if (result.rows.length === 0) {
+      return res.json({ points: 0 });
+    }
+    res.json({ points: result.rows[0].points });
   } catch (err) {
     console.error('Loyalty fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch loyalty' });
+    res.status(500).json({ message: 'Failed to fetch loyalty points' });
   }
 });
 
 // Referrals
-app.get('/api/referrals', authenticateToken, async (req, res) => {
+app.post('/api/referrals', authenticateToken, async (req, res) => {
+  const { referredEmail } = req.body;
+
+  if (!referredEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(referredEmail)) {
+    return res.status(400).json({ message: 'Valid email is required' });
+  }
+
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT code, link FROM referrals WHERE user_id = $1', [req.user.id]);
-    client.release();
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Referral not found' });
+    const userExists = await client.query('SELECT * FROM users WHERE email = $1', [referredEmail]);
+    if (userExists.rows.length > 0) {
+      client.release();
+      return res.status(400).json({ message: 'Referred email already registered' });
     }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Referrals fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch referrals' });
-  }
-});
 
-// Support
-app.get('/api/support/tickets', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT id, subject, status, created_at FROM support_tickets WHERE user_id = $1', [req.user.id]);
-    client.release();
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Support tickets fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch tickets' });
-  }
-});
-
-app.post('/api/support/tickets/create', authenticateToken, async (req, res) => {
-  const { subject, description } = req.body;
-  if (!subject || !description) {
-    return res.status(400).json({ message: 'Subject and description required' });
-  }
-
-  try {
-    const client = await pool.connect();
     await client.query(
-      'INSERT INTO support_tickets (user_id, subject, description) VALUES ($1, $2, $3)',
-      [req.user.id, subject, description]
+      'INSERT INTO referrals (referrer_id, referred_email, status) VALUES ($1, $2, $3)',
+      [req.user.id, referredEmail, 'pending']
     );
     client.release();
-    res.json({ success: true });
+    res.json({ message: 'Referral sent' });
   } catch (err) {
-    console.error('Create ticket error:', err.message);
-    res.status(500).json({ message: 'Failed to create ticket' });
+    console.error('Referral create error:', err.message);
+    res.status(500).json({ message: 'Failed to create referral' });
   }
 });
 
-app.get('/api/support/chat', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT sender, content, timestamp FROM support_chat WHERE user_id = $1', [req.user.id]);
-    client.release();
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Support chat fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch chat' });
-  }
+// Serve frontend
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/api/support/chat/send', authenticateToken, async (req, res) => {
-  const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ message: 'Message required' });
-  }
-
-  try {
-    const client = await pool.connect();
-    await client.query(
-      'INSERT INTO support_chat (user_id, sender, content) VALUES ($1, $2, $3)',
-      [req.user.id, 'user', message]
-    );
-    // Simulate admin response
-    setTimeout(async () => {
-      await client.query(
-        'INSERT INTO support_chat (user_id, sender, content) VALUES ($1, $2, $3)',
-        [req.user.id, 'admin', 'Thank you for your message. How can we assist you further?']
-      );
-    }, 2000);
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Send chat error:', err.message);
-    res.status(500).json({ message: 'Failed to send message' });
-  }
+app.get('/admin.html', authenticateToken, authenticateAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Profile
-app.get('/api/profile', authenticateToken, async (req, res) => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query(
-      'SELECT id, name, email, phone, profile_image FROM users WHERE id = $1',
-      [req.user.id]
-    );
-    client.release();
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
+// Start server with retry
+async function startServer() {
+  while (true) {
+    try {
+      const initialized = await initializeDatabase();
+      if (initialized) {
+        const PORT = process.env.PORT || 3000;
+        server.listen(PORT, () => {
+          console.log(`Server running on http://localhost:${PORT}`);
+        });
+        break; // Exit loop on successful start
+      }
+    } catch (err) {
+      console.error('Server start failed:', err.message);
+      console.log('Retrying server start in 30 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 30000));
     }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Profile fetch error:', err.message);
-    res.status(500).json({ message: 'Failed to fetch profile' });
   }
-});
+}
 
-app.post('/api/profile/update', authenticateToken, async (req, res) => {
-  const { name, email, phone } = req.body;
-  try {
-    const client = await pool.connect();
-    const result = await client.query(
-      'UPDATE users SET name = $1, email = $2, phone = $3 WHERE id = $4 RETURNING id, name, email, phone, profile_image',
-      [name, email, phone, req.user.id]
-    );
-    client.release();
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Profile update error:', err.message);
-    res.status(500).json({ message: 'Failed to update profile' });
-  }
-});
-
-app.post('/api/profile/upload-image', upload.single('image'), authenticateToken, async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No image uploaded' });
-  }
-
-  try {
-    // In a real app, you'd upload to a cloud storage like AWS S3
-    // For simplicity, store as base64 in DB
-    const imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    const client = await pool.connect();
-    await client.query(
-      'UPDATE users SET profile_image = $1 WHERE id = $2',
-      [imageUrl, req.user.id]
-    );
-    client.release();
-    res.json({ success: true, imageUrl });
-  } catch (err) {
-    console.error('Profile image upload error:', err.message);
-    res.status(500).json({ message: 'Failed to upload image' });
-  }
-});
-
-// Logout
-app.post('/api/logout', authenticateToken, async (req, res) => {
-  // JWT is stateless; client should remove token
-  res.json({ success: true });
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
-initializeDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to initialize database:', err.message);
-    process.exit(1);
-  });
+startServer();

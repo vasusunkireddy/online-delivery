@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline';
+    script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com 'unsafe-inline';
     style-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline';
-    img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com;
-    connect-src 'self' http://localhost:3000;
+    img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com https://your-backend-domain.com;
+    connect-src 'self' http://localhost:3000 https://api.razorpay.com https://your-backend-domain.com;
     font-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;
     object-src 'none';
     base-uri 'self';
@@ -20,6 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Poppins', sans-serif; background: #f3f4f6; overflow-x: hidden; }
@@ -42,7 +43,7 @@
     .animate-dropdown { animation: dropdown 0.3s ease-out; }
 
     .toast {
-      position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white;
+      position: fixed; bottom: 20px; right: 20px; color: white;
       padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       z-index: 1000; display: none; font-size: 0.9rem; transition: opacity 0.3s ease;
     }
@@ -203,7 +204,7 @@
         </button>
         <div class="profile-dropdown">
           <button id="profileToggle" aria-label="Toggle profile menu">
-            <img src="https://via.placeholder.com/32" alt="Profile" class="profile-img rounded-full">
+            <img src="https://via.placeholder.com/32" alt="Profile" class="profile-img rounded-full" id="headerProfileImage">
           </button>
           <div id="dropdownMenu" class="dropdown-menu">
             <button data-section="dashboard" class="user-nav active"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
@@ -216,6 +217,7 @@
             <button data-section="referrals" class="user-nav"><i class="fas fa-user-friends"></i> Refer & Earn</button>
             <button data-section="support" class="user-nav"><i class="fas fa-headset"></i> Support</button>
             <button data-section="faq" class="user-nav"><i class="fas fa-question-circle"></i> FAQ</button>
+            <button data-section="order-history" class="user-nav"><i class="fas fa-history"></i> Order History</button>
             <button data-section="profile" class="user-nav"><i class="fas fa-user"></i> Profile</button>
             <button id="logoutBtn" class="text-red-600 hover:bg-red-100"><i class="fas fa-sign-out-alt"></i> Logout</button>
           </div>
@@ -359,7 +361,7 @@
             <label class="block text-gray-700 text-sm mb-1">Payment Method</label>
             <select id="paymentMethod" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" aria-label="Select payment">
               <option value="cod">Cash on Delivery</option>
-              <option value="online">Online Payment</option>
+              <option value="online">Online Payment (Razorpay)</option>
             </select>
           </div>
           <button id="checkoutBtn" class="mt-3 w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Checkout</button>
@@ -439,6 +441,28 @@
       </div>
     </section>
 
+    <section id="user-order-history" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Order History</h2>
+        <button id="backFromOrderHistory" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="bg-orange-100 text-orange-600">
+              <th class="p-2 text-left">Order ID</th>
+              <th class="p-2 text-left">Date</th>
+              <th class="p-2 text-left">Items</th>
+              <th class="p-2 text-left">Total</th>
+              <th class="p-2 text-left">Status</th>
+              <th class="p-2 text-left">Payment</th>
+            </tr>
+          </thead>
+          <tbody id="orderHistoryItems"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="user-profile" class="user-section hidden animate-slideUp">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-2xl font-bold text-orange-600">Your Profile</h2>
@@ -446,7 +470,7 @@
       </div>
       <div class="bg-white rounded-lg p-3 shadow space-y-3">
         <div class="flex justify-center">
-          <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img profile-img-upload rounded-full w-20 h-20 object-cover">
+          <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img profile-img-upload rounded-full w-20 h-20 object-cover" onerror="this.src='https://via.placeholder.com/80?text=Profile'">
         </div>
         <div>
           <label class="block text-gray-700 text-sm">Upload Profile Image</label>
@@ -499,63 +523,8 @@
       SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif'],
       MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
       BANNER_INTERVAL: 5000,
-      TOAST_DURATION: 3000
-    };
-
-    // Mock Data
-    const MOCK_DATA = {
-      status: { isOpen: true, prepTime: 30 },
-      offers: [
-        { id: 1, title: '20% Off First Order', description: 'Use code FIRST20', code: 'FIRST20', discount: 20, image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6' },
-        { id: 2, title: 'Free Delivery', description: 'On orders above ₹500', code: 'FREEDEL', discount: 10, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38' }
-      ],
-      menu: [
-        { id: '1', name: 'Margherita Pizza', price: 250, description: 'Classic pizza with tomato and mozzarella', category: 'Vegetarian', image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6', is_popular: true },
-        { id: '2', name: 'Butter Chicken', price: 350, description: 'Creamy chicken curry', category: 'Non-Veg', image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398', is_popular: true },
-        { id: '3', name: 'Chocolate Lava Cake', price: 150, description: 'Warm cake with molten center', category: 'Desserts', image: 'https://images.unsplash.com/photo-1617303421954-0db7df940ce3', is_popular: false }
-      ],
-      cart: {
-        items: [
-          { id: '1', name: 'Margherita Pizza', price: 250, quantity: 2 },
-          { id: '3', name: 'Chocolate Lava Cake', price: 150, quantity: 1 }
-        ]
-      },
-      orders: [
-        { id: 'ORD001', date: '2025-05-01', items: [{ name: 'Margherita Pizza' }, { name: 'Butter Chicken' }], total: 600, status: 'Delivered' },
-        { id: 'ORD002', date: '2025-05-02', items: [{ name: 'Chocolate Lava Cake' }], total: 150, status: 'In Transit' }
-      ],
-      cancellationPolicy: { text: 'Cancel within 10 mins for full refund' },
-      favourites: [
-        { id: '1', name: 'Margherita Pizza', price: 250, description: 'Classic pizza', image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6' }
-      ],
-      addresses: [
-        { id: '1', name: 'Home', street: '123 MG Road', city: 'Mumbai', state: 'MH', zip: '400001', mobile: '9876543210', isDefault: true },
-        { id: '2', name: 'Office', street: '456 Corporate Park', city: 'Mumbai', state: 'MH', zip: '400002', mobile: '9876543211', isDefault: false }
-      ],
-      loyalty: {
-        points: 150,
-        history: [
-          { description: 'Order #ORD001', points: 50, date: '2025-05-01' },
-          { description: 'Referral Bonus', points: 100, date: '2025-05-02' }
-        ]
-      },
-      referrals: { code: 'DEL123', link: 'https://delicute.com/refer/DEL123' },
-      support: {
-        tickets: [
-          { id: 'TCK001', subject: 'Order Issue', status: 'Open', createdAt: '2025-05-01' }
-        ],
-        chat: [
-          { sender: 'user', content: 'I have an issue with my order', timestamp: '2025-05-01T10:00:00Z' },
-          { sender: 'admin', content: 'Please provide order ID', timestamp: '2025-05-01T10:01:00Z' }
-        ]
-      },
-      profile: {
-        id: 'USR001',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '9876543210',
-        image: 'https://via.placeholder.com/96'
-      }
+      TOAST_DURATION: 3000,
+      RAZORPAY_KEY: 'YOUR_RAZORPAY_KEY_ID' // Replace with your Razorpay Key ID
     };
 
     // Static FAQ Data
@@ -569,20 +538,21 @@
 
     // State
     let state = {
-      isLoggedIn: true,
+      isLoggedIn: !!localStorage.getItem('jwtToken'),
       userId: null,
       navigationHistory: ['dashboard'],
       appliedCoupon: null,
       favourites: [],
       referral: { link: '' },
-      profileImage: MOCK_DATA.profile.image,
+      profileImage: null,
       currentSection: 'dashboard'
     };
 
     // Utilities
-    const showToast = (msg) => {
+    const showToast = (msg, type = 'success') => {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
+      toast.className = `toast ${type === 'error' ? 'bg-red-600' : 'bg-orange-600'}`;
       toast.style.display = 'block';
       toast.style.opacity = '1';
       setTimeout(() => {
@@ -609,140 +579,29 @@
     };
 
     // API Client
-    const apiFetch = async (endpoint, method = 'GET', data = null) => {
+    const apiFetch = async (endpoint, method = 'GET', data = null, isMultipart = false) => {
       try {
         const url = `${CONFIG.API_URL}${endpoint}`;
         const options = {
           method,
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken') || ''}`
           }
         };
-        if (data) options.body = JSON.stringify(data);
+        if (data && !isMultipart) {
+          options.headers['Content-Type'] = 'application/json';
+          options.body = JSON.stringify(data);
+        } else if (data && isMultipart) {
+          options.body = data;
+        }
         const response = await fetch(url, options);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
         return await response.json();
       } catch (err) {
-        showToast(`Error: ${err.message}`);
-        return null;
-      }
-    };
-
-    // Mock API for Development
-    const mockApiFetch = async (endpoint, method = 'GET', data = null) => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if (endpoint === '/status') return MOCK_DATA.status;
-        if (endpoint === '/offers') return MOCK_DATA.offers;
-        if (endpoint.startsWith('/menu')) {
-          const params = new URLSearchParams(endpoint.split('?')[1] || '');
-          let items = MOCK_DATA.menu;
-          const category = params.get('category');
-          const price = params.get('price');
-          const query = params.get('query')?.toLowerCase();
-          if (category && category !== 'all') items = items.filter(i => i.category === category);
-          if (price && price !== 'all') {
-            const [min, max] = price.split('-').map(Number);
-            items = items.filter(i => i.price >= min && (max ? i.price <= max :  true));
-          }
-          if (query) items = items.filter(i => i.name.toLowerCase().includes(query));
-          return items;
-        }
-        if (endpoint === '/cart') return MOCK_DATA.cart;
-        if (endpoint === '/cart/apply-coupon') return { success: true, discount: data.code === 'FIRST20' ? 20 : 10 };
-        if (endpoint === '/cart/add') {
-          const existing = MOCK_DATA.cart.items.find(i => i.id === data.item.id);
-          if (existing) existing.quantity += 1;
-          else MOCK_DATA.cart.items.push(data.item);
-          return { success: true };
-        }
-        if (endpoint === '/cart/update') {
-          const item = MOCK_DATA.cart.items.find(i => i.id === data.itemId);
-          if (item) {
-            if (data.action === 'increase') item.quantity += 1;
-            if (data.action === 'decrease' && item.quantity > 1) item.quantity -= 1;
-          }
-          return { success: true };
-        }
-        if (endpoint === '/cart/remove') {
-          MOCK_DATA.cart.items = MOCK_DATA.cart.items.filter(i => i.id !== data.itemId);
-          return { success: true };
-        }
-        if (endpoint === '/orders') return MOCK_DATA.orders;
-        if (endpoint === '/cancellation-policy') return MOCK_DATA.cancellationPolicy;
-        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/track')) {
-          const orderId = endpoint.split('/')[2];
-          return { status: MOCK_DATA.orders.find(o => o.id === orderId)?.status, deliveryPartner: { name: 'Jane Doe', contact: '9876543212' } };
-        }
-        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/reorder')) {
-          MOCK_DATA.cart.items = MOCK_DATA.orders.find(o => o.id === endpoint.split('/')[2]).items.map(i => ({ ...i, id: '1', price: 250, quantity: 1 }));
-          return { success: true };
-        }
-        if (endpoint.startsWith('/orders/') && endpoint.endsWith('/rate')) return { success: true };
-        if (endpoint === '/favourites') return MOCK_DATA.favourites;
-        if (endpoint === '/favourites/add') {
-          MOCK_DATA.favourites.push(MOCK_DATA.menu.find(i => i.id === data.itemId));
-          return { success: true };
-        }
-        if (endpoint === '/favourites/remove') {
-          MOCK_DATA.favourites = MOCK_DATA.favourites.filter(f => f.id !== data.itemId);
-          return { success: true };
-        }
-        if (endpoint === '/addresses') return MOCK_DATA.addresses;
-        if (endpoint === '/addresses/add') {
-          MOCK_DATA.addresses.push({ id: `ADD${MOCK_DATA.addresses.length + 1}`, ...data });
-          return { success: true };
-        }
-        if (endpoint === '/addresses/update') {
-          const index = MOCK_DATA.addresses.findIndex(a => a.id === data.id);
-          MOCK_DATA.addresses[index] = { ...MOCK_DATA.addresses[index], ...data };
-          return { success: true };
-        }
-        if (endpoint === '/addresses/delete') {
-          MOCK_DATA.addresses = MOCK_DATA.addresses.filter(a => a.id !== data.id);
-          return { success: true };
-        }
-        if (endpoint === '/addresses/set-default') {
-          MOCK_DATA.addresses.forEach(a => a.isDefault = a.id === data.id);
-          return { success: true };
-        }
-        if (endpoint === '/checkout') {
-          MOCK_DATA.cart.items = [];
-          MOCK_DATA.orders.push({
-            id: `ORD00${MOCK_DATA.orders.length + 3}`,
-            date: new Date().toISOString(),
-            items: MOCK_DATA.cart.items,
-            total: MOCK_DATA.cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-            status: 'Confirmed'
-          });
-          return { success: true };
-        }
-        if (endpoint === '/loyalty') return MOCK_DATA.loyalty;
-        if (endpoint === '/referrals') return MOCK_DATA.referrals;
-        if (endpoint === '/support/tickets') return MOCK_DATA.support.tickets;
-        if (endpoint === '/support/chat') return MOCK_DATA.support.chat;
-        if (endpoint === '/support/chat/send') {
-          MOCK_DATA.support.chat.push({ sender: 'user', content: data.message, timestamp: new Date().toISOString() });
-          return { success: true };
-        }
-        if (endpoint === '/support/tickets/create') {
-          MOCK_DATA.support.tickets.push({ id: `TCK00${MOCK_DATA.support.tickets.length + 2}`, ...data, status: 'Open', createdAt: new Date().toISOString() });
-          return { success: true };
-        }
-        if (endpoint === '/profile') return MOCK_DATA.profile;
-        if (endpoint === '/profile/update') {
-          MOCK_DATA.profile = { ...MOCK_DATA.profile, ...data };
-          return { success: true };
-        }
-        if (endpoint === '/profile/upload-image') {
-          MOCK_DATA.profile.image = data.image;
-          return { success: true, imageUrl: data.image };
-        }
-        if (endpoint === '/logout') return { success: true };
-        throw new Error('Endpoint not found');
-      } catch (err) {
-        showToast(`Error: ${err.message}`);
+        showToast(`Error: ${err.message}`, 'error');
         return null;
       }
     };
@@ -779,7 +638,9 @@
       target.classList.remove('hidden');
       navButtons.forEach(b => b.classList.remove('active'));
       document.querySelectorAll(`[data-section="${sectionId}"]`).forEach(b => b.classList.add('active'));
-      if (state.navigationHistory[state.navigationHistory.length - 1] !== sectionId) state.navigationHistory.push(sectionId);
+      if (state.navigationHistory[state.navigationHistory.length - 1] !== sectionId) {
+        state.navigationHistory.push(sectionId);
+      }
       toggleDropdown();
       switch (sectionId) {
         case 'menu': loadMenu(); break;
@@ -791,6 +652,7 @@
         case 'referrals': loadReferrals(); break;
         case 'support': loadSupport(); break;
         case 'faq': loadFAQ(); break;
+        case 'order-history': loadOrderHistory(); break;
         case 'profile': loadProfile(); break;
         default: loadDashboard(); break;
       }
@@ -809,12 +671,12 @@
 
     // Logout
     const handleLogout = async () => {
-      const data = await mockApiFetch('/logout', 'POST');
+      const data = await apiFetch('/auth/logout', 'POST');
       if (data && data.success) {
         showToast('Logged out successfully');
         state.isLoggedIn = false;
-        localStorage.removeItem('token');
-        setTimeout(() => window.location.href = 'index.html', 1000);
+        localStorage.removeItem('jwtToken');
+        setTimeout(() => window.location.href = '/login.html', 1000);
       }
     };
 
@@ -822,38 +684,46 @@
 
     // Status Bar
     const loadStatusBar = async () => {
-      const status = await mockApiFetch('/status');
+      const status = await apiFetch('/restaurant/status');
       document.getElementById('statusBar').textContent = status ?
-        `Restaurant: ${status.isOpen ? 'Open' : 'Closed'} | Prep: ${status.prepTime} mins` : 'Status unavailable';
+        `Restaurant: ${status.status === 'open' ? 'Open' : 'Closed'} | Prep: ${status.prepTime || 30} mins` : 'Status unavailable';
     };
 
     // Dashboard
     const loadDashboard = async () => {
-      const profile = await mockApiFetch('/profile');
-      const loyalty = await mockApiFetch('/loyalty');
+      const profile = await apiFetch('/users/me');
+      const loyalty = await apiFetch('/users/me/loyalty');
       if (profile) {
-        document.getElementById('welcomeName').textContent = profile.name;
+        document.getElementById('welcomeName').textContent = profile.name || 'User';
+        document.getElementById('headerProfileImage').src = profile.image || 'https://via.placeholder.com/32';
+        document.getElementById('headerProfileImage').onerror = () => {
+          this.src = 'https://via.placeholder.com/32?text=Profile';
+        };
       }
       if (loyalty) {
         document.getElementById('welcomePoints').textContent = loyalty.points || 0;
       }
+      loadStatusBar();
+      loadBanners();
+      loadOffers();
+      loadMenu();
     };
 
     // Banners
     const loadBanners = async () => {
-      const offers = await mockApiFetch('/offers');
+      const promotions = await apiFetch('/promotions');
       const carousel = document.getElementById('banner1').parentElement;
-      if (!offers || !offers.length) {
+      if (!promotions || !promotions.length) {
         carousel.innerHTML = `<div class="banner-item"><div class="banner-content"><p class="text-sm">No promotions available</p></div></div>`;
         return;
       }
-      carousel.innerHTML = offers.map((o, i) => `
+      carousel.innerHTML = promotions.map((p, i) => `
         <div id="banner${i}" class="banner-item ${i ? 'hidden' : ''}">
-          <img src="${o.image}" alt="${o.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">
+          <img src="${p.image || 'https://via.placeholder.com/300?text=Promo'}" alt="${p.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">
           <div class="banner-content">
-            <h3 class="text-base font-bold">${o.title}</h3>
-            <p class="text-xs">${o.description} | Code: ${o.code}</p>
-            <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm" data-code="${o.code}" data-discount="${o.discount}">Claim</button>
+            <h3 class="text-base font-bold">${p.title}</h3>
+            <p class="text-xs">${p.description || 'Use code: ' + p.code} | Code: ${p.code}</p>
+            <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm" data-code="${p.code}" data-discount="${p.discount}">Claim</button>
           </div>
         </div>
       `).join('');
@@ -872,7 +742,7 @@
       document.querySelectorAll('.apply-banner-offer').forEach(btn => {
         btn.addEventListener('click', async () => {
           state.appliedCoupon = { code: btn.dataset.code, discount: parseFloat(btn.dataset.discount) };
-          const data = await mockApiFetch('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
+          const data = await apiFetch('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
           if (data && data.success) {
             showToast(`Offer ${state.appliedCoupon.code} applied! ${state.appliedCoupon.discount}% off`);
             loadCart();
@@ -883,15 +753,15 @@
 
     // Offers
     const loadOffers = async () => {
-      const offers = await mockApiFetch('/offers');
-      if (!offers || !offers.length) {
+      const promotions = await apiFetch('/promotions');
+      if (!promotions || !promotions.length) {
         document.getElementById('applyOffer').classList.add('hidden');
         return;
       }
-      const offer = offers[0];
+      const offer = promotions[0];
       document.getElementById('applyOffer').addEventListener('click', async () => {
         state.appliedCoupon = { code: offer.code, discount: offer.discount };
-        const data = await mockApiFetch('/cart/apply-coupon', 'POST', { code: offer.code });
+        const data = await apiFetch('/cart/apply-coupon', 'POST', { code: offer.code });
         if (data && data.success) {
           showToast(`Offer ${offer.code} applied! ${offer.discount}% off`);
           loadCart();
@@ -902,11 +772,13 @@
     // Menu
     const loadMenu = async (category = 'all', price = 'all', query = '') => {
       const params = new URLSearchParams({ category, price, query });
-      const items = await mockApiFetch(`/menu?${params.toString()}`);
+      const items = await apiFetch(`/menu?${params.toString()}`);
+      const favourites = await apiFetch('/favourites');
+      state.favourites = favourites || [];
       const favouriteIds = state.favourites.map(f => f.id);
       const renderItem = item => `
         <div class="menu-item">
-          <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <img src="${item.image || 'https://via.placeholder.com/150?text=No+Image'}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="p-3">
             <h3 class="text-sm font-semibold">${item.name}</h3>
             <p class="text-gray-600 text-xs">₹${item.price}</p>
@@ -920,13 +792,55 @@
       `;
       document.getElementById('menuItems').innerHTML = items?.length ? items.map(renderItem).join('') : '<p class="text-sm">No items found</p>';
       document.getElementById('menuPreview').innerHTML = items?.slice(0, 4).map(renderItem).join('') || '';
-      document.getElementById('popular').innerHTML = items?.filter(i => i.is_popular).slice(0, 4).map(renderItem).join('') || '';
+      document.getElementById('popular').innerHTML = items?.filter(i => i.isPopular).slice(0, 4).map(renderItem).join('') || '';
       VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
+      bindFilterEvents();
+    };
+
+    const bindFilterEvents = () => {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const category = btn.dataset.category;
+          const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value;
+          const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value;
+          loadMenu(category, price, query);
+        });
+      });
+      ['menuPriceFilter', 'priceFilter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', () => {
+            const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+            const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value;
+            loadMenu(category, el.value, query);
+          });
+        }
+      });
+      ['menuSearch', 'searchMenu'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', debounce(() => {
+            const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+            const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value;
+            loadMenu(category, price, el.value);
+          }, 300));
+        }
+      });
+    };
+
+    const debounce = (func, wait) => {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+      };
     };
 
     // Cart
     const loadCart = async () => {
-      const cart = await mockApiFetch('/cart');
+      const cart = await apiFetch('/cart');
       const itemsEl = document.getElementById('cartItems');
       const subtotalEl = document.getElementById('cartSubtotal');
       const discountEl = document.getElementById('cartDiscount');
@@ -942,7 +856,7 @@
         addressEl.innerHTML = '<option value="">Select Address</option>';
         return;
       }
-      const addresses = await mockApiFetch('/addresses') || [];
+      const addresses = await apiFetch('/addresses') || [];
       addressEl.innerHTML = '<option value="">Select Address</option>' + addresses.map(a => `<option value="${a.id}" ${a.isDefault ? 'selected' : ''}>${a.name}: ${a.street}, ${a.city}</option>`).join('');
       const subtotal = cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const discount = state.appliedCoupon ? (subtotal * state.appliedCoupon.discount / 100) : 0;
@@ -974,16 +888,16 @@
       const id = btn.dataset.id;
       if (btn.classList.contains('add-to-cart')) {
         const item = { id, name: btn.dataset.name, price: parseFloat(btn.dataset.price), quantity: 1 };
-        const cart = await mockApiFetch('/cart');
+        const cart = await apiFetch('/cart');
         const existing = cart?.items.find(i => i.id === id);
         if (existing) {
-          const data = await mockApiFetch('/cart/update', 'POST', { itemId: id, action: 'increase' });
+          const data = await apiFetch('/cart/update', 'POST', { itemId: id, action: 'increase' });
           if (data && data.success) {
             showToast(`${item.name} quantity updated`);
             loadCart();
           }
         } else {
-          const data = await mockApiFetch('/cart/add', 'POST', { item });
+          const data = await apiFetch('/cart/add', 'POST', { item });
           if (data && data.success) {
             showToast(`${item.name} added to cart`);
             loadCart();
@@ -991,13 +905,13 @@
         }
       } else if (btn.classList.contains('update-cart')) {
         const action = btn.dataset.action;
-        const data = await mockApiFetch('/cart/update', 'POST', { itemId: id, action });
+        const data = await apiFetch('/cart/update', 'POST', { itemId: id, action });
         if (data && data.success) {
           showToast('Cart updated');
           loadCart();
         }
       } else if (btn.classList.contains('remove-from-cart')) {
-        const data = await mockApiFetch('/cart/remove', 'POST', { itemId: id });
+        const data = await apiFetch('/cart/remove', 'POST', { itemId: id });
         if (data && data.success) {
           showToast('Item removed');
           loadCart();
@@ -1008,8 +922,8 @@
     // Coupon
     document.getElementById('applyCoupon').addEventListener('click', async () => {
       const code = document.getElementById('couponCode').value.trim();
-      if (!code) return showToast('Enter a promo code');
-      const data = await mockApiFetch('/cart/apply-coupon', 'POST', { code });
+      if (!code) return showToast('Enter a promo code', 'error');
+      const data = await apiFetch('/cart/apply-coupon', 'POST', { code });
       if (data && data.success) {
         state.appliedCoupon = { code, discount: data.discount };
         showToast(`Coupon ${code} applied! ${data.discount}% off`);
@@ -1017,15 +931,80 @@
       }
     });
 
+    // Checkout with Razorpay
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const addressId = document.getElementById('cartAddress').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      if (!addressId) return showToast('Please select a delivery address', 'error');
+      const cart = await apiFetch('/cart');
+      if (!cart || !cart.items?.length) return showToast('Cart is empty', 'error');
+      const orderData = {
+        addressId,
+        paymentMethod,
+        couponCode: state.appliedCoupon?.code
+      };
+      if (paymentMethod === 'cod') {
+        const data = await apiFetch('/orders', 'POST', orderData);
+        if (data && data.success) {
+          showToast('Order placed successfully!');
+          triggerConfetti();
+          loadCart();
+          loadOrders();
+          loadOrderHistory();
+          showSection('orders');
+        }
+      } else {
+        const paymentData = await apiFetch('/orders/create-payment', 'POST', orderData);
+        if (!paymentData || !paymentData.orderId) return showToast('Failed to initiate payment', 'error');
+        const options = {
+          key: CONFIG.RAZORPAY_KEY,
+          amount: paymentData.amount,
+          currency: 'INR',
+          name: 'DELICUTE',
+          description: 'Food Order Payment',
+          image: 'https://i.imgur.com/ZbhzFqT.png',
+          order_id: paymentData.orderId,
+          handler: async (response) => {
+            const verifyData = await apiFetch('/orders/verify-payment', 'POST', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            if (verifyData && verifyData.success) {
+              showToast('Payment successful! Order placed.');
+              triggerConfetti();
+              loadCart();
+              loadOrders();
+              loadOrderHistory();
+              showSection('orders');
+            } else {
+              showToast('Payment verification failed', 'error');
+            }
+          },
+          prefill: {
+            name: document.getElementById('welcomeName').textContent,
+            email: (await apiFetch('/users/me'))?.email || '',
+            contact: (await apiFetch('/users/me'))?.phone || ''
+          },
+          theme: {
+            color: '#f97316'
+          }
+        };
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', () => showToast('Payment failed. Please try again.', 'error'));
+        rzp.open();
+      }
+    });
+
     // Orders
     const loadOrders = async () => {
-      const orders = await mockApiFetch('/orders');
-      const policy = await mockApiFetch('/cancellation-policy');
+      const orders = await apiFetch('/orders');
+      const policy = await apiFetch('/cancellation-policy');
       document.getElementById('cancellationPolicy').textContent = policy?.text || 'Cancel within 10 mins for full refund';
       document.getElementById('orderItems').innerHTML = orders?.length ? orders.map(o => `
         <tr>
           <td class="p-2">${o.id}</td>
-          <td class="p-2">${new Date(o.date).toLocaleDateString()}</td>
+          <td class="p-2">${new Date(o.createdAt).toLocaleDateString()}</td>
           <td class="p-2">${o.items.map(i => i.name).join(', ')}</td>
           <td class="p-2">₹${o.total.toFixed(2)}</td>
           <td class="p-2">${o.status}</td>
@@ -1038,13 +1017,28 @@
       `).join('') : '<tr><td colspan="6" class="p-2 text-gray-600 text-sm">No orders</td></tr>';
     };
 
+    // Order History
+    const loadOrderHistory = async () => {
+      const orders = await apiFetch('/orders/history');
+      document.getElementById('orderHistoryItems').innerHTML = orders?.length ? orders.map(o => `
+        <tr>
+          <td class="p-2">${o.id}</td>
+          <td class="p-2">${new Date(o.createdAt).toLocaleDateString()}</td>
+          <td class="p-2">${o.items.map(i => i.name).join(', ')}</td>
+          <td class="p-2">₹${o.total.toFixed(2)}</td>
+          <td class="p-2">${o.status}</td>
+          <td class="p-2">${o.paymentMethod === 'online' ? 'Online (Razorpay)' : 'Cash on Delivery'}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="6" class="p-2 text-gray-600 text-sm">No order history</td></tr>';
+    };
+
     // Order Actions
     document.addEventListener('click', async e => {
       const btn = e.target.closest('.track-order, .reorder, .rate-order');
       if (!btn) return;
       const orderId = btn.dataset.orderId;
       if (btn.classList.contains('track-order')) {
-        const data = await mockApiFetch(`/orders/${orderId}/track`);
+        const data = await apiFetch(`/orders/${orderId}/track`);
         if (data) {
           const modal = document.createElement('div');
           modal.className = 'modal active';
@@ -1062,7 +1056,7 @@
           modal.querySelector('.close').addEventListener('click', () => modal.remove());
         }
       } else if (btn.classList.contains('reorder')) {
-        const data = await mockApiFetch(`/orders/${orderId}/reorder`, 'POST');
+        const data = await apiFetch(`/orders/${orderId}/reorder`, 'POST');
         if (data && data.success) {
           showToast('Items added to cart');
           loadCart();
@@ -1097,8 +1091,8 @@
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
         modal.querySelector('#submitRating').addEventListener('click', async () => {
           const comment = document.getElementById('ratingComment').value;
-          if (!comment) return showToast('Please provide feedback');
-          const data = await mockApiFetch(`/orders/${orderId}/rate`, 'POST', { rating, comment });
+          if (!comment) return showToast('Please provide feedback', 'error');
+          const data = await apiFetch(`/orders/${orderId}/rate`, 'POST', { rating, comment });
           if (data && data.success) {
             showToast('Rating submitted');
             modal.remove();
@@ -1110,12 +1104,12 @@
 
     // Favourites
     const loadFavourites = async () => {
-      const favourites = await mockApiFetch('/favourites');
+      const favourites = await apiFetch('/favourites');
       state.favourites = favourites || [];
       const container = document.getElementById('favouritesItems');
       container.innerHTML = favourites?.length ? favourites.map(i => `
         <div class="menu-item">
-          <img src="${i.image}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <img src="${i.image || 'https://via.placeholder.com/150?text=No+Image'}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
           <div class="p-3">
             <h3 class="text-sm font-semibold">${i.name}</h3>
             <p class="text-gray-600 text-xs">₹${i.price}</p>
@@ -1136,24 +1130,25 @@
       const id = btn.dataset.id;
       const isFavourite = state.favourites.some(f => f.id === id);
       const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
-      const data = await mockApiFetch(endpoint, 'POST', { itemId: id });
+      const data = await apiFetch(endpoint, 'POST', { itemId: id });
       if (data && data.success) {
         if (isFavourite) {
           state.favourites = state.favourites.filter(f => f.id !== id);
           showToast('Removed from favourites');
         } else {
-          const item = (await mockApiFetch('/menu')).find(i => i.id === id);
+          const item = (await apiFetch('/menu')).find(i => i.id === id);
           state.favourites.push(item);
-                  showToast('Added to favourites');
+          showToast('Added to favourites');
         }
         btn.querySelector('i').classList.toggle('text-red-500');
         if (state.currentSection === 'favourites') loadFavourites();
+        if (state.currentSection === 'menu' || state.currentSection === 'dashboard') loadMenu();
       }
     });
 
     // Addresses
     const loadAddresses = async () => {
-      const addresses = await mockApiFetch('/addresses');
+      const addresses = await apiFetch('/addresses');
       const container = document.getElementById('addressItems');
       container.innerHTML = addresses?.length ? addresses.map(a => `
         <div class="bg-white rounded-lg p-3 shadow flex justify-between items-center">
@@ -1171,7 +1166,7 @@
       `).join('') : '<p class="text-sm">No addresses saved</p>';
     };
 
-    // Address Actions
+        // Address Actions
     document.getElementById('addAddress').addEventListener('click', () => {
       const modal = document.createElement('div');
       modal.className = 'modal active';
@@ -1197,14 +1192,14 @@
               <input type="text" name="state" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
             </div>
             <div>
-              <label class="block text-gray-700 text-sm">Zip</label>
+              <label class="block text-gray-700 text-sm">ZIP Code</label>
               <input type="text" name="zip" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
             </div>
             <div>
               <label class="block text-gray-700 text-sm">Mobile</label>
               <input type="tel" name="mobile" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
             </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save</button>
+            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save Address</button>
           </form>
         </div>
       `;
@@ -1213,18 +1208,10 @@
       modal.querySelector('#addressForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const address = {
-          name: formData.get('name'),
-          street: formData.get('street'),
-          city: formData.get('city'),
-          state: formData.get('state'),
-          zip: formData.get('zip'),
-          mobile: formData.get('mobile'),
-          isDefault: addresses.length === 0
-        };
-        const data = await mockApiFetch('/addresses/add', 'POST', address);
+        const address = Object.fromEntries(formData);
+        const data = await apiFetch('/addresses', 'POST', address);
         if (data && data.success) {
-          showToast('Address added successfully');
+          showToast('Address added');
           modal.remove();
           loadAddresses();
           loadCart();
@@ -1232,14 +1219,13 @@
       });
     });
 
-    document.addEventListener('click', async (e) => {
+    document.addEventListener('click', async e => {
       const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
       if (!btn) return;
       const id = btn.dataset.id;
       if (btn.classList.contains('edit-address')) {
-        const addresses = await mockApiFetch('/addresses');
-        const address = addresses.find(a => a.id === id);
-        if (!address) return showToast('Address not found');
+        const address = await apiFetch(`/addresses/${id}`);
+        if (!address) return;
         const modal = document.createElement('div');
         modal.className = 'modal active';
         modal.innerHTML = `
@@ -1247,6 +1233,7 @@
             <span class="close">×</span>
             <h3 class="text-base font-bold text-orange-600">Edit Address</h3>
             <form id="editAddressForm" class="space-y-3">
+              <input type="hidden" name="id" value="${id}">
               <div>
                 <label class="block text-gray-700 text-sm">Name</label>
                 <input type="text" name="name" value="${address.name}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
@@ -1264,14 +1251,14 @@
                 <input type="text" name="state" value="${address.state}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">Zip</label>
+                <label class="block text-gray-700 text-sm">ZIP Code</label>
                 <input type="text" name="zip" value="${address.zip}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
               </div>
               <div>
                 <label class="block text-gray-700 text-sm">Mobile</label>
                 <input type="tel" name="mobile" value="${address.mobile}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
               </div>
-              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save</button>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update Address</button>
             </form>
           </div>
         `;
@@ -1280,34 +1267,25 @@
         modal.querySelector('#editAddressForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const formData = new FormData(e.target);
-          const updatedAddress = {
-            id,
-            name: formData.get('name'),
-            street: formData.get('street'),
-            city: formData.get('city'),
-            state: formData.get('state'),
-            zip: formData.get('zip'),
-            mobile: formData.get('mobile')
-          };
-          const data = await mockApiFetch('/addresses/update', 'POST', updatedAddress);
+          const address = Object.fromEntries(formData);
+          const data = await apiFetch(`/addresses/${id}`, 'PUT', address);
           if (data && data.success) {
-            showToast('Address updated successfully');
+            showToast('Address updated');
             modal.remove();
             loadAddresses();
             loadCart();
           }
         });
       } else if (btn.classList.contains('delete-address')) {
-        if (confirm('Are you sure you want to delete this address?')) {
-          const data = await mockApiFetch('/addresses/delete', 'POST', { id });
-          if (data && data.success) {
-            showToast('Address deleted successfully');
-            loadAddresses();
-            loadCart();
-          }
+        if (!confirm('Are you sure you want to delete this address?')) return;
+        const data = await apiFetch(`/addresses/${id}`, 'DELETE');
+        if (data && data.success) {
+          showToast('Address deleted');
+          loadAddresses();
+          loadCart();
         }
       } else if (btn.classList.contains('set-default-address')) {
-        const data = await mockApiFetch('/addresses/set-default', 'POST', { id });
+        const data = await apiFetch(`/addresses/${id}/set-default`, 'POST');
         if (data && data.success) {
           showToast('Default address updated');
           loadAddresses();
@@ -1316,63 +1294,45 @@
       }
     });
 
-    // Checkout
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
-      const cart = await mockApiFetch('/cart');
-      const addressId = document.getElementById('cartAddress').value;
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      if (!cart?.items.length) return showToast('Cart is empty');
-      if (!addressId) return showToast('Please select a delivery address');
-      const data = await mockApiFetch('/checkout', 'POST', { addressId, paymentMethod });
-      if (data && data.success) {
-        showToast('Order placed successfully!');
-        triggerConfetti();
-        loadCart();
-        loadOrders();
-        showSection('orders');
-      }
-    });
-
     // Loyalty
     const loadLoyalty = async () => {
-      const loyalty = await mockApiFetch('/loyalty');
+      const loyalty = await apiFetch('/users/me/loyalty');
+      const history = await apiFetch('/users/me/loyalty/history');
       document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-      document.getElementById('loyaltyHistory').innerHTML = loyalty?.history?.length ? loyalty.history.map(h => `
-        <div class="border-b py-2 text-sm">
+      document.getElementById('loyaltyHistory').innerHTML = history?.length ? history.map(h => `
+        <div class="border-b py-2 text-xs">
           <p>${h.description}</p>
-          <p class="text-gray-600">${h.points} points on ${new Date(h.date).toLocaleDateString()}</p>
+          <p class="text-gray-600">${h.points > 0 ? '+' : ''}${h.points} points on ${new Date(h.createdAt).toLocaleDateString()}</p>
         </div>
-      `).join('') : '<p class="text-sm">No history available</p>';
+      `).join('') : '<p class="text-sm">No loyalty history</p>';
     };
 
     // Referrals
     const loadReferrals = async () => {
-      const referral = await mockApiFetch('/referrals');
-      if (referral) {
-        state.referral = referral;
-        document.getElementById('referralCode').textContent = referral.code;
-        document.getElementById('referralLink').href = referral.link;
-      }
+      const referral = await apiFetch('/referrals');
+      state.referral = referral || { link: '' };
+      document.getElementById('referralCode').textContent = referral?.code || 'N/A';
+      const link = referral?.link || 'https://delicute.com';
+      document.getElementById('referralLink').href = link;
+      document.getElementById('shareWhatsApp').href = `https://api.whatsapp.com/send?text=Join DELICUTE with my referral link: ${link}`;
+      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=Join DELICUTE with my referral link: ${link}`;
+      document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
     };
+
+    document.getElementById('shareBtn').addEventListener('click', () => openModal('shareModal'));
+    document.querySelector('#shareModal .close').addEventListener('click', () => closeModal('shareModal'));
 
     // Support
     const loadSupport = async () => {
-      const tickets = await mockApiFetch('/support/tickets');
-      const chat = await mockApiFetch('/support/chat');
+      const tickets = await apiFetch('/support/tickets');
       document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-        <div class="border-b py-2 text-sm">
+        <div class="border-b py-2 text-xs">
           <p class="font-semibold">${t.subject}</p>
-          <p class="text-gray-600">Status: ${t.status} | Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
+          <p class="text-gray-600">${t.status} - ${new Date(t.createdAt).toLocaleDateString()}</p>
+          <button class="view-ticket bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${t.id}">View</button>
         </div>
-      `).join('') : '<p class="text-sm">No tickets</p>';
-      document.getElementById('chatMessages').innerHTML = chat?.length ? chat.map(m => `
-        <div class="chat-message ${m.sender}">
-          <p class="text-xs">${m.content}</p>
-          <p class="text-xs text-gray-400">${new Date(m.timestamp).toLocaleString()}</p>
-        </div>
-      `).join('') : '<p class="text-sm">No messages</p>';
-      const chatContainer = document.getElementById('chatMessages');
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+      `).join('') : '<p class="text-sm">No support tickets</p>';
+      loadChat();
     };
 
     document.getElementById('createTicketBtn').addEventListener('click', () => {
@@ -1389,9 +1349,9 @@
             </div>
             <div>
               <label class="block text-gray-700 text-sm">Description</label>
-              <textarea name="description" class="w-full px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" rows="4" required></textarea>
+              <textarea name="description" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" required></textarea>
             </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit</button>
+            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit Ticket</button>
           </form>
         </div>
       `;
@@ -1400,28 +1360,78 @@
       modal.querySelector('#ticketForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const ticket = {
-          subject: formData.get('subject'),
-          description: formData.get('description')
-        };
-        const data = await mockApiFetch('/support/tickets/create', 'POST', ticket);
+        const ticket = Object.fromEntries(formData);
+        const data = await apiFetch('/support/tickets', 'POST', ticket);
         if (data && data.success) {
-          showToast('Ticket created successfully');
+          showToast('Ticket created');
           modal.remove();
           loadSupport();
         }
       });
     });
 
-    document.getElementById('sendChat').addEventListener('click', async () => {
-      const input = document.getElementById('chatInput');
-      const message = input.value.trim();
-      if (!message) return;
-      const data = await mockApiFetch('/support/chat/send', 'POST', { message });
-      if (data && data.success) {
-        input.value = '';
-        loadSupport();
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.view-ticket');
+      if (!btn) return;
+      const ticket = await apiFetch(`/support/tickets/${btn.dataset.id}`);
+      if (!ticket) return;
+      const modal = document.createElement('div');
+      modal.className = 'modal active';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <span class="close">×</span>
+          <h3 class="text-base font-bold text-orange-600">Ticket: ${ticket.subject}</h3>
+          <div class="space-y-2 text-sm">
+            <p><strong>Status:</strong> ${ticket.status}</p>
+            <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleDateString()}</p>
+            <p><strong>Description:</strong> ${ticket.description}</p>
+            ${ticket.response ? `<p><strong>Response:</strong> ${ticket.response}</p>` : '<p>No response yet</p>'}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    });
+
+    // Live Chat
+    let socket;
+    const loadChat = () => {
+      socket?.close();
+      socket = new WebSocket('ws://localhost:3000');
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'join', userId: state.userId }));
+      };
+      socket.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'typing') {
+          document.getElementById('typingIndicator').textContent = msg.userId === state.userId ? '' : 'Admin is typing...';
+          setTimeout(() => document.getElementById('typingIndicator').textContent = '', 2000);
+        } else if (msg.type === 'message') {
+          const messages = document.getElementById('chatMessages');
+          const div = document.createElement('div');
+          div.className = `chat-message ${msg.userId === state.userId ? 'user' : 'admin'}`;
+          div.textContent = msg.text;
+          messages.appendChild(div);
+          messages.scrollTop = messages.scrollHeight;
+        }
+      };
+      socket.onclose = () => {
+        showToast('Chat disconnected', 'error');
+      };
+    };
+
+    document.getElementById('chatInput').addEventListener('input', () => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'typing', userId: state.userId }));
       }
+    });
+
+    document.getElementById('sendChat').addEventListener('click', () => {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text || socket.readyState !== WebSocket.OPEN) return;
+      socket.send(JSON.stringify({ type: 'message', userId: state.userId, text }));
+      input.value = '';
     });
 
     document.getElementById('chatInput').addEventListener('keypress', (e) => {
@@ -1440,32 +1450,35 @@
 
     // Profile
     const loadProfile = async () => {
-      const profile = await mockApiFetch('/profile');
-      if (profile) {
-        document.getElementById('profileName').value = profile.name;
-        document.getElementById('profileEmail').value = profile.email;
-        document.getElementById('profilePhone').value = profile.phone;
-        document.getElementById('profileImage').src = profile.image;
-        state.profileImage = profile.image;
-      }
+      const profile = await apiFetch('/users/me');
+      if (!profile) return;
+      state.userId = profile.id;
+      document.getElementById('profileName').value = profile.name || '';
+      document.getElementById('profileEmail').value = profile.email || '';
+      document.getElementById('profilePhone').value = profile.phone || '';
+      document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
+      state.profileImage = profile.image;
+      document.getElementById('profileImage').onerror = () => {
+        this.src = 'https://via.placeholder.com/80?text=Profile';
+      };
     };
 
     document.getElementById('editProfileBtn').addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#user-profile input:not(#profileImageInput)');
-      const isEditable = inputs[0].readOnly;
-      inputs.forEach(i => i.readOnly = !isEditable);
-      const btn = document.getElementById('editProfileBtn');
-      btn.innerHTML = isEditable ? '<i class="fas fa-save mr-1"></i>Save' : '<i class="fas fa-edit mr-1"></i>Edit Profile';
-      if (!isEditable) {
+      const inputs = document.querySelectorAll('#profileName, #profilePhone');
+      const isEditing = inputs[0].readOnly;
+      inputs.forEach(input => input.readOnly = !isEditing);
+      document.getElementById('editProfileBtn').innerHTML = isEditing ?
+        `<i class="fas fa-save mr-1"></i>Save Profile` : `<i class="fas fa-edit mr-1"></i>Edit Profile`;
+      if (!isEditing) {
         const profile = {
           name: document.getElementById('profileName').value,
-          email: document.getElementById('profileEmail').value,
           phone: document.getElementById('profilePhone').value
         };
-        mockApiFetch('/profile/update', 'POST', profile).then(data => {
+        apiFetch('/users/me', 'PUT', profile).then(data => {
           if (data && data.success) {
-            showToast('Profile updated successfully');
+            showToast('Profile updated');
             loadProfile();
+            loadDashboard();
           }
         });
       }
@@ -1474,67 +1487,22 @@
     document.getElementById('profileImageInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) return showToast('Unsupported image format');
-      if (file.size > CONFIG.MAX_IMAGE_SIZE) return showToast('Image size exceeds 5MB');
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const imageData = reader.result;
-        const data = await mockApiFetch('/profile/upload-image', 'POST', { image: imageData });
-        if (data && data.success) {
-          document.getElementById('profileImage').src = data.imageUrl;
-          state.profileImage = data.imageUrl;
-          showToast('Profile image updated');
-        }
-      };
-      reader.readAsDataURL(file);
+      if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+        return showToast('Only JPEG, PNG, or GIF images are allowed', 'error');
+      }
+      if (file.size > CONFIG.MAX_IMAGE_SIZE) {
+        return showToast('Image size must be less than 5MB', 'error');
+      }
+      const formData = new FormData();
+      formData.append('image', file);
+      const data = await apiFetch('/users/me/image', 'POST', formData, true);
+      if (data && data.success) {
+        state.profileImage = data.imageUrl;
+        document.getElementById('profileImage').src = data.imageUrl;
+        document.getElementById('headerProfileImage').src = data.imageUrl;
+        showToast('Profile image updated');
+      }
     });
-
-    // Filters and Search
-    const applyFilters = (section) => {
-      const category = document.querySelector(`#${section} .filter-btn.active`)?.dataset.category || 'all';
-      const price = document.getElementById(`${section === 'menu' ? 'menuPriceFilter' : 'priceFilter'}`).value;
-      const query = document.getElementById(`${section === 'menu' ? 'menuSearch' : 'searchMenu'}`)?.value || '';
-      loadMenu(category, price, query);
-    };
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyFilters(btn.closest('.user-section').id === 'user-menu' ? 'menu' : 'dashboard');
-      });
-    });
-
-    document.getElementById('priceFilter').addEventListener('change', () => applyFilters('dashboard'));
-    document.getElementById('menuPriceFilter').addEventListener('change', () => applyFilters('menu'));
-
-    document.getElementById('searchMenu').addEventListener('input', debounce(() => applyFilters('dashboard'), 300));
-    document.getElementById('menuSearch').addEventListener('input', debounce(() => applyFilters('menu'), 300));
-
-    // Share
-    document.getElementById('shareBtn').addEventListener('click', () => openModal('shareModal'));
-    document.querySelector('#shareModal .close').addEventListener('click', () => closeModal('shareModal'));
-
-    const shareLinks = {
-      shareWhatsApp: `https://wa.me/?text=Try DELICUTE! ${state.referral.link || 'https://delicute.com'}`,
-      shareTwitter: `https://twitter.com/intent/tweet?text=Try DELICUTE!&url=${state.referral.link || 'https://delicute.com'}`,
-      shareFacebook: `https://www.facebook.com/sharer/sharer.php?u=${state.referral.link || 'https://delicute.com'}`
-    };
-
-    Object.keys(shareLinks).forEach(id => {
-      const el = document.getElementById(id);
-      el.href = shareLinks[id];
-      el.addEventListener('click', () => closeModal('shareModal'));
-    });
-
-    // Debounce Utility
-    function debounce(func, wait) {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-      };
-    }
 
     // Particles Animation
     const initParticles = () => {
@@ -1542,20 +1510,26 @@
       const ctx = canvas.getContext('2d');
       canvas.width = canvas.parentElement.offsetWidth;
       canvas.height = canvas.parentElement.offsetHeight;
-      const particles = Array.from({ length: 50 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        speed: Math.random() * 0.5 + 0.2
-      }));
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 1,
+          vx: Math.random() * 2 - 1,
+          vy: Math.random() * 2 - 1
+        });
+      }
       const animate = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => {
-          p.y += p.speed;
-          if (p.y > canvas.height) p.y = 0;
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
+          ctx.fillStyle = '#f97316';
           ctx.fill();
         });
         requestAnimationFrame(animate);
@@ -1565,30 +1539,16 @@
 
     // Initialize
     const init = async () => {
-      await loadStatusBar();
+      if (!state.isLoggedIn) {
+        window.location.href = '/index.html';
+        return;
+      }
       await loadDashboard();
-      await loadBanners();
-      await loadOffers();
-      await loadMenu();
-      await loadCart();
       initParticles();
-      document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal(modal.id);
-        });
-      });
     };
 
-    window.addEventListener('load', init);
-
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      const canvas = document.querySelector('.particles');
-      if (canvas) {
-        canvas.width = canvas.parentElement.offsetWidth;
-        canvas.height = canvas.parentElement.offsetHeight;
-      }
-    });
+    init();
   </script>
 </body>
 </html>
+</xaiArtifact>
