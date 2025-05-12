@@ -12,9 +12,8 @@ const multer = require('multer');
 const fs = require('fs');
 const winston = require('winston');
 require('dotenv').config();
-const net = require('net');
+const net = require('net'); // For port checking
 
-// Initialize Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -58,7 +57,7 @@ if (missingEnv.length > 0) {
   process.exit(1);
 }
 
-// Set default environment variables
+// Set default for non-critical env
 process.env.PORT = process.env.PORT || '3000';
 process.env.CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
@@ -1027,7 +1026,7 @@ app.get('/api/offers', async (req, res) => {
       }))
     );
   } catch (err) {
-    logger.error('offers fetch error', { message: err.message, stack: err.stack });
+    logger.error('Offers fetch error', { message: err.message, stack: err.stack });
     res.status(500).json({ message: 'Failed to fetch offers', error: err.message });
   }
 });
@@ -1046,7 +1045,7 @@ app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
     );
     client.release();
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'offer not found' });
+      return res.status(404).json({ message: 'Offer not found' });
     }
     const p = result.rows[0];
     res.json({
@@ -1633,6 +1632,7 @@ app.post('/api/favourites', authenticateToken, async (req, res) => {
     res.json({ message: 'Item added to favourites' });
   } catch (err) {
     logger.error('Add to favourites error', { message: err.message, stack: err.stack });
+    res.status(500).json({ message: 'Failed to add item to favourites', error: err.message });
   }
 });
 
@@ -1694,7 +1694,6 @@ app.use((err, req, res, next) => {
   logger.error('Server error', { message: err.message, stack: err.stack });
   res.status(500).json({ message: 'Internal server error', error: err.message });
 });
-
 
 // Start server with retry
 async function startServer() {

@@ -39,13 +39,14 @@
     }
 
     .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: var(--shadow);
-      border-radius: 16px;
-      transition: all 0.3s ease;
-    }
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
 
     .glass:hover {
       transform: translateY(-5px);
@@ -928,37 +929,67 @@
 
     // API Client
     const api = {
-      async fetchData(endpoint, method = 'GET', data = null) {
-        try {
-          const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          };
-          const options = { method, headers };
-          if (data) options.body = JSON.stringify(data);
-          const response = await fetch(`${CONFIG.API_URL}${endpoint}`, options);
-          if (!response.ok) throw new Error('Network error');
-          return await response.json();
-        } catch (err) {
-          showToast(`Error: ${err.message}`, 'error');
-          return null;
+      async fetchData(endpoint, method = 'GET', data = null, retries = 2) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            const headers = {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+            };
+            const options = { method, headers };
+            if (data) options.body = JSON.stringify(data);
+            const response = await fetch(`${CONFIG.API_URL}${endpoint}`, options);
+            if (!response.ok) {
+              if (response.status === 401) {
+                showToast('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/index.html';
+                return null;
+              }
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+          } catch (err) {
+            if (attempt === retries) {
+              showToast(`Error: ${err.message}`, 'error');
+              return null;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
       },
-      async uploadImage(endpoint, formData) {
-        try {
-          const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` },
-            body: formData,
-          });
-          if (!response.ok) throw new Error('Image upload failed');
-          return await response.json();
-        } catch (err) {
-          showToast(`Error: ${err.message}`, 'error');
-          return null;
+      async uploadImage(endpoint, formData, retries = 2) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` },
+              body: formData,
+            });
+            if (!response.ok) {
+              if (response.status === 401) {
+                showToast('Session expired. Please log in again.', 'error');
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/index.html';
+                return null;
+              }
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const result = await response.json();
+            if (!result.url) throw new Error('No image URL returned');
+            return result;
+          } catch (err) {
+            if (attempt === retries) {
+              showToast(`Image upload failed: ${err.message}`, 'error');
+              return null;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
       },
     };
+
+    
 
     // Section Loaders
     async function loadDashboard() {
@@ -967,6 +998,8 @@
         api.fetchData('/orders'),
         api.fetchData('/users'),
       ]);
+
+      if (!profile || !orders || !customers) return;
 
       document.getElementById('welcomeName').textContent = profile?.name || 'Admin';
       document.getElementById('welcomeNameHeader').textContent = profile?.name || 'Admin';
@@ -1029,6 +1062,7 @@
 
     async function loadProfile() {
       const profile = await api.fetchData('/admin/profile');
+      if (!profile) return;
       document.getElementById('profileImage').src = profile?.image || CONFIG.FALLBACK_IMAGE;
       document.getElementById('profileImageEdit').src = profile?.image || CONFIG.FALLBACK_IMAGE;
       document.getElementById('profileName').value = profile?.name || '';
@@ -1040,6 +1074,8 @@
         api.fetchData('/orders'),
         api.fetchData('/users'),
       ]);
+
+      if (!orders || !customers) return;
 
       const paginatedOrders = paginate(orders || [], state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('ordersList').innerHTML = paginatedOrders.map(order => {
@@ -1079,6 +1115,8 @@
         api.fetchData('/orders'),
       ]);
 
+      if (!customers || !orders) return;
+
       const paginatedCustomers = paginate(customers || [], state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('customersList').innerHTML = paginatedCustomers.map(customer => {
         const customerOrders = orders?.filter(o => o.userId === customer._id) || [];
@@ -1107,6 +1145,7 @@
 
     async function loadMenu() {
       const menuItems = await api.fetchData('/menu');
+      if (!menuItems) return;
       const paginatedMenu = paginate(menuItems || [], state.currentPage.menu, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('menuList').innerHTML = paginatedMenu.map(item => `
         <tr>
@@ -1135,12 +1174,14 @@
 
     async function loadSupport() {
       const users = await api.fetchData('/users');
+      if (!users) return;
       const chatUserSelect = document.getElementById('chatUser');
       chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + (users?.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`) || []).join('');
     }
 
     async function loadChatMessages(userId) {
       const messages = await api.fetchData(`/chat/${userId}`);
+      if (!messages) return;
       const chatWindow = document.getElementById('chatWindow');
       chatWindow.innerHTML = (messages || []).map(msg => `
         <div class="chat-message ${msg.sender === 'admin' ? 'admin' : 'user'}">
@@ -1153,6 +1194,7 @@
 
     async function loadPromotions() {
       const promotions = await api.fetchData('/promotions');
+      if (!promotions) return;
       const paginatedPromotions = paginate(promotions || [], state.currentPage.promotions, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('promotionsList').innerHTML = paginatedPromotions.map(promo => `
         <tr>
@@ -1185,6 +1227,8 @@
         api.fetchData('/users'),
       ]);
 
+      if (!feedback || !users) return;
+
       const paginatedFeedback = paginate(feedback || [], state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('feedbackList').innerHTML = paginatedFeedback.map(f => {
         const user = users?.find(u => u._id === f.userId) || { name: 'Unknown' };
@@ -1216,6 +1260,8 @@
         api.fetchData('/users'),
       ]);
 
+      if (!restaurantStatus || !users) return;
+
       document.getElementById('restaurantStatus').value = restaurantStatus?.status || 'open';
       document.getElementById('openTime').value = restaurantStatus?.openTime || '';
       document.getElementById('closeTime').value = restaurantStatus?.closeTime || '';
@@ -1226,6 +1272,7 @@
 
     async function loadReports() {
       const orders = await api.fetchData('/orders');
+      if (!orders) return;
       const dates = [...new Set(orders?.map(o => new Date(o.createdAt).toISOString().split('T')[0]) || [])].sort();
       const salesData = dates.map(date => orders?.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
       const ctx = document.getElementById('reportsChart').getContext('2d');
@@ -1311,113 +1358,221 @@
 
         const data = { name, email };
         if (imageInput) {
-          const formData = new FormData();
+                    const formData = new FormData();
           formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/profile', formData);
-          if (uploadResult?.url) data.image = uploadResult.url;
+          if (uploadResult) {
+            data.image = uploadResult.url;
+          } else {
+            showToast('Failed to upload profile image', 'error');
+            return;
+          }
         }
 
         const result = await api.fetchData('/admin/profile', 'PUT', data);
         if (result) {
-          showToast('Profile updated successfully', 'success');
-          document.getElementById('welcomeName').textContent = name;
-          document.getElementById('welcomeNameHeader').textContent = name;
           document.getElementById('profileImage').src = data.image || CONFIG.FALLBACK_IMAGE;
           document.getElementById('profileImageEdit').src = data.image || CONFIG.FALLBACK_IMAGE;
+          document.getElementById('welcomeName').textContent = name;
+          document.getElementById('welcomeNameHeader').textContent = name;
+          showToast('Profile updated successfully', 'success');
+          triggerConfetti();
         }
       });
 
-      document.getElementById('addMenuItem').addEventListener('click', () => {
-        document.getElementById('menuName').value = '';
-        document.getElementById('menuCategory').value = '';
-        document.getElementById('menuPrice').value = '';
-        document.getElementById('menuDescription').value = '';
-        document.getElementById('menuAvailable').value = 'true';
-        document.getElementById('menuImage').value = '';
-        openModal('addMenuItemModal');
-      });
-
-      document.getElementById('saveMenuItem').addEventListener('click', async () => {
-        const name = document.getElementById('menuName').value.trim();
-        const category = document.getElementById('menuCategory').value.trim();
-        const price = parseFloat(document.getElementById('menuPrice').value);
-        const description = document.getElementById('menuDescription').value.trim();
-        const available = document.getElementById('menuAvailable').value === 'true';
-        const imageInput = document.getElementById('menuImage').files[0];
-
-        if (!name || !category || !price || !description || !imageInput) {
-          showToast('Please fill in all fields', 'error');
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('image', imageInput);
-        const uploadResult = await api.uploadImage('/upload/menu', formData);
-        if (uploadResult?.url) {
-          const result = await api.fetchData('/menu', 'POST', {
-            name, category, price, description, available, image: uploadResult.url
-          });
-          if (result) {
-            showToast('Menu item added', 'success');
-            closeModal('addMenuItemModal');
-            loadMenu();
+      document.getElementById('recentOrders').addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        const id = button.getAttribute('data-id');
+        if (action === 'view') {
+          const order = await api.fetchData(`/orders/${id}`);
+          if (order) {
+            showToast(`Order #${id}: ₹${order.total}, Status: ${order.status}`, 'success');
+          }
+        } else if (action === 'refund') {
+          state.currentRefundOrder = id;
+          const order = await api.fetchData(`/orders/${id}`);
+          if (order) {
+            document.getElementById('refundAmount').value = order.total || 0;
+            openModal('refundModal');
           }
         }
       });
 
-      document.getElementById('menuList').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.dataset.action;
-        const id = target.dataset.id;
+      document.getElementById('ordersList').addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        const id = button.getAttribute('data-id');
+        if (action === 'view') {
+          const order = await api.fetchData(`/orders/${id}`);
+          if (order) {
+            showToast(`Order #${id}: ₹${order.total}, Status: ${order.status}`, 'success');
+          }
+        } else if (action === 'refund') {
+          state.currentRefundOrder = id;
+          const order = await api.fetchData(`/orders/${id}`);
+          if (order) {
+            document.getElementById('refundAmount').value = order.total || 0;
+            openModal('refundModal');
+          }
+        }
+      });
 
+      document.getElementById('processRefund').addEventListener('click', async () => {
+        const reason = document.getElementById('refundReason').value.trim();
+        if (!reason) {
+          showToast('Please provide a reason for the refund', 'error');
+          return;
+        }
+        const result = await api.fetchData(`/orders/${state.currentRefundOrder}/refund`, 'POST', { reason });
+        if (result) {
+          showToast('Refund processed successfully', 'success');
+          closeModal('refundModal');
+          loadOrders();
+          loadDashboard();
+          triggerConfetti();
+        }
+      });
+
+      document.getElementById('customersList').addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const id = button.getAttribute('data-id');
+        const customer = await api.fetchData(`/users/${id}`);
+        if (customer) {
+          showToast(`Customer: ${customer.name}, Email: ${customer.email}`, 'success');
+        }
+      });
+
+      document.getElementById('menuList').addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        const id = button.getAttribute('data-id');
         if (action === 'edit') {
           const item = await api.fetchData(`/menu/${id}`);
-          state.currentEditMenuItem = id;
-          document.getElementById('editMenuName').value = item?.name || '';
-          document.getElementById('editMenuCategory').value = item?.category || '';
-          document.getElementById('editMenuPrice').value = item?.price || '';
-          document.getElementById('editMenuDescription').value = item?.description || '';
-          document.getElementById('editMenuAvailable').value = item?.available?.toString() || 'true';
-          document.getElementById('editMenuImage').value = '';
-          openModal('editMenuItemModal');
+          if (item) {
+            state.currentEditMenuItem = id;
+            document.getElementById('editMenuName').value = item.name || '';
+            document.getElementById('editMenuCategory').value = item.category || '';
+            document.getElementById('editMenuPrice').value = item.price || 0;
+            document.getElementById('editMenuDescription').value = item.description || '';
+            document.getElementById('editMenuAvailable').value = item.available ? 'true' : 'false';
+            openModal('editMenuItemModal');
+          }
         } else if (action === 'delete') {
-          if (confirm('Are you sure you want to delete this item?')) {
+          if (confirm('Are you sure you want to delete this menu item?')) {
             const result = await api.fetchData(`/menu/${id}`, 'DELETE');
             if (result) {
-              showToast('Menu item deleted', 'success');
+              showToast('Menu item deleted successfully', 'success');
               loadMenu();
             }
           }
         }
       });
 
-      document.getElementById('updateMenuItem').addEventListener('click', async () => {
-        const name = document.getElementById('editMenuName').value.trim();
-        const category = document.getElementById('editMenuCategory').value.trim();
-        const price = parseFloat(document.getElementById('editMenuPrice').value);
-        const description = document.getElementById('editMenuDescription').value.trim();
-        const available = document.getElementById('editMenuAvailable').value === 'true';
-        const imageInput = document.getElementById('editMenuImage').files[0];
+      document.getElementById('addMenuItem').addEventListener('click', () => {
+        document.getElementById('menuImage').value = '';
+        document.getElementById('menuName').value = '';
+        document.getElementById('menuCategory').value = '';
+        document.getElementById('menuPrice').value = '';
+        document.getElementById('menuDescription').value = '';
+        document.getElementById('menuAvailable').value = 'true';
+        openModal('addMenuItemModal');
+      });
 
-        if (!name || !category || !price || !description) {
+      document.getElementById('saveMenuItem').addEventListener('click', async () => {
+        const image = document.getElementById('menuImage').files[0];
+        const name = document.getElementById('menuName').value.trim();
+        const category = document.getElementById('menuCategory').value.trim();
+        const price = parseFloat(document.getElementById('menuPrice').value);
+        const description = document.getElementById('menuDescription').value.trim();
+        const available = document.getElementById('menuAvailable').value === 'true';
+
+        if (!name || !category || isNaN(price) || !description) {
           showToast('Please fill in all fields', 'error');
           return;
         }
 
         const data = { name, category, price, description, available };
-        if (imageInput) {
+        if (image) {
           const formData = new FormData();
-          formData.append('image', imageInput);
+          formData.append('image', image);
           const uploadResult = await api.uploadImage('/upload/menu', formData);
-          if (uploadResult?.url) data.image = uploadResult.url;
+          if (uploadResult) {
+            data.image = uploadResult.url;
+          } else {
+            showToast('Failed to upload menu image', 'error');
+            return;
+          }
+        }
+
+        const result = await api.fetchData('/menu', 'POST', data);
+        if (result) {
+          showToast('Menu item added successfully', 'success');
+          closeModal('addMenuItemModal');
+          loadMenu();
+          triggerConfetti();
+        }
+      });
+
+      document.getElementById('updateMenuItem').addEventListener('click', async () => {
+        const image = document.getElementById('editMenuImage').files[0];
+        const name = document.getElementById('editMenuName').value.trim();
+        const category = document.getElementById('editMenuCategory').value.trim();
+        const price = parseFloat(document.getElementById('editMenuPrice').value);
+        const description = document.getElementById('editMenuDescription').value.trim();
+        const available = document.getElementById('editMenuAvailable').value === 'true';
+
+        if (!name || !category || isNaN(price) || !description) {
+          showToast('Please fill in all fields', 'error');
+          return;
+        }
+
+        const data = { name, category, price, description, available };
+        if (image) {
+          const formData = new FormData();
+          formData.append('image', image);
+          const uploadResult = await api.uploadImage('/upload/menu', formData);
+          if (uploadResult) {
+            data.image = uploadResult.url;
+          } else {
+            showToast('Failed to upload menu image', 'error');
+            return;
+          }
         }
 
         const result = await api.fetchData(`/menu/${state.currentEditMenuItem}`, 'PUT', data);
         if (result) {
-          showToast('Menu item updated', 'success');
+          showToast('Menu item updated successfully', 'success');
           closeModal('editMenuItemModal');
           loadMenu();
+          triggerConfetti();
+        }
+      });
+
+      document.getElementById('chatUser').addEventListener('change', (e) => {
+        state.currentChatUser = e.target.value;
+        if (state.currentChatUser) {
+          loadChatMessages(state.currentChatUser);
+        } else {
+          document.getElementById('chatWindow').innerHTML = '';
+        }
+      });
+
+      document.getElementById('sendMessage').addEventListener('click', async () => {
+        const message = document.getElementById('chatInput').value.trim();
+        if (!message || !state.currentChatUser) {
+          showToast('Please select a user and enter a message', 'error');
+          return;
+        }
+        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', { content: message });
+        if (result) {
+          document.getElementById('chatInput').value = '';
+          loadChatMessages(state.currentChatUser);
+          state.socket.emit('chatMessage', { userId: state.currentChatUser, content: message, sender: 'admin' });
         }
       });
 
@@ -1432,54 +1587,63 @@
       });
 
       document.getElementById('savePromotion').addEventListener('click', async () => {
+        const image = document.getElementById('promoImage').files[0];
         const title = document.getElementById('promoTitle').value.trim();
         const code = document.getElementById('promoCode').value.trim();
         const discount = parseInt(document.getElementById('promoDiscount').value);
         const startDate = document.getElementById('promoStartDate').value;
         const endDate = document.getElementById('promoEndDate').value;
-        const imageInput = document.getElementById('promoImage').files[0];
 
-        if (!title || !code || !discount || !startDate || !endDate || !imageInput) {
+        if (!title || !code || isNaN(discount) || !startDate || !endDate) {
           showToast('Please fill in all fields', 'error');
           return;
         }
 
-        const formData = new FormData();
-        formData.append('image', imageInput);
-        const uploadResult = await api.uploadImage('/upload/promotion', formData);
-        if (uploadResult?.url) {
-          const result = await api.fetchData('/promotions', 'POST', {
-            title, code, discount, startDate, endDate, image: uploadResult.url
-          });
-          if (result) {
-            showToast('Promotion added', 'success');
-            closeModal('addPromotionModal');
-            loadPromotions();
+        const data = { title, code, discount, startDate, endDate };
+        if (image) {
+          const formData = new FormData();
+          formData.append('image', image);
+          const uploadResult = await api.uploadImage('/upload/promotion', formData);
+          if (uploadResult) {
+            data.image = uploadResult.url;
+          } else {
+            showToast('Failed to upload promotion image', 'error');
+            return;
           }
+        }
+
+        const result = await api.fetchData('/promotions', 'POST', data);
+        if (result) {
+          showToast('Promotion added successfully', 'success');
+          closeModal('addPromotionModal');
+          loadPromotions();
+          triggerConfetti();
+          document.getElementById('promoImage').value = '';
         }
       });
 
       document.getElementById('promotionsList').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.dataset.action;
-        const id = target.dataset.id;
-
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        const id = button.getAttribute('data-id');
         if (action === 'edit') {
           const promo = await api.fetchData(`/promotions/${id}`);
-                    state.currentEditPromotion = id;
-          document.getElementById('editPromoTitle').value = promo?.title || '';
-          document.getElementById('editPromoCode').value = promo?.code || '';
-          document.getElementById('editPromoDiscount').value = promo?.discount || '';
-          document.getElementById('editPromoStartDate').value = promo?.startDate ? new Date(promo.startDate).toISOString().split('T')[0] : '';
-          document.getElementById('editPromoEndDate').value = promo?.endDate ? new Date(promo.endDate).toISOString().split('T')[0] : '';
-          document.getElementById('editPromoImage').value = '';
-          openModal('editPromotionModal');
+          if (promo) {
+            state.currentEditPromotion = id;
+            document.getElementById('editPromoTitle').value = promo.title || '';
+            document.getElementById('editPromoCode').value = promo.code || '';
+            document.getElementById('editPromoDiscount').value = promo.discount || 0;
+            document.getElementById('editPromoStartDate').value = promo.startDate ? new Date(promo.startDate).toISOString().split('T')[0] : '';
+            document.getElementById('editPromoEndDate').value = promo.endDate ? new Date(promo.endDate).toISOString().split('T')[0] : '';
+            document.getElementById('editPromoImage').value = '';
+            openModal('editPromotionModal');
+          }
         } else if (action === 'delete') {
           if (confirm('Are you sure you want to delete this promotion?')) {
             const result = await api.fetchData(`/promotions/${id}`, 'DELETE');
             if (result) {
-              showToast('Promotion deleted', 'success');
+              showToast('Promotion deleted successfully', 'success');
               loadPromotions();
             }
           }
@@ -1487,119 +1651,47 @@
       });
 
       document.getElementById('updatePromotion').addEventListener('click', async () => {
+        const image = document.getElementById('editPromoImage').files[0];
         const title = document.getElementById('editPromoTitle').value.trim();
         const code = document.getElementById('editPromoCode').value.trim();
         const discount = parseInt(document.getElementById('editPromoDiscount').value);
         const startDate = document.getElementById('editPromoStartDate').value;
         const endDate = document.getElementById('editPromoEndDate').value;
-        const imageInput = document.getElementById('editPromoImage').files[0];
 
-        if (!title || !code || !discount || !startDate || !endDate) {
+        if (!title || !code || isNaN(discount) || !startDate || !endDate) {
           showToast('Please fill in all fields', 'error');
           return;
         }
 
         const data = { title, code, discount, startDate, endDate };
-        if (imageInput) {
+        if (image) {
           const formData = new FormData();
-          formData.append('image', imageInput);
+          formData.append('image', image);
           const uploadResult = await api.uploadImage('/upload/promotion', formData);
-          if (uploadResult?.url) data.image = uploadResult.url;
+          if (uploadResult) {
+            data.image = uploadResult.url;
+          } else {
+            showToast('Failed to upload promotion image', 'error');
+            return;
+          }
         }
 
         const result = await api.fetchData(`/promotions/${state.currentEditPromotion}`, 'PUT', data);
         if (result) {
-          showToast('Promotion updated', 'success');
+          showToast('Promotion updated successfully', 'success');
           closeModal('editPromotionModal');
           loadPromotions();
+          triggerConfetti();
         }
-      });
-
-      document.getElementById('ordersList').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.dataset.action;
-        const id = target.dataset.id;
-
-        if (action === 'view') {
-          const order = await api.fetchData(`/orders/${id}`);
-          alert(`Order #${id}\nCustomer: ${order.customer?.name || 'Unknown'}\nTotal: ₹${order.total?.toLocaleString('en-IN') || 0}\nStatus: ${order.status}\nItems: ${order.items?.map(i => i.name).join(', ') || 'None'}`);
-        } else if (action === 'refund') {
-          const order = await api.fetchData(`/orders/${id}`);
-          state.currentRefundOrder = id;
-          document.getElementById('refundAmount').value = order.total || 0;
-          document.getElementById('refundReason').value = '';
-          openModal('refundModal');
-        }
-      });
-
-      document.getElementById('recentOrders').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const action = target.dataset.action;
-        const id = target.dataset.id;
-
-        if (action === 'view') {
-          const order = await api.fetchData(`/orders/${id}`);
-          alert(`Order #${id}\nCustomer: ${order.customer?.name || 'Unknown'}\nTotal: ₹${order.total?.toLocaleString('en-IN') || 0}\nStatus: ${order.status}\nItems: ${order.items?.map(i => i.name).join(', ') || 'None'}`);
-        } else if (action === 'refund') {
-          const order = await api.fetchData(`/orders/${id}`);
-          state.currentRefundOrder = id;
-          document.getElementById('refundAmount').value = order.total || 0;
-          document.getElementById('refundReason').value = '';
-          openModal('refundModal');
-        }
-      });
-
-      document.getElementById('processRefund').addEventListener('click', async () => {
-        const reason = document.getElementById('refundReason').value.trim();
-        if (!reason) {
-          showToast('Please provide a reason for the refund', 'error');
-          return;
-        }
-
-        const result = await api.fetchData(`/orders/${state.currentRefundOrder}/refund`, 'POST', { reason });
-        if (result) {
-          showToast('Refund processed successfully', 'success');
-          closeModal('refundModal');
-          loadDashboard();
-          loadOrders();
-        }
-      });
-
-      document.getElementById('customersList').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const id = target.dataset.id;
-        const customer = await api.fetchData(`/users/${id}`);
-        alert(`Customer: ${customer.name}\nEmail: ${customer.email}\nPhone: ${customer.phone || 'N/A'}\nOrders: ${customer.orders?.length || 0}\nLoyalty Points: ${customer.loyaltyPoints || 0}`);
       });
 
       document.getElementById('feedbackList').addEventListener('click', async (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        const id = target.dataset.id;
+        const button = e.target.closest('button');
+        if (!button) return;
+        const id = button.getAttribute('data-id');
         const feedback = await api.fetchData(`/feedback/${id}`);
-        alert(`Feedback #${id}\nCustomer: ${feedback.customer?.name || 'Unknown'}\nRating: ${feedback.rating}/5\nComment: ${feedback.comment}\nDate: ${new Date(feedback.createdAt).toLocaleDateString()}`);
-      });
-
-      document.getElementById('chatUser').addEventListener('change', (e) => {
-        state.currentChatUser = e.target.value;
-        if (state.currentChatUser) loadChatMessages(state.currentChatUser);
-      });
-
-      document.getElementById('sendMessage').addEventListener('click', async () => {
-        const message = document.getElementById('chatInput').value.trim();
-        if (!message || !state.currentChatUser) {
-          showToast('Please select a user and type a message', 'error');
-          return;
-        }
-
-        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', { content: message });
-        if (result) {
-          document.getElementById('chatInput').value = '';
-          loadChatMessages(state.currentChatUser);
-          state.socket.emit('chatMessage', { userId: state.currentChatUser, message: { content: message, sender: 'admin', timestamp: new Date() } });
+        if (feedback) {
+          showToast(`Feedback: ${feedback.comment}, Rating: ${feedback.rating}/5`, 'success');
         }
       });
 
@@ -1608,9 +1700,16 @@
         const openTime = document.getElementById('openTime').value;
         const closeTime = document.getElementById('closeTime').value;
 
-        const result = await api.fetchData('/restaurant/status', 'PUT', { status, openTime, closeTime });
+        if (!status || !openTime || !closeTime) {
+          showToast('Please fill in all fields', 'error');
+          return;
+        }
+
+        const data = { status, openTime, closeTime };
+        const result = await api.fetchData('/restaurant/status', 'PUT', data);
         if (result) {
-          showToast('Restaurant status updated', 'success');
+          showToast('Restaurant status updated successfully', 'success');
+          triggerConfetti();
         }
       });
 
@@ -1618,36 +1717,36 @@
         const userId = document.getElementById('loyaltyUser').value;
         const points = parseInt(document.getElementById('loyaltyPoints').value);
 
-        if (!userId || !points) {
-          showToast('Please select a user and specify points', 'error');
+        if (!userId || isNaN(points) || points < 0) {
+          showToast('Please select a user and enter valid points', 'error');
           return;
         }
 
         const result = await api.fetchData(`/users/${userId}/loyalty`, 'PUT', { points });
         if (result) {
-          showToast('Loyalty points assigned', 'success');
+          showToast('Loyalty points assigned successfully', 'success');
           document.getElementById('loyaltyPoints').value = '';
+          triggerConfetti();
         }
       });
 
-      // Socket Events
-      state.socket.on('chatMessage', (data) => {
-        if (data.userId === state.currentChatUser) {
-          loadChatMessages(state.currentChatUser);
-        }
-      });
-
+      // Socket.io Events
       state.socket.on('newOrder', () => {
         showToast('New order received!', 'success');
-        triggerConfetti();
         loadDashboard();
         loadOrders();
       });
 
-      state.socket.on('orderStatus', (data) => {
-        showToast(`Order #${data.orderId} updated to ${data.status}`, 'success');
+      state.socket.on('orderStatus', ({ orderId, status }) => {
+        showToast(`Order #${orderId} status updated to ${status}`, 'success');
         loadDashboard();
         loadOrders();
+      });
+
+      state.socket.on('chatMessage', ({ userId, content, sender }) => {
+        if (state.currentChatUser === userId && sender !== 'admin') {
+          loadChatMessages(userId);
+        }
       });
 
       // Countdown Timer
@@ -1656,24 +1755,18 @@
         const target = new Date();
         target.setHours(23, 59, 59, 999);
         const diff = target - now;
-        if (diff <= 0) {
-          document.getElementById('countdownTimer').textContent = 'Day ended!';
-          return;
-        }
         const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
         const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        document.getElementById('countdownTimer').textContent = `${hours}:${minutes}:${seconds} until day ends`;
+        document.getElementById('countdownTimer').textContent = `${hours}:${minutes}:${seconds} until daily reset`;
       }
-
       setInterval(updateCountdown, 1000);
-      updateCountdown();
 
       // Initialize
       if (!localStorage.getItem('jwtToken')) {
         window.location.href = '/index.html';
       } else {
-        loadDashboard();
+        switchSection('dashboard');
       }
     });
   </script>
