@@ -27,6 +27,7 @@
     "razorpay": "^2.9.6",
     "sanitize-html": "^2.16.0",
     "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
     "winston": "^3.17.0",
     "ws": "^8.18.2"
   },
