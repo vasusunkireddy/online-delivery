@@ -19,15 +19,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-<<<<<<< HEAD
-    origin: [
-      process.env.CLIENT_URL,
-      'https://delicute.onrender.com',
-      'http://localhost:3000',
-    ].filter(Boolean),
-=======
-    origin: [process.env.CLIENT_URL, 'https://delicute.onrender.com'],
->>>>>>> c920dafbda6f22b5b932d813c7068eb9ecf29ef1
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
