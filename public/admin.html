@@ -39,14 +39,13 @@
     }
 
     .glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: var(--shadow);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
-
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: var(--shadow);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
 
     .glass:hover {
       transform: translateY(-5px);
@@ -653,7 +652,7 @@
               <select id="loyaltyUser" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600"></select>
             </div>
             <div>
-              <label for="loyaltyPoints" class="block font-medium mb-2">Points</label>
+              <label for="loyalUtPoints" class="block font-medium mb-2">Points</label>
               <input type="number" id="loyaltyPoints" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-600">
             </div>
             <button id="assignLoyaltyPoints" class="stunning-btn"><i class="fas fa-gift"></i> Assign Points</button>
@@ -863,7 +862,7 @@
       },
       charts: {},
       isDropdownOpen: false,
-      socket: io(CONFIG.SOCKET_URL),
+      socket: io(CONFIG.SOCKET_URL, { transports: ['websocket'] }),
       currentChatUser: null,
       currentEditPromotion: null,
       currentEditMenuItem: null,
@@ -989,8 +988,6 @@
       },
     };
 
-    
-
     // Section Loaders
     async function loadDashboard() {
       const [profile, orders, customers] = await Promise.all([
@@ -1011,21 +1008,21 @@
 
       const paginatedOrders = paginate(orders || [], state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('recentOrders').innerHTML = paginatedOrders.map(order => {
-        const customer = customers?.find(c => c._id === order.userId) || { name: 'Unknown' };
+        const customer = customers?.find(c => c.id === order.user_id) || { name: 'Unknown' };
         return `
           <tr>
-            <td data-label="Order ID">#${order._id}</td>
+            <td data-label="Order ID">#${order.id}</td>
             <td data-label="Customer">${sanitizeInput(customer.name)}</td>
             <td data-label="Items">${order.items?.length || 0}</td>
             <td data-label="Total">₹${order.total?.toLocaleString('en-IN') || 0}</td>
             <td data-label="Status">${sanitizeInput(order.status)}</td>
-            <td data-label="Payment Method">${sanitizeInput(order.paymentMethod || 'N/A')}</td>
+            <td data-label="Payment Method">${sanitizeInput(order.payment_method || 'N/A')}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order._id}" aria-label="View order ${order._id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
                 <i class="fas fa-eye"></i> View
               </button>
-              ${order.status === 'completed' && order.paymentMethod !== 'cash' ? `
-                <button class="stunning-btn text-sm px-3 py-1 bg-yellow-600" data-action="refund" data-id="${order._id}" aria-label="Refund order ${order._id}">
+              ${order.status === 'completed' && order.payment_method !== 'cash' ? `
+                <button class="stunning-btn text-sm px-3 py-1 bg-yellow-600" data-action="refund" data-id="${order.id}" aria-label="Refund order ${order.id}">
                   <i class="fas fa-undo"></i> Refund
                 </button>
               ` : ''}
@@ -1039,8 +1036,8 @@
         loadDashboard();
       });
 
-      const dates = [...new Set(orders?.map(o => new Date(o.createdAt).toISOString().split('T')[0]) || [])].sort();
-      const salesData = dates.map(date => orders?.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
+      const dates = [...new Set(orders?.map(o => new Date(o.created_at).toISOString().split('T')[0]) || [])].sort();
+      const salesData = dates.map(date => orders?.filter(o => new Date(o.created_at).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
       const ctx = document.getElementById('salesChart').getContext('2d');
       if (state.charts.salesChart) state.charts.salesChart.destroy();
       state.charts.salesChart = new Chart(ctx, {
@@ -1079,22 +1076,22 @@
 
       const paginatedOrders = paginate(orders || [], state.currentPage.orders, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('ordersList').innerHTML = paginatedOrders.map(order => {
-        const customer = customers?.find(c => c._id === order.userId) || { name: 'Unknown' };
+        const customer = customers?.find(c => c.id === order.user_id) || { name: 'Unknown' };
         return `
           <tr>
-            <td data-label="Order ID">#${order._id}</td>
+            <td data-label="Order ID">#${order.id}</td>
             <td data-label="Customer">${sanitizeInput(customer.name)}</td>
             <td data-label="Items">${order.items?.length || 0}</td>
             <td data-label="Total">₹${order.total?.toLocaleString('en-IN') || 0}</td>
             <td data-label="Status">${sanitizeInput(order.status)}</td>
-            <td data-label="Payment Method">${sanitizeInput(order.paymentMethod || 'N/A')}</td>
-            <td data-label="Order Date">${new Date(order.createdAt).toLocaleDateString()}</td>
+            <td data-label="Payment Method">${sanitizeInput(order.payment_method || 'N/A')}</td>
+            <td data-label="Order Date">${new Date(order.created_at).toLocaleDateString()}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order._id}" aria-label="View order ${order._id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${order.id}" aria-label="View order ${order.id}">
                 <i class="fas fa-eye"></i> View
               </button>
-              ${order.status === 'completed' && order.paymentMethod !== 'cash' ? `
-                <button class="stunning-btn text-sm px-3 py-1 bg-yellow-600" data-action="refund" data-id="${order._id}" aria-label="Refund order ${order._id}">
+              ${order.status === 'completed' && order.payment_method !== 'cash' ? `
+                <button class="stunning-btn text-sm px-3 py-1 bg-yellow-600" data-action="refund" data-id="${order.id}" aria-label="Refund order ${order.id}">
                   <i class="fas fa-undo"></i> Refund
                 </button>
               ` : ''}
@@ -1119,17 +1116,17 @@
 
       const paginatedCustomers = paginate(customers || [], state.currentPage.customers, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('customersList').innerHTML = paginatedCustomers.map(customer => {
-        const customerOrders = orders?.filter(o => o.userId === customer._id) || [];
+        const customerOrders = orders?.filter(o => o.user_id === customer.id) || [];
         return `
           <tr>
-            <td data-label="Customer ID">#${customer._id}</td>
+            <td data-label="Customer ID">#${customer.id}</td>
             <td data-label="Name">${sanitizeInput(customer.name)}</td>
             <td data-label="Email">${sanitizeInput(customer.email)}</td>
             <td data-label="Phone">${sanitizeInput(customer.phone || 'N/A')}</td>
             <td data-label="Orders">${customerOrders.length}</td>
-            <td data-label="Loyalty Points">${customer.loyaltyPoints || 0}</td>
+            <td data-label="Loyalty Points">${customer.loyalty_points || 0}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${customer._id}" aria-label="View customer ${customer._id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${customer.id}" aria-label="View customer ${customer.id}">
                 <i class="fas fa-eye"></i> View
               </button>
             </td>
@@ -1156,10 +1153,10 @@
           <td data-label="Description">${sanitizeInput(item.description)}</td>
           <td data-label="Availability">${item.available ? 'Yes' : 'No'}</td>
           <td data-label="Actions">
-            <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${item._id}" aria-label="Edit item ${item._id}">
+            <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${item.id}" aria-label="Edit item ${item.id}">
               <i class="fas fa-edit"></i> Edit
             </button>
-            <button class="stunning-btn text-sm px-3 py-1 bg-red-600" data-action="delete" data-id="${item._id}" aria-label="Delete item ${item._id}">
+            <button class="stunning-btn text-sm px-3 py-1 bg-red-600" data-action="delete" data-id="${item.id}" aria-label="Delete item ${item.id}">
               <i class="fas fa-trash"></i> Delete
             </button>
           </td>
@@ -1176,7 +1173,7 @@
       const users = await api.fetchData('/users');
       if (!users) return;
       const chatUserSelect = document.getElementById('chatUser');
-      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + (users?.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`) || []).join('');
+      chatUserSelect.innerHTML = '<option value="">Select a customer</option>' + (users?.map(u => `<option value="${u.id}">${sanitizeInput(u.name)}</option>`) || []).join('');
     }
 
     async function loadChatMessages(userId) {
@@ -1186,7 +1183,7 @@
       chatWindow.innerHTML = (messages || []).map(msg => `
         <div class="chat-message ${msg.sender === 'admin' ? 'admin' : 'user'}">
           <p>${sanitizeInput(msg.content)}</p>
-          <small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
+          <small>${new Date(msg.created_at).toLocaleTimeString()}</small>
         </div>
       `).join('');
       chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -1202,13 +1199,13 @@
           <td data-label="Title">${sanitizeInput(promo.title)}</td>
           <td data-label="Code">${sanitizeInput(promo.code)}</td>
           <td data-label="Discount">${promo.discount}%</td>
-          <td data-label="Start Date">${new Date(promo.startDate).toLocaleDateString()}</td>
-          <td data-label="End Date">${new Date(promo.endDate).toLocaleDateString()}</td>
+          <td data-label="Start Date">${new Date(promo.start_date).toLocaleDateString()}</td>
+          <td data-label="End Date">${new Date(promo.end_date).toLocaleDateString()}</td>
           <td data-label="Actions">
-            <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${promo._id}" aria-label="Edit promotion ${promo._id}">
+            <button class="stunning-btn text-sm px-3 py-1" data-action="edit" data-id="${promo.id}" aria-label="Edit promotion ${promo.id}">
               <i class="fas fa-edit"></i> Edit
             </button>
-            <button class="stunning-btn text-sm px-3 py-1 bg-red-600" data-action="delete" data-id="${promo._id}" aria-label="Delete promotion ${promo._id}">
+            <button class="stunning-btn text-sm px-3 py-1 bg-red-600" data-action="delete" data-id="${promo.id}" aria-label="Delete promotion ${promo.id}">
               <i class="fas fa-trash"></i> Delete
             </button>
           </td>
@@ -1231,16 +1228,16 @@
 
       const paginatedFeedback = paginate(feedback || [], state.currentPage.feedback, CONFIG.ITEMS_PER_PAGE);
       document.getElementById('feedbackList').innerHTML = paginatedFeedback.map(f => {
-        const user = users?.find(u => u._id === f.userId) || { name: 'Unknown' };
+        const user = users?.find(u => u.id === f.user_id) || { name: 'Unknown' };
         return `
           <tr>
-            <td data-label="Feedback ID">#${f._id}</td>
+            <td data-label="Feedback ID">#${f.id}</td>
             <td data-label="Customer">${sanitizeInput(user.name)}</td>
             <td data-label="Rating">${f.rating}/5</td>
             <td data-label="Comment">${sanitizeInput(f.comment)}</td>
-            <td data-label="Date">${new Date(f.createdAt).toLocaleDateString()}</td>
+            <td data-label="Date">${new Date(f.created_at).toLocaleDateString()}</td>
             <td data-label="Actions">
-              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f._id}" aria-label="View feedback ${f._id}">
+              <button class="stunning-btn text-sm px-3 py-1" data-action="view" data-id="${f.id}" aria-label="View feedback ${f.id}">
                 <i class="fas fa-eye"></i> View
               </button>
             </td>
@@ -1263,18 +1260,18 @@
       if (!restaurantStatus || !users) return;
 
       document.getElementById('restaurantStatus').value = restaurantStatus?.status || 'open';
-      document.getElementById('openTime').value = restaurantStatus?.openTime || '';
-      document.getElementById('closeTime').value = restaurantStatus?.closeTime || '';
+      document.getElementById('openTime').value = restaurantStatus?.open_time || '';
+      document.getElementById('closeTime').value = restaurantStatus?.close_time || '';
 
       const loyaltyUserSelect = document.getElementById('loyaltyUser');
-      loyaltyUserSelect.innerHTML = '<option value="">Select a user</option>' + (users?.map(u => `<option value="${u._id}">${sanitizeInput(u.name)}</option>`) || []).join('');
+      loyaltyUserSelect.innerHTML = '<option value="">Select a user</option>' + (users?.map(u => `<option value="${u.id}">${sanitizeInput(u.name)}</option>`) || []).join('');
     }
 
     async function loadReports() {
       const orders = await api.fetchData('/orders');
       if (!orders) return;
-      const dates = [...new Set(orders?.map(o => new Date(o.createdAt).toISOString().split('T')[0]) || [])].sort();
-      const salesData = dates.map(date => orders?.filter(o => new Date(o.createdAt).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
+      const dates = [...new Set(orders?.map(o => new Date(o.created_at).toISOString().split('T')[0]) || [])].sort();
+      const salesData = dates.map(date => orders?.filter(o => new Date(o.created_at).toISOString().split('T')[0] === date).reduce((sum, o) => sum + (o.total || 0), 0) || 0);
       const ctx = document.getElementById('reportsChart').getContext('2d');
       if (state.charts.reportsChart) state.charts.reportsChart.destroy();
       state.charts.reportsChart = new Chart(ctx, {
@@ -1326,6 +1323,15 @@
         }, 500);
       }, 2000);
 
+      state.socket.on('connect', () => {
+        console.log('Socket.IO connected');
+      });
+
+      state.socket.on('connect_error', (err) => {
+        showToast('Failed to connect to chat server', 'error');
+        console.error('Socket.IO connection error:', err);
+      });
+
       document.getElementById('profileToggle').addEventListener('click', () => {
         state.isDropdownOpen = !state.isDropdownOpen;
         document.getElementById('dropdownMenu').classList.toggle('show', state.isDropdownOpen);
@@ -1350,7 +1356,7 @@
         const name = document.getElementById('profileName').value.trim();
         const email = document.getElementById('profileEmail').value.trim();
         const imageInput = document.getElementById('profileImageInput').files[0];
-        
+
         if (!name || !email) {
           showToast('Please fill in all fields', 'error');
           return;
@@ -1358,7 +1364,7 @@
 
         const data = { name, email };
         if (imageInput) {
-                    const formData = new FormData();
+          const formData = new FormData();
           formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/profile', formData);
           if (uploadResult) {
@@ -1452,27 +1458,41 @@
         const action = button.getAttribute('data-action');
         const id = button.getAttribute('data-id');
         if (action === 'edit') {
-          const item = await api.fetchData(`/menu/${id}`);
-          if (item) {
-            state.currentEditMenuItem = id;
-            document.getElementById('editMenuName').value = item.name || '';
-            document.getElementById('editMenuCategory').value = item.category || '';
-            document.getElementById('editMenuPrice').value = item.price || 0;
-            document.getElementById('editMenuDescription').value = item.description || '';
-            document.getElementById('editMenuAvailable').value = item.available ? 'true' : 'false';
-            openModal('editMenuItemModal');
+          try {
+            const item = await api.fetchData(`/menu/${id}`);
+            if (item) {
+              state.currentEditMenuItem = id;
+              document.getElementById('editMenuName').value = item.name || '';
+              document.getElementById('editMenuCategory').value = item.category || '';
+              document.getElementById('editMenuPrice').value = item.price || 0;
+              document.getElementById('editMenuDescription').value = item.description || '';
+              document.getElementById('editMenuAvailable').value = item.available ? 'true' : 'false';
+              document.getElementById('editMenuImage').value = ''; // Reset file input
+              openModal('editMenuItemModal');
+            } else {
+              showToast('Failed to load menu item', 'error');
+            }
+          } catch (err) {
+            showToast(`Error loading menu item: ${err.message}`, 'error');
           }
         } else if (action === 'delete') {
           if (confirm('Are you sure you want to delete this menu item?')) {
-            const result = await api.fetchData(`/menu/${id}`, 'DELETE');
-            if (result) {
-              showToast('Menu item deleted successfully', 'success');
-              loadMenu();
+            try {
+              const result = await api.fetchData(`/menu/${id}`, 'DELETE');
+              if (result) {
+                showToast('Menu item deleted successfully', 'success');
+                loadMenu();
+              } else {
+                showToast('Failed to delete menu item', 'error');
+              }
+            } catch (err) {
+              showToast(`Error deleting menu item: ${err.message}`, 'error');
             }
           }
         }
       });
 
+      
       document.getElementById('addMenuItem').addEventListener('click', () => {
         document.getElementById('menuImage').value = '';
         document.getElementById('menuName').value = '';
@@ -1484,22 +1504,22 @@
       });
 
       document.getElementById('saveMenuItem').addEventListener('click', async () => {
-        const image = document.getElementById('menuImage').files[0];
+        const imageInput = document.getElementById('menuImage').files[0];
         const name = document.getElementById('menuName').value.trim();
         const category = document.getElementById('menuCategory').value.trim();
         const price = parseFloat(document.getElementById('menuPrice').value);
         const description = document.getElementById('menuDescription').value.trim();
         const available = document.getElementById('menuAvailable').value === 'true';
 
-        if (!name || !category || isNaN(price) || !description) {
-          showToast('Please fill in all fields', 'error');
+        if (!name || !category || isNaN(price) || price <= 0) {
+          showToast('Please fill in all required fields with valid values', 'error');
           return;
         }
 
         const data = { name, category, price, description, available };
-        if (image) {
+        if (imageInput) {
           const formData = new FormData();
-          formData.append('image', image);
+          formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/menu', formData);
           if (uploadResult) {
             data.image = uploadResult.url;
@@ -1519,22 +1539,22 @@
       });
 
       document.getElementById('updateMenuItem').addEventListener('click', async () => {
-        const image = document.getElementById('editMenuImage').files[0];
+        const imageInput = document.getElementById('editMenuImage').files[0];
         const name = document.getElementById('editMenuName').value.trim();
         const category = document.getElementById('editMenuCategory').value.trim();
         const price = parseFloat(document.getElementById('editMenuPrice').value);
         const description = document.getElementById('editMenuDescription').value.trim();
         const available = document.getElementById('editMenuAvailable').value === 'true';
 
-        if (!name || !category || isNaN(price) || !description) {
-          showToast('Please fill in all fields', 'error');
+        if (!name || !category || isNaN(price) || price <= 0) {
+          showToast('Please fill in all required fields with valid values', 'error');
           return;
         }
 
         const data = { name, category, price, description, available };
-        if (image) {
+        if (imageInput) {
           const formData = new FormData();
-          formData.append('image', image);
+          formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/menu', formData);
           if (uploadResult) {
             data.image = uploadResult.url;
@@ -1548,17 +1568,21 @@
         if (result) {
           showToast('Menu item updated successfully', 'success');
           closeModal('editMenuItemModal');
+          state.currentEditMenuItem = null;
           loadMenu();
           triggerConfetti();
         }
       });
 
-      document.getElementById('chatUser').addEventListener('change', (e) => {
-        state.currentChatUser = e.target.value;
-        if (state.currentChatUser) {
-          loadChatMessages(state.currentChatUser);
-        } else {
-          document.getElementById('chatWindow').innerHTML = '';
+      document.getElementById('chatUser').addEventListener('change', async (e) => {
+        const userId = e.target.value;
+        state.currentChatUser = userId || null;
+        document.getElementById('chatInput').disabled = !userId;
+        document.getElementById('sendMessage').disabled = !userId;
+        document.getElementById('chatWindow').innerHTML = '';
+        if (userId) {
+          await loadChatMessages(userId);
+          state.socket.emit('joinChat', userId);
         }
       });
 
@@ -1568,11 +1592,38 @@
           showToast('Please select a user and enter a message', 'error');
           return;
         }
-        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', { content: message });
+
+        const data = { content: message, userId: state.currentChatUser };
+        const result = await api.fetchData(`/chat/${state.currentChatUser}`, 'POST', data);
         if (result) {
+          state.socket.emit('chatMessage', {
+            userId: state.currentChatUser,
+            content: message,
+            sender: 'admin',
+            created_at: new Date().toISOString(),
+          });
           document.getElementById('chatInput').value = '';
-          loadChatMessages(state.currentChatUser);
-          state.socket.emit('chatMessage', { userId: state.currentChatUser, content: message, sender: 'admin' });
+          const chatWindow = document.getElementById('chatWindow');
+          chatWindow.innerHTML += `
+            <div class="chat-message admin">
+              <p>${sanitizeInput(message)}</p>
+              <small>${new Date().toLocaleTimeString()}</small>
+            </div>
+          `;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+      });
+
+      state.socket.on('chatMessage', (msg) => {
+        if (msg.userId === state.currentChatUser) {
+          const chatWindow = document.getElementById('chatWindow');
+          chatWindow.innerHTML += `
+            <div class="chat-message ${msg.sender === 'admin' ? 'admin' : 'user'}">
+              <p>${sanitizeInput(msg.content)}</p>
+              <small>${new Date(msg.created_at).toLocaleTimeString()}</small>
+            </div>
+          `;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
         }
       });
 
@@ -1587,22 +1638,22 @@
       });
 
       document.getElementById('savePromotion').addEventListener('click', async () => {
-        const image = document.getElementById('promoImage').files[0];
         const title = document.getElementById('promoTitle').value.trim();
         const code = document.getElementById('promoCode').value.trim();
         const discount = parseInt(document.getElementById('promoDiscount').value);
         const startDate = document.getElementById('promoStartDate').value;
         const endDate = document.getElementById('promoEndDate').value;
+        const imageInput = document.getElementById('promoImage').files[0];
 
-        if (!title || !code || isNaN(discount) || !startDate || !endDate) {
-          showToast('Please fill in all fields', 'error');
+        if (!title || !code || isNaN(discount) || discount <= 0 || !startDate || !endDate) {
+          showToast('Please fill in all required fields with valid values', 'error');
           return;
         }
 
-        const data = { title, code, discount, startDate, endDate };
-        if (image) {
+        const data = { title, code, discount, start_date: startDate, end_date: endDate };
+        if (imageInput) {
           const formData = new FormData();
-          formData.append('image', image);
+          formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/promotion', formData);
           if (uploadResult) {
             data.image = uploadResult.url;
@@ -1618,7 +1669,6 @@
           closeModal('addPromotionModal');
           loadPromotions();
           triggerConfetti();
-          document.getElementById('promoImage').value = '';
         }
       });
 
@@ -1634,8 +1684,8 @@
             document.getElementById('editPromoTitle').value = promo.title || '';
             document.getElementById('editPromoCode').value = promo.code || '';
             document.getElementById('editPromoDiscount').value = promo.discount || 0;
-            document.getElementById('editPromoStartDate').value = promo.startDate ? new Date(promo.startDate).toISOString().split('T')[0] : '';
-            document.getElementById('editPromoEndDate').value = promo.endDate ? new Date(promo.endDate).toISOString().split('T')[0] : '';
+            document.getElementById('editPromoStartDate').value = promo.start_date ? new Date(promo.start_date).toISOString().split('T')[0] : '';
+            document.getElementById('editPromoEndDate').value = promo.end_date ? new Date(promo.end_date).toISOString().split('T')[0] : '';
             document.getElementById('editPromoImage').value = '';
             openModal('editPromotionModal');
           }
@@ -1651,22 +1701,22 @@
       });
 
       document.getElementById('updatePromotion').addEventListener('click', async () => {
-        const image = document.getElementById('editPromoImage').files[0];
         const title = document.getElementById('editPromoTitle').value.trim();
         const code = document.getElementById('editPromoCode').value.trim();
         const discount = parseInt(document.getElementById('editPromoDiscount').value);
         const startDate = document.getElementById('editPromoStartDate').value;
         const endDate = document.getElementById('editPromoEndDate').value;
+        const imageInput = document.getElementById('editPromoImage').files[0];
 
-        if (!title || !code || isNaN(discount) || !startDate || !endDate) {
-          showToast('Please fill in all fields', 'error');
+        if (!title || !code || isNaN(discount) || discount <= 0 || !startDate || !endDate) {
+          showToast('Please fill in all required fields with valid values', 'error');
           return;
         }
 
-        const data = { title, code, discount, startDate, endDate };
-        if (image) {
+        const data = { title, code, discount, start_date: startDate, end_date: endDate };
+        if (imageInput) {
           const formData = new FormData();
-          formData.append('image', image);
+          formData.append('image', imageInput);
           const uploadResult = await api.uploadImage('/upload/promotion', formData);
           if (uploadResult) {
             data.image = uploadResult.url;
@@ -1680,6 +1730,7 @@
         if (result) {
           showToast('Promotion updated successfully', 'success');
           closeModal('editPromotionModal');
+          state.currentEditPromotion = null;
           loadPromotions();
           triggerConfetti();
         }
@@ -1705,7 +1756,7 @@
           return;
         }
 
-        const data = { status, openTime, closeTime };
+        const data = { status, open_time: openTime, close_time: closeTime };
         const result = await api.fetchData('/restaurant/status', 'PUT', data);
         if (result) {
           showToast('Restaurant status updated successfully', 'success');
@@ -1717,7 +1768,7 @@
         const userId = document.getElementById('loyaltyUser').value;
         const points = parseInt(document.getElementById('loyaltyPoints').value);
 
-        if (!userId || isNaN(points) || points < 0) {
+        if (!userId || isNaN(points) || points <= 0) {
           showToast('Please select a user and enter valid points', 'error');
           return;
         }
@@ -1726,41 +1777,10 @@
         if (result) {
           showToast('Loyalty points assigned successfully', 'success');
           document.getElementById('loyaltyPoints').value = '';
+          document.getElementById('loyaltyUser').value = '';
           triggerConfetti();
         }
       });
-
-      // Socket.io Events
-      state.socket.on('newOrder', () => {
-        showToast('New order received!', 'success');
-        loadDashboard();
-        loadOrders();
-      });
-
-      state.socket.on('orderStatus', ({ orderId, status }) => {
-        showToast(`Order #${orderId} status updated to ${status}`, 'success');
-        loadDashboard();
-        loadOrders();
-      });
-
-      state.socket.on('chatMessage', ({ userId, content, sender }) => {
-        if (state.currentChatUser === userId && sender !== 'admin') {
-          loadChatMessages(userId);
-        }
-      });
-
-      // Countdown Timer
-      function updateCountdown() {
-        const now = new Date();
-        const target = new Date();
-        target.setHours(23, 59, 59, 999);
-        const diff = target - now;
-        const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        document.getElementById('countdownTimer').textContent = `${hours}:${minutes}:${seconds} until daily reset`;
-      }
-      setInterval(updateCountdown, 1000);
 
       // Initialize
       if (!localStorage.getItem('jwtToken')) {

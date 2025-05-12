@@ -275,15 +275,16 @@ async function initializeDatabase() {
           price NUMERIC(10,2) NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS offers (
+        CREATE TABLE IF NOT EXISTS promotions (
           id SERIAL PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
+          description TEXT,
           code VARCHAR(50) UNIQUE,
           discount INTEGER NOT NULL,
-          description TEXT,
-          start_date DATE NOT NULL,
-          end_date DATE NOT NULL,
-          image TEXT
+          image TEXT,
+          start_date DATE,
+          end_date DATE,
+          image_data BYTEA
         );
 
         CREATE TABLE IF NOT EXISTS testimonials (
@@ -320,7 +321,7 @@ async function initializeDatabase() {
 
         CREATE TABLE IF NOT EXISTS restaurant_status (
           id SERIAL PRIMARY KEY,
-          status VARCHAR(50) NOT NULL,
+          status VARCHAR(10) NOT NULL,
           open_time TIME,
           close_time TIME
         );
@@ -397,24 +398,44 @@ async function initializeDatabase() {
 
 // Socket.IO Events
 io.on('connection', (socket) => {
-  logger.info('Socket.IO client connected');
+  logger.info('Socket.IO client connected', { socketId: socket.id });
+
   socket.on('chatMessage', async (data) => {
     try {
+      const { userId, sender, content } = data;
+      if (!userId || !sender || !content || !['admin', 'user'].includes(sender)) {
+        logger.error('Invalid chat message data', { data });
+        socket.emit('error', { message: 'Invalid message data' });
+        return;
+      }
+
       const client = await pool.connect();
+      const userExists = await client.query('SELECT id FROM users WHERE id = $1', [userId]);
+      if (userExists.rows.length === 0) {
+        client.release();
+        logger.error('User not found for chat message', { userId });
+        socket.emit('error', { message: 'User not found' });
+        return;
+      }
+
       const result = await client.query(
         'INSERT INTO support_chat (user_id, sender, content) VALUES ($1, $2, $3) RETURNING *',
-        [data.userId, data.sender, data.content]
+        [userId, sender, content]
       );
       client.release();
-      io.emit('chatMessage', {
+
+      const message = {
         _id: result.rows[0].id,
         userId: result.rows[0].user_id,
         sender: result.rows[0].sender,
         content: result.rows[0].content,
         timestamp: result.rows[0].timestamp,
-      });
+      };
+      io.emit('chatMessage', message);
+      logger.info('Chat message sent', { message });
     } catch (err) {
       logger.error('Socket.IO chat message error', { message: err.message, stack: err.stack });
+      socket.emit('error', { message: 'Failed to send message' });
     }
   });
 
@@ -427,7 +448,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    logger.info('Socket.IO client disconnected');
+    logger.info('Socket.IO client disconnected', { socketId: socket.id });
   });
 });
 
@@ -677,11 +698,11 @@ app.put('/api/admin/profile', authenticateToken, authenticateAdmin, async (req, 
 // Image Upload
 app.post('/api/upload/:type', authenticateToken, (req, res) => {
   const type = req.params.type;
-  if (!['profile', 'menu', 'offer'].includes(type)) {
+  if (!['profile', 'menu', 'promotion'].includes(type)) {
     return res.status(400).json({ message: 'Invalid upload type' });
   }
 
-  upload(req, res, (err) => {
+  upload(req, res, async (err) => {
     if (err) {
       logger.error('Image upload error', { message: err.message, stack: err.stack });
       return res.status(400).json({ message: err.message || 'File upload failed' });
@@ -690,6 +711,15 @@ app.post('/api/upload/:type', authenticateToken, (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     const url = `/Uploads/${req.file.filename}`;
+    if (type === 'promotion') {
+      try {
+        const imageData = fs.readFileSync(path.join(uploadDir, req.file.filename));
+        return res.json({ url, imageData: imageData.toString('base64') });
+      } catch (err) {
+        logger.error('Image data read error', { message: err.message, stack: err.stack });
+        return res.status(500).json({ message: 'Failed to read image data', error: err.message });
+      }
+    }
     res.json({ url });
   });
 });
@@ -1004,13 +1034,13 @@ app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (
   }
 });
 
-// Offers
-app.get('/api/offers', async (req, res) => {
+// Promotions
+app.get('/api/promotions', async (req, res) => {
   try {
     const client = await pool.connect();
     const result = await client.query(`
       SELECT id, title, code, discount, description, start_date, end_date, image
-      FROM offers
+      FROM promotions
       WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE
     `);
     client.release();
@@ -1023,30 +1053,30 @@ app.get('/api/offers', async (req, res) => {
         description: p.description,
         startDate: p.start_date,
         endDate: p.end_date,
-        image: p.image,
+        image: p.image || '/assets/fallback-promotion.png',
       }))
     );
   } catch (err) {
-    logger.error('offers fetch error', { message: err.message, stack: err.stack });
-    res.status(500).json({ message: 'Failed to fetch offers', error: err.message });
+    logger.error('Promotions fetch error', { message: err.message, stack: err.stack });
+    res.status(500).json({ message: 'Failed to fetch promotions', error: err.message });
   }
 });
 
-app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+app.get('/api/promotions/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   if (!id || isNaN(id)) {
-    return res.status(400).json({ message: 'Valid offer ID is required' });
+    return res.status(400).json({ message: 'Valid promotion ID is required' });
   }
 
   try {
     const client = await pool.connect();
     const result = await client.query(
-      'SELECT id, title, code, discount, description, start_date, end_date, image FROM offers WHERE id = $1',
+      'SELECT id, title, code, discount, description, start_date, end_date, image FROM promotions WHERE id = $1',
       [id]
     );
     client.release();
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'offer not found' });
+      return res.status(404).json({ message: 'Promotion not found' });
     }
     const p = result.rows[0];
     res.json({
@@ -1057,16 +1087,16 @@ app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
       description: p.description,
       startDate: p.start_date,
       endDate: p.end_date,
-      image: p.image,
+      image: p.image || '/assets/fallback-promotion.png',
     });
   } catch (err) {
-    logger.error('Offer fetch error', { message: err.message, stack: err.stack });
-    res.status(500).json({ message: 'Failed to fetch offer', error: err.message });
+    logger.error('Promotion fetch error', { message: err.message, stack: err.stack });
+    res.status(500).json({ message: 'Failed to fetch promotion', error: err.message });
   }
 });
 
-app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { title, code, discount, description, startDate, endDate, image } = req.body;
+app.post('/api/promotions', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { title, code, discount, description, startDate, endDate, image, imageData } = req.body;
 
   if (!title || !code || !discount || !startDate || !endDate) {
     return res.status(400).json({ message: 'Title, code, discount, startDate, and endDate are required' });
@@ -1080,15 +1110,16 @@ app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) =
 
   try {
     const client = await pool.connect();
-    const codeExists = await client.query('SELECT id FROM offers WHERE code = $1', [code.trim()]);
+    const codeExists = await client.query('SELECT id FROM promotions WHERE code = $1', [code.trim()]);
     if (codeExists.rows.length > 0) {
       client.release();
-      return res.status(400).json({ message: 'Offer code already exists' });
+      return res.status(400).json({ message: 'Promotion code already exists' });
     }
 
+    const imageDataBuffer = imageData ? Buffer.from(imageData, 'base64') : null;
     const result = await client.query(
-      'INSERT INTO offers (title, code, discount, description, start_date, end_date, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [title.trim(), code.trim(), discount, description || null, startDate, endDate, image || null]
+      'INSERT INTO promotions (title, code, discount, description, start_date, end_date, image, image_data) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [title.trim(), code.trim(), discount, description || null, startDate, endDate, image || null, imageDataBuffer]
     );
     client.release();
     res.status(201).json({
@@ -1099,26 +1130,26 @@ app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) =
       description: result.rows[0].description,
       startDate: result.rows[0].start_date,
       endDate: result.rows[0].end_date,
-      image: result.rows[0].image,
+      image: result.rows[0].image || '/assets/fallback-promotion.png',
     });
   } catch (err) {
-    logger.error('Offer create error', { message: err.message, stack: err.stack });
+    logger.error('Promotion create error', { message: err.message, stack: err.stack });
     if (err.code === '23505') {
-      res.status(400).json({ message: 'Offer code already exists' });
+      res.status(400).json({ message: 'Promotion code already exists' });
     } else {
-      res.status(500).json({ message: 'Failed to create offer', error: err.message });
+      res.status(500).json({ message: 'Failed to create promotion', error: err.message });
     }
   }
 });
 
-app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+app.put('/api/promotions/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { title, code, discount, description, startDate, endDate, image } = req.body;
+  const { title, code, discount, description, startDate, endDate, image, imageData } = req.body;
 
   if (!id || isNaN(id)) {
-    return res.status(400).json({ message: 'Valid offer ID is required' });
+    return res.status(400).json({ message: 'Valid promotion ID is required' });
   }
-  if (!title && !code && !discount && !startDate && !endDate && !image && description === undefined) {
+  if (!title && !code && !discount && !startDate && !endDate && !image && description === undefined && !imageData) {
     return res.status(400).json({ message: 'At least one field is required for update' });
   }
   if (discount && (isNaN(discount) || discount <= 0)) {
@@ -1130,17 +1161,17 @@ app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
 
   try {
     const client = await pool.connect();
-    const existingOffer = await client.query('SELECT * FROM offers WHERE id = $1', [id]);
-    if (existingOffer.rows.length === 0) {
+    const existingPromotion = await client.query('SELECT * FROM promotions WHERE id = $1', [id]);
+    if (existingPromotion.rows.length === 0) {
       client.release();
-      return res.status(404).json({ message: 'Offer not found' });
+      return res.status(404).json({ message: 'Promotion not found' });
     }
 
-    if (code && code.trim() !== existingOffer.rows[0].code) {
-      const codeExists = await client.query('SELECT id FROM offers WHERE code = $1 AND id != $2', [code.trim(), id]);
+    if (code && code.trim() !== existingPromotion.rows[0].code) {
+      const codeExists = await client.query('SELECT id FROM promotions WHERE code = $1 AND id != $2', [code.trim(), id]);
       if (codeExists.rows.length > 0) {
         client.release();
-        return res.status(400).json({ message: 'Offer code already exists' });
+        return res.status(400).json({ message: 'Promotion code already exists' });
       }
     }
 
@@ -1176,6 +1207,10 @@ app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
       fields.push(`image = $${index++}`);
       values.push(image);
     }
+    if (imageData) {
+      fields.push(`image_data = $${index++}`);
+      values.push(Buffer.from(imageData, 'base64'));
+    }
 
     if (fields.length === 0) {
       client.release();
@@ -1183,12 +1218,12 @@ app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
     }
 
     values.push(id);
-    const query = `UPDATE offers SET ${fields.join(', ')} WHERE id = $${index} RETURNING *`;
+    const query = `UPDATE promotions SET ${fields.join(', ')} WHERE id = $${index} RETURNING *`;
     const result = await client.query(query, values);
     client.release();
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Offer not found' });
+      return res.status(404).json({ message: 'Promotion not found' });
     }
 
     res.json({
@@ -1199,36 +1234,36 @@ app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
       description: result.rows[0].description,
       startDate: result.rows[0].start_date,
       endDate: result.rows[0].end_date,
-      image: result.rows[0].image,
+      image: result.rows[0].image || '/assets/fallback-promotion.png',
     });
   } catch (err) {
-    logger.error('Offer update error', { message: err.message, stack: err.stack });
+    logger.error('Promotion update error', { message: err.message, stack: err.stack });
     if (err.code === '23505') {
-      res.status(400).json({ message: 'Offer code already exists' });
+      res.status(400).json({ message: 'Promotion code already exists' });
     } else {
-      res.status(500).json({ message: 'Failed to update offer', error: err.message });
+      res.status(500).json({ message: 'Failed to update promotion', error: err.message });
     }
   }
 });
 
-app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+app.delete('/api/promotions/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
 
   if (!id || isNaN(id)) {
-    return res.status(400).json({ message: 'Valid offer ID is required' });
+    return res.status(400).json({ message: 'Valid promotion ID is required' });
   }
 
   try {
     const client = await pool.connect();
-    const result = await client.query('DELETE FROM offers WHERE id = $1 RETURNING id', [id]);
+    const result = await client.query('DELETE FROM promotions WHERE id = $1 RETURNING id', [id]);
     client.release();
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Offer not found' });
+      return res.status(404).json({ message: 'Promotion not found' });
     }
-    res.json({ message: 'Offer deleted', id: result.rows[0].id });
+    res.json({ message: 'Promotion deleted', id: result.rows[0].id });
   } catch (err) {
-    logger.error('Offer delete error', { message: err.message, stack: err.stack });
-    res.status(500).json({ message: 'Failed to delete offer', error: err.message });
+    logger.error('Promotion delete error', { message: err.message, stack: err.stack });
+    res.status(500).json({ message: 'Failed to delete promotion', error: err.message });
   }
 });
 
@@ -1346,11 +1381,19 @@ app.put('/api/users/:id/loyalty', authenticateToken, authenticateAdmin, async (r
 app.get('/api/support/chat/:userId', authenticateToken, authenticateAdmin, async (req, res) => {
   const { userId } = req.params;
   if (!userId || isNaN(userId)) {
+    logger.error('Invalid user ID for support chat fetch', { userId });
     return res.status(400).json({ message: 'Valid user ID is required' });
   }
 
   try {
     const client = await pool.connect();
+    const userExists = await client.query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (userExists.rows.length === 0) {
+      client.release();
+      logger.error('User not found for support chat', { userId });
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const result = await client.query(
       'SELECT id, user_id, sender, content, timestamp FROM support_chat WHERE user_id = $1 ORDER BY timestamp',
       [userId]
@@ -1376,17 +1419,20 @@ app.post('/api/support/chat/:userId', authenticateToken, authenticateAdmin, asyn
   const { content } = req.body;
 
   if (!userId || isNaN(userId)) {
+    logger.error('Invalid user ID for support chat send', { userId });
     return res.status(400).json({ message: 'Valid user ID is required' });
   }
   if (!content || typeof content !== 'string' || content.trim() === '') {
+    logger.error('Invalid content for support chat', { content });
     return res.status(400).json({ message: 'Content is required and must be a non-empty string' });
   }
 
   try {
     const client = await pool.connect();
-    const userExists = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const userExists = await client.query('SELECT id FROM users WHERE id = $1', [userId]);
     if (userExists.rows.length === 0) {
       client.release();
+      logger.error('User not found for support chat', { userId });
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -1396,14 +1442,16 @@ app.post('/api/support/chat/:userId', authenticateToken, authenticateAdmin, asyn
     );
     client.release();
 
-    io.emit('chatMessage', {
+    const message = {
       _id: result.rows[0].id,
       userId: result.rows[0].user_id,
       sender: result.rows[0].sender,
       content: result.rows[0].content,
       timestamp: result.rows[0].timestamp,
-    });
-    res.json(result.rows[0]);
+    };
+    io.emit('chatMessage', message);
+    logger.info('Support chat message sent', { message });
+    res.json(message);
   } catch (err) {
     logger.error('Support chat send error', { message: err.message, stack: err.stack });
     res.status(500).json({ message: 'Failed to send message', error: err.message });
@@ -1553,6 +1601,7 @@ app.get('/api/restaurant/status', async (req, res) => {
     const result = await client.query('SELECT status, open_time, close_time FROM restaurant_status WHERE id = 1');
     client.release();
     if (result.rows.length === 0) {
+      logger.error('Restaurant status not found');
       return res.status(404).json({ message: 'Restaurant status not found' });
     }
     res.json({
@@ -1570,12 +1619,15 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
   const { status, openTime, closeTime } = req.body;
 
   if (!status || !['open', 'closed'].includes(status)) {
+    logger.error('Invalid restaurant status', { status });
     return res.status(400).json({ message: 'Status must be "open" or "closed"' });
   }
   if (!openTime || !/^\d{2}:\d{2}(:\d{2})?$/.test(openTime)) {
+    logger.error('Invalid openTime format', { openTime });
     return res.status(400).json({ message: 'openTime must be in HH:MM or HH:MM:SS format' });
   }
   if (!closeTime || !/^\d{2}:\d{2}(:\d{2})?$/.test(closeTime)) {
+    logger.error('Invalid closeTime format', { closeTime });
     return res.status(400).json({ message: 'closeTime must be in HH:MM or HH:MM:SS format' });
   }
 
@@ -1590,6 +1642,7 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
     );
     client.release();
     if (result.rows.length === 0) {
+      logger.error('Restaurant status not found for update');
       return res.status(404).json({ message: 'Restaurant status not found' });
     }
     res.json({
@@ -1633,6 +1686,7 @@ app.post('/api/favourites', authenticateToken, async (req, res) => {
     res.json({ message: 'Item added to favourites' });
   } catch (err) {
     logger.error('Add to favourites error', { message: err.message, stack: err.stack });
+    res.status(500).json({ message: 'Failed to add to favourites', error: err.message });
   }
 });
 
@@ -1695,11 +1749,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error', error: err.message });
 });
 
-
 // Start server with retry
 async function startServer() {
   try {
-    // Check port availability
     await checkPort(process.env.PORT);
     console.log(`Port ${process.env.PORT} is available`);
 

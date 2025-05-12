@@ -44,7 +44,7 @@
 
     .toast {
       position: fixed; bottom: 20px; right: 20px; color: white;
-      padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba extensor muscle strains(0, 0, 0, 0.3);
       z-index: 1000; display: none; font-size: 0.9rem; transition: opacity 0.3s ease;
     }
 
@@ -154,6 +154,109 @@
     .bottom-nav button.active { color: var(--primary); }
     .bottom-nav button i { font-size: 1.4rem; }
 
+    /* Updated Profile Section Styles */
+    .profile-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .profile-image-container {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+    }
+    .profile-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      transition: transform 0.3s ease;
+    }
+    .profile-image:hover {
+      transform: scale(1.05);
+    }
+    .profile-image-upload-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: var(--primary);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .profile-field {
+      margin-bottom: 16px;
+    }
+    .profile-field label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .profile-field input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #f9fafb;
+      transition: border-color 0.2s ease;
+    }
+    .profile-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+    }
+    .profile-field input[readonly] {
+      background: #e5e7eb;
+      cursor: not-allowed;
+    }
+    .profile-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .profile-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+    .profile-actions button.edit {
+      background: var(--primary);
+      color: white;
+    }
+    .profile-actions button.edit:hover {
+      background: var(--secondary);
+    }
+    .profile-actions button.cancel {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+    .profile-actions button.cancel:hover {
+      background: #d1d5db;
+    }
+
     @media (min-width: 1024px) {
       .bottom-nav { display: none; }
       .main-content { margin: 0; }
@@ -162,6 +265,7 @@
       .banner-content { max-width: 60%; }
       .text-2xl { font-size: 1.5rem; }
       .grid-cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .profile-container { max-width: 600px; }
     }
     @media (max-width: 1023px) {
       .main-content { margin-bottom: 60px; }
@@ -183,6 +287,9 @@
       .chat-container { max-height: 200px; }
       .modal-content { width: 280px; }
       .dropdown-menu { width: 180px; }
+      .profile-container { padding: 16px; }
+      .profile-image-container { width: 80px; height: 80px; }
+      .profile-image-upload-btn { width: 28px; height: 28px; }
     }
   </style>
 </head>
@@ -464,31 +571,34 @@
     </section>
 
     <section id="user-profile" class="user-section hidden animate-slideUp">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-2xl font-bold text-orange-600">Your Profile</h2>
-        <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
-      </div>
-      <div class="bg-white rounded-lg p-3 shadow space-y-3">
-        <div class="flex justify-center">
-          <img src="https://via.placeholder.com/80" alt="Profile" id="profileImage" class="profile-img profile-img-upload rounded-full w-20 h-20 object-cover" onerror="this.src='https://via.placeholder.com/80?text=Profile'">
+      <div class="profile-container">
+        <div class="profile-header">
+          <h2 class="text-xl font-bold text-orange-600">Your Profile</h2>
+          <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
         </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Upload Profile Image</label>
-          <input type="file" id="profileImageInput" accept="image/*" class="w-full px-3 py-1.5 border rounded-full text-sm">
+        <div class="profile-image-container">
+          <img src="https://via.placeholder.com/100" alt="Profile" id="profileImage" class="profile-image" onerror="this.src='https://via.placeholder.com/100?text=Profile'">
+          <label for="profileImageInput" class="profile-image-upload-btn">
+            <i class="fas fa-camera"></i>
+          </label>
+          <input type="file" id="profileImageInput" accept="image/*" class="hidden">
         </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Name</label>
-          <input type="text" id="profileName" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
+        <div class="profile-field">
+          <label>Name</label>
+          <input type="text" id="profileName" readonly>
         </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Email</label>
-          <input type="email" id="profileEmail" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
+        <div class="profile-field">
+          <label>Email</label>
+          <input type="email" id="profileEmail" readonly>
         </div>
-        <div>
-          <label class="block text-gray-700 text-sm">Phone</label>
-          <input type="tel" id="profilePhone" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" readonly>
+        <div class="profile-field">
+          <label>Phone</label>
+          <input type="tel" id="profilePhone" readonly>
         </div>
-        <button id="editProfileBtn" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-edit mr-1"></i>Edit Profile</button>
+        <div class="profile-actions">
+          <button id="editProfileBtn" class="edit"><i class="fas fa-edit mr-1"></i>Edit Profile</button>
+          <button id="cancelEditBtn" class="cancel hidden"><i class="fas fa-times mr-1"></i>Cancel</button>
+        </div>
       </div>
     </section>
   </div>
@@ -1059,7 +1169,7 @@
         const data = await apiFetch(`/orders/${orderId}/reorder`, 'POST');
         if (data && data.success) {
           showToast('Items added to cart');
-          loadCart();
+           loadCart();
           showSection('cart');
         }
       } else if (btn.classList.contains('rate-order')) {
@@ -1124,431 +1234,435 @@
       VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
     };
 
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.toggle-favourite');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const isFavourite = state.favourites.some(f => f.id === id);
-      const endpoint = isFavourite ? `/favourites/remove` : `/favourites/add`;
-      const data = await apiFetch(endpoint, 'POST', { itemId: id });
-      if (data && data.success) {
-        if (isFavourite) {
-          state.favourites = state.favourites.filter(f => f.id !== id);
-          showToast('Removed from favourites');
-        } else {
-          const item = (await apiFetch('/menu')).find(i => i.id === id);
-          state.favourites.push(item);
-          showToast('Added to favourites');
-        }
-        btn.querySelector('i').classList.toggle('text-red-500');
-        if (state.currentSection === 'favourites') loadFavourites();
-        if (state.currentSection === 'menu' || state.currentSection === 'dashboard') loadMenu();
-      }
-    });
-
-    // Addresses
-    const loadAddresses = async () => {
-      const addresses = await apiFetch('/addresses');
-      const container = document.getElementById('addressItems');
-      container.innerHTML = addresses?.length ? addresses.map(a => `
-        <div class="bg-white rounded-lg p-3 shadow flex justify-between items-center">
-          <div>
-            <h4 class="text-sm font-semibold">${a.name}</h4>
-            <p class="text-xs text-gray-600">${a.street}, ${a.city}, ${a.state} ${a.zip}</p>
-            <p class="text-xs text-gray-600">${a.mobile}</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
-            <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
-            <button class="set-default-address bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs ${a.isDefault ? 'opacity-50 cursor-not-allowed' : ''}" data-id="${a.id}" ${a.isDefault ? 'disabled' : ''}><i class="fas fa-check"></i></button>
-          </div>
-        </div>
-      `).join('') : '<p class="text-sm">No addresses saved</p>';
-    };
-
-        // Address Actions
-    document.getElementById('addAddress').addEventListener('click', () => {
-      const modal = document.createElement('div');
-      modal.className = 'modal active';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <span class="close">×</span>
-          <h3 class="text-base font-bold text-orange-600">Add Address</h3>
-          <form id="addressForm" class="space-y-3">
-            <div>
-              <label class="block text-gray-700 text-sm">Name</label>
-              <input type="text" name="name" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <div>
-              <label class="block text-gray-700 text-sm">Street</label>
-              <input type="text" name="street" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <div>
-              <label class="block text-gray-700 text-sm">City</label>
-              <input type="text" name="city" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <div>
-              <label class="block text-gray-700 text-sm">State</label>
-              <input type="text" name="state" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <div>
-              <label class="block text-gray-700 text-sm">ZIP Code</label>
-              <input type="text" name="zip" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <div>
-              <label class="block text-gray-700 text-sm">Mobile</label>
-              <input type="tel" name="mobile" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save Address</button>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#addressForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const address = Object.fromEntries(formData);
-        const data = await apiFetch('/addresses', 'POST', address);
+          document.addEventListener('click', async e => {
+        const btn = e.target.closest('.toggle-favourite');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const isFavourited = state.favourites.some(f => f.id === id);
+        const endpoint = isFavourited ? '/favourites/remove' : '/favourites/add';
+        const data = await apiFetch(endpoint, 'POST', { itemId: id });
         if (data && data.success) {
-          showToast('Address added');
-          modal.remove();
-          loadAddresses();
-          loadCart();
+          showToast(isFavourited ? 'Removed from favourites' : 'Added to favourites');
+          loadFavourites();
+          loadMenu();
         }
       });
-    });
 
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      if (btn.classList.contains('edit-address')) {
-        const address = await apiFetch(`/addresses/${id}`);
-        if (!address) return;
+      // Addresses
+      const loadAddresses = async () => {
+        const addresses = await apiFetch('/addresses');
+        const container = document.getElementById('addressItems');
+        container.innerHTML = addresses?.length ? addresses.map(a => `
+          <div class="bg-white rounded-lg p-3 shadow flex justify-between items-center">
+            <div>
+              <h4 class="text-sm font-semibold">${a.name}</h4>
+              <p class="text-xs text-gray-600">${a.street}, ${a.city}, ${a.state}, ${a.zip}</p>
+              <p class="text-xs text-gray-500">${a.phone}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
+              <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+              ${a.isDefault ? '<span class="text-xs text-green-600">Default</span>' : `<button class="set-default-address bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-700 text-xs" data-id="${a.id}">Set Default</button>`}
+            </div>
+          </div>
+        `).join('') : '<p class="text-sm">No addresses saved</p>';
+      };
+
+      document.getElementById('addAddress').addEventListener('click', () => {
         const modal = document.createElement('div');
         modal.className = 'modal active';
         modal.innerHTML = `
           <div class="modal-content">
             <span class="close">×</span>
-            <h3 class="text-base font-bold text-orange-600">Edit Address</h3>
-            <form id="editAddressForm" class="space-y-3">
-              <input type="hidden" name="id" value="${id}">
+            <h3 class="text-base font-bold text-orange-600">Add Address</h3>
+            <form id="addressForm" class="space-y-3">
               <div>
-                <label class="block text-gray-700 text-sm">Name</label>
-                <input type="text" name="name" value="${address.name}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">Name</label>
+                <input type="text" name="name" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Home, Work, etc.">
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">Street</label>
-                <input type="text" name="street" value="${address.street}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">Street</label>
+                <input type="text" name="street" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Street address">
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">City</label>
-                <input type="text" name="city" value="${address.city}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">City</label>
+                <input type="text" name="city" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="City">
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">State</label>
-                <input type="text" name="state" value="${address.state}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">State</label>
+                <input type="text" name="state" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="State">
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">ZIP Code</label>
-                <input type="text" name="zip" value="${address.zip}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">ZIP</label>
+                <input type="text" name="zip" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="ZIP code">
               </div>
               <div>
-                <label class="block text-gray-700 text-sm">Mobile</label>
-                <input type="tel" name="mobile" value="${address.mobile}" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+                <label class="block text-sm text-gray-700">Phone</label>
+                <input type="tel" name="phone" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Phone number">
               </div>
-              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update Address</button>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save Address</button>
             </form>
           </div>
         `;
         document.body.appendChild(modal);
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
-        modal.querySelector('#editAddressForm').addEventListener('submit', async (e) => {
+        modal.querySelector('#addressForm').addEventListener('submit', async e => {
           e.preventDefault();
           const formData = new FormData(e.target);
           const address = Object.fromEntries(formData);
-          const data = await apiFetch(`/addresses/${id}`, 'PUT', address);
+          const data = await apiFetch('/addresses', 'POST', address);
           if (data && data.success) {
-            showToast('Address updated');
+            showToast('Address added');
             modal.remove();
             loadAddresses();
-            loadCart();
           }
         });
-      } else if (btn.classList.contains('delete-address')) {
-        if (!confirm('Are you sure you want to delete this address?')) return;
-        const data = await apiFetch(`/addresses/${id}`, 'DELETE');
-        if (data && data.success) {
-          showToast('Address deleted');
-          loadAddresses();
-          loadCart();
-        }
-      } else if (btn.classList.contains('set-default-address')) {
-        const data = await apiFetch(`/addresses/${id}/set-default`, 'POST');
-        if (data && data.success) {
-          showToast('Default address updated');
-          loadAddresses();
-          loadCart();
-        }
-      }
-    });
+      });
 
-    // Loyalty
-    const loadLoyalty = async () => {
-      const loyalty = await apiFetch('/users/me/loyalty');
-      const history = await apiFetch('/users/me/loyalty/history');
-      document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
-      document.getElementById('loyaltyHistory').innerHTML = history?.length ? history.map(h => `
-        <div class="border-b py-2 text-xs">
-          <p>${h.description}</p>
-          <p class="text-gray-600">${h.points > 0 ? '+' : ''}${h.points} points on ${new Date(h.createdAt).toLocaleDateString()}</p>
-        </div>
-      `).join('') : '<p class="text-sm">No loyalty history</p>';
-    };
-
-    // Referrals
-    const loadReferrals = async () => {
-      const referral = await apiFetch('/referrals');
-      state.referral = referral || { link: '' };
-      document.getElementById('referralCode').textContent = referral?.code || 'N/A';
-      const link = referral?.link || 'https://delicute.com';
-      document.getElementById('referralLink').href = link;
-      document.getElementById('shareWhatsApp').href = `https://api.whatsapp.com/send?text=Join DELICUTE with my referral link: ${link}`;
-      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=Join DELICUTE with my referral link: ${link}`;
-      document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
-    };
-
-    document.getElementById('shareBtn').addEventListener('click', () => openModal('shareModal'));
-    document.querySelector('#shareModal .close').addEventListener('click', () => closeModal('shareModal'));
-
-    // Support
-    const loadSupport = async () => {
-      const tickets = await apiFetch('/support/tickets');
-      document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
-        <div class="border-b py-2 text-xs">
-          <p class="font-semibold">${t.subject}</p>
-          <p class="text-gray-600">${t.status} - ${new Date(t.createdAt).toLocaleDateString()}</p>
-          <button class="view-ticket bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${t.id}">View</button>
-        </div>
-      `).join('') : '<p class="text-sm">No support tickets</p>';
-      loadChat();
-    };
-
-    document.getElementById('createTicketBtn').addEventListener('click', () => {
-      const modal = document.createElement('div');
-      modal.className = 'modal active';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <span class="close">×</span>
-          <h3 class="text-base font-bold text-orange-600">Create Support Ticket</h3>
-          <form id="ticketForm" class="space-y-3">
-            <div>
-              <label class="block text-gray-700 text-sm">Subject</label>
-              <input type="text" name="subject" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" required>
+      document.addEventListener('click', async e => {
+        const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        if (btn.classList.contains('edit-address')) {
+          const address = await apiFetch(`/addresses/${id}`);
+          if (!address) return;
+          const modal = document.createElement('div');
+          modal.className = 'modal active';
+          modal.innerHTML = `
+            <div class="modal-content">
+              <span class="close">×</span>
+              <h3 class="text-base font-bold text-orange-600">Edit Address</h3>
+              <form id="editAddressForm" class="space-y-3">
+                <div>
+                  <label class="block text-sm text-gray-700">Name</label>
+                  <input type="text" name="name" value="${address.name}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">Street</label>
+                  <input type="text" name="street" value="${address.street}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">City</label>
+                  <input type="text" name="city" value="${address.city}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">State</label>
+                  <input type="text" name="state" value="${address.state}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">ZIP</label>
+                  <input type="text" name="zip" value="${address.zip}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">Phone</label>
+                  <input type="tel" name="phone" value="${address.phone}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update Address</button>
+              </form>
             </div>
-            <div>
-              <label class="block text-gray-700 text-sm">Description</label>
-              <textarea name="description" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" required></textarea>
-            </div>
-            <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit Ticket</button>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-      modal.querySelector('#ticketForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const ticket = Object.fromEntries(formData);
-        const data = await apiFetch('/support/tickets', 'POST', ticket);
-        if (data && data.success) {
-          showToast('Ticket created');
-          modal.remove();
-          loadSupport();
+          `;
+          document.body.appendChild(modal);
+          modal.querySelector('.close').addEventListener('click', () => modal.remove());
+          modal.querySelector('#editAddressForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const address = Object.fromEntries(formData);
+            const data = await apiFetch(`/addresses/${id}`, 'PUT', address);
+            if (data && data.success) {
+              showToast('Address updated');
+              modal.remove();
+              loadAddresses();
+            }
+          });
+        } else if (btn.classList.contains('delete-address')) {
+          if (!confirm('Are you sure you want to delete this address?')) return;
+          const data = await apiFetch(`/addresses/${id}`, 'DELETE');
+          if (data && data.success) {
+            showToast('Address deleted');
+            loadAddresses();
+          }
+        } else if (btn.classList.contains('set-default-address')) {
+          const data = await apiFetch(`/addresses/${id}/set-default`, 'POST');
+          if (data && data.success) {
+            showToast('Default address set');
+            loadAddresses();
+          }
         }
       });
-    });
 
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.view-ticket');
-      if (!btn) return;
-      const ticket = await apiFetch(`/support/tickets/${btn.dataset.id}`);
-      if (!ticket) return;
-      const modal = document.createElement('div');
-      modal.className = 'modal active';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <span class="close">×</span>
-          <h3 class="text-base font-bold text-orange-600">Ticket: ${ticket.subject}</h3>
-          <div class="space-y-2 text-sm">
-            <p><strong>Status:</strong> ${ticket.status}</p>
-            <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleDateString()}</p>
-            <p><strong>Description:</strong> ${ticket.description}</p>
-            ${ticket.response ? `<p><strong>Response:</strong> ${ticket.response}</p>` : '<p>No response yet</p>'}
+      // Loyalty
+      const loadLoyalty = async () => {
+        const loyalty = await apiFetch('/users/me/loyalty');
+        const history = await apiFetch('/users/me/loyalty/history');
+        document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+        document.getElementById('loyaltyHistory').innerHTML = history?.length ? history.map(h => `
+          <div class="border-b py-2 text-sm">
+            <p>${h.description}</p>
+            <p class="text-gray-600 text-xs">${h.points} points on ${new Date(h.createdAt).toLocaleDateString()}</p>
           </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close').addEventListener('click', () => modal.remove());
-    });
-
-    // Live Chat
-    let socket;
-    const loadChat = () => {
-      socket?.close();
-      socket = new WebSocket('ws://localhost:3000');
-      socket.onopen = () => {
-        socket.send(JSON.stringify({ type: 'join', userId: state.userId }));
+        `).join('') : '<p class="text-sm">No loyalty history</p>';
       };
-      socket.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-        if (msg.type === 'typing') {
-          document.getElementById('typingIndicator').textContent = msg.userId === state.userId ? '' : 'Admin is typing...';
-          setTimeout(() => document.getElementById('typingIndicator').textContent = '', 2000);
-        } else if (msg.type === 'message') {
-          const messages = document.getElementById('chatMessages');
-          const div = document.createElement('div');
-          div.className = `chat-message ${msg.userId === state.userId ? 'user' : 'admin'}`;
-          div.textContent = msg.text;
-          messages.appendChild(div);
-          messages.scrollTop = messages.scrollHeight;
+
+      // Referrals
+      const loadReferrals = async () => {
+        const referral = await apiFetch('/users/me/referral');
+        if (referral) {
+          state.referral = referral;
+          document.getElementById('referralCode').textContent = referral.code || 'N/A';
+          document.getElementById('referralLink').href = referral.link;
         }
       };
-      socket.onclose = () => {
-        showToast('Chat disconnected', 'error');
+
+      // Support
+      const loadSupport = async () => {
+        const tickets = await apiFetch('/support/tickets');
+        document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+          <div class="border-b py-2 text-sm">
+            <p class="font-semibold">${t.subject}</p>
+            <p class="text-gray-600 text-xs">${t.status} - ${new Date(t.createdAt).toLocaleDateString()}</p>
+            <button class="view-ticket bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${t.id}">View</button>
+          </div>
+        `).join('') : '<p class="text-sm">No support tickets</p>';
+        loadChat();
       };
-    };
 
-    document.getElementById('chatInput').addEventListener('input', () => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'typing', userId: state.userId }));
-      }
-    });
-
-    document.getElementById('sendChat').addEventListener('click', () => {
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      if (!text || socket.readyState !== WebSocket.OPEN) return;
-      socket.send(JSON.stringify({ type: 'message', userId: state.userId, text }));
-      input.value = '';
-    });
-
-    document.getElementById('chatInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') document.getElementById('sendChat').click();
-    });
-
-    // FAQ
-    const loadFAQ = () => {
-      document.getElementById('faqItems').innerHTML = STATIC_FAQ.map(f => `
-        <div class="border-b py-2">
-          <h4 class="text-sm font-semibold">${f.question}</h4>
-          <p class="text-xs text-gray-600">${f.answer}</p>
-        </div>
-      `).join('');
-    };
-
-    // Profile
-    const loadProfile = async () => {
-      const profile = await apiFetch('/users/me');
-      if (!profile) return;
-      state.userId = profile.id;
-      document.getElementById('profileName').value = profile.name || '';
-      document.getElementById('profileEmail').value = profile.email || '';
-      document.getElementById('profilePhone').value = profile.phone || '';
-      document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/80';
-      state.profileImage = profile.image;
-      document.getElementById('profileImage').onerror = () => {
-        this.src = 'https://via.placeholder.com/80?text=Profile';
-      };
-    };
-
-    document.getElementById('editProfileBtn').addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#profileName, #profilePhone');
-      const isEditing = inputs[0].readOnly;
-      inputs.forEach(input => input.readOnly = !isEditing);
-      document.getElementById('editProfileBtn').innerHTML = isEditing ?
-        `<i class="fas fa-save mr-1"></i>Save Profile` : `<i class="fas fa-edit mr-1"></i>Edit Profile`;
-      if (!isEditing) {
-        const profile = {
-          name: document.getElementById('profileName').value,
-          phone: document.getElementById('profilePhone').value
-        };
-        apiFetch('/users/me', 'PUT', profile).then(data => {
+      document.getElementById('createTicketBtn').addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Create Support Ticket</h3>
+            <form id="ticketForm" class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-700">Subject</label>
+                <input type="text" name="subject" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Issue summary">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">Description</label>
+                <textarea name="description" required class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" placeholder="Describe your issue"></textarea>
+              </div>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit Ticket</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        modal.querySelector('#ticketForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const ticket = Object.fromEntries(formData);
+          const data = await apiFetch('/support/tickets', 'POST', ticket);
           if (data && data.success) {
-            showToast('Profile updated');
-            loadProfile();
-            loadDashboard();
+            showToast('Ticket created');
+            modal.remove();
+            loadSupport();
           }
         });
-      }
-    });
+      });
 
-    document.getElementById('profileImageInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-        return showToast('Only JPEG, PNG, or GIF images are allowed', 'error');
-      }
-      if (file.size > CONFIG.MAX_IMAGE_SIZE) {
-        return showToast('Image size must be less than 5MB', 'error');
-      }
-      const formData = new FormData();
-      formData.append('image', file);
-      const data = await apiFetch('/users/me/image', 'POST', formData, true);
-      if (data && data.success) {
-        state.profileImage = data.imageUrl;
-        document.getElementById('profileImage').src = data.imageUrl;
-        document.getElementById('headerProfileImage').src = data.imageUrl;
-        showToast('Profile image updated');
-      }
-    });
+      document.addEventListener('click', async e => {
+        const btn = e.target.closest('.view-ticket');
+        if (!btn) return;
+        const ticket = await apiFetch(`/support/tickets/${btn.dataset.id}`);
+        if (!ticket) return;
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Ticket #${ticket.id}</h3>
+            <div class="space-y-2 text-sm">
+              <p><strong>Subject:</strong> ${ticket.subject}</p>
+              <p><strong>Status:</strong> ${ticket.status}</p>
+              <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleDateString()}</p>
+              <p><strong>Description:</strong> ${ticket.description}</p>
+              ${ticket.response ? `<p><strong>Response:</strong> ${ticket.response}</p>` : '<p><strong>Response:</strong> Awaiting reply</p>'}
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      });
 
-    // Particles Animation
-    const initParticles = () => {
-      const canvas = document.querySelector('.particles');
-      const ctx = canvas.getContext('2d');
-      canvas.width = canvas.parentElement.offsetWidth;
-      canvas.height = canvas.parentElement.offsetHeight;
-      const particles = [];
-      for (let i = 0; i < 50; i++) {
-        particles.push({
+      // Chat
+      const loadChat = async () => {
+        const messages = await apiFetch('/support/chat');
+        const chatContainer = document.getElementById('chatMessages');
+        chatContainer.innerHTML = messages?.length ? messages.map(m => `
+          <div class="chat-message ${m.isUser ? 'user' : 'admin'}">
+            <p class="text-xs">${m.text}</p>
+            <span class="text-xs text-gray-400">${new Date(m.createdAt).toLocaleTimeString()}</span>
+          </div>
+        `).join('') : '<p class="text-sm">No messages</p>';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      };
+
+      document.getElementById('sendChat').addEventListener('click', async () => {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        const data = await apiFetch('/support/chat', 'POST', { text });
+        if (data && data.success) {
+          input.value = '';
+          loadChat();
+        }
+      });
+
+      document.getElementById('chatInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') document.getElementById('sendChat').click();
+      });
+
+      // FAQ
+      const loadFAQ = () => {
+        const faqContainer = document.getElementById('faqItems');
+        faqContainer.innerHTML = STATIC_FAQ.map((faq, i) => `
+          <div class="border-b py-2">
+            <button class="w-full text-left text-sm font-semibold text-orange-600 flex justify-between items-center" data-faq-id="${i}">
+              ${faq.question}
+              <i class="fas fa-chevron-down transform transition-transform"></i>
+            </button>
+            <div class="faq-answer hidden text-xs text-gray-600 mt-1">${faq.answer}</div>
+          </div>
+        `).join('');
+        document.querySelectorAll('[data-faq-id]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const answer = btn.nextElementSibling;
+            const icon = btn.querySelector('.fa-chevron-down');
+            answer.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+          });
+        });
+      };
+
+      // Profile
+      const loadProfile = async () => {
+        const profile = await apiFetch('/users/me');
+        if (profile) {
+          document.getElementById('profileName').value = profile.name || '';
+          document.getElementById('profileEmail').value = profile.email || '';
+          document.getElementById('profilePhone').value = profile.phone || '';
+          document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/100?text=Profile';
+        }
+      };
+
+      const enableProfileEdit = () => {
+        document.getElementById('profileName').removeAttribute('readonly');
+        document.getElementById('profilePhone').removeAttribute('readonly');
+        document.getElementById('editProfileBtn').classList.add('hidden');
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+      };
+
+      const disableProfileEdit = () => {
+        document.getElementById('profileName').setAttribute('readonly', true);
+        document.getElementById('profilePhone').setAttribute('readonly', true);
+        document.getElementById('editProfileBtn').classList.remove('hidden');
+        document.getElementById('cancelEditBtn').classList.add('hidden');
+      };
+
+      document.getElementById('editProfileBtn').addEventListener('click', async () => {
+        if (document.getElementById('editProfileBtn').textContent.includes('Save')) {
+          const name = document.getElementById('profileName').value;
+          const phone = document.getElementById('profilePhone').value;
+          if (!name || !phone) return showToast('Please fill all fields', 'error');
+          const data = await apiFetch('/users/me', 'PUT', { name, phone });
+          if (data && data.success) {
+            showToast('Profile updated');
+            disableProfileEdit();
+            document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
+            document.getElementById('welcomeName').textContent = name;
+          }
+        } else {
+          enableProfileEdit();
+          document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes';
+        }
+      });
+
+      document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        disableProfileEdit();
+        document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
+        loadProfile();
+      });
+
+      document.getElementById('profileImageInput').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+          showToast('Only JPEG, PNG, or GIF images are allowed', 'error');
+          return;
+        }
+        if (file.size > CONFIG.MAX_IMAGE_SIZE) {
+          showToast('Image size must be less than 5MB', 'error');
+          return;
+        }
+        const formData = new FormData();
+        formData.append('image', file);
+        const data = await apiFetch('/users/me/image', 'POST', formData, true);
+        if (data && data.success) {
+          showToast('Profile image updated');
+          document.getElementById('profileImage').src = data.imageUrl;
+          document.getElementById('headerProfileImage').src = data.imageUrl;
+        }
+      });
+
+      // Share
+      document.getElementById('shareBtn').addEventListener('click', () => {
+        openModal('shareModal');
+        const shareUrl = window.location.origin;
+        const shareText = 'Check out DELICUTE for delicious food!';
+        document.getElementById('shareWhatsApp').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      });
+
+      document.querySelector('#shareModal .close').addEventListener('click', () => closeModal('shareModal'));
+
+      // Particles
+      const initParticles = () => {
+        const canvas = document.querySelector('.particles');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+        const particles = Array.from({ length: 50 }, () => ({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          radius: Math.random() * 2 + 1,
-          vx: Math.random() * 2 - 1,
-          vy: Math.random() * 2 - 1
-        });
-      }
-      const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = '#f97316';
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
+          size: Math.random() * 3 + 1,
+          speedX: Math.random() * 0.5 - 0.25,
+          speedY: Math.random() * 0.5 - 0.25
+        }));
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach(p => {
+            p.x += p.speedX;
+            p.y += p.speedY;
+            if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
+            ctx.fill();
+          });
+          requestAnimationFrame(animate);
+        };
+        animate();
       };
-      animate();
-    };
 
-    // Initialize
-    const init = async () => {
-      if (!state.isLoggedIn) {
-        window.location.href = '/index.html';
-        return;
-      }
-      await loadDashboard();
-      initParticles();
-    };
+      // Initialize
+      const init = async () => {
+        if (!state.isLoggedIn) {
+          showToast('Please log in', 'error');
+          setTimeout(() => window.location.href = '/login.html', 1000);
+          return;
+        }
+        const profile = await apiFetch('/users/me');
+        state.userId = profile?.id;
+        initParticles();
+        loadDashboard();
+      };
 
-    init();
-  </script>
-</body>
+      window.addEventListener('resize', initParticles);
+      init();
+    </script>
+  </body>
 </html>
-</xaiArtifact>
