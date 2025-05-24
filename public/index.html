@@ -458,24 +458,24 @@
         }
 
         // Render Special Offers
-        async function renderSpecialOffers() {
+        function renderSpecialOffers() {
             const specialOffersContainer = document.getElementById('specialOffers');
             if (!specialOffersContainer) return;
             specialOffersContainer.innerHTML = '';
             try {
-                const response = await fetch('/api/special-offers');
-                if (!response.ok) {
-                    throw new Error((await response.json()).message);
+                const offers = JSON.parse(localStorage.getItem('offers')) || [];
+                if (offers.length === 0) {
+                    specialOffersContainer.innerHTML = '<p class="text-center col-span-full text-gray-600">No special offers available at the moment.</p>';
+                    return;
                 }
-                const offers = await response.json();
                 offers.forEach(offer => {
                     const offerItem = document.createElement('div');
                     offerItem.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
                     offerItem.innerHTML = `
-                        <img src="${offer.image}" alt="${offer.name}" class="w-full h-40 sm:h-48 object-cover">
+                        <img src="${offer.image || 'https://via.placeholder.com/150'}" alt="${offer.name}" class="w-full h-40 sm:h-48 object-cover">
                         <div class="p-4 sm:p-6">
                             <h3 class="text-lg sm:text-xl font-semibold text-gray-800">${offer.name}</h3>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${offer.description}</p>
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${offer.description || 'No description'}</p>
                             <p class="text-orange-600 font-bold mt-2 text-sm sm:text-base">${offer.price}</p>
                             <button class="bg-orange-600 text-white px-4 py-2 mt-2 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick='addToCart(${JSON.stringify(offer)})'>Add to Cart</button>
                         </div>
@@ -483,7 +483,7 @@
                     specialOffersContainer.appendChild(offerItem);
                 });
             } catch (error) {
-                console.error('Error fetching special offers:', error);
+                console.error('Error rendering special offers:', error);
                 showToast('Failed to load special offers.', 'error');
             }
         }

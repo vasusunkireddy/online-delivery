@@ -193,6 +193,7 @@
     <script>
         // Toast Notification
         function showToast(message, type) {
+            console.log(`Toast: ${message} (${type})`);
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
@@ -208,6 +209,7 @@
 
         // Modal handling
         function openModal(modalId) {
+            console.log(`Opening modal: ${modalId}`);
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.classList.remove('hidden');
@@ -215,6 +217,7 @@
         }
 
         function closeModal(modalId) {
+            console.log(`Closing modal: ${modalId}`);
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.classList.add('hidden');
@@ -226,6 +229,7 @@
 
         // Forgot Password Flow
         function showForgotPassword() {
+            console.log('Showing forgot password form');
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('forgotPasswordForm').classList.remove('hidden');
             document.getElementById('otpForm').classList.add('hidden');
@@ -233,143 +237,198 @@
         }
 
         function showOtpForm() {
+            console.log('Showing OTP form');
             document.getElementById('forgotPasswordForm').classList.add('hidden');
             document.getElementById('otpForm').classList.remove('hidden');
         }
 
         function showResetPassword() {
+            console.log('Showing reset password form');
             document.getElementById('otpForm').classList.add('hidden');
             document.getElementById('resetPasswordForm').classList.remove('hidden');
         }
 
         function showLoginForm() {
+            console.log('Showing login form');
             document.getElementById('loginForm').classList.remove('hidden');
             document.getElementById('forgotPasswordForm').classList.add('hidden');
             document.getElementById('otpForm').classList.add('hidden');
             document.getElementById('resetPasswordForm').classList.add('hidden');
+            // Clear input fields
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
         }
 
         // Admin Login Handler
         async function handleAdminLogin() {
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                showToast('Please enter both email and password', 'error');
+                return;
+            }
             try {
+                console.log('Sending login request:', { email });
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
+                console.log('Login response status:', response.status);
                 const data = await response.json();
+                console.log('Login response data:', data);
                 if (!response.ok) {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Login failed');
                 }
-                if (data.user.role !== 'admin') {
+                if (!data.token) {
+                    throw new Error('No token received from server');
+                }
+                if (data.user?.role !== 'admin') {
                     throw new Error('Admin access required');
                 }
                 localStorage.setItem('token', data.token);
+                console.log('Token stored:', localStorage.getItem('token'));
                 showToast('Admin login successful!', 'success');
-                window.location.href = '/admindashboard.html';
+                setTimeout(() => {
+                    console.log('Redirecting to admindashboard.html');
+                    window.location.href = '/admindashboard.html';
+                }, 1000);
             } catch (error) {
-                showToast('Login failed: ' + error.message, 'error');
+                console.error('Login error:', error.message);
+                showToast(`Login failed: ${error.message}`, 'error');
             }
         }
 
         // Admin Signup Handler
         async function handleAdminSignup() {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const phone = document.getElementById('signupPhone').value;
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
             const password = document.getElementById('signupPassword').value;
+            if (!name || !email || !phone || !password) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
             try {
+                console.log('Sending signup request:', { name, email, phone });
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, phone, password, role: 'admin' })
                 });
+                console.log('Signup response status:', response.status);
                 const data = await response.json();
+                console.log('Signup response data:', data);
                 if (!response.ok) {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Sign up failed');
                 }
                 showToast('Admin sign up successful! Please log in.', 'success');
                 openModal('loginModal');
                 closeModal('signupModal');
             } catch (error) {
-                showToast('Sign up failed: ' + error.message, 'error');
+                console.error('Signup error:', error.message);
+                showToast(`Sign up failed: ${error.message}`, 'error');
             }
         }
 
         // Google Login Handler
         function handleGoogleLogin() {
+            console.log('Initiating Google login');
             window.location.href = '/api/auth/google';
         }
 
         // Password Reset Flow
         async function sendOtp() {
-            const email = document.getElementById('forgotEmail').value;
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) {
+                showToast('Please enter your email', 'error');
+                return;
+            }
             try {
+                console.log('Sending OTP request for:', email);
                 const response = await fetch('/api/auth/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
+                console.log('OTP response status:', response.status);
                 const data = await response.json();
+                console.log('OTP response data:', data);
                 if (!response.ok) {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Failed to send OTP');
                 }
                 showToast(data.message, 'success');
                 showOtpForm();
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('OTP error:', error.message);
+                showToast(`Error: ${error.message}`, 'error');
             }
         }
 
         async function verifyOtp() {
-            const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('otp').value;
+            const email = document.getElementById('forgotEmail').value.trim();
+            const otp = document.getElementById('otp').value.trim();
+            if (!otp) {
+                showToast('Please enter the OTP', 'error');
+                return;
+            }
             try {
+                console.log('Verifying OTP for:', email);
                 const response = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp })
                 });
+                console.log('OTP verify response status:', response.status);
                 const data = await response.json();
+                console.log('OTP verify response data:', data);
                 if (!response.ok) {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'OTP verification failed');
                 }
                 showToast(data.message, 'success');
                 showResetPassword();
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('OTP verify error:', error.message);
+                showToast(`Error: ${error.message}`, 'error');
             }
         }
 
         async function resetPassword() {
-            const email = document.getElementById('forgotEmail').value;
+            const email = document.getElementById('forgotEmail').value.trim();
             const password = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            if (!password || !confirmPassword) {
+                showToast('Please enter both passwords', 'error');
+                return;
+            }
             if (password !== confirmPassword) {
-                showToast('Passwords do not match.', 'error');
+                showToast('Passwords do not match', 'error');
                 return;
             }
             try {
+                console.log('Resetting password for:', email);
                 const response = await fetch('/api/auth/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
+                console.log('Reset password response status:', response.status);
                 const data = await response.json();
+                console.log('Reset password response data:', data);
                 if (!response.ok) {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Password reset failed');
                 }
                 showToast(data.message, 'success');
                 showLoginForm();
                 closeModal('loginModal');
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('Reset password error:', error.message);
+                showToast(`Error: ${error.message}`, 'error');
             }
         }
 
         // Open login modal by default
+        console.log('Initializing page: opening login modal');
         openModal('loginModal');
     </script>
 </body>

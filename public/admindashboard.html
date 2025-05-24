@@ -6,259 +6,524 @@
     <title>Delicute Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
-        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
-        .sidebar-link { transition: background-color 0.2s; }
-        .sidebar-link:hover { background-color: rgba(249, 115, 22, 0.1); }
-        .hidden { display: none; }
-        .modal { transition: opacity 0.3s; }
-        .modal.show { opacity: 1; pointer-events: auto; }
-        .modal.hide { opacity: 0; pointer-events: none; }
+        body {
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                            url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Profile Dropdown */
+        .profile-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .profile-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-image {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #f97316;
+            transition: border-color 0.3s ease;
+        }
+
+        .welcome-message {
+            color: #f97316;
+            font-weight: 600;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: 4rem;
+            right: 1rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 12rem;
+            z-index: 40;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            color: #374151;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            border-left: 3px solid #f97316;
+        }
+
+        .dropdown-item.logout {
+            color: #dc2626;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-left: 3px solid #dc2626;
+        }
+
+        /* Card Styling */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #f97316;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ea580c;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        /* Modal */
+        .modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: scale(0.95);
+        }
+
+        .modal.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .modal.hide {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Toast */
+        .toast {
+            background: #1f2937;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .profile-container {
+                padding: 0.5rem;
+            }
+
+            .welcome-message {
+                font-size: 0.75rem;
+            }
+
+            .dropdown-menu {
+                width: 10rem;
+                right: 0.5rem;
+                top: 3.5rem;
+            }
+
+            .dropdown-item {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-600"></div>
+    <div id="loadingOverlay" class="loading-overlay fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-600"></div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hidden">
+    <div id="toast" class="toast fixed bottom-4 right-4 text-white px-4 py-2 hidden">
         <span id="toastMessage"></span>
     </div>
 
-    <!-- Main Container -->
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-lg flex-shrink-0">
-            <div class="p-4">
-                <h1 class="text-2xl font-bold text-orange-600">Delicute Admin</h1>
-            </div>
-            <nav class="mt-4">
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('dashboard')">Dashboard</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('orders')">Orders</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('menu')">Menu</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('customers')">Customers</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('payments')">Payments</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('settings')">Settings</a>
-                <a href="#" class="sidebar-link block py-2 px-4 text-red-600 hover:text-red-700" onclick="handleLogout()">Logout</a>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-6 overflow-y-auto">
-            <!-- Dashboard Section -->
-            <section id="dashboard" class="space-y-6">
-                <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
-                        <h3 class="text-lg font-semibold text-gray-700">Total Orders</h3>
-                        <p id="totalOrders" class="text-2xl font-bold text-orange-600">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
-                        <h3 class="text-lg font-semibold text-gray-700">Total Customers</h3>
-                        <p id="totalCustomers" class="text-2xl font-bold text-orange-600">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
-                        <h3 class="text-lg font-semibold text-gray-700">Total Revenue</h3>
-                        <p id="totalRevenue" class="text-2xl font-bold text-orange-600">₹0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
-                        <h3 class="text-lg font-semibold text-gray-700">Recent Orders</h3>
-                        <p id="recentOrdersCount" class="text-2xl font-bold text-orange-600">0</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Recent Orders</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Order ID</th>
-                                <th class="py-2">Customer</th>
-                                <th class="py-2">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentOrders"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Orders Section -->
-            <section id="orders" class="space-y-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800">Order Management</h2>
-                <!-- Filters -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Filter Orders</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <select id="orderStatusFilter" class="border rounded-lg p-2 text-sm">
-                            <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Accepted">Accepted</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Out for Delivery">Out for Delivery</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <input type="date" id="orderDateFilter" class="border rounded-lg p-2 text-sm">
-                        <input type="text" id="orderCustomerFilter" class="border rounded-lg p-2 text-sm" placeholder="Search by customer name">
-                    </div>
-                    <button class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="renderOrders()">Apply Filters</button>
-                </div>
-                <!-- Order List -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Order List</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Order ID</th>
-                                <th class="py-2">Customer</th>
-                                <th class="py-2">Total</th>
-                                <th class="py-2">Status</th>
-                                <th class="py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderList"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Menu Section -->
-            <section id="menu" class="space-y-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800">Menu Management</h2>
-                <!-- Add Category -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Category</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" id="categoryName" class="border rounded-lg p-2 text-sm" placeholder="Category Name">
-                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addCategory()">Add Category</button>
-                    </div>
-                </div>
-                <!-- Add Menu Item -->
-                <div class="bg-white p-6 rounded-lg shadow-lg" id="menuForm">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Menu Item</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" id="menuName" class="border rounded-lg p-2 text-sm" placeholder="Item Name">
-                        <textarea id="menuDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
-                        <select id="menuCategory" class="border rounded-lg p-2 text-sm">
-                            <option value="">Select Category</option>
-                        </select>
-                        <input type="number" id="menuPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
-                        <input type="file" id="menuImage" accept="image/*" class="text-sm">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="menuAvailable" class="mr-2" checked>
-                            <label for="menuAvailable" class="text-sm">Available</label>
-                        </div>
-                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addMenuItem()">Add Item</button>
-                    </div>
-                </div>
-                <!-- Menu Items List -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Menu Items</h3>
-                    <div id="adminMenuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
-            </section>
-
-            <!-- Customers Section -->
-            <section id="customers" class="space-y-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800">Customer Management</h2>
-                <!-- Customer List -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Database</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Name</th>
-                                <th class="py-2">Email</th>
-                                <th class="py-2">Phone</th>
-                                <th class="py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customerList"></tbody>
-                    </table>
-                </div>
-                <!-- Customer Queries -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Queries</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Customer</th>
-                                <th class="py-2">Query</th>
-                                <th class="py-2">Status</th>
-                                <th class="py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="queryList"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Payments Section -->
-            <section id="payments" class="space-y-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800">Payment Management</h2>
-                <!-- Payment Tracking -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Payment Tracking</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Order ID</th>
-                                <th class="py-2">Customer</th>
-                                <th class="py-2">Amount</th>
-                                <th class="py-2">Payment Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="paymentList"></tbody>
-                    </table>
-                </div>
-                <!-- Refunds -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Refund Management</h3>
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="py-2">Order ID</th>
-                                <th class="py-2">Customer</th>
-                                <th class="py-2">Amount</th>
-                                <th class="py-2">Reason</th>
-                                <th class="py-2">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="refundList"></tbody>
-                    </table>
-                </div>
-                <!-- Revenue Reports -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Revenue Reports</h3>
-                    <canvas id="revenueChart" class="w-full h-64"></canvas>
-                </div>
-            </section>
-
-            <!-- Settings Section -->
-            <section id="settings" class="space-y-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800">Business Settings</h2>
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Restaurant Details</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" id="restaurantName" class="border rounded-lg p-2 text-sm" placeholder="Restaurant Name">
-                        <input type="email" id="contactEmail" class="border rounded-lg p-2 text-sm" placeholder="Contact Email">
-                        <input type="text" id="contactPhone" class="border rounded-lg p-2 text-sm" placeholder="Contact Phone">
-                        <input type="file" id="restaurantLogo" accept="image/*" class="text-sm">
-                        <textarea id="openingHours" class="border rounded-lg p-2 text-sm" rows="4" placeholder='{"mon_fri": "9:00 AM - 10:00 PM", "sat_sun": "10:00 AM - 11:00 PM"}'></textarea>
-                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="updateBusinessSettings()">Update Settings</button>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <!-- Profile Dropdown -->
+    <div class="profile-container" onclick="toggleDropdown()">
+        <img id="profileImage" class="profile-image" src="https://via.placeholder.com/40" alt="Profile Image">
+        <span id="welcomeMessage" class="welcome-message">Welcome, Admin</span>
     </div>
+
+    <!-- Dropdown Menu -->
+    <div id="dropdownMenu" class="dropdown-menu hidden">
+        <div class="dropdown-item" onclick="showSection('dashboard')">Dashboard</div>
+        <div class="dropdown-item" onclick="showSection('orders')">Orders</div>
+        <div class="dropdown-item" onclick="showSection('menu')">Menu</div>
+        <div class="dropdown-item" onclick="showSection('customers')">Customers</div>
+        <div class="dropdown-item" onclick="showSection('payments')">Payments</div>
+        <div class="dropdown-item" onclick="showSection('offers')">Offers</div>
+        <div class="dropdown-item" onclick="showSection('coupons')">Coupons</div>
+        <div class="dropdown-item" onclick="showSection('settings')">Settings</div>
+        <div class="dropdown-item" onclick="showSection('profile')">Profile</div>
+        <div class="dropdown-item logout" onclick="handleLogout()">Logout</div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="p-4 sm:p-6 max-w-7xl mx-auto">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="space-y-6">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Dashboard</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card p-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Total Orders</h3>
+                    <p id="totalOrders" class="text-2xl font-bold text-orange-600">0</p>
+                </div>
+                <div class="card p-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Total Customers</h3>
+                    <p id="totalCustomers" class="text-2xl font-bold text-orange-600">0</p>
+                </div>
+                <div class="card p-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Total Revenue</h3>
+                    <p id="totalRevenue" class="text-2xl font-bold text-orange-600">₹0</p>
+                </div>
+                <div class="card p-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Recent Orders</h3>
+                    <p id="recentOrdersCount" class="text-2xl font-bold text-orange-600">0</p>
+                </div>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Recent Orders</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Order ID</th>
+                            <th class="py-2">Customer</th>
+                            <th class="py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrders"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section id="orders" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Order Management</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Filter Orders</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <select id="orderStatusFilter" class="border rounded-lg p-2 text-sm">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Out for Delivery">Out for Delivery</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <input type="date" id="orderDateFilter" class="border rounded-lg p-2 text-sm">
+                    <input type="text" id="orderCustomerFilter" class="border rounded-lg p-2 text-sm" placeholder="Search by customer name">
+                </div>
+                <button class="btn btn-primary mt-4" onclick="renderOrders()">Apply Filters</button>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Order List</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Order ID</th>
+                            <th class="py-2">Customer</th>
+                            <th class="py-2">Total</th>
+                            <th class="py-2">Status</th>
+                            <th class="py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderList"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Menu Section -->
+        <section id="menu" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Menu Management</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Category</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="categoryName" class="border rounded-lg p-2 text-sm" placeholder="Category Name">
+                    <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
+                </div>
+            </div>
+            <div class="card p-4" id="menuForm">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Menu Item</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="menuName" class="border rounded-lg p-2 text-sm" placeholder="Item Name">
+                    <textarea id="menuDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
+                    <select id="menuCategory" class="border rounded-lg p-2 text-sm">
+                        <option value="">Select Category</option>
+                    </select>
+                    <input type="number" id="menuPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
+                    <input type="file" id="menuImage" accept="image/*" class="text-sm">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="menuAvailable" class="mr-2" checked>
+                        <label for="menuAvailable" class="text-sm">Available</label>
+                    </div>
+                    <button class="btn btn-primary" onclick="addMenuItem()">Add Item</button>
+                </div>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Menu Items</h3>
+                <div id="adminMenuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- Customers Section -->
+        <section id="customers" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Customer Management</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Database</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Name</th>
+                            <th class="py-2">Email</th>
+                            <th class="py-2">Phone</th>
+                            <th class="py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerList"></tbody>
+                </table>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Queries</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Customer</th>
+                            <th class="py-2">Query</th>
+                            <th class="py-2">Status</th>
+                            <th class="py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queryList"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Payments Section -->
+        <section id="payments" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Payment Management</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Payment Tracking</h3>
+                <table classeq="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Order ID</th>
+                            <th class="py-2">Customer</th>
+                            <th class="py-2">Amount</th>
+                            <th class="py-2">Payment Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentList"></tbody>
+                </table>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Refund Management</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="py-2">Order ID</th>
+                            <th class="py-2">Customer</th>
+                            <th class="py-2">Amount</th>
+                            <th class="py-2">Reason</th>
+                            <th class="py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refundList"></tbody>
+                </table>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Revenue Reports</h3>
+                <canvas id="revenueChart" class="w-full h-64"></canvas>
+            </div>
+        </section>
+
+        <!-- Offers Section -->
+        <section id="offers" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Offers Management</h2>
+            <div class="card p-4" id="offerForm">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Offer</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="offerName" class="border rounded-lg p-2 text-sm" placeholder="Offer Name">
+                    <textarea id="offerDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
+                    <input type="number" id="offerPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
+                    <input type="file" id="offerImage" accept="image/*" class="text-sm">
+                    <button class="btn btn-primary" onclick="addOffer()">Add Offer</button>
+                </div>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Offers</h3>
+                <div id="adminOffers" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- Coupons Section -->
+        <section id="coupons" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Coupon Management</h2>
+            <div class="card p-4" id="couponForm">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Coupon</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="couponCode" class="border rounded-lg p-2 text-sm" placeholder="Coupon Code">
+                    <select id="couponType" class="border rounded-lg p-2 text-sm">
+                        <option value="percentage">Percentage</option>
+                        <option value="fixed">Fixed Amount</option>
+                    </select>
+                    <input type="number" id="couponValue" class="border rounded-lg p-2 text-sm" placeholder="Discount Value" min="0">
+                    <input type="date" id="couponValidFrom" class="border rounded-lg p-2 text-sm">
+                    <input type="date" id="couponValidUntil" class="border rounded-lg p-2 text-sm">
+                    <input type="file" id="couponImage" accept="image/*" class="text-sm">
+                    <button class="btn btn-primary" onclick="addCoupon()">Add Coupon</button>
+                </div>
+            </div>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Coupons</h3>
+                <div id="adminCoupons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Business Settings</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Restaurant Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="restaurantName" class="border rounded-lg p-2 text-sm" placeholder="Restaurant Name">
+                    <input type="email" id="contactEmail" class="border rounded-lg p-2 text-sm" placeholder="Contact Email">
+                    <input type="text" id="contactPhone" class="border rounded-lg p-2 text-sm" placeholder="Contact Phone">
+                    <input type="file" id="restaurantLogo" accept="image/*" class="text-sm">
+                    <textarea id="openingHours" class="border rounded-lg p-2 text-sm" rows="4" placeholder='{"mon_fri": "9:00 AM - 10:00 PM", "sat_sun": "10:00 AM - 11:00 PM"}'></textarea>
+                    <button class="btn btn-primary" onclick="updateBusinessSettings()">Update Settings</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profile" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Profile Settings</h2>
+            <div class="card p-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Edit Profile</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="profileUsername" class="text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="profileUsername" class="border rounded-lg p-2 text-sm w-full" placeholder="Enter username">
+                    </div>
+                    <div>
+                        <label for="profileImageUpload" class="text-sm font-medium text-gray-700">Profile Image</label>
+                        <input type="file" id="profileImageUpload" accept="image/*" class="text-sm w-full">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="welcomeMessageInput" class="text-sm font-medium text-gray-700">Welcome Message</label>
+                        <textarea id="welcomeMessageInput" class="border rounded-lg p-2 text-sm w-full" rows="3" placeholder="Enter welcome message"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="updateProfile()">Update Profile</button>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <!-- Order Details Modal -->
     <div id="orderDetailsModal" class="modal fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+        <div class="card p-6 w-full max-w-2xl">
             <h3 class="text-lg font-semibold text-gray-700 mb-4">Order Details</h3>
             <div id="orderDetailsContent" class="space-y-4"></div>
             <div class="mt-6 flex justify-end space-x-2">
-                <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="closeModal('orderDetailsModal')">Close</button>
+                <button class="btn btn-secondary" onclick="closeModal('orderDetailsModal')">Close</button>
             </div>
         </div>
     </div>
@@ -277,9 +542,15 @@
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
             toastMessage.textContent = message;
-            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
+            toast.className = `toast fixed bottom-4 right-4 px-4 py-2 text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('show');
+            dropdown.classList.toggle('hidden');
         }
 
         function showSection(sectionId) {
@@ -287,26 +558,422 @@
                 section.classList.add('hidden');
             });
             document.getElementById(sectionId).classList.remove('hidden');
+            toggleDropdown();
             if (sectionId === 'dashboard') fetchDashboardStats();
             else if (sectionId === 'orders') renderOrders();
             else if (sectionId === 'menu') { renderAdminMenu(); fetchCategories(); }
             else if (sectionId === 'customers') { renderCustomers(); renderCustomerQueries(); }
             else if (sectionId === 'payments') { renderPayments(); renderRefunds(); renderRevenueReports(); }
+            else if (sectionId === 'offers') renderAdminOffers();
+            else if (sectionId === 'coupons') renderAdminCoupons();
             else if (sectionId === 'settings') fetchBusinessSettings();
+            else if (sectionId === 'profile') loadProfile();
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
         }
 
-        // Navbar Setup
-        function setupNavbar() {
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.addEventListener('click', () => {
-                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('bg-orange-100', 'text-orange-600'));
-                    link.classList.add('bg-orange-100', 'text-orange-600');
-                });
+        // Profile Management
+        function loadProfile() {
+            const profile = JSON.parse(localStorage.getItem('adminProfile')) || {
+                username: 'Admin',
+                welcomeMessage: 'Welcome, Admin',
+                profileImage: 'https://via.placeholder.com/40'
+            };
+            document.getElementById('profileUsername').value = profile.username;
+            document.getElementById('welcomeMessageInput').value = profile.welcomeMessage.replace('Welcome, ', '');
+            document.getElementById('profileImage').src = profile.profileImage;
+            document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
+        }
+
+        function updateProfile() {
+            const username = document.getElementById('profileUsername').value.trim();
+            const welcomeMessageInput = document.getElementById('welcomeMessageInput').value.trim();
+            const profileImageUpload = document.getElementById('profileImageUpload');
+            if (!username || !welcomeMessageInput) {
+                showToast('Username and welcome message are required', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const profile = JSON.parse(localStorage.getItem('adminProfile')) || {};
+                profile.username = username;
+                profile.welcomeMessage = `Welcome, ${welcomeMessageInput}`;
+                if (profileImageUpload.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profile.profileImage = e.target.result;
+                        localStorage.setItem('adminProfile', JSON.stringify(profile));
+                        document.getElementById('profileImage').src = profile.profileImage;
+                        document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
+                        showToast('Profile updated successfully!', 'success');
+                        showLoading(false);
+                    };
+                    reader.readAsDataURL(profileImageUpload.files[0]);
+                } else {
+                    profile.profileImage = profile.profileImage || 'https://via.placeholder.com/40';
+                    localStorage.setItem('adminProfile', JSON.stringify(profile));
+                    document.getElementById('profileImage').src = profile.profileImage;
+                    document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
+                    showToast('Profile updated successfully!', 'success');
+                    showLoading(false);
+                }
+            } catch (error) {
+                showToast(`Error updating profile: ${error.message}`, 'error');
+                showLoading(false);
+            }
+        }
+
+        // UUID Generator
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
             });
+        }
+
+        // Offers Management
+        function addOffer() {
+            const name = document.getElementById('offerName').value.trim();
+            const description = document.getElementById('offerDescription').value.trim();
+            const price = document.getElementById('offerPrice').value;
+            const imageInput = document.getElementById('offerImage');
+            if (!name || !price || price < 0 || !imageInput.files[0]) {
+                showToast('Please fill all fields with valid data and upload an image.', 'error');
+                return;
+            }
+            showLoading(true);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const offers = JSON.parse(localStorage.getItem('offers')) || [];
+                offers.push({
+                    id: generateUUID(),
+                    name,
+                    description,
+                    price: `₹${parseFloat(price).toFixed(2)}`,
+                    image: e.target.result
+                });
+                localStorage.setItem('offers', JSON.stringify(offers));
+                showToast('Offer added successfully!', 'success');
+                document.getElementById('offerName').value = '';
+                document.getElementById('offerDescription').value = '';
+                document.getElementById('offerPrice').value = '';
+                imageInput.value = '';
+                renderAdminOffers();
+                showLoading(false);
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+        }
+
+        function editOffer(id) {
+            const offers = JSON.parse(localStorage.getItem('offers')) || [];
+            const offer = offers.find(o => o.id === id);
+            if (!offer) return;
+            const offerForm = document.getElementById('offerForm');
+            offerForm.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Edit Offer</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="offerName" class="border rounded-lg p-2 text-sm" value="${offer.name}">
+                    <textarea id="offerDescription" class="border rounded-lg p-2 text-sm" rows="3">${offer.description || ''}</textarea>
+                    <input type="number" id="offerPrice" class="border rounded-lg p-2 text-sm" value="${offer.price.replace('₹', '')}" min="0">
+                    <input type="file" id="offerImage" accept="image/*" class="text-sm">
+                    <button class="btn btn-primary" onclick="updateOffer('${id}')">Update Offer</button>
+                    <button class="btn btn-secondary" onclick="renderAdminOffers()">Cancel</button>
+                </div>
+            `;
+        }
+
+        function updateOffer(id) {
+            const name = document.getElementById('offerName').value.trim();
+            const description = document.getElementById('offerDescription').value.trim();
+            const price = document.getElementById('offerPrice').value;
+            const imageInput = document.getElementById('offerImage');
+            if (!name || !price || price < 0) {
+                showToast('Please fill all fields with valid data.', 'error');
+                return;
+            }
+            showLoading(true);
+            const offers = JSON.parse(localStorage.getItem('offers')) || [];
+            const offerIndex = offers.findIndex(o => o.id === id);
+            if (offerIndex === -1) {
+                showToast('Offer not found', 'error');
+                showLoading(false);
+                return;
+            }
+            if (imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    offers[offerIndex] = {
+                        id,
+                        name,
+                        description,
+                        price: `₹${parseFloat(price).toFixed(2)}`,
+                        image: e.target.result
+                    };
+                    localStorage.setItem('offers', JSON.stringify(offers));
+                    showToast('Offer updated successfully!', 'success');
+                    renderAdminOffers();
+                    showLoading(false);
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                offers[offerIndex] = {
+                    id,
+                    name,
+                    description,
+                    price: `₹${parseFloat(price).toFixed(2)}`,
+                    image: offers[offerIndex].image
+                };
+                localStorage.setItem('offers', JSON.stringify(offers));
+                showToast('Offer updated successfully!', 'success');
+                renderAdminOffers();
+                showLoading(false);
+            }
+        }
+
+        function deleteOffer(id) {
+            showLoading(true);
+            try {
+                const offers = JSON.parse(localStorage.getItem('offers')) || [];
+                const updatedOffers = offers.filter(o => o.id !== id);
+                localStorage.setItem('offers', JSON.stringify(updatedOffers));
+                showToast('Offer deleted successfully!', 'success');
+                renderAdminOffers();
+            } catch (error) {
+                showToast(`Error deleting offer: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderAdminOffers() {
+            const adminOffersContainer = document.getElementById('adminOffers');
+            if (!adminOffersContainer) return;
+            adminOffersContainer.innerHTML = '';
+            const offerForm = document.getElementById('offerForm');
+            offerForm.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Offer</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="offerName" class="border rounded-lg p-2 text-sm" placeholder="Offer Name">
+                    <textarea id="offerDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
+                    <input type="number" id="offerPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
+                    <input type="file" id="offerImage" accept="image/*" class="text-sm">
+                    <button class="btn btn-primary" onclick="addOffer()">Add Offer</button>
+                </div>
+            `;
+            try {
+                const offers = JSON.parse(localStorage.getItem('offers')) || [];
+                offers.forEach(offer => {
+                    const offerItem = document.createElement('div');
+                    offerItem.className = 'card overflow-hidden';
+                    offerItem.innerHTML = `
+                        <img src="${offer.image || 'https://via.placeholder.com/150'}" alt="${offer.name}" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800">${offer.name}</h3>
+                            <p class="text-gray-600 mt-2 text-sm">${offer.description || 'No description'}</p>
+                            <p class="text-orange-600 font-bold mt-2 text-sm">${offer.price}</p>
+                            <div class="mt-4 flex space-x-2">
+                                <button class="text-blue-600 hover:underline text-sm" onclick="editOffer('${offer.id}')">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm" onclick="deleteOffer('${offer.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    adminOffersContainer.appendChild(offerItem);
+                });
+            } catch (error) {
+                showToast(`Error fetching offers: ${error.message}`, 'error');
+            }
+        }
+
+        // Coupons Management
+        async function addCoupon() {
+            const code = document.getElementById('couponCode').value.trim().toUpperCase();
+            const type = document.getElementById('couponType').value;
+            const value = document.getElementById('couponValue').value;
+            const validFrom = document.getElementById('couponValidFrom').value;
+            const validUntil = document.getElementById('couponValidUntil').value;
+            const imageInput = document.getElementById('couponImage');
+            if (!code || !type || !value || value < 0 || !validFrom || !validUntil) {
+                showToast('Please fill all fields with valid data.', 'error');
+                return;
+            }
+            if (new Date(validFrom) > new Date(validUntil)) {
+                showToast('Valid until date must be after valid from date.', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+                formData.append('type', type);
+                formData.append('value', value);
+                formData.append('valid_from', validFrom);
+                formData.append('valid_until', validUntil);
+                if (imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                const response = await fetch('/api/coupons', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to add coupon');
+                showToast('Coupon added successfully!', 'success');
+                document.getElementById('couponCode').value = '';
+                document.getElementById('couponType').value = 'percentage';
+                document.getElementById('couponValue').value = '';
+                document.getElementById('couponValidFrom').value = '';
+                document.getElementById('couponValidUntil').value = '';
+                imageInput.value = '';
+                renderAdminCoupons();
+            } catch (error) {
+                showToast(`Error adding coupon: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function editCoupon(id) {
+            try {
+                const response = await fetch('/api/coupons', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch coupons');
+                const coupons = await response.json();
+                const coupon = coupons.find(c => c.id == id);
+                if (!coupon) return;
+                const couponForm = document.getElementById('couponForm');
+                couponForm.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Edit Coupon</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="couponCode" class="border rounded-lg p-2 text-sm" value="${coupon.code}">
+                        <select id="couponType" class="border rounded-lg p-2 text-sm">
+                            <option value="percentage" ${coupon.type === 'percentage' ? 'selected' : ''}>Percentage</option>
+                            <option value="fixed" ${coupon.type === 'fixed' ? 'selected' : ''}>Fixed Amount</option>
+                        </select>
+                        <input type="number" id="couponValue" class="border rounded-lg p-2 text-sm" value="${coupon.value}" min="0">
+                        <input type="date" id="couponValidFrom" class="border rounded-lg p-2 text-sm" value="${coupon.valid_from}">
+                        <input type="date" id="couponValidUntil" class="border rounded-lg p-2 text-sm" value="${coupon.valid_until}">
+                        <input type="file" id="couponImage" accept="image/*" class="text-sm">
+                        <button class="btn btn-primary" onclick="updateCoupon('${id}')">Update Coupon</button>
+                        <button class="btn btn-secondary" onclick="renderAdminCoupons()">Cancel</button>
+                    </div>
+                `;
+            } catch (error) {
+                showToast(`Error fetching coupon: ${error.message}`, 'error');
+            }
+        }
+
+        async function updateCoupon(id) {
+            const code = document.getElementById('couponCode').value.trim().toUpperCase();
+            const type = document.getElementById('couponType').value;
+            const value = document.getElementById('couponValue').value;
+            const validFrom = document.getElementById('couponValidFrom').value;
+            const validUntil = document.getElementById('couponValidUntil').value;
+            const imageInput = document.getElementById('couponImage');
+            if (!code || !type || !value || value < 0 || !validFrom || !validUntil) {
+                showToast('Please fill all fields with valid data.', 'error');
+                return;
+            }
+            if (new Date(validFrom) > new Date(validUntil)) {
+                showToast('Valid until date must be after valid from date.', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+                formData.append('type', type);
+                formData.append('value', value);
+                formData.append('valid_from', validFrom);
+                formData.append('valid_until', validUntil);
+                if (imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                const response = await fetch(`/api/coupons/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update coupon');
+                showToast('Coupon updated successfully!', 'success');
+                renderAdminCoupons();
+            } catch (error) {
+                showToast(`Error updating coupon: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function deleteCoupon(id) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/coupons/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to delete coupon');
+                showToast('Coupon deleted successfully!', 'success');
+                renderAdminCoupons();
+            } catch (error) {
+                showToast(`Error deleting coupon: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function renderAdminCoupons() {
+            const adminCouponsContainer = document.getElementById('adminCoupons');
+            if (!adminCouponsContainer) return;
+            adminCouponsContainer.innerHTML = '';
+            const couponForm = document.getElementById('couponForm');
+            couponForm.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Coupon</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="couponCode" class="border rounded-lg p-2 text-sm" placeholder="Coupon Code">
+                    <select id="couponType" class="border rounded-lg p-2 text-sm">
+                        <option value="percentage">Percentage</option>
+                        <option value="fixed">Fixed Amount</option>
+                    </select>
+                    <input type="number" id="couponValue" class="border rounded-lg p-2 text-sm" placeholder="Discount Value" min="0">
+                    <input type="date" id="couponValidFrom" class="border rounded-lg p-2 text-sm">
+                    <input type="date" id="couponValidUntil" class="border rounded-lg p-2 text-sm">
+                    <input type="file" id="couponImage" accept="image/*" class="text-sm">
+                    <button class="btn btn-primary" onclick="addCoupon()">Add Coupon</button>
+                </div>
+            `;
+            showLoading(true);
+            try {
+                const response = await fetch('/api/coupons', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch coupons');
+                const coupons = await response.json();
+                coupons.forEach(coupon => {
+                    const couponItem = document.createElement('div');
+                    couponItem.className = 'card overflow-hidden';
+                    couponItem.innerHTML = `
+                        <img src="${coupon.image || 'https://via.placeholder.com/150'}" alt="${coupon.code}" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800">${coupon.code}</h3>
+                            <p class="text-gray-600 mt-2 text-sm">Type: ${coupon.type === 'percentage' ? 'Percentage' : 'Fixed Amount'}</p>
+                            <p class="text-gray-600 mt-2 text-sm">Value: ${coupon.type === 'percentage' ? `${coupon.value}%` : `₹${coupon.value}`}</p>
+                            <p class="text-gray-600 mt-2 text-sm">Valid From: ${coupon.valid_from}</p>
+                            <p class="text-gray-600 mt-2 text-sm">Valid Until: ${coupon.valid_until}</p>
+                            <div class="mt-4 flex space-x-2">
+                                <button class="text-blue-600 hover:underline text-sm" onclick="editCoupon('${coupon.id}')">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm" onclick="deleteCoupon('${coupon.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    adminCouponsContainer.appendChild(couponItem);
+                });
+            } catch (error) {
+                showToast(`Error fetching coupons: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
         // Fetch Dashboard Stats
@@ -449,8 +1116,8 @@
                             <input type="checkbox" id="menuAvailable" class="mr-2" ${item.is_available ? 'checked' : ''}>
                             <label for="menuAvailable" class="text-sm">Available</label>
                         </div>
-                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="updateMenuItem('${id}')">Update Item</button>
-                        <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="renderAdminMenu()">Cancel</button>
+                        <button class="btn btn-primary" onclick="updateMenuItem('${id}')">Update Item</button>
+                        <button class="btn btn-secondary" onclick="renderAdminMenu()">Cancel</button>
                     </div>
                 `;
                 await fetchCategories();
@@ -460,44 +1127,50 @@
             }
         }
 
-        // Update Menu Item
         async function updateMenuItem(id) {
-            const name = document.getElementById('menuName').value.trim();
-            const description = document.getElementById('menuDescription').value.trim();
-            const category_id = document.getElementById('menuCategory').value;
-            const price = document.getElementById('menuPrice').value;
-            const imageInput = document.getElementById('menuImage');
-            const is_available = document.getElementById('menuAvailable').checked;
-            if (!name || !price || !category_id || price < 0) {
-                showToast('Please fill all fields with valid data.', 'error');
-                return;
-            }
-            showLoading(true);
-            try {
-                const formData = new FormData();
-                formData.append('name', name);
-                formData.append('description', description);
-                formData.append('category_id', category_id);
-                formData.append('price', `₹${price}`);
-                formData.append('is_available', is_available);
-                if (imageInput.files[0]) {
-                    formData.append('image', imageInput.files[0]);
-                }
-                const response = await fetch(`/api/menu/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update item');
-                showToast('Menu item updated successfully!', 'success');
-                renderAdminMenu();
-            } catch (error) {
-                showToast(`Error updating menu item: ${error.message}`, 'error');
-            } finally {
-                showLoading(false);
-            }
+    const name = document.getElementById('menuName').value.trim();
+    const description = document.getElementById('menuDescription').value.trim();
+    const category_id = document.getElementById('menuCategory').value;
+    const price = document.getElementById('menuPrice').value;
+    const imageInput = document.getElementById('menuImage');
+    const is_available = document.getElementById('menuAvailable').checked;
+
+    if (!name || !price || !category_id || price < 0) {
+        showToast('Please fill all fields with valid data.', 'error');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('description', description);
+        formData.append('category_id', category_id);
+        formData.append('price', `₹${price}`);
+        formData.append('is_available', is_available);
+        if (imageInput.files[0]) {
+            formData.append('image', imageInput.files[0]);
         }
 
+        const response = await fetch(`/api/menu/${id}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update item');
+        }
+
+        showToast('Menu item updated successfully!', 'success');
+        renderAdminMenu();
+    } catch (error) {
+        showToast(`Error updating menu item: ${error.message}`, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
         // Toggle Menu Item Availability
         async function toggleMenuAvailability(id, is_available) {
             showLoading(true);
@@ -558,7 +1231,7 @@
                         <input type="checkbox" id="menuAvailable" class="mr-2" checked>
                         <label for="menuAvailable" class="text-sm">Available</label>
                     </div>
-                    <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addMenuItem()">Add Item</button>
+                    <button class="btn btn-primary" onclick="addMenuItem()">Add Item</button>
                 </div>
             `;
             await fetchCategories();
@@ -573,19 +1246,19 @@
                 items.forEach(item => {
                     const category = categories.find(cat => cat.id == item.category_id) || { name: 'Uncategorized' };
                     const menuItem = document.createElement('div');
-                    menuItem.className = 'bg-white rounded-lg shadow-lg overflow-hidden card-hover';
+                    menuItem.className = 'card overflow-hidden';
                     menuItem.innerHTML = `
-                        <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-40 sm:h-48 object-cover">
-                        <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">${item.name}</h3>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${item.description || 'No description'}</p>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">Category: ${category.name}</p>
-                            <p class="text-orange-600 font-bold mt-2 text-sm sm:text-base">${item.price}</p>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">Status: ${item.is_available ? 'Available' : 'Out of Stock'}</p>
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
+                            <p class="text-gray-600 mt-2 text-sm">${item.description || 'No description'}</p>
+                            <p class="text-gray-600 mt-2 text-sm">Category: ${category.name}</p>
+                            <p class="text-orange-600 font-bold mt-2 text-sm">${item.price}</p>
+                            <p class="text-gray-600 mt-2 text-sm">Status: ${item.is_available ? 'Available' : 'Out of Stock'}</p>
                             <div class="mt-4 flex space-x-2">
-                                <button class="text-blue-600 hover:underline text-sm sm:text-base" onclick="editMenuItem('${item.id}')">Edit</button>
-                                <button class="text-red-600 hover:underline text-sm sm:text-base" onclick="deleteMenuItem('${item.id}')">Delete</button>
-                                <button class="text-green-600 hover:underline text-sm sm:text-base" onclick="toggleMenuAvailability('${item.id}', ${!item.is_available})">${item.is_available ? 'Mark Out of Stock' : 'Mark Available'}</button>
+                                <button class="text-blue-600 hover:underline text-sm" onclick="editMenuItem('${item.id}')">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm" onclick="deleteMenuItem('${item.id}')">Delete</button>
+                                <button class="text-green-600 hover:underline text-sm" onclick="toggleMenuAvailability('${item.id}', ${!item.is_available})">${item.is_available ? 'Mark Out of Stock' : 'Mark Available'}</button>
                             </div>
                         </div>
                     `;
@@ -651,17 +1324,29 @@
         async function viewOrderDetails(orderId) {
             showLoading(true);
             try {
-                const response = await fetch(`/api/orders/${orderId}`, {
+                const orderResponse = await fetch(`/api/orders/${orderId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch order details');
-                const order = await response.json();
-                const personnel = await (await fetch('/api/delivery-personnel', { headers: { 'Authorization': `Bearer ${token}` } })).json();
+                if (!orderResponse.ok) throw new Error((await orderResponse.json()).message || 'Failed to fetch order details');
+                const order = await orderResponse.json();
+                const personnelResponse = await fetch('/api/delivery-personnel', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const personnel = await personnelResponse.json();
+                const couponsResponse = await fetch('/api/coupons', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const coupons = await couponsResponse.json();
                 const modalContent = document.getElementById('orderDetailsContent');
                 modalContent.innerHTML = `
                     <p><strong>Order ID:</strong> ${order.id}</p>
                     <p><strong>Customer:</strong> ${order.customer_name}</p>
                     <p><strong>Delivery Address:</strong> ${order.delivery_address || 'Not provided'}</p>
+                    <p><strong>Subtotal:</strong> ₹${parseFloat(order.subtotal_amount || order.total_amount.replace('₹', '')).toFixed(2)}</p>
+                    ${order.coupon_code ? `
+                        <p><strong>Coupon Applied:</strong> ${order.coupon_code} (${order.coupon_type === 'percentage' ? `${order.coupon_value}%` : `₹${order.coupon_value}`})</p>
+                        <p><strong>Discount:</strong> ₹${order.discount_amount || '0.00'}</p>
+                    ` : ''}
                     <p><strong>Total:</strong> ₹${parseFloat(order.total_amount.replace('₹', '')).toFixed(2)}</p>
                     <p><strong>Payment Status:</strong> ${order.payment_status}</p>
                     <p><strong>Status:</strong> ${order.status}</p>
@@ -675,16 +1360,49 @@
                         <option value="">Select Personnel</option>
                         ${personnel.map(p => `<option value="${p.id}" ${order.delivery_personnel_id == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
                     </select>
-                    <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 mt-2" onclick="assignDeliveryPersonnel('${order.id}')">Assign</button>
-                    ${order.status !== 'Cancelled' ? `
+                    <button class="btn btn-primary mt-2" onclick="assignDeliveryPersonnel('${order.id}')">Assign</button>
+                    ${order.status !== 'Cancelled' && order.status !== 'Completed' ? `
+                        <h4 class="font-semibold mt-4">Apply Coupon:</h4>
+                        <select id="couponSelect" class="border rounded-lg p-2 text-sm w-full">
+                            <option value="">Select Coupon</option>
+                            ${coupons.filter(c => new Date(c.valid_from) <= new Date() && new Date(c.valid_until) >= new Date()).map(c => `<option value="${c.id}">${c.code} (${c.type === 'percentage' ? `${c.value}%` : `₹${c.value}`})</option>`).join('')}
+                        </select>
+                        <button class="btn btn-primary mt-2" onclick="applyCouponToOrder('${order.id}')">Apply Coupon</button>
                         <h4 class="font-semibold mt-4">Cancel Order:</h4>
                         <textarea id="cancelReason" class="border rounded-lg p-2 text-sm w-full" placeholder="Reason for cancellation"></textarea>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 mt-2" onclick="cancelOrder('${order.id}')">Cancel Order</button>
+                        <button class="btn btn-danger mt-2" onclick="cancelOrder('${order.id}')">Cancel Order</button>
                     ` : ''}
                 `;
                 document.getElementById('orderDetailsModal').classList.remove('hidden');
             } catch (error) {
                 showToast(`Error fetching order details: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Apply Coupon to Order
+        async function applyCouponToOrder(orderId) {
+            const couponId = document.getElementById('couponSelect').value;
+            if (!couponId) {
+                showToast('Please select a coupon', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}/apply-coupon`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ coupon_id: couponId })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to apply coupon');
+                showToast('Coupon applied successfully!', 'success');
+                viewOrderDetails(orderId);
+            } catch (error) {
+                showToast(`Error applying coupon: ${error.message}`, 'error');
             } finally {
                 showLoading(false);
             }
@@ -844,11 +1562,11 @@
                 queries.forEach(query => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="px-4 py-2">${query.name}</td>
-                        <td class="px-4 py-2">${query.query_text}</td>
+                        <td class="px-4 py-2">${query.customerName}</td>
+                        <td class="px-4 py-2">${query.query}</td>
                         <td class="px-4 py-2">${query.status}</td>
                         <td class="px-4 py-2">
-                            ${query.status === 'Open' ? `<button class="text-blue-600 hover:underline text-sm" onclick="respondToQuery('${query.id}')">Respond</button>` : ''}
+                            <button class="text-blue-600 hover:underline text-sm" onclick="respondToQuery('${query.id}')">Respond</button>
                         </td>
                     `;
                     queryList.appendChild(row);
@@ -862,26 +1580,53 @@
 
         // Respond to Customer Query
         async function respondToQuery(queryId) {
-            const response = prompt('Enter response to the query:');
-            if (!response || response.trim() === '') {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/customer-queries/${queryId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch query');
+                const query = await response.json();
+                const modalContent = document.getElementById('orderDetailsContent');
+                modalContent.innerHTML = `
+                    <p><strong>Customer:</strong> ${query.customerName}</p>
+                    <p><strong>Query:</strong> ${query.query}</p>
+                    <p><strong>Status:</strong> ${query.status}</p>
+                    <h4 class="font-semibold mt-4">Response:</h4>
+                    <textarea id="queryResponse" class="border rounded-lg p-2 text-sm w-full" rows="4" placeholder="Enter your response"></textarea>
+                    <button class="btn btn-primary mt-2" onclick="submitQueryResponse('${query.id}')">Submit Response</button>
+                `;
+                document.getElementById('orderDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                showToast(`Error fetching query: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Submit Query Response
+        async function submitQueryResponse(queryId) {
+            const responseText = document.getElementById('queryResponse').value.trim();
+            if (!responseText) {
                 showToast('Response is required', 'error');
                 return;
             }
             showLoading(true);
             try {
-                const res = await fetch(`/api/customer-queries/${queryId}/respond`, {
+                const response = await fetch(`/api/customer-queries/${queryId}/respond`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ response_text: response })
+                    body: JSON.stringify({ response: responseText, status: 'Resolved' })
                 });
-                if (!res.ok) throw new Error((await res.json()).message || 'Failed to respond to query');
-                showToast('Query responded successfully!', 'success');
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to submit response');
+                showToast('Response submitted successfully!', 'success');
+                closeModal('orderDetailsModal');
                 renderCustomerQueries();
             } catch (error) {
-                showToast(`Error responding to query: ${error.message}`, 'error');
+                showToast(`Error submitting response: ${error.message}`, 'error');
             } finally {
                 showLoading(false);
             }
@@ -894,18 +1639,18 @@
             paymentList.innerHTML = '';
             showLoading(true);
             try {
-                const response = await fetch('/api/orders', {
+                const response = await fetch('/api/payments', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch payments');
-                const orders = await response.json();
-                orders.forEach(order => {
+                const payments = await response.json();
+                payments.forEach(payment => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="px-4 py-2">${order.id}</td>
-                        <td class="px-4 py-2">${order.customerName}</td>
-                        <td class="px-4 py-2">₹${order.total.toFixed(2)}</td>
-                        <td class="px-4 py-2">${order.payment_status || 'Pending'}</td>
+                        <td class="px-4 py-2">${payment.orderId}</td>
+                        <td class="px-4 py-2">${payment.customerName}</td>
+                        <td class="px-4 py-2">₹${payment.amount.toFixed(2)}</td>
+                        <td class="px-4 py-2">${payment.status}</td>
                     `;
                     paymentList.appendChild(row);
                 });
@@ -931,9 +1676,9 @@
                 refunds.forEach(refund => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="px-4 py-2">${refund.order_id}</td>
-                        <td class="px-4 py-2">${refund.customer_name}</td>
-                        <td class="px-4 py-2">${refund.amount}</td>
+                        <td class="px-4 py-2">${refund.orderId}</td>
+                        <td class="px-4 py-2">${refund.customerName}</td>
+                        <td class="px-4 py-2">₹${refund.amount.toFixed(2)}</td>
                         <td class="px-4 py-2">${refund.reason}</td>
                         <td class="px-4 py-2">${refund.status}</td>
                     `;
@@ -960,10 +1705,10 @@
                 revenueChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: reports.map(r => r.date),
+                        labels: reports.labels, // e.g., ['Jan', 'Feb', 'Mar']
                         datasets: [{
-                            label: 'Daily Revenue (₹)',
-                            data: reports.map(r => r.total),
+                            label: 'Revenue (₹)',
+                            data: reports.revenue, // e.g., [10000, 15000, 20000]
                             borderColor: '#f97316',
                             backgroundColor: 'rgba(249, 115, 22, 0.2)',
                             fill: true
@@ -972,8 +1717,12 @@
                     options: {
                         responsive: true,
                         scales: {
-                            x: { title: { display: true, text: 'Date' } },
-                            y: { title: { display: true, text: 'Revenue (₹)' }, beginAtZero: true }
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: value => `₹${value}`
+                                }
+                            }
                         }
                     }
                 });
@@ -988,15 +1737,15 @@
         async function fetchBusinessSettings() {
             showLoading(true);
             try {
-                const response = await fetch('/api/business-settings', {
+                const response = await fetch('/api/settings', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch settings');
                 const settings = await response.json();
-                document.getElementById('restaurantName').value = settings.restaurant_name;
-                document.getElementById('contactEmail').value = settings.contact_email;
-                document.getElementById('contactPhone').value = settings.contact_phone;
-                document.getElementById('openingHours').value = JSON.stringify(settings.opening_hours, null, 2);
+                document.getElementById('restaurantName').value = settings.restaurantName || '';
+                document.getElementById('contactEmail').value = settings.contactEmail || '';
+                document.getElementById('contactPhone').value = settings.contactPhone || '';
+                document.getElementById('openingHours').value = JSON.stringify(settings.openingHours || {}, null, 2);
             } catch (error) {
                 showToast(`Error fetching settings: ${error.message}`, 'error');
             } finally {
@@ -1006,33 +1755,39 @@
 
         // Update Business Settings
         async function updateBusinessSettings() {
-            const restaurant_name = document.getElementById('restaurantName').value.trim();
-            const contact_email = document.getElementById('contactEmail').value.trim();
-            const contact_phone = document.getElementById('contactPhone').value.trim();
-            const opening_hours = document.getElementById('openingHours').value;
-            const logoInput = document.getElementById('restaurantLogo');
-            if (!restaurant_name || !contact_email || !contact_phone || !opening_hours) {
-                showToast('All fields are required', 'error');
+            const restaurantName = document.getElementById('restaurantName').value.trim();
+            const contactEmail = document.getElementById('contactEmail').value.trim();
+            const contactPhone = document.getElementById('contactPhone').value.trim();
+            const openingHoursText = document.getElementById('openingHours').value.trim();
+            const restaurantLogo = document.getElementById('restaurantLogo');
+            if (!restaurantName || !contactEmail || !contactPhone || !openingHoursText) {
+                showToast('Please fill all fields.', 'error');
+                return;
+            }
+            let openingHours;
+            try {
+                openingHours = JSON.parse(openingHoursText);
+            } catch (error) {
+                showToast('Invalid opening hours format. Please use valid JSON.', 'error');
                 return;
             }
             showLoading(true);
             try {
                 const formData = new FormData();
-                formData.append('restaurant_name', restaurant_name);
-                formData.append('contact_email', contact_email);
-                formData.append('contact_phone', contact_phone);
-                formData.append('opening_hours', opening_hours);
-                if (logoInput.files[0]) {
-                    formData.append('logo', logoInput.files[0]);
+                formData.append('restaurantName', restaurantName);
+                formData.append('contactEmail', contactEmail);
+                formData.append('contactPhone', contactPhone);
+                formData.append('openingHours', JSON.stringify(openingHours));
+                if (restaurantLogo.files[0]) {
+                    formData.append('logo', restaurantLogo.files[0]);
                 }
-                const response = await fetch('/api/business-settings', {
+                const response = await fetch('/api/settings', {
                     method: 'PUT',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to update settings');
-                showToast('Business settings updated successfully!', 'success');
-                fetchBusinessSettings();
+                showToast('Settings updated successfully!', 'success');
             } catch (error) {
                 showToast(`Error updating settings: ${error.message}`, 'error');
             } finally {
@@ -1040,43 +1795,25 @@
             }
         }
 
-        // Logout Handler
+        // Handle Logout
         function handleLogout() {
             localStorage.removeItem('token');
+            localStorage.removeItem('adminProfile');
             showToast('Logged out successfully!', 'success');
-            setTimeout(() => window.location.href = '/admin.html', 1000);
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
         }
 
-        // Check Authentication
-        async function checkAuth() {
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
             if (!token) {
-                showToast('Please log in to access the dashboard.', 'error');
-                setTimeout(() => window.location.href = '/admin.html', 1000);
+                window.location.href = '/login';
                 return;
             }
-            showLoading(true);
-            try {
-                const response = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.status === 401 || response.status === 403) {
-                    showToast('Admin access required.', 'error');
-                    localStorage.removeItem('token');
-                    setTimeout(() => window.location.href = '/admin.html', 1000);
-                } else {
-                    showSection('dashboard');
-                }
-            } catch (error) {
-                showToast(`Error verifying authentication: ${error.message}`, 'error');
-                setTimeout(() => window.location.href = '/admin.html', 1000);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // Initialize page
-        setupNavbar();
-        checkAuth();
+            loadProfile();
+            showSection('dashboard');
+        });
     </script>
 </body>
 </html>
