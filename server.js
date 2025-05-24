@@ -85,22 +85,30 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let userResult = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+    let user;
     if (userResult.rows.length > 0) {
-      return done(null, userResult.rows[0]);
+      user = userResult.rows[0];
+    } else {
+      userResult = await pool.query('SELECT * FROM users WHERE email = $1', [profile.emails[0].value]);
+      if (userResult.rows.length > 0) {
+        user = await pool.query(
+          'UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *',
+          [profile.id, profile.emails[0].value]
+        ).then(res => res.rows[0]);
+      } else {
+        user = await pool.query(
+          'INSERT INTO users (email, name, google_id, role, profile_image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+          [profile.emails[0].value, profile.displayName, profile.id, 'user', null]
+        ).then(res => res.rows[0]);
+      }
     }
-    userResult = await pool.query('SELECT * FROM users WHERE email = $1', [profile.emails[0].value]);
-    if (userResult.rows.length > 0) {
-      const updatedUser = await pool.query(
-        'UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *',
-        [profile.id, profile.emails[0].value]
-      );
-      return done(null, updatedUser.rows[0]);
-    }
-    const newUser = await pool.query(
-      'INSERT INTO users (email, name, google_id, role, profile_image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [profile.emails[0].value, profile.displayName, profile.id, 'user', null]
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
     );
-    return done(null, newUser.rows[0]);
+    user.token = token;
+    return done(null, user);
   } catch (error) {
     console.error('Google OAuth Error:', error.message);
     return done(error);
@@ -110,7 +118,7 @@ passport.use(new GoogleStrategy({
 // Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Enable SSL for Render
+  ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: 5000,
   max: 20
 });
@@ -156,7 +164,6 @@ async function initializeAndUpdateDatabase() {
   try {
     console.log('Initializing database...');
 
-    // Create tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -276,7 +283,6 @@ async function initializeAndUpdateDatabase() {
     // Check and update schema
     console.log('Checking and updating database schema...');
 
-    // Check for profile_image column in users table
     const profileImageCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -285,10 +291,8 @@ async function initializeAndUpdateDatabase() {
     if (profileImageCheck.rows.length === 0) {
       console.log('Adding profile_image column to users table...');
       await pool.query('ALTER TABLE users ADD COLUMN profile_image TEXT');
-      console.log('profile_image column added successfully');
     }
 
-    // Check for customer_name column in orders table
     const customerNameCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -297,10 +301,8 @@ async function initializeAndUpdateDatabase() {
     if (customerNameCheck.rows.length === 0) {
       console.log('Adding customer_name column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN customer_name VARCHAR(255) NOT NULL DEFAULT \'Unknown\'');
-      console.log('customer_name column added successfully');
     }
 
-    // Check for image_url column in menu_items table
     const imageUrlCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -309,10 +311,8 @@ async function initializeAndUpdateDatabase() {
     if (imageUrlCheck.rows.length === 0) {
       console.log('Adding image_url column to menu_items table...');
       await pool.query('ALTER TABLE menu_items ADD COLUMN image_url TEXT');
-      console.log('image_url column added successfully');
     }
 
-    // Check for category_id in menu_items table
     const categoryIdCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -321,10 +321,8 @@ async function initializeAndUpdateDatabase() {
     if (categoryIdCheck.rows.length === 0) {
       console.log('Adding category_id column to menu_items table...');
       await pool.query('ALTER TABLE menu_items ADD COLUMN category_id INTEGER REFERENCES menu_categories(id)');
-      console.log('category_id column added successfully');
     }
 
-    // Check for is_available column in menu_items table
     const isAvailableCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -333,10 +331,8 @@ async function initializeAndUpdateDatabase() {
     if (isAvailableCheck.rows.length === 0) {
       console.log('Adding is_available column to menu_items table...');
       await pool.query('ALTER TABLE menu_items ADD COLUMN is_available BOOLEAN DEFAULT TRUE');
-      console.log('is_available column added successfully');
     }
 
-    // Check for delivery_address, payment_status, delivery_personnel_id, cancel_reason columns in orders table
     const deliveryAddressCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -345,7 +341,6 @@ async function initializeAndUpdateDatabase() {
     if (deliveryAddressCheck.rows.length === 0) {
       console.log('Adding delivery_address column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN delivery_address TEXT');
-      console.log('delivery_address column added successfully');
     }
 
     const paymentStatusCheck = await pool.query(`
@@ -356,7 +351,6 @@ async function initializeAndUpdateDatabase() {
     if (paymentStatusCheck.rows.length === 0) {
       console.log('Adding payment_status column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN payment_status VARCHAR(50) DEFAULT \'Pending\'');
-      console.log('payment_status column added successfully');
     }
 
     const deliveryPersonnelIdCheck = await pool.query(`
@@ -367,7 +361,6 @@ async function initializeAndUpdateDatabase() {
     if (deliveryPersonnelIdCheck.rows.length === 0) {
       console.log('Adding delivery_personnel_id column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN delivery_personnel_id INTEGER REFERENCES delivery_personnel(id)');
-      console.log('delivery_personnel_id column added successfully');
     }
 
     const cancelReasonCheck = await pool.query(`
@@ -378,10 +371,8 @@ async function initializeAndUpdateDatabase() {
     if (cancelReasonCheck.rows.length === 0) {
       console.log('Adding cancel_reason column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN cancel_reason TEXT');
-      console.log('cancel_reason column added successfully');
     }
 
-    // Check for coupon-related columns in orders table
     const couponCodeCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -390,7 +381,6 @@ async function initializeAndUpdateDatabase() {
     if (couponCodeCheck.rows.length === 0) {
       console.log('Adding coupon_code column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(50)');
-      console.log('coupon_code column added successfully');
     }
 
     const couponTypeCheck = await pool.query(`
@@ -401,7 +391,6 @@ async function initializeAndUpdateDatabase() {
     if (couponTypeCheck.rows.length === 0) {
       console.log('Adding coupon_type column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN coupon_type VARCHAR(20)');
-      console.log('coupon_type column added successfully');
     }
 
     const couponValueCheck = await pool.query(`
@@ -412,7 +401,6 @@ async function initializeAndUpdateDatabase() {
     if (couponValueCheck.rows.length === 0) {
       console.log('Adding coupon_value column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN coupon_value NUMERIC');
-      console.log('coupon_value column added successfully');
     }
 
     const discountAmountCheck = await pool.query(`
@@ -423,10 +411,8 @@ async function initializeAndUpdateDatabase() {
     if (discountAmountCheck.rows.length === 0) {
       console.log('Adding discount_amount column to orders table...');
       await pool.query('ALTER TABLE orders ADD COLUMN discount_amount VARCHAR(20)');
-      console.log('discount_amount column added successfully');
     }
 
-    // Check for customer_name column in refunds table
     const refundCustomerNameCheck = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -435,7 +421,6 @@ async function initializeAndUpdateDatabase() {
     if (refundCustomerNameCheck.rows.length === 0) {
       console.log('Adding customer_name column to refunds table...');
       await pool.query('ALTER TABLE refunds ADD COLUMN customer_name VARCHAR(255) NOT NULL DEFAULT \'Unknown\'');
-      console.log('customer_name column added successfully');
     }
 
     // Seed admin user
@@ -616,6 +601,27 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Utility Functions
+const generateOtp = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const sendOtpEmail = async (email, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Delicute Password Reset OTP',
+    text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`OTP sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending OTP email:', error.message);
+    throw new Error('Failed to send OTP email');
+  }
+};
+
 // Health Check Endpoint
 app.get('/api/health', async (req, res) => {
   try {
@@ -627,13 +633,106 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Google Auth Routes
+app.get('/api/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/api/auth/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/' }),
+  (req, res) => {
+    try {
+      const token = req.user.token;
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?token=${token}`);
+    } catch (error) {
+      console.error('Google callback error:', error.message);
+      res.status(500).json({ message: 'Authentication failed' });
+    }
+  }
+);
+
+// Forgot Password Routes
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Valid email is required' });
+    }
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await pool.query('DELETE FROM otps WHERE email = $1', [email]);
+    await pool.query(
+      'INSERT INTO otps (email, otp, expires_at) VALUES ($1, $2, $3)',
+      [email, otp, expiresAt]
+    );
+    await sendOtpEmail(email, otp);
+    res.json({ message: 'OTP sent to your email' });
+  } catch (error) {
+    console.error('Forgot Password Error:', error.message, error.stack);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+app.post('/api/auth/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    if (!email || !otp || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: 'Valid email and 6-digit OTP are required' });
+    }
+    const otpResult = await pool.query(
+      'SELECT * FROM otps WHERE email = $1 AND otp = $2 AND expires_at > NOW()',
+      [email, otp]
+    );
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+    await pool.query('DELETE FROM otps WHERE email = $1', [email]);
+    res.json({ message: 'OTP verified successfully' });
+  } catch (error) {
+    console.error('Verify OTP Error:', error.message, error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Valid email is required' });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      'UPDATE users SET password = $1 WHERE email = $2',
+      [hashedPassword, email]
+    );
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset Password Error:', error.message, error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, phone, password, role } = req.body;
   const userRole = role === 'admin' ? 'admin' : 'user';
   try {
-    if (!email || !password || !name) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+    if (!email || !password || !name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Valid name, email, and password are required' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
     const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
@@ -652,21 +751,24 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(201).json({ token, user: newUser.rows[0] });
   } catch (error) {
     console.error('Register Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    if (!email || !password || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Valid email and password are required' });
     }
     const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const user = userResult.rows[0];
+    if (!user.password) {
+      return res.status(401).json({ message: 'Please use Google login or reset your password' });
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -679,7 +781,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, profile_image: user.profile_image } });
   } catch (error) {
     console.error('Login Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -690,7 +792,7 @@ app.get('/api/menu-categories', authenticateToken, isAdmin, async (req, res) => 
     res.json(result.rows);
   } catch (error) {
     console.error('Get Menu Categories Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -707,7 +809,7 @@ app.post('/api/menu-categories', authenticateToken, isAdmin, async (req, res) =>
     res.status(201).json(newCategory.rows[0]);
   } catch (error) {
     console.error('Create Menu Category Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -718,7 +820,7 @@ app.get('/api/menu', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Get Menu Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -753,7 +855,7 @@ app.post('/api/menu', authenticateToken, isAdmin, upload.single('image'), async 
     res.status(201).json(newItem.rows[0]);
   } catch (error) {
     console.error('POST /api/menu Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -804,7 +906,7 @@ app.put('/api/menu/:id', authenticateToken, isAdmin, upload.single('image'), asy
     res.json(updatedItem.rows[0]);
   } catch (error) {
     console.error('PUT /api/menu/:id Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -825,7 +927,7 @@ app.put('/api/menu/:id/availability', authenticateToken, isAdmin, async (req, re
     res.json(updatedItem.rows[0]);
   } catch (error) {
     console.error('Update Menu Availability Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -845,7 +947,7 @@ app.delete('/api/menu/:id', authenticateToken, isAdmin, async (req, res) => {
     res.json({ message: 'Menu item deleted' });
   } catch (error) {
     console.error('Delete Menu Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -856,7 +958,7 @@ app.get('/api/special-offers', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Get Offers Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -880,7 +982,7 @@ app.post('/api/special-offers', authenticateToken, isAdmin, upload.single('image
     res.status(201).json(newOffer.rows[0]);
   } catch (error) {
     console.error('POST /api/special-offers Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -921,7 +1023,7 @@ app.put('/api/special-offers/:id', authenticateToken, isAdmin, upload.single('im
     res.json(updatedOffer.rows[0]);
   } catch (error) {
     console.error('PUT /api/special-offers/:id Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -941,14 +1043,19 @@ app.delete('/api/special-offers/:id', authenticateToken, isAdmin, async (req, re
     res.json({ message: 'Offer deleted' });
   } catch (error) {
     console.error('Delete Offer Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Customers Routes
 app.get('/api/customers', authenticateToken, isAdmin, async (req, res) => {
-  const result = await pool.query('SELECT * FROM customers ORDER BY id');
-  res.json(result.rows);
+  try {
+    const result = await pool.query('SELECT * FROM customers ORDER BY id');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get Customers Error:', error.message, error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 app.get('/api/customers/:id', authenticateToken, isAdmin, async (req, res) => {
@@ -961,7 +1068,7 @@ app.get('/api/customers/:id', authenticateToken, isAdmin, async (req, res) => {
     res.json(customer.rows[0]);
   } catch (error) {
     console.error('Get Customer Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1000,7 +1107,7 @@ app.get('/api/orders', authenticateToken, isAdmin, async (req, res) => {
     })));
   } catch (error) {
     console.error('Get Orders Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1031,7 +1138,7 @@ app.get('/api/orders/:id', authenticateToken, isAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Get Order Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1057,7 +1164,7 @@ app.put('/api/orders/:id', authenticateToken, isAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Update Order Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1084,7 +1191,7 @@ app.put('/api/orders/:id/assign-delivery', authenticateToken, isAdmin, async (re
     });
   } catch (error) {
     console.error('Assign Delivery Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1111,7 +1218,7 @@ app.put('/api/orders/:id/cancel', authenticateToken, isAdmin, async (req, res) =
     });
   } catch (error) {
     console.error('Cancel Order Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1133,7 +1240,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Create Order Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1144,7 +1251,7 @@ app.get('/api/customer-queries', authenticateToken, isAdmin, async (req, res) =>
     res.json(result.rows);
   } catch (error) {
     console.error('Get Customer Queries Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1165,7 +1272,7 @@ app.put('/api/customer-queries/:id/respond', authenticateToken, isAdmin, async (
     res.json(updatedQuery.rows[0]);
   } catch (error) {
     console.error('Respond to Query Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1176,7 +1283,7 @@ app.get('/api/refunds', authenticateToken, isAdmin, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Get Refunds Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1196,7 +1303,7 @@ app.get('/api/revenue-reports', authenticateToken, isAdmin, async (req, res) => 
     })));
   } catch (error) {
     console.error('Get Revenue Reports Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1210,7 +1317,7 @@ app.get('/api/business-settings', authenticateToken, isAdmin, async (req, res) =
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Get Business Settings Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1246,7 +1353,7 @@ app.put('/api/business-settings', authenticateToken, isAdmin, upload.single('log
     res.json(updatedSettings.rows[0]);
   } catch (error) {
     console.error('Update Business Settings Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1257,7 +1364,7 @@ app.get('/api/delivery-personnel', authenticateToken, isAdmin, async (req, res) 
     res.json(result.rows);
   } catch (error) {
     console.error('Get Delivery Personnel Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1280,7 +1387,7 @@ app.get('/api/dashboard/stats', authenticateToken, isAdmin, async (req, res) => 
     });
   } catch (error) {
     console.error('Get Dashboard Stats Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1303,7 +1410,7 @@ app.post('/api/payments/create-order', authenticateToken, async (req, res) => {
     res.json({ orderId: order.id, key: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
     console.error('Create Payment Order Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1329,7 +1436,7 @@ app.post('/api/payments/verify', authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error('Verify Payment Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1340,7 +1447,7 @@ app.get('/api/coupons', authenticateToken, isAdmin, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Get Coupons Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1372,7 +1479,7 @@ app.post('/api/coupons', authenticateToken, isAdmin, upload.single('image'), asy
     res.status(201).json(newCoupon.rows[0]);
   } catch (error) {
     console.error('POST /api/coupons Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1427,7 +1534,7 @@ app.put('/api/coupons/:id', authenticateToken, isAdmin, upload.single('image'), 
     res.json(updatedCoupon.rows[0]);
   } catch (error) {
     console.error('PUT /api/coupons/:id Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1447,7 +1554,7 @@ app.delete('/api/coupons/:id', authenticateToken, isAdmin, async (req, res) => {
     res.json({ message: 'Coupon deleted' });
   } catch (error) {
     console.error('Delete Coupon Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1505,7 +1612,7 @@ app.put('/api/orders/:id/apply-coupon', authenticateToken, isAdmin, async (req, 
     });
   } catch (error) {
     console.error('Apply Coupon Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1521,6 +1628,9 @@ app.get('/admin', (req, res) => {
 // Start Server
 async function startServer() {
   try {
+    if (!process.env.JWT_SECRET || !process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Missing required environment variables');
+    }
     await testDbConnection();
     await initializeAndUpdateDatabase();
     const port = process.env.PORT || 3000;
