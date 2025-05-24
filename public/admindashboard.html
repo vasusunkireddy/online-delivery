@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delicute Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
+        .sidebar-link { transition: background-color 0.2s; }
+        .sidebar-link:hover { background-color: rgba(249, 115, 22, 0.1); }
+        .hidden { display: none; }
+        .modal { transition: opacity 0.3s; }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal.hide { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-600"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hidden">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg flex-shrink-0">
+            <div class="p-4">
+                <h1 class="text-2xl font-bold text-orange-600">Delicute Admin</h1>
+            </div>
+            <nav class="mt-4">
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('dashboard')">Dashboard</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('orders')">Orders</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('menu')">Menu</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('customers')">Customers</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('payments')">Payments</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-gray-700 hover:text-orange-600" onclick="showSection('settings')">Settings</a>
+                <a href="#" class="sidebar-link block py-2 px-4 text-red-600 hover:text-red-700" onclick="handleLogout()">Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
+                        <h3 class="text-lg font-semibold text-gray-700">Total Orders</h3>
+                        <p id="totalOrders" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
+                        <h3 class="text-lg font-semibold text-gray-700">Total Customers</h3>
+                        <p id="totalCustomers" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
+                        <h3 class="text-lg font-semibold text-gray-700">Total Revenue</h3>
+                        <p id="totalRevenue" class="text-2xl font-bold text-orange-600">₹0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card-hover">
+                        <h3 class="text-lg font-semibold text-gray-700">Recent Orders</h3>
+                        <p id="recentOrdersCount" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Recent Orders</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Order ID</th>
+                                <th class="py-2">Customer</th>
+                                <th class="py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrders"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-800">Order Management</h2>
+                <!-- Filters -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Filter Orders</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <select id="orderStatusFilter" class="border rounded-lg p-2 text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <input type="date" id="orderDateFilter" class="border rounded-lg p-2 text-sm">
+                        <input type="text" id="orderCustomerFilter" class="border rounded-lg p-2 text-sm" placeholder="Search by customer name">
+                    </div>
+                    <button class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="renderOrders()">Apply Filters</button>
+                </div>
+                <!-- Order List -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Order List</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Order ID</th>
+                                <th class="py-2">Customer</th>
+                                <th class="py-2">Total</th>
+                                <th class="py-2">Status</th>
+                                <th class="py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Menu Section -->
+            <section id="menu" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-800">Menu Management</h2>
+                <!-- Add Category -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Category</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="categoryName" class="border rounded-lg p-2 text-sm" placeholder="Category Name">
+                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addCategory()">Add Category</button>
+                    </div>
+                </div>
+                <!-- Add Menu Item -->
+                <div class="bg-white p-6 rounded-lg shadow-lg" id="menuForm">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Menu Item</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="menuName" class="border rounded-lg p-2 text-sm" placeholder="Item Name">
+                        <textarea id="menuDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
+                        <select id="menuCategory" class="border rounded-lg p-2 text-sm">
+                            <option value="">Select Category</option>
+                        </select>
+                        <input type="number" id="menuPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
+                        <input type="file" id="menuImage" accept="image/*" class="text-sm">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="menuAvailable" class="mr-2" checked>
+                            <label for="menuAvailable" class="text-sm">Available</label>
+                        </div>
+                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addMenuItem()">Add Item</button>
+                    </div>
+                </div>
+                <!-- Menu Items List -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Menu Items</h3>
+                    <div id="adminMenuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </section>
+
+            <!-- Customers Section -->
+            <section id="customers" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-800">Customer Management</h2>
+                <!-- Customer List -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Database</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Name</th>
+                                <th class="py-2">Email</th>
+                                <th class="py-2">Phone</th>
+                                <th class="py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerList"></tbody>
+                    </table>
+                </div>
+                <!-- Customer Queries -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Customer Queries</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Customer</th>
+                                <th class="py-2">Query</th>
+                                <th class="py-2">Status</th>
+                                <th class="py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queryList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payments Section -->
+            <section id="payments" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-800">Payment Management</h2>
+                <!-- Payment Tracking -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Payment Tracking</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Order ID</th>
+                                <th class="py-2">Customer</th>
+                                <th class="py-2">Amount</th>
+                                <th class="py-2">Payment Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentList"></tbody>
+                    </table>
+                </div>
+                <!-- Refunds -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Refund Management</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2">Order ID</th>
+                                <th class="py-2">Customer</th>
+                                <th class="py-2">Amount</th>
+                                <th class="py-2">Reason</th>
+                                <th class="py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="refundList"></tbody>
+                    </table>
+                </div>
+                <!-- Revenue Reports -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Revenue Reports</h3>
+                    <canvas id="revenueChart" class="w-full h-64"></canvas>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-800">Business Settings</h2>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Restaurant Details</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="restaurantName" class="border rounded-lg p-2 text-sm" placeholder="Restaurant Name">
+                        <input type="email" id="contactEmail" class="border rounded-lg p-2 text-sm" placeholder="Contact Email">
+                        <input type="text" id="contactPhone" class="border rounded-lg p-2 text-sm" placeholder="Contact Phone">
+                        <input type="file" id="restaurantLogo" accept="image/*" class="text-sm">
+                        <textarea id="openingHours" class="border rounded-lg p-2 text-sm" rows="4" placeholder='{"mon_fri": "9:00 AM - 10:00 PM", "sat_sun": "10:00 AM - 11:00 PM"}'></textarea>
+                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="updateBusinessSettings()">Update Settings</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Order Details</h3>
+            <div id="orderDetailsContent" class="space-y-4"></div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="closeModal('orderDetailsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let revenueChart = null;
+
+        // Utility Functions
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('main > section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            if (sectionId === 'dashboard') fetchDashboardStats();
+            else if (sectionId === 'orders') renderOrders();
+            else if (sectionId === 'menu') { renderAdminMenu(); fetchCategories(); }
+            else if (sectionId === 'customers') { renderCustomers(); renderCustomerQueries(); }
+            else if (sectionId === 'payments') { renderPayments(); renderRefunds(); renderRevenueReports(); }
+            else if (sectionId === 'settings') fetchBusinessSettings();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Navbar Setup
+        function setupNavbar() {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('bg-orange-100', 'text-orange-600'));
+                    link.classList.add('bg-orange-100', 'text-orange-600');
+                });
+            });
+        }
+
+        // Fetch Dashboard Stats
+        async function fetchDashboardStats() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/dashboard/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch stats');
+                const stats = await response.json();
+                document.getElementById('totalOrders').textContent = stats.totalOrders;
+                document.getElementById('totalCustomers').textContent = stats.totalCustomers;
+                document.getElementById('totalRevenue').textContent = `₹${stats.totalRevenue.toFixed(2)}`;
+                document.getElementById('recentOrdersCount').textContent = stats.recentOrders.length;
+                const recentOrders = document.getElementById('recentOrders');
+                recentOrders.innerHTML = stats.recentOrders.map(order => `
+                    <tr class="border-b">
+                        <td class="py-2">${order.id}</td>
+                        <td class="py-2">${order.customerName}</td>
+                        <td class="py-2">${order.status}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast(`Error fetching stats: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Fetch Categories
+        async function fetchCategories() {
+            try {
+                const response = await fetch('/api/menu-categories', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch categories');
+                const categories = await response.json();
+                const select = document.getElementById('menuCategory');
+                select.innerHTML = '<option value="">Select Category</option>' + categories.map(cat => `
+                    <option value="${cat.id}">${cat.name}</option>
+                `).join('');
+            } catch (error) {
+                showToast(`Error fetching categories: ${error.message}`, 'error');
+            }
+        }
+
+        // Add Category
+        async function addCategory() {
+            const name = document.getElementById('categoryName').value.trim();
+            if (!name) {
+                showToast('Category name is required', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const response = await fetch('/api/menu-categories', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to add category');
+                showToast('Category added successfully!', 'success');
+                document.getElementById('categoryName').value = '';
+                fetchCategories();
+            } catch (error) {
+                showToast(`Error adding category: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Add Menu Item
+        async function addMenuItem() {
+            const name = document.getElementById('menuName').value.trim();
+            const description = document.getElementById('menuDescription').value.trim();
+            const category_id = document.getElementById('menuCategory').value;
+            const price = document.getElementById('menuPrice').value;
+            const imageInput = document.getElementById('menuImage');
+            const is_available = document.getElementById('menuAvailable').checked;
+            if (!name || !price || !category_id || price < 0 || !imageInput.files[0]) {
+                showToast('Please fill all fields with valid data and upload an image.', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('description', description);
+                formData.append('category_id', category_id);
+                formData.append('price', `₹${price}`);
+                formData.append('is_available', is_available);
+                formData.append('image', imageInput.files[0]);
+                const response = await fetch('/api/menu', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to add item');
+                showToast('Menu item added successfully!', 'success');
+                document.getElementById('menuName').value = '';
+                document.getElementById('menuDescription').value = '';
+                document.getElementById('menuCategory').value = '';
+                document.getElementById('menuPrice').value = '';
+                document.getElementById('menuAvailable').checked = true;
+                imageInput.value = '';
+                renderAdminMenu();
+            } catch (error) {
+                showToast(`Error adding menu item: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Edit Menu Item
+        async function editMenuItem(id) {
+            try {
+                const response = await fetch('/api/menu', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch menu');
+                const items = await response.json();
+                const item = items.find(item => item.id == id);
+                if (!item) return;
+                const menuForm = document.getElementById('menuForm');
+                menuForm.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Edit Menu Item</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="menuName" class="border rounded-lg p-2 text-sm" value="${item.name}">
+                        <textarea id="menuDescription" class="border rounded-lg p-2 text-sm" rows="3">${item.description || ''}</textarea>
+                        <select id="menuCategory" class="border rounded-lg p-2 text-sm">
+                            <option value="">Select Category</option>
+                        </select>
+                        <input type="number" id="menuPrice" class="border rounded-lg p-2 text-sm" value="${item.price.replace('₹', '')}" min="0">
+                        <input type="file" id="menuImage" accept="image/*" class="text-sm">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="menuAvailable" class="mr-2" ${item.is_available ? 'checked' : ''}>
+                            <label for="menuAvailable" class="text-sm">Available</label>
+                        </div>
+                        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="updateMenuItem('${id}')">Update Item</button>
+                        <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="renderAdminMenu()">Cancel</button>
+                    </div>
+                `;
+                await fetchCategories();
+                document.getElementById('menuCategory').value = item.category_id || '';
+            } catch (error) {
+                showToast(`Error fetching menu item: ${error.message}`, 'error');
+            }
+        }
+
+        // Update Menu Item
+        async function updateMenuItem(id) {
+            const name = document.getElementById('menuName').value.trim();
+            const description = document.getElementById('menuDescription').value.trim();
+            const category_id = document.getElementById('menuCategory').value;
+            const price = document.getElementById('menuPrice').value;
+            const imageInput = document.getElementById('menuImage');
+            const is_available = document.getElementById('menuAvailable').checked;
+            if (!name || !price || !category_id || price < 0) {
+                showToast('Please fill all fields with valid data.', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('description', description);
+                formData.append('category_id', category_id);
+                formData.append('price', `₹${price}`);
+                formData.append('is_available', is_available);
+                if (imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update item');
+                showToast('Menu item updated successfully!', 'success');
+                renderAdminMenu();
+            } catch (error) {
+                showToast(`Error updating menu item: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Toggle Menu Item Availability
+        async function toggleMenuAvailability(id, is_available) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/menu/${id}/availability`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ is_available })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update availability');
+                showToast(`Item marked as ${is_available ? 'Available' : 'Out of Stock'}`, 'success');
+                renderAdminMenu();
+            } catch (error) {
+                showToast(`Error updating availability: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Delete Menu Item
+        async function deleteMenuItem(id) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to delete item');
+                showToast('Menu item deleted successfully!', 'success');
+                renderAdminMenu();
+            } catch (error) {
+                showToast(`Error deleting menu item: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Menu Items
+        async function renderAdminMenu() {
+            const adminMenuContainer = document.getElementById('adminMenuItems');
+            if (!adminMenuContainer) return;
+            adminMenuContainer.innerHTML = '';
+            const menuForm = document.getElementById('menuForm');
+            menuForm.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Add Menu Item</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="menuName" class="border rounded-lg p-2 text-sm" placeholder="Item Name">
+                    <textarea id="menuDescription" class="border rounded-lg p-2 text-sm" rows="3" placeholder="Description"></textarea>
+                    <select id="menuCategory" class="border rounded-lg p-2 text-sm">
+                        <option value="">Select Category</option>
+                    </select>
+                    <input type="number" id="menuPrice" class="border rounded-lg p-2 text-sm" placeholder="Price (INR)" min="0">
+                    <input type="file" id="menuImage" accept="image/*" class="text-sm">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="menuAvailable" class="mr-2" checked>
+                        <label for="menuAvailable" class="text-sm">Available</label>
+                    </div>
+                    <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700" onclick="addMenuItem()">Add Item</button>
+                </div>
+            `;
+            await fetchCategories();
+            showLoading(true);
+            try {
+                const response = await fetch('/api/menu', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch menu items');
+                const items = await response.json();
+                const categories = await (await fetch('/api/menu-categories', { headers: { 'Authorization': `Bearer ${token}` } })).json();
+                items.forEach(item => {
+                    const category = categories.find(cat => cat.id == item.category_id) || { name: 'Uncategorized' };
+                    const menuItem = document.createElement('div');
+                    menuItem.className = 'bg-white rounded-lg shadow-lg overflow-hidden card-hover';
+                    menuItem.innerHTML = `
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-40 sm:h-48 object-cover">
+                        <div class="p-4 sm:p-6">
+                            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">${item.name}</h3>
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${item.description || 'No description'}</p>
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">Category: ${category.name}</p>
+                            <p class="text-orange-600 font-bold mt-2 text-sm sm:text-base">${item.price}</p>
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">Status: ${item.is_available ? 'Available' : 'Out of Stock'}</p>
+                            <div class="mt-4 flex space-x-2">
+                                <button class="text-blue-600 hover:underline text-sm sm:text-base" onclick="editMenuItem('${item.id}')">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm sm:text-base" onclick="deleteMenuItem('${item.id}')">Delete</button>
+                                <button class="text-green-600 hover:underline text-sm sm:text-base" onclick="toggleMenuAvailability('${item.id}', ${!item.is_available})">${item.is_available ? 'Mark Out of Stock' : 'Mark Available'}</button>
+                            </div>
+                        </div>
+                    `;
+                    adminMenuContainer.appendChild(menuItem);
+                });
+            } catch (error) {
+                showToast(`Error fetching menu items: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Orders
+        async function renderOrders() {
+            const orderList = document.getElementById('orderList');
+            if (!orderList) return;
+            orderList.innerHTML = '';
+            showLoading(true);
+            try {
+                const statusFilter = document.getElementById('orderStatusFilter').value;
+                const dateFilter = document.getElementById('orderDateFilter').value;
+                const customerFilter = document.getElementById('orderCustomerFilter').value.trim();
+                let url = '/api/orders';
+                const params = new URLSearchParams();
+                if (statusFilter) params.append('status', statusFilter);
+                if (dateFilter) params.append('date', dateFilter);
+                if (customerFilter) params.append('customer', customerFilter);
+                if (params.toString()) url += `?${params.toString()}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch orders');
+                const orders = await response.json();
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${order.id}</td>
+                        <td class="px-4 py-2">${order.customerName}</td>
+                        <td class="px-4 py-2">₹${order.total.toFixed(2)}</td>
+                        <td class="px-4 py-2">${order.status}</td>
+                        <td class="px-4 py-2">
+                            <button class="text-blue-600 hover:underline text-sm" onclick="viewOrderDetails('${order.id}')">Details</button>
+                            <select onchange="updateOrderStatus('${order.id}', this.value)" class="border rounded-lg p-1 text-sm">
+                                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Accepted" ${order.status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+                                <option value="In Progress" ${order.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                                <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </td>
+                    `;
+                    orderList.appendChild(row);
+                });
+            } catch (error) {
+                showToast(`Error fetching orders: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // View Order Details
+        async function viewOrderDetails(orderId) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch order details');
+                const order = await response.json();
+                const personnel = await (await fetch('/api/delivery-personnel', { headers: { 'Authorization': `Bearer ${token}` } })).json();
+                const modalContent = document.getElementById('orderDetailsContent');
+                modalContent.innerHTML = `
+                    <p><strong>Order ID:</strong> ${order.id}</p>
+                    <p><strong>Customer:</strong> ${order.customer_name}</p>
+                    <p><strong>Delivery Address:</strong> ${order.delivery_address || 'Not provided'}</p>
+                    <p><strong>Total:</strong> ₹${parseFloat(order.total_amount.replace('₹', '')).toFixed(2)}</p>
+                    <p><strong>Payment Status:</strong> ${order.payment_status}</p>
+                    <p><strong>Status:</strong> ${order.status}</p>
+                    ${order.cancel_reason ? `<p><strong>Cancel Reason:</strong> ${order.cancel_reason}</p>` : ''}
+                    <h4 class="font-semibold mt-4">Items:</h4>
+                    <ul class="list-disc pl-5">
+                        ${order.items.map(item => `<li>${item.name} - ₹${item.price} x ${item.quantity}</li>`).join('')}
+                    </ul>
+                    <h4 class="font-semibold mt-4">Assign Delivery Personnel:</h4>
+                    <select id="deliveryPersonnel" class="border rounded-lg p-2 text-sm w-full">
+                        <option value="">Select Personnel</option>
+                        ${personnel.map(p => `<option value="${p.id}" ${order.delivery_personnel_id == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    </select>
+                    <button class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 mt-2" onclick="assignDeliveryPersonnel('${order.id}')">Assign</button>
+                    ${order.status !== 'Cancelled' ? `
+                        <h4 class="font-semibold mt-4">Cancel Order:</h4>
+                        <textarea id="cancelReason" class="border rounded-lg p-2 text-sm w-full" placeholder="Reason for cancellation"></textarea>
+                        <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 mt-2" onclick="cancelOrder('${order.id}')">Cancel Order</button>
+                    ` : ''}
+                `;
+                document.getElementById('orderDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                showToast(`Error fetching order details: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Assign Delivery Personnel
+        async function assignDeliveryPersonnel(orderId) {
+            const delivery_personnel_id = document.getElementById('deliveryPersonnel').value;
+            if (!delivery_personnel_id) {
+                showToast('Please select a delivery personnel', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}/assign-delivery`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ delivery_personnel_id })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to assign personnel');
+                showToast('Delivery personnel assigned successfully!', 'success');
+                viewOrderDetails(orderId);
+            } catch (error) {
+                showToast(`Error assigning personnel: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Cancel Order
+        async function cancelOrder(orderId) {
+            const cancel_reason = document.getElementById('cancelReason').value.trim();
+            if (!cancel_reason) {
+                showToast('Cancel reason is required', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ cancel_reason })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to cancel order');
+                showToast('Order cancelled successfully!', 'success');
+                closeModal('orderDetailsModal');
+                renderOrders();
+            } catch (error) {
+                showToast(`Error cancelling order: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update Order Status
+        async function updateOrderStatus(orderId, status) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update order');
+                showToast(`Order status updated to ${status}!`, 'success');
+                renderOrders();
+            } catch (error) {
+                showToast(`Error updating order: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Customers
+        async function renderCustomers() {
+            const customerList = document.getElementById('customerList');
+            if (!customerList) return;
+            customerList.innerHTML = '';
+            showLoading(true);
+            try {
+                const response = await fetch('/api/customers', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch customers');
+                const customers = await response.json();
+                customers.forEach(customer => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${customer.name}</td>
+                        <td class="px-4 py-2">${customer.email}</td>
+                        <td class="px-4 py-2">${customer.phone || '-'}</td>
+                        <td class="px-4 py-2">
+                            <button class="text-blue-600 hover:underline text-sm" onclick="viewCustomerDetails('${customer.id}')">View Details</button>
+                        </td>
+                    `;
+                    customerList.appendChild(row);
+                });
+            } catch (error) {
+                showToast(`Error fetching customers: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // View Customer Details
+        async function viewCustomerDetails(customerId) {
+            showLoading(true);
+            try {
+                const customerResponse = await fetch(`/api/customers/${customerId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!customerResponse.ok) throw new Error((await customerResponse.json()).message || 'Failed to fetch customer');
+                const customer = await customerResponse.json();
+                const ordersResponse = await fetch(`/api/orders?customer=${customer.email}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await ordersResponse.json();
+                const modalContent = document.getElementById('orderDetailsContent');
+                modalContent.innerHTML = `
+                    <p><strong>Name:</strong> ${customer.name}</p>
+                    <p><strong>Email:</strong> ${customer.email}</p>
+                    <p><strong>Phone:</strong> ${customer.phone || 'Not provided'}</p>
+                    <h4 class="font-semibold mt-4">Order History:</h4>
+                    <ul class="list-disc pl-5">
+                        ${orders.length ? orders.map(order => `<li>Order #${order.id} - ₹${order.total.toFixed(2)} - ${order.status}</li>`).join('') : '<li>No orders</li>'}
+                    </ul>
+                `;
+                document.getElementById('orderDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                showToast(`Error fetching customer details: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Customer Queries
+        async function renderCustomerQueries() {
+            const queryList = document.getElementById('queryList');
+            if (!queryList) return;
+            queryList.innerHTML = '';
+            showLoading(true);
+            try {
+                const response = await fetch('/api/customer-queries', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch queries');
+                const queries = await response.json();
+                queries.forEach(query => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${query.name}</td>
+                        <td class="px-4 py-2">${query.query_text}</td>
+                        <td class="px-4 py-2">${query.status}</td>
+                        <td class="px-4 py-2">
+                            ${query.status === 'Open' ? `<button class="text-blue-600 hover:underline text-sm" onclick="respondToQuery('${query.id}')">Respond</button>` : ''}
+                        </td>
+                    `;
+                    queryList.appendChild(row);
+                });
+            } catch (error) {
+                showToast(`Error fetching queries: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Respond to Customer Query
+        async function respondToQuery(queryId) {
+            const response = prompt('Enter response to the query:');
+            if (!response || response.trim() === '') {
+                showToast('Response is required', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const res = await fetch(`/api/customer-queries/${queryId}/respond`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ response_text: response })
+                });
+                if (!res.ok) throw new Error((await res.json()).message || 'Failed to respond to query');
+                showToast('Query responded successfully!', 'success');
+                renderCustomerQueries();
+            } catch (error) {
+                showToast(`Error responding to query: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Payments
+        async function renderPayments() {
+            const paymentList = document.getElementById('paymentList');
+            if (!paymentList) return;
+            paymentList.innerHTML = '';
+            showLoading(true);
+            try {
+                const response = await fetch('/api/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch payments');
+                const orders = await response.json();
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${order.id}</td>
+                        <td class="px-4 py-2">${order.customerName}</td>
+                        <td class="px-4 py-2">₹${order.total.toFixed(2)}</td>
+                        <td class="px-4 py-2">${order.payment_status || 'Pending'}</td>
+                    `;
+                    paymentList.appendChild(row);
+                });
+            } catch (error) {
+                showToast(`Error fetching payments: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Refunds
+        async function renderRefunds() {
+            const refundList = document.getElementById('refundList');
+            if (!refundList) return;
+            refundList.innerHTML = '';
+            showLoading(true);
+            try {
+                const response = await fetch('/api/refunds', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch refunds');
+                const refunds = await response.json();
+                refunds.forEach(refund => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${refund.order_id}</td>
+                        <td class="px-4 py-2">${refund.customer_name}</td>
+                        <td class="px-4 py-2">${refund.amount}</td>
+                        <td class="px-4 py-2">${refund.reason}</td>
+                        <td class="px-4 py-2">${refund.status}</td>
+                    `;
+                    refundList.appendChild(row);
+                });
+            } catch (error) {
+                showToast(`Error fetching refunds: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render Revenue Reports
+        async function renderRevenueReports() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/revenue-reports', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch revenue reports');
+                const reports = await response.json();
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                if (revenueChart) revenueChart.destroy();
+                revenueChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: reports.map(r => r.date),
+                        datasets: [{
+                            label: 'Daily Revenue (₹)',
+                            data: reports.map(r => r.total),
+                            borderColor: '#f97316',
+                            backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Date' } },
+                            y: { title: { display: true, text: 'Revenue (₹)' }, beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (error) {
+                showToast(`Error fetching revenue reports: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Fetch Business Settings
+        async function fetchBusinessSettings() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/business-settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch settings');
+                const settings = await response.json();
+                document.getElementById('restaurantName').value = settings.restaurant_name;
+                document.getElementById('contactEmail').value = settings.contact_email;
+                document.getElementById('contactPhone').value = settings.contact_phone;
+                document.getElementById('openingHours').value = JSON.stringify(settings.opening_hours, null, 2);
+            } catch (error) {
+                showToast(`Error fetching settings: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update Business Settings
+        async function updateBusinessSettings() {
+            const restaurant_name = document.getElementById('restaurantName').value.trim();
+            const contact_email = document.getElementById('contactEmail').value.trim();
+            const contact_phone = document.getElementById('contactPhone').value.trim();
+            const opening_hours = document.getElementById('openingHours').value;
+            const logoInput = document.getElementById('restaurantLogo');
+            if (!restaurant_name || !contact_email || !contact_phone || !opening_hours) {
+                showToast('All fields are required', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('restaurant_name', restaurant_name);
+                formData.append('contact_email', contact_email);
+                formData.append('contact_phone', contact_phone);
+                formData.append('opening_hours', opening_hours);
+                if (logoInput.files[0]) {
+                    formData.append('logo', logoInput.files[0]);
+                }
+                const response = await fetch('/api/business-settings', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update settings');
+                showToast('Business settings updated successfully!', 'success');
+                fetchBusinessSettings();
+            } catch (error) {
+                showToast(`Error updating settings: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Logout Handler
+        function handleLogout() {
+            localStorage.removeItem('token');
+            showToast('Logged out successfully!', 'success');
+            setTimeout(() => window.location.href = '/admin.html', 1000);
+        }
+
+        // Check Authentication
+        async function checkAuth() {
+            if (!token) {
+                showToast('Please log in to access the dashboard.', 'error');
+                setTimeout(() => window.location.href = '/admin.html', 1000);
+                return;
+            }
+            showLoading(true);
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    showToast('Admin access required.', 'error');
+                    localStorage.removeItem('token');
+                    setTimeout(() => window.location.href = '/admin.html', 1000);
+                } else {
+                    showSection('dashboard');
+                }
+            } catch (error) {
+                showToast(`Error verifying authentication: ${error.message}`, 'error');
+                setTimeout(() => window.location.href = '/admin.html', 1000);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Initialize page
+        setupNavbar();
+        checkAuth();
+    </script>
+</body>
+</html>

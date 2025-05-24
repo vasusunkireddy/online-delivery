@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com 'unsafe-inline';
+    style-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline';
+    img-src 'self' data: https://images.unsplash.com https://via.placeholder.com https://i.imgur.com https://your-backend-domain.com;
+    connect-src 'self' http://localhost:3000 https://api.razorpay.com https://your-backend-domain.com;
+    font-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
+  <title>User Dashboard - DELICUTE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: #f3f4f6; overflow-x: hidden; }
+
+    :root {
+      --primary: #f97316;
+      --secondary: #fb923c;
+      --background: #f3f4f6;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes dropdown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+    .animate-slideUp { animation: slideUp 0.5s ease-out; }
+    .animate-dropdown { animation: dropdown 0.3s ease-out; }
+
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; color: white;
+      padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba extensor muscle strains(0, 0, 0, 0.3);
+      z-index: 1000; display: none; font-size: 0.9rem; transition: opacity 0.3s ease;
+    }
+
+    header {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      padding: 10px 12px; position: sticky; top: 0; z-index: 20;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+    .dropdown-menu {
+      position: absolute; top: 100%; right: 0; background: var(--card-bg);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); border-radius: 8px;
+      width: 200px; z-index: 30; display: none; overflow: hidden;
+    }
+    .dropdown-menu.active { display: block; }
+    .dropdown-menu button {
+      width: 100%; text-align: left; padding: 10px 16px; border: none;
+      background: none; color: var(--text); font-size: 0.9rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px; transition: background 0.2s ease;
+    }
+    .dropdown-menu button:hover { background: #f1f5f9; }
+    .dropdown-menu button i { font-size: 1rem; }
+    .dropdown-menu button.active { background: #fef3c7; color: var(--primary); }
+
+    .hero-bg {
+      background: linear-gradient(to right, #ffedd5, #fed7aa); position: relative;
+      overflow: hidden; border-radius: 10px; padding: 12px; display: flex; align-items: center;
+      gap: 12px;
+    }
+    .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    .menu-item {
+      background: var(--card-bg); border-radius: 10px; overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease;
+    }
+    .menu-item:hover { transform: scale(1.02); }
+    .menu-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
+
+    .banner-container {
+      position: relative; overflow: hidden; width: 100%; padding: 0 12px;
+    }
+    .banner-item {
+      background: var(--card-bg); border-radius: 10px; padding: 12px; min-height: 120px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); position: relative; transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .banner-item.hidden { transform: translateX(100%); opacity: 0; position: absolute; }
+    .banner-item:not(.hidden) { transform: translateX(0); opacity: 1; }
+    .banner-item img {
+      width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;
+      z-index: -1; filter: brightness(0.7);
+    }
+    .banner-content { z-index: 1; color: white; max-width: 100%; }
+    .banner-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); background: var(--primary);
+      color: white; padding: 6px; border-radius: 50%; cursor: pointer; z-index: 10;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    }
+    .banner-arrow.left { left: 6px; }
+    .banner-arrow.right { right: 6px; }
+
+    .chat-container {
+      max-height: 250px; overflow-y: auto; padding: 8px; border: 1px solid #e5e7eb;
+      border-radius: 8px; background: var(--card-bg);
+    }
+    .chat-message {
+      margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; max-width: 75%;
+    }
+    .chat-message.user { background: var(--primary); color: white; margin-left: auto; }
+    .chat-message.admin { background: #e5e7eb; color: var(--text); margin-right: auto; }
+
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);
+      z-index: 2000; display: none; justify-content: center; align-items: center; transition: opacity 0.3s ease;
+    }
+    .modal.active { display: flex; opacity: 1; }
+    .modal-content {
+      background: var(--card-bg); padding: 16px; border-radius: 10px; max-width: 90%; width: 320px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); transform: scale(0.8); transition: transform 0.3s ease;
+    }
+    .modal.active .modal-content { transform: scale(1); }
+    .modal-content .close {
+      position: absolute; top: 8px; right: 8px; font-size: 1.2rem; cursor: pointer;
+      color: var(--text);
+    }
+
+    .profile-img-upload {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .profile-img-upload:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+    }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--text);
+      display: none; justify-content: space-around; padding: 8px 0; z-index: 1000;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .bottom-nav button {
+      color: #e2e8f0; font-size: 0.7rem; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; background: none; border: none; padding: 6px;
+      transition: color 0.2s ease;
+    }
+    .bottom-nav button.active { color: var(--primary); }
+    .bottom-nav button i { font-size: 1.4rem; }
+
+    /* Updated Profile Section Styles */
+    .profile-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .profile-image-container {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+    }
+    .profile-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      transition: transform 0.3s ease;
+    }
+    .profile-image:hover {
+      transform: scale(1.05);
+    }
+    .profile-image-upload-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: var(--primary);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .profile-field {
+      margin-bottom: 16px;
+    }
+    .profile-field label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .profile-field input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #f9fafb;
+      transition: border-color 0.2s ease;
+    }
+    .profile-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+    }
+    .profile-field input[readonly] {
+      background: #e5e7eb;
+      cursor: not-allowed;
+    }
+    .profile-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .profile-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+    .profile-actions button.edit {
+      background: var(--primary);
+      color: white;
+    }
+    .profile-actions button.edit:hover {
+      background: var(--secondary);
+    }
+    .profile-actions button.cancel {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+    .profile-actions button.cancel:hover {
+      background: #d1d5db;
+    }
+
+    @media (min-width: 1024px) {
+      .bottom-nav { display: none; }
+      .main-content { margin: 0; }
+      .menu-item img { height: 180px; }
+      .banner-item { min-height: 180px; }
+      .banner-content { max-width: 60%; }
+      .text-2xl { font-size: 1.5rem; }
+      .grid-cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .profile-container { max-width: 600px; }
+    }
+    @media (max-width: 1023px) {
+      .main-content { margin-bottom: 60px; }
+      .bottom-nav { display: flex; }
+      .text-2xl { font-size: 1.25rem; }
+      .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-bg { flex-direction: column; align-items: flex-start; }
+      header img.profile-img { width: 32px; height: 32px; }
+    }
+    @media (max-width: 640px) {
+      .grid-cols-2 { grid-template-columns: 1fr; }
+      .banner-item { padding: 10px; min-height: 100px; }
+      .banner-content { max-width: 100%; }
+      .menu-item img { height: 100px; }
+      .text-2xl { font-size: 1.1rem; }
+      .hero-bg { padding: 10px; }
+      header { padding: 8px 10px; }
+      .banner-arrow { width: 24px; height: 24px; padding: 5px; }
+      .chat-container { max-height: 200px; }
+      .modal-content { width: 280px; }
+      .dropdown-menu { width: 180px; }
+      .profile-container { padding: 16px; }
+      .profile-image-container { width: 80px; height: 80px; }
+      .profile-image-upload-btn { width: 28px; height: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="text-white">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <img src="https://i.imgur.com/ZbhzFqT.png" alt="DELICUTE Logo" class="h-7">
+        <div class="text-2xl font-bold">DELICUTE</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="relative sm:block hidden">
+          <input type="text" id="searchMenu" class="px-3 py-1.5 rounded-full bg-white text-gray-800 w-40 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Search..." aria-label="Search dishes">
+          <i class="fas fa-search absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"></i>
+        </div>
+        <button id="cartSummary" class="relative" aria-label="View cart">
+          <i class="fas fa-cart-shopping text-lg"></i>
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5">0</span>
+        </button>
+        <div class="profile-dropdown">
+          <button id="profileToggle" aria-label="Toggle profile menu">
+            <img src="https://via.placeholder.com/32" alt="Profile" class="profile-img rounded-full" id="headerProfileImage">
+          </button>
+          <div id="dropdownMenu" class="dropdown-menu">
+            <button data-section="dashboard" class="user-nav active"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+            <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i> Menu</button>
+            <button data-section="orders" class="user-nav"><i class="fas fa-shopping-cart"></i> Orders</button>
+            <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i> Cart</button>
+            <button data-section="favourites" class="user-nav"><i class="fas fa-heart"></i> Favourites</button>
+            <button data-section="addresses" class="user-nav"><i class="fas fa-map-marker-alt"></i> Addresses</button>
+            <button data-section="loyalty" class="user-nav"><i class="fas fa-star"></i> Loyalty</button>
+            <button data-section="referrals" class="user-nav"><i class="fas fa-user-friends"></i> Refer & Earn</button>
+            <button data-section="support" class="user-nav"><i class="fas fa-headset"></i> Support</button>
+            <button data-section="faq" class="user-nav"><i class="fas fa-question-circle"></i> FAQ</button>
+            <button data-section="order-history" class="user-nav"><i class="fas fa-history"></i> Order History</button>
+            <button data-section="profile" class="user-nav"><i class="fas fa-user"></i> Profile</button>
+            <button id="logoutBtn" class="text-red-600 hover:bg-red-100"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-content flex-1 p-3">
+    <section id="user-dashboard" class="user-section animate-slideUp">
+      <div id="statusBar" class="bg-yellow-100 text-yellow-800 p-2 rounded-lg mb-3 text-center text-xs">Restaurant: Open | Prep: 30 mins</div>
+      <div class="bg-white rounded-lg p-3 mb-3 shadow">
+        <h2 class="text-xl font-semibold text-orange-600">Welcome, <span id="welcomeName">User</span>!</h2>
+        <p class="text-sm text-gray-600">Loyalty Points: <span id="welcomePoints">0</span></p>
+      </div>
+      <div class="banner-container mb-4">
+        <div id="banner1" class="banner-item hidden">
+          <div class="banner-content">
+            <h3 class="text-base font-bold">Loading...</h3>
+            <p class="text-xs">Loading...</p>
+            <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm">Apply Now</button>
+          </div>
+        </div>
+        <button id="prevBanner" class="banner-arrow left"><i class="fas fa-chevron-left"></i></button>
+        <button id="nextBanner" class="banner-arrow right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="hero-bg mb-4">
+        <canvas class="particles"></canvas>
+        <div class="relative z-10">
+          <h2 class="text-2xl font-bold mb-1">Savor the Moment!</h2>
+          <p class="text-xs mb-3">Discover gourmet dishes crafted for you.</p>
+          <div class="flex gap-3">
+            <button data-section="menu" class="user-nav bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Explore Menu</button>
+            <button id="applyOffer" class="bg-white text-orange-600 px-3 py-1.5 rounded-full hover:bg-gray-100 text-sm">Check Offers</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <button data-section="orders" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-shopping-cart mr-1"></i> Track Order</button>
+        <button data-section="favourites" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-heart mr-1"></i> Favourites</button>
+        <button data-section="support" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-headset mr-1"></i> Support</button>
+        <button data-section="loyalty" class="user-nav bg-orange-100 text-orange-600 p-2 rounded-lg hover:bg-orange-200 flex items-center justify-center text-sm"><i class="fas fa-star mr-1"></i> Loyalty</button>
+      </div>
+      <h3 class="text-lg font-bold mb-3">Popular Picks</h3>
+      <div id="popular" class="grid grid-cols-2 gap-3 mb-4"></div>
+      <h3 class="text-lg font-bold mb-3">Explore Our Menu</h3>
+      <div class="flex flex-col gap-3 mb-4">
+        <div class="flex flex-wrap gap-2">
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full active text-sm" data-category="all">All</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Vegetarian">Veg</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Non-Veg">Non-Veg</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Desserts">Desserts</button>
+        </div>
+        <select class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" id="priceFilter" aria-label="Filter by price">
+          <option value="all">All Prices</option>
+          <option value="0-200">₹0 - ₹200</option>
+          <option value="200-500">₹200 - ₹500</option>
+          <option value="500+">₹500+</option>
+        </select>
+      </div>
+      <div id="menuPreview" class="grid grid-cols-2 gap-3 mb-4"></div>
+      <div class="text-center">
+        <button id="shareBtn" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-share-alt mr-1"></i>Share DELICUTE</button>
+      </div>
+    </section>
+
+    <section id="user-menu" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Our Menu</h2>
+        <button id="backFromMenu" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="flex flex-col gap-3 mb-4">
+        <div class="relative">
+          <input type="text" id="menuSearch" class="w-full px-3 py-1.5 rounded-full border focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Search dishes..." aria-label="Search dishes">
+          <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"></i>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full active text-sm" data-category="all">All</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Vegetarian">Veg</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Non-Veg">Non-Veg</button>
+          <button class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm" data-category="Desserts">Desserts</button>
+        </div>
+        <select class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" id="menuPriceFilter" aria-label="Filter by price">
+          <option value="all">All Prices</option>
+          <option value="0-200">₹0 - ₹200</option>
+          <option value="200-500">₹200 - ₹500</option>
+          <option value="500+">₹500+</option>
+        </select>
+      </div>
+      <div id="menuItems" class="grid grid-cols-2 gap-3"></div>
+    </section>
+
+    <section id="user-orders" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Your Orders</h2>
+        <button id="backFromOrders" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow mb-3">
+        <h3 class="text-base font-bold mb-1">Cancellation Policy</h3>
+        <p id="cancellationPolicy" class="text-sm">Cancel within 10 mins for full refund</p>
+      </div>
+      <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="bg-orange-100 text-orange-600">
+              <th class="p-2 text-left">Order ID</th>
+              <th class="p-2 text-left">Date</th>
+              <th class="p-2 text-left">Items</th>
+              <th class="p-2 text-left">Total</th>
+              <th class="p-2 text-left">Status</th>
+              <th class="p-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orderItems"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="user-cart" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Your Cart</h2>
+        <button id="backFromCart" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow">
+        <div id="cartItems" class="space-y-3"></div>
+        <div class="mt-3 border-t pt-3">
+          <div class="flex justify-between items-center mb-3">
+            <input type="text" id="couponCode" class="px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 w-2/3 text-sm" placeholder="Promo code" aria-label="Promo code">
+            <button id="applyCoupon" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Apply</button>
+          </div>
+          <p class="flex justify-between text-sm"><span>Subtotal:</span> <span id="cartSubtotal">₹0</span></p>
+          <p class="flex justify-between text-sm"><span>Discount:</span> <span id="cartDiscount">₹0</span></p>
+          <p class="flex justify-between font-bold text-sm"><span>Total:</span> <span id="cartTotal">₹0</span></p>
+          <div class="mt-3">
+            <label class="block text-gray-700 text-sm mb-1">Delivery Address</label>
+            <select id="cartAddress" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" aria-label="Select address">
+              <option value="">Select Address</option>
+            </select>
+          </div>
+          <div class="mt-3">
+            <label class="block text-gray-700 text-sm mb-1">Payment Method</label>
+            <select id="paymentMethod" class="w-full px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" aria-label="Select payment">
+              <option value="cod">Cash on Delivery</option>
+              <option value="online">Online Payment (Razorpay)</option>
+            </select>
+          </div>
+          <button id="checkoutBtn" class="mt-3 w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Checkout</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="user-favourites" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Your Favourites</h2>
+        <button id="backFromFavourites" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div id="favouritesItems" class="grid grid-cols-2 gap-3"></div>
+    </section>
+
+    <section id="user-addresses" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Your Addresses</h2>
+        <button id="backFromAddresses" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <button id="addAddress" class="mb-3 bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-plus mr-1"></i>Add Address</button>
+      <div id="addressItems" class="space-y-3"></div>
+    </section>
+
+    <section id="user-loyalty" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Loyalty Points</h2>
+        <button id="backFromLoyalty" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow">
+        <p class="text-base font-semibold mb-3">Points: <span id="loyaltyPoints">0</span></p>
+        <h3 class="text-base font-bold mb-1">History</h3>
+        <div id="loyaltyHistory"></div>
+      </div>
+    </section>
+
+    <section id="user-referrals" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Refer & Earn</h2>
+        <button id="backFromReferrals" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow">
+        <p class="text-xs mb-3">Share your referral code!</p>
+        <p class="text-base font-semibold">Code: <span id="referralCode"></span></p>
+        <a id="referralLink" href="#" class="mt-3 inline-block bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-share-alt mr-1"></i>Share Link</a>
+      </div>
+    </section>
+
+    <section id="user-support" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Support</h2>
+        <button id="backFromSupport" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <button id="createTicketBtn" class="mb-3 bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-ticket-alt mr-1"></i>Create Ticket</button>
+      <div class="bg-white rounded-lg p-3 shadow mb-3">
+        <h3 class="text-base font-bold mb-1">Tickets</h3>
+        <div id="supportTickets" class="space-y-3"></div>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow">
+        <h3 class="text-base font-bold mb-1">Live Chat</h3>
+        <div id="chatMessages" class="chat-container mb-3"></div>
+        <div class="typing-indicator text-xs text-gray-500" id="typingIndicator"></div>
+        <div class="flex gap-2">
+          <input type="text" id="chatInput" class="flex-1 px-3 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm" placeholder="Type message..." aria-label="Chat message">
+          <button id="sendChat" class="bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="user-faq" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">FAQ</h2>
+        <button id="backFromFAQ" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg p-3 shadow">
+        <div id="faqItems" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <section id="user-order-history" class="user-section hidden animate-slideUp">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-2xl font-bold text-orange-600">Order History</h2>
+        <button id="backFromOrderHistory" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+      </div>
+      <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="bg-orange-100 text-orange-600">
+              <th class="p-2 text-left">Order ID</th>
+              <th class="p-2 text-left">Date</th>
+              <th class="p-2 text-left">Items</th>
+              <th class="p-2 text-left">Total</th>
+              <th class="p-2 text-left">Status</th>
+              <th class="p-2 text-left">Payment</th>
+            </tr>
+          </thead>
+          <tbody id="orderHistoryItems"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="user-profile" class="user-section hidden animate-slideUp">
+      <div class="profile-container">
+        <div class="profile-header">
+          <h2 class="text-xl font-bold text-orange-600">Your Profile</h2>
+          <button id="backFromProfile" class="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-300 text-sm"><i class="fas fa-arrow-left mr-1"></i>Back</button>
+        </div>
+        <div class="profile-image-container">
+          <img src="https://via.placeholder.com/100" alt="Profile" id="profileImage" class="profile-image" onerror="this.src='https://via.placeholder.com/100?text=Profile'">
+          <label for="profileImageInput" class="profile-image-upload-btn">
+            <i class="fas fa-camera"></i>
+          </label>
+          <input type="file" id="profileImageInput" accept="image/*" class="hidden">
+        </div>
+        <div class="profile-field">
+          <label>Name</label>
+          <input type="text" id="profileName" readonly>
+        </div>
+        <div class="profile-field">
+          <label>Email</label>
+          <input type="email" id="profileEmail" readonly>
+        </div>
+        <div class="profile-field">
+          <label>Phone</label>
+          <input type="tel" id="profilePhone" readonly>
+        </div>
+        <div class="profile-actions">
+          <button id="editProfileBtn" class="edit"><i class="fas fa-edit mr-1"></i>Edit Profile</button>
+          <button id="cancelEditBtn" class="cancel hidden"><i class="fas fa-times mr-1"></i>Cancel</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button data-section="dashboard" class="user-nav active"><i class="fas fa-home"></i><span>Home</span></button>
+    <button data-section="menu" class="user-nav"><i class="fas fa-utensils"></i><span>Menu</span></button>
+    <button data-section="cart" class="user-nav"><i class="fas fa-cart-shopping"></i><span>Cart</span></button>
+    <button data-section="orders" class="user-nav"><i class="fas fa-shopping-bag"></i><span>Orders</span></button>
+    <button data-section="profile" class="user-nav"><i class="fas fa-user"></i><span>Profile</span></button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="shareModal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <h3 class="text-base font-bold text-orange-600">Share DELICUTE!</h3>
+      <div class="share-buttons flex flex-wrap gap-2 justify-center">
+        <a href="#" id="shareWhatsApp" class="bg-green-500 text-white px-3 py-1.5 rounded-full hover:bg-green-600 text-sm"><i class="fab fa-whatsapp mr-1"></i>WhatsApp</a>
+        <a href="#" id="shareTwitter" class="bg-blue-500 text-white px-3 py-1.5 rounded-full hover:bg-blue-600 text-sm"><i class="fab fa-twitter mr-1"></i>Twitter</a>
+        <a href="#" id="shareFacebook" class="bg-blue-700 text-white px-3 py-1.5 rounded-full hover:bg-blue-800 text-sm"><i class="fab fa-facebook mr-1"></i>Facebook</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const CONFIG = {
+      API_URL: 'http://localhost:3000/api',
+      ITEMS_PER_PAGE: 8,
+      SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif'],
+      MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+      BANNER_INTERVAL: 5000,
+      TOAST_DURATION: 3000,
+      RAZORPAY_KEY: 'YOUR_RAZORPAY_KEY_ID' // Replace with your Razorpay Key ID
+    };
+
+    // Static FAQ Data
+    const STATIC_FAQ = [
+      { question: 'How do I track my order?', answer: 'Visit the Orders section, select your order, and click Track to view real-time updates.' },
+      { question: 'What is the cancellation policy?', answer: 'You can cancel within 10 minutes of placing the order for a full refund.' },
+      { question: 'How do I apply a promo code?', answer: 'Enter the promo code in the cart section and click Apply to see the discount.' },
+      { question: 'Can I change my delivery address?', answer: 'Yes, you can update your address in the Addresses section before checkout.' },
+      { question: 'How do loyalty points work?', answer: 'Earn points on every order and redeem them for discounts in the Loyalty section.' }
+    ];
+
+    // State
+    let state = {
+      isLoggedIn: !!localStorage.getItem('jwtToken'),
+      userId: null,
+      navigationHistory: ['dashboard'],
+      appliedCoupon: null,
+      favourites: [],
+      referral: { link: '' },
+      profileImage: null,
+      currentSection: 'dashboard'
+    };
+
+    // Utilities
+    const showToast = (msg, type = 'success') => {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = `toast ${type === 'error' ? 'bg-red-600' : 'bg-orange-600'}`;
+      toast.style.display = 'block';
+      toast.style.opacity = '1';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+      }, CONFIG.TOAST_DURATION);
+    };
+
+    const triggerConfetti = () => confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#f97316', '#fb923c', '#fff']
+    });
+
+    const openModal = (id) => {
+      const modal = document.getElementById(id);
+      modal.classList.add('active');
+    };
+
+    const closeModal = (id) => {
+      const modal = document.getElementById(id);
+      modal.classList.remove('active');
+    };
+
+    // API Client
+    const apiFetch = async (endpoint, method = 'GET', data = null, isMultipart = false) => {
+      try {
+        const url = `${CONFIG.API_URL}${endpoint}`;
+        const options = {
+          method,
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken') || ''}`
+          }
+        };
+        if (data && !isMultipart) {
+          options.headers['Content-Type'] = 'application/json';
+          options.body = JSON.stringify(data);
+        } else if (data && isMultipart) {
+          options.body = data;
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        return await response.json();
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+        return null;
+      }
+    };
+
+    // Dropdown Toggle
+    const toggleDropdown = () => {
+      const dropdown = document.getElementById('dropdownMenu');
+      dropdown.classList.toggle('active');
+      if (dropdown.classList.contains('active')) {
+        dropdown.classList.add('animate-dropdown');
+      } else {
+        dropdown.classList.remove('animate-dropdown');
+      }
+    };
+
+    document.getElementById('profileToggle').addEventListener('click', toggleDropdown);
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('dropdownMenu');
+      if (!dropdown.contains(e.target) && !e.target.closest('#profileToggle') && dropdown.classList.contains('active')) {
+        toggleDropdown();
+      }
+    });
+
+    // Navigation
+    const sections = document.querySelectorAll('.user-section');
+    const navButtons = document.querySelectorAll('.user-nav');
+    const showSection = (sectionId) => {
+      if (state.currentSection === sectionId && sectionId !== 'dashboard') {
+        sectionId = 'dashboard';
+      }
+      state.currentSection = sectionId;
+      sections.forEach(s => s.classList.add('hidden'));
+      const target = document.getElementById(`user-${sectionId}`);
+      target.classList.remove('hidden');
+      navButtons.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll(`[data-section="${sectionId}"]`).forEach(b => b.classList.add('active'));
+      if (state.navigationHistory[state.navigationHistory.length - 1] !== sectionId) {
+        state.navigationHistory.push(sectionId);
+      }
+      toggleDropdown();
+      switch (sectionId) {
+        case 'menu': loadMenu(); break;
+        case 'cart': loadCart(); break;
+        case 'orders': loadOrders(); break;
+        case 'favourites': loadFavourites(); break;
+        case 'addresses': loadAddresses(); break;
+        case 'loyalty': loadLoyalty(); break;
+        case 'referrals': loadReferrals(); break;
+        case 'support': loadSupport(); break;
+        case 'faq': loadFAQ(); break;
+        case 'order-history': loadOrderHistory(); break;
+        case 'profile': loadProfile(); break;
+        default: loadDashboard(); break;
+      }
+    };
+
+    navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
+    document.getElementById('cartSummary').addEventListener('click', () => showSection('cart'));
+
+    const goBack = () => {
+      state.navigationHistory.pop();
+      state.currentSection = state.navigationHistory[state.navigationHistory.length - 1] || 'dashboard';
+      showSection(state.currentSection);
+    };
+
+    document.querySelectorAll('[id^="backFrom"]').forEach(btn => btn.addEventListener('click', goBack));
+
+    // Logout
+    const handleLogout = async () => {
+      const data = await apiFetch('/auth/logout', 'POST');
+      if (data && data.success) {
+        showToast('Logged out successfully');
+        state.isLoggedIn = false;
+        localStorage.removeItem('jwtToken');
+        setTimeout(() => window.location.href = '/login.html', 1000);
+      }
+    };
+
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // Status Bar
+    const loadStatusBar = async () => {
+      const status = await apiFetch('/restaurant/status');
+      document.getElementById('statusBar').textContent = status ?
+        `Restaurant: ${status.status === 'open' ? 'Open' : 'Closed'} | Prep: ${status.prepTime || 30} mins` : 'Status unavailable';
+    };
+
+    // Dashboard
+    const loadDashboard = async () => {
+      const profile = await apiFetch('/users/me');
+      const loyalty = await apiFetch('/users/me/loyalty');
+      if (profile) {
+        document.getElementById('welcomeName').textContent = profile.name || 'User';
+        document.getElementById('headerProfileImage').src = profile.image || 'https://via.placeholder.com/32';
+        document.getElementById('headerProfileImage').onerror = () => {
+          this.src = 'https://via.placeholder.com/32?text=Profile';
+        };
+      }
+      if (loyalty) {
+        document.getElementById('welcomePoints').textContent = loyalty.points || 0;
+      }
+      loadStatusBar();
+      loadBanners();
+      loadOffers();
+      loadMenu();
+    };
+
+    // Banners
+    const loadBanners = async () => {
+      const promotions = await apiFetch('/promotions');
+      const carousel = document.getElementById('banner1').parentElement;
+      if (!promotions || !promotions.length) {
+        carousel.innerHTML = `<div class="banner-item"><div class="banner-content"><p class="text-sm">No promotions available</p></div></div>`;
+        return;
+      }
+      carousel.innerHTML = promotions.map((p, i) => `
+        <div id="banner${i}" class="banner-item ${i ? 'hidden' : ''}">
+          <img src="${p.image || 'https://via.placeholder.com/300?text=Promo'}" alt="${p.title}" class="banner-image" loading="lazy" onerror="this.style.display='none'">
+          <div class="banner-content">
+            <h3 class="text-base font-bold">${p.title}</h3>
+            <p class="text-xs">${p.description || 'Use code: ' + p.code} | Code: ${p.code}</p>
+            <button class="apply-banner-offer bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm" data-code="${p.code}" data-discount="${p.discount}">Claim</button>
+          </div>
+        </div>
+      `).join('');
+      initBannerCarousel();
+    };
+
+    const initBannerCarousel = () => {
+      const items = document.querySelectorAll('.banner-item');
+      let idx = 0;
+      const showBanner = (i) => {
+        items.forEach((item, j) => item.classList.toggle('hidden', i !== j));
+      };
+      document.getElementById('nextBanner').addEventListener('click', () => showBanner(idx = (idx + 1) % items.length));
+      document.getElementById('prevBanner').addEventListener('click', () => showBanner(idx = (idx - 1 + items.length) % items.length));
+      setInterval(() => showBanner(idx = (idx + 1) % items.length), CONFIG.BANNER_INTERVAL);
+      document.querySelectorAll('.apply-banner-offer').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          state.appliedCoupon = { code: btn.dataset.code, discount: parseFloat(btn.dataset.discount) };
+          const data = await apiFetch('/cart/apply-coupon', 'POST', { code: state.appliedCoupon.code });
+          if (data && data.success) {
+            showToast(`Offer ${state.appliedCoupon.code} applied! ${state.appliedCoupon.discount}% off`);
+            loadCart();
+          }
+        });
+      });
+    };
+
+    // Offers
+    const loadOffers = async () => {
+      const promotions = await apiFetch('/promotions');
+      if (!promotions || !promotions.length) {
+        document.getElementById('applyOffer').classList.add('hidden');
+        return;
+      }
+      const offer = promotions[0];
+      document.getElementById('applyOffer').addEventListener('click', async () => {
+        state.appliedCoupon = { code: offer.code, discount: offer.discount };
+        const data = await apiFetch('/cart/apply-coupon', 'POST', { code: offer.code });
+        if (data && data.success) {
+          showToast(`Offer ${offer.code} applied! ${offer.discount}% off`);
+          loadCart();
+        }
+      });
+    };
+
+    // Menu
+    const loadMenu = async (category = 'all', price = 'all', query = '') => {
+      const params = new URLSearchParams({ category, price, query });
+      const items = await apiFetch(`/menu?${params.toString()}`);
+      const favourites = await apiFetch('/favourites');
+      state.favourites = favourites || [];
+      const favouriteIds = state.favourites.map(f => f.id);
+      const renderItem = item => `
+        <div class="menu-item">
+          <img src="${item.image || 'https://via.placeholder.com/150?text=No+Image'}" alt="${item.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold">${item.name}</h3>
+            <p class="text-gray-600 text-xs">₹${item.price}</p>
+            <p class="text-xs text-gray-500">${item.description || 'No description'}</p>
+            <div class="flex gap-2 mt-2">
+              <button class="add-to-cart bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}"><i class="fas fa-cart-plus mr-1"></i>Add</button>
+              <button class="toggle-favourite bg-gray-200 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-300 text-xs" data-id="${item.id}"><i class="fas fa-heart ${favouriteIds.includes(item.id) ? 'text-red-500' : ''}"></i></button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('menuItems').innerHTML = items?.length ? items.map(renderItem).join('') : '<p class="text-sm">No items found</p>';
+      document.getElementById('menuPreview').innerHTML = items?.slice(0, 4).map(renderItem).join('') || '';
+      document.getElementById('popular').innerHTML = items?.filter(i => i.isPopular).slice(0, 4).map(renderItem).join('') || '';
+      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
+      bindFilterEvents();
+    };
+
+    const bindFilterEvents = () => {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const category = btn.dataset.category;
+          const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value;
+          const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value;
+          loadMenu(category, price, query);
+        });
+      });
+      ['menuPriceFilter', 'priceFilter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', () => {
+            const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+            const query = document.getElementById('menuSearch')?.value || document.getElementById('searchMenu').value;
+            loadMenu(category, el.value, query);
+          });
+        }
+      });
+      ['menuSearch', 'searchMenu'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', debounce(() => {
+            const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+            const price = document.getElementById('menuPriceFilter')?.value || document.getElementById('priceFilter').value;
+            loadMenu(category, price, el.value);
+          }, 300));
+        }
+      });
+    };
+
+    const debounce = (func, wait) => {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+      };
+    };
+
+    // Cart
+    const loadCart = async () => {
+      const cart = await apiFetch('/cart');
+      const itemsEl = document.getElementById('cartItems');
+      const subtotalEl = document.getElementById('cartSubtotal');
+      const discountEl = document.getElementById('cartDiscount');
+      const totalEl = document.getElementById('cartTotal');
+      const countEl = document.getElementById('cartCount');
+      const addressEl = document.getElementById('cartAddress');
+      if (!cart || !cart.items?.length) {
+        itemsEl.innerHTML = '<p class="text-sm">Cart is empty</p>';
+        subtotalEl.textContent = '₹0';
+        discountEl.textContent = '₹0';
+        totalEl.textContent = '₹0';
+        countEl.textContent = '0';
+        addressEl.innerHTML = '<option value="">Select Address</option>';
+        return;
+      }
+      const addresses = await apiFetch('/addresses') || [];
+      addressEl.innerHTML = '<option value="">Select Address</option>' + addresses.map(a => `<option value="${a.id}" ${a.isDefault ? 'selected' : ''}>${a.name}: ${a.street}, ${a.city}</option>`).join('');
+      const subtotal = cart.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+      const discount = state.appliedCoupon ? (subtotal * state.appliedCoupon.discount / 100) : 0;
+      const total = subtotal - discount;
+      itemsEl.innerHTML = cart.items.map(i => `
+        <div class="flex justify-between items-center p-2 border-b">
+          <div>
+            <h4 class="text-sm font-semibold">${i.name}</h4>
+            <p class="text-gray-600 text-xs">₹${i.price} x ${i.quantity}</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-action="decrease">-</button>
+            <span class="text-xs">${i.quantity}</span>
+            <button class="update-cart bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-action="increase">+</button>
+            <button class="remove-from-cart bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${i.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+      subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
+      discountEl.textContent = `₹${discount.toFixed(2)}`;
+      totalEl.textContent = `₹${total.toFixed(2)}`;
+      countEl.textContent = cart.items.reduce((sum, i) => sum + i.quantity, 0);
+    };
+
+    // Cart Actions
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.add-to-cart, .update-cart, .remove-from-cart');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.classList.contains('add-to-cart')) {
+        const item = { id, name: btn.dataset.name, price: parseFloat(btn.dataset.price), quantity: 1 };
+        const cart = await apiFetch('/cart');
+        const existing = cart?.items.find(i => i.id === id);
+        if (existing) {
+          const data = await apiFetch('/cart/update', 'POST', { itemId: id, action: 'increase' });
+          if (data && data.success) {
+            showToast(`${item.name} quantity updated`);
+            loadCart();
+          }
+        } else {
+          const data = await apiFetch('/cart/add', 'POST', { item });
+          if (data && data.success) {
+            showToast(`${item.name} added to cart`);
+            loadCart();
+          }
+        }
+      } else if (btn.classList.contains('update-cart')) {
+        const action = btn.dataset.action;
+        const data = await apiFetch('/cart/update', 'POST', { itemId: id, action });
+        if (data && data.success) {
+          showToast('Cart updated');
+          loadCart();
+        }
+      } else if (btn.classList.contains('remove-from-cart')) {
+        const data = await apiFetch('/cart/remove', 'POST', { itemId: id });
+        if (data && data.success) {
+          showToast('Item removed');
+          loadCart();
+        }
+      }
+    });
+
+    // Coupon
+    document.getElementById('applyCoupon').addEventListener('click', async () => {
+      const code = document.getElementById('couponCode').value.trim();
+      if (!code) return showToast('Enter a promo code', 'error');
+      const data = await apiFetch('/cart/apply-coupon', 'POST', { code });
+      if (data && data.success) {
+        state.appliedCoupon = { code, discount: data.discount };
+        showToast(`Coupon ${code} applied! ${data.discount}% off`);
+        loadCart();
+      }
+    });
+
+    // Checkout with Razorpay
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const addressId = document.getElementById('cartAddress').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      if (!addressId) return showToast('Please select a delivery address', 'error');
+      const cart = await apiFetch('/cart');
+      if (!cart || !cart.items?.length) return showToast('Cart is empty', 'error');
+      const orderData = {
+        addressId,
+        paymentMethod,
+        couponCode: state.appliedCoupon?.code
+      };
+      if (paymentMethod === 'cod') {
+        const data = await apiFetch('/orders', 'POST', orderData);
+        if (data && data.success) {
+          showToast('Order placed successfully!');
+          triggerConfetti();
+          loadCart();
+          loadOrders();
+          loadOrderHistory();
+          showSection('orders');
+        }
+      } else {
+        const paymentData = await apiFetch('/orders/create-payment', 'POST', orderData);
+        if (!paymentData || !paymentData.orderId) return showToast('Failed to initiate payment', 'error');
+        const options = {
+          key: CONFIG.RAZORPAY_KEY,
+          amount: paymentData.amount,
+          currency: 'INR',
+          name: 'DELICUTE',
+          description: 'Food Order Payment',
+          image: 'https://i.imgur.com/ZbhzFqT.png',
+          order_id: paymentData.orderId,
+          handler: async (response) => {
+            const verifyData = await apiFetch('/orders/verify-payment', 'POST', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            if (verifyData && verifyData.success) {
+              showToast('Payment successful! Order placed.');
+              triggerConfetti();
+              loadCart();
+              loadOrders();
+              loadOrderHistory();
+              showSection('orders');
+            } else {
+              showToast('Payment verification failed', 'error');
+            }
+          },
+          prefill: {
+            name: document.getElementById('welcomeName').textContent,
+            email: (await apiFetch('/users/me'))?.email || '',
+            contact: (await apiFetch('/users/me'))?.phone || ''
+          },
+          theme: {
+            color: '#f97316'
+          }
+        };
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', () => showToast('Payment failed. Please try again.', 'error'));
+        rzp.open();
+      }
+    });
+
+    // Orders
+    const loadOrders = async () => {
+      const orders = await apiFetch('/orders');
+      const policy = await apiFetch('/cancellation-policy');
+      document.getElementById('cancellationPolicy').textContent = policy?.text || 'Cancel within 10 mins for full refund';
+      document.getElementById('orderItems').innerHTML = orders?.length ? orders.map(o => `
+        <tr>
+          <td class="p-2">${o.id}</td>
+          <td class="p-2">${new Date(o.createdAt).toLocaleDateString()}</td>
+          <td class="p-2">${o.items.map(i => i.name).join(', ')}</td>
+          <td class="p-2">₹${o.total.toFixed(2)}</td>
+          <td class="p-2">${o.status}</td>
+          <td class="p-2 flex gap-2">
+            <button class="track-order bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-order-id="${o.id}"><i class="fas fa-map-marker-alt mr-1"></i>Track</button>
+            <button class="reorder bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-700 text-xs" data-order-id="${o.id}"><i class="fas fa-redo mr-1"></i>Reorder</button>
+            ${o.status === 'Delivered' ? `<button class="rate-order bg-green-600 text-white px-2 py-1 rounded-full hover:bg-green-700 text-xs" data-order-id="${o.id}"><i class="fas fa-star mr-1"></i>Rate</button>` : ''}
+          </td>
+        </tr>
+      `).join('') : '<tr><td colspan="6" class="p-2 text-gray-600 text-sm">No orders</td></tr>';
+    };
+
+    // Order History
+    const loadOrderHistory = async () => {
+      const orders = await apiFetch('/orders/history');
+      document.getElementById('orderHistoryItems').innerHTML = orders?.length ? orders.map(o => `
+        <tr>
+          <td class="p-2">${o.id}</td>
+          <td class="p-2">${new Date(o.createdAt).toLocaleDateString()}</td>
+          <td class="p-2">${o.items.map(i => i.name).join(', ')}</td>
+          <td class="p-2">₹${o.total.toFixed(2)}</td>
+          <td class="p-2">${o.status}</td>
+          <td class="p-2">${o.paymentMethod === 'online' ? 'Online (Razorpay)' : 'Cash on Delivery'}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="6" class="p-2 text-gray-600 text-sm">No order history</td></tr>';
+    };
+
+    // Order Actions
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.track-order, .reorder, .rate-order');
+      if (!btn) return;
+      const orderId = btn.dataset.orderId;
+      if (btn.classList.contains('track-order')) {
+        const data = await apiFetch(`/orders/${orderId}/track`);
+        if (data) {
+          const modal = document.createElement('div');
+          modal.className = 'modal active';
+          modal.innerHTML = `
+            <div class="modal-content">
+              <span class="close">×</span>
+              <h3 class="text-base">Track Order #${orderId}</h3>
+              <div class="space-y-2 text-sm">
+                <p>Status: ${data.status}</p>
+                ${data.deliveryPartner ? `<p>Partner: ${data.deliveryPartner.name}</p><p>Contact: ${data.deliveryPartner.contact}</p>` : '<p>No delivery partner assigned</p>'}
+              </div>
+            </div>
+          `;
+          document.body.appendChild(modal);
+          modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        }
+      } else if (btn.classList.contains('reorder')) {
+        const data = await apiFetch(`/orders/${orderId}/reorder`, 'POST');
+        if (data && data.success) {
+          showToast('Items added to cart');
+           loadCart();
+          showSection('cart');
+        }
+      } else if (btn.classList.contains('rate-order')) {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base">Rate Order #${orderId}</h3>
+            <div class="space-y-3">
+              <div class="flex justify-center gap-1">
+                ${[1, 2, 3, 4, 5].map(i => `<i class="fas fa-star text-xl cursor-pointer" data-rating="${i}" style="color: ${i <= 3 ? '#f97316' : '#d1d5db'}"></i>`).join('')}
+              </div>
+              <textarea id="ratingComment" class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="3" placeholder="Your feedback"></textarea>
+              <button id="submitRating" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        let rating = 3;
+        modal.querySelectorAll('.fa-star').forEach(star => {
+          star.addEventListener('click', () => {
+            rating = parseInt(star.dataset.rating);
+            modal.querySelectorAll('.fa-star').forEach(s => {
+              s.style.color = parseInt(s.dataset.rating) <= rating ? '#f97316' : '#d1d5db';
+            });
+          });
+        });
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        modal.querySelector('#submitRating').addEventListener('click', async () => {
+          const comment = document.getElementById('ratingComment').value;
+          if (!comment) return showToast('Please provide feedback', 'error');
+          const data = await apiFetch(`/orders/${orderId}/rate`, 'POST', { rating, comment });
+          if (data && data.success) {
+            showToast('Rating submitted');
+            modal.remove();
+            loadOrders();
+          }
+        });
+      }
+    });
+
+    // Favourites
+    const loadFavourites = async () => {
+      const favourites = await apiFetch('/favourites');
+      state.favourites = favourites || [];
+      const container = document.getElementById('favouritesItems');
+      container.innerHTML = favourites?.length ? favourites.map(i => `
+        <div class="menu-item">
+          <img src="${i.image || 'https://via.placeholder.com/150?text=No+Image'}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold">${i.name}</h3>
+            <p class="text-gray-600 text-xs">₹${i.price}</p>
+            <p class="text-xs text-gray-500">${i.description || 'No description'}</p>
+            <div class="flex gap-2 mt-2">
+              <button class="add-to-cart bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${i.id}" data-name="${i.name}" data-price="${i.price}"><i class="fas fa-cart-plus mr-1"></i>Add</button>
+              <button class="toggle-favourite bg-gray-200 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-300 text-xs" data-id="${i.id}"><i class="fas fa-heart text-red-500"></i></button>
+            </div>
+          </div>
+        </div>
+      `).join('') : '<p class="text-sm">No favourite items</p>';
+      VanillaTilt.init(document.querySelectorAll('.menu-item'), { max: 8, speed: 300 });
+    };
+
+          document.addEventListener('click', async e => {
+        const btn = e.target.closest('.toggle-favourite');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const isFavourited = state.favourites.some(f => f.id === id);
+        const endpoint = isFavourited ? '/favourites/remove' : '/favourites/add';
+        const data = await apiFetch(endpoint, 'POST', { itemId: id });
+        if (data && data.success) {
+          showToast(isFavourited ? 'Removed from favourites' : 'Added to favourites');
+          loadFavourites();
+          loadMenu();
+        }
+      });
+
+      // Addresses
+      const loadAddresses = async () => {
+        const addresses = await apiFetch('/addresses');
+        const container = document.getElementById('addressItems');
+        container.innerHTML = addresses?.length ? addresses.map(a => `
+          <div class="bg-white rounded-lg p-3 shadow flex justify-between items-center">
+            <div>
+              <h4 class="text-sm font-semibold">${a.name}</h4>
+              <p class="text-xs text-gray-600">${a.street}, ${a.city}, ${a.state}, ${a.zip}</p>
+              <p class="text-xs text-gray-500">${a.phone}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-address bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${a.id}"><i class="fas fa-edit"></i></button>
+              <button class="delete-address bg-red-600 text-white px-2 py-1 rounded-full hover:bg-red-700 text-xs" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+              ${a.isDefault ? '<span class="text-xs text-green-600">Default</span>' : `<button class="set-default-address bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-700 text-xs" data-id="${a.id}">Set Default</button>`}
+            </div>
+          </div>
+        `).join('') : '<p class="text-sm">No addresses saved</p>';
+      };
+
+      document.getElementById('addAddress').addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Add Address</h3>
+            <form id="addressForm" class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-700">Name</label>
+                <input type="text" name="name" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Home, Work, etc.">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">Street</label>
+                <input type="text" name="street" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Street address">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">City</label>
+                <input type="text" name="city" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="City">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">State</label>
+                <input type="text" name="state" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="State">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">ZIP</label>
+                <input type="text" name="zip" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="ZIP code">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">Phone</label>
+                <input type="tel" name="phone" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Phone number">
+              </div>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Save Address</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        modal.querySelector('#addressForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const address = Object.fromEntries(formData);
+          const data = await apiFetch('/addresses', 'POST', address);
+          if (data && data.success) {
+            showToast('Address added');
+            modal.remove();
+            loadAddresses();
+          }
+        });
+      });
+
+      document.addEventListener('click', async e => {
+        const btn = e.target.closest('.edit-address, .delete-address, .set-default-address');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        if (btn.classList.contains('edit-address')) {
+          const address = await apiFetch(`/addresses/${id}`);
+          if (!address) return;
+          const modal = document.createElement('div');
+          modal.className = 'modal active';
+          modal.innerHTML = `
+            <div class="modal-content">
+              <span class="close">×</span>
+              <h3 class="text-base font-bold text-orange-600">Edit Address</h3>
+              <form id="editAddressForm" class="space-y-3">
+                <div>
+                  <label class="block text-sm text-gray-700">Name</label>
+                  <input type="text" name="name" value="${address.name}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">Street</label>
+                  <input type="text" name="street" value="${address.street}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">City</label>
+                  <input type="text" name="city" value="${address.city}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">State</label>
+                  <input type="text" name="state" value="${address.state}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">ZIP</label>
+                  <input type="text" name="zip" value="${address.zip}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-700">Phone</label>
+                  <input type="tel" name="phone" value="${address.phone}" required class="w-full px-3 py-1.5 border rounded-lg text-sm">
+                </div>
+                <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Update Address</button>
+              </form>
+            </div>
+          `;
+          document.body.appendChild(modal);
+          modal.querySelector('.close').addEventListener('click', () => modal.remove());
+          modal.querySelector('#editAddressForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const address = Object.fromEntries(formData);
+            const data = await apiFetch(`/addresses/${id}`, 'PUT', address);
+            if (data && data.success) {
+              showToast('Address updated');
+              modal.remove();
+              loadAddresses();
+            }
+          });
+        } else if (btn.classList.contains('delete-address')) {
+          if (!confirm('Are you sure you want to delete this address?')) return;
+          const data = await apiFetch(`/addresses/${id}`, 'DELETE');
+          if (data && data.success) {
+            showToast('Address deleted');
+            loadAddresses();
+          }
+        } else if (btn.classList.contains('set-default-address')) {
+          const data = await apiFetch(`/addresses/${id}/set-default`, 'POST');
+          if (data && data.success) {
+            showToast('Default address set');
+            loadAddresses();
+          }
+        }
+      });
+
+      // Loyalty
+      const loadLoyalty = async () => {
+        const loyalty = await apiFetch('/users/me/loyalty');
+        const history = await apiFetch('/users/me/loyalty/history');
+        document.getElementById('loyaltyPoints').textContent = loyalty?.points || 0;
+        document.getElementById('loyaltyHistory').innerHTML = history?.length ? history.map(h => `
+          <div class="border-b py-2 text-sm">
+            <p>${h.description}</p>
+            <p class="text-gray-600 text-xs">${h.points} points on ${new Date(h.createdAt).toLocaleDateString()}</p>
+          </div>
+        `).join('') : '<p class="text-sm">No loyalty history</p>';
+      };
+
+      // Referrals
+      const loadReferrals = async () => {
+        const referral = await apiFetch('/users/me/referral');
+        if (referral) {
+          state.referral = referral;
+          document.getElementById('referralCode').textContent = referral.code || 'N/A';
+          document.getElementById('referralLink').href = referral.link;
+        }
+      };
+
+      // Support
+      const loadSupport = async () => {
+        const tickets = await apiFetch('/support/tickets');
+        document.getElementById('supportTickets').innerHTML = tickets?.length ? tickets.map(t => `
+          <div class="border-b py-2 text-sm">
+            <p class="font-semibold">${t.subject}</p>
+            <p class="text-gray-600 text-xs">${t.status} - ${new Date(t.createdAt).toLocaleDateString()}</p>
+            <button class="view-ticket bg-orange-600 text-white px-2 py-1 rounded-full hover:bg-orange-700 text-xs" data-id="${t.id}">View</button>
+          </div>
+        `).join('') : '<p class="text-sm">No support tickets</p>';
+        loadChat();
+      };
+
+      document.getElementById('createTicketBtn').addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Create Support Ticket</h3>
+            <form id="ticketForm" class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-700">Subject</label>
+                <input type="text" name="subject" required class="w-full px-3 py-1.5 border rounded-lg text-sm" placeholder="Issue summary">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700">Description</label>
+                <textarea name="description" required class="w-full px-3 py-1.5 border rounded-lg text-sm" rows="4" placeholder="Describe your issue"></textarea>
+              </div>
+              <button type="submit" class="w-full bg-orange-600 text-white px-3 py-1.5 rounded-full hover:bg-orange-700 text-sm">Submit Ticket</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+        modal.querySelector('#ticketForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const ticket = Object.fromEntries(formData);
+          const data = await apiFetch('/support/tickets', 'POST', ticket);
+          if (data && data.success) {
+            showToast('Ticket created');
+            modal.remove();
+            loadSupport();
+          }
+        });
+      });
+
+      document.addEventListener('click', async e => {
+        const btn = e.target.closest('.view-ticket');
+        if (!btn) return;
+        const ticket = await apiFetch(`/support/tickets/${btn.dataset.id}`);
+        if (!ticket) return;
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">×</span>
+            <h3 class="text-base font-bold text-orange-600">Ticket #${ticket.id}</h3>
+            <div class="space-y-2 text-sm">
+              <p><strong>Subject:</strong> ${ticket.subject}</p>
+              <p><strong>Status:</strong> ${ticket.status}</p>
+              <p><strong>Created:</strong> ${new Date(ticket.createdAt).toLocaleDateString()}</p>
+              <p><strong>Description:</strong> ${ticket.description}</p>
+              ${ticket.response ? `<p><strong>Response:</strong> ${ticket.response}</p>` : '<p><strong>Response:</strong> Awaiting reply</p>'}
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+      });
+
+      // Chat
+      const loadChat = async () => {
+        const messages = await apiFetch('/support/chat');
+        const chatContainer = document.getElementById('chatMessages');
+        chatContainer.innerHTML = messages?.length ? messages.map(m => `
+          <div class="chat-message ${m.isUser ? 'user' : 'admin'}">
+            <p class="text-xs">${m.text}</p>
+            <span class="text-xs text-gray-400">${new Date(m.createdAt).toLocaleTimeString()}</span>
+          </div>
+        `).join('') : '<p class="text-sm">No messages</p>';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      };
+
+      document.getElementById('sendChat').addEventListener('click', async () => {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        const data = await apiFetch('/support/chat', 'POST', { text });
+        if (data && data.success) {
+          input.value = '';
+          loadChat();
+        }
+      });
+
+      document.getElementById('chatInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') document.getElementById('sendChat').click();
+      });
+
+      // FAQ
+      const loadFAQ = () => {
+        const faqContainer = document.getElementById('faqItems');
+        faqContainer.innerHTML = STATIC_FAQ.map((faq, i) => `
+          <div class="border-b py-2">
+            <button class="w-full text-left text-sm font-semibold text-orange-600 flex justify-between items-center" data-faq-id="${i}">
+              ${faq.question}
+              <i class="fas fa-chevron-down transform transition-transform"></i>
+            </button>
+            <div class="faq-answer hidden text-xs text-gray-600 mt-1">${faq.answer}</div>
+          </div>
+        `).join('');
+        document.querySelectorAll('[data-faq-id]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const answer = btn.nextElementSibling;
+            const icon = btn.querySelector('.fa-chevron-down');
+            answer.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+          });
+        });
+      };
+
+      // Profile
+      const loadProfile = async () => {
+        const profile = await apiFetch('/users/me');
+        if (profile) {
+          document.getElementById('profileName').value = profile.name || '';
+          document.getElementById('profileEmail').value = profile.email || '';
+          document.getElementById('profilePhone').value = profile.phone || '';
+          document.getElementById('profileImage').src = profile.image || 'https://via.placeholder.com/100?text=Profile';
+        }
+      };
+
+      const enableProfileEdit = () => {
+        document.getElementById('profileName').removeAttribute('readonly');
+        document.getElementById('profilePhone').removeAttribute('readonly');
+        document.getElementById('editProfileBtn').classList.add('hidden');
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+      };
+
+      const disableProfileEdit = () => {
+        document.getElementById('profileName').setAttribute('readonly', true);
+        document.getElementById('profilePhone').setAttribute('readonly', true);
+        document.getElementById('editProfileBtn').classList.remove('hidden');
+        document.getElementById('cancelEditBtn').classList.add('hidden');
+      };
+
+      document.getElementById('editProfileBtn').addEventListener('click', async () => {
+        if (document.getElementById('editProfileBtn').textContent.includes('Save')) {
+          const name = document.getElementById('profileName').value;
+          const phone = document.getElementById('profilePhone').value;
+          if (!name || !phone) return showToast('Please fill all fields', 'error');
+          const data = await apiFetch('/users/me', 'PUT', { name, phone });
+          if (data && data.success) {
+            showToast('Profile updated');
+            disableProfileEdit();
+            document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
+            document.getElementById('welcomeName').textContent = name;
+          }
+        } else {
+          enableProfileEdit();
+          document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes';
+        }
+      });
+
+      document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        disableProfileEdit();
+        document.getElementById('editProfileBtn').innerHTML = '<i class="fas fa-edit mr-1"></i>Edit Profile';
+        loadProfile();
+      });
+
+      document.getElementById('profileImageInput').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+          showToast('Only JPEG, PNG, or GIF images are allowed', 'error');
+          return;
+        }
+        if (file.size > CONFIG.MAX_IMAGE_SIZE) {
+          showToast('Image size must be less than 5MB', 'error');
+          return;
+        }
+        const formData = new FormData();
+        formData.append('image', file);
+        const data = await apiFetch('/users/me/image', 'POST', formData, true);
+        if (data && data.success) {
+          showToast('Profile image updated');
+          document.getElementById('profileImage').src = data.imageUrl;
+          document.getElementById('headerProfileImage').src = data.imageUrl;
+        }
+      });
+
+      // Share
+      document.getElementById('shareBtn').addEventListener('click', () => {
+        openModal('shareModal');
+        const shareUrl = window.location.origin;
+        const shareText = 'Check out DELICUTE for delicious food!';
+        document.getElementById('shareWhatsApp').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      });
+
+      document.querySelector('#shareModal .close').addEventListener('click', () => closeModal('shareModal'));
+
+      // Particles
+      const initParticles = () => {
+        const canvas = document.querySelector('.particles');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+        const particles = Array.from({ length: 50 }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speedX: Math.random() * 0.5 - 0.25,
+          speedY: Math.random() * 0.5 - 0.25
+        }));
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach(p => {
+            p.x += p.speedX;
+            p.y += p.speedY;
+            if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(249, 115, 22, 0.5)';
+            ctx.fill();
+          });
+          requestAnimationFrame(animate);
+        };
+        animate();
+      };
+
+      // Initialize
+      const init = async () => {
+        if (!state.isLoggedIn) {
+          showToast('Please log in', 'error');
+          setTimeout(() => window.location.href = '/login.html', 1000);
+          return;
+        }
+        const profile = await apiFetch('/users/me');
+        state.userId = profile?.id;
+        initParticles();
+        loadDashboard();
+      };
+
+      window.addEventListener('resize', initParticles);
+      init();
+    </script>
+  </body>
+</html>
