@@ -36,6 +36,7 @@
             z-index: 50;
             display: none;
             transition: opacity 0.3s ease;
+            font-size: 14px;
         }
         .toast-success {
             background-color: #10b981;
@@ -53,96 +54,16 @@
                 transform: scale(1);
             }
         }
-        /* Mobile Responsive Design */
         @media (max-width: 640px) {
-            body {
-                font-size: 0.75rem;
-            }
             .modal-content {
-                margin: 0.75rem;
-                padding: 1rem;
-                max-width: 90%;
+                margin: 1rem;
+                padding: 1.5rem;
             }
             .toast {
-                bottom: 10px;
-                right: 10px;
-                font-size: 0.625rem;
-                padding: 8px 16px;
-            }
-            h1 {
-                font-size: 1.25rem;
-            }
-            h2 {
-                font-size: 1rem;
-            }
-            p, a, button, input, label {
-                font-size: 0.625rem;
-            }
-            input, button {
-                padding: 0.5rem;
-            }
-            /* Header adjustments */
-            header img {
-                height: 1.5rem;
-            }
-            header h1 {
-                font-size: 1rem;
-            }
-            header p {
-                font-size: 0.5rem;
-            }
-            /* Form layouts */
-            #loginForm, #forgotPasswordForm, #otpForm, #resetPasswordForm, #signupModal .modal-content > div {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.5rem;
-            }
-            #loginForm .mb-4, #loginForm .mb-6, #forgotPasswordForm .mb-6, #otpForm .mb-6, #resetPasswordForm .mb-4, #resetPasswordForm .mb-6, #signupModal .mb-4, #signupModal .mb-6 {
-                grid-column: span 2;
-            }
-            /* Button and image sizes */
-            button img {
-                height: 0.875rem;
-            }
-            button {
-                padding: 0.5rem;
-            }
-            /* Footer adjustments */
-            footer p, footer a {
-                font-size: 0.5rem;
-            }
-        }
-        @media (min-width: 641px) {
-            .modal-content {
-                padding: 2rem;
-                max-width: 28rem;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            h2 {
-                font-size: 1.5rem;
-            }
-            p, a, button, input, label {
-                font-size: 0.875rem;
-            }
-            input, button {
-                padding: 0.75rem;
-            }
-            header img {
-                height: 2.5rem;
-            }
-            header h1 {
-                font-size: 1.5rem;
-            }
-            header p {
-                font-size: 0.75rem;
-            }
-            button img {
-                height: 1.25rem;
-            }
-            footer p, footer a {
-                font-size: 0.75rem;
+                bottom: 12px;
+                right: 12px;
+                font-size: 12px;
+                padding: 10px 20px;
             }
         }
     </style>
@@ -151,10 +72,10 @@
     <!-- Header -->
     <header class="bg-white shadow-md w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-center">
-            <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12 w-auto">
+            <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 sm:h-12 w-auto">
             <div class="ml-3">
-                <h1 class="text-2xl font-bold text-orange-600">Delicute Admin</h1>
-                <p class="text-sm text-gray-600">Manage Culinary Excellence</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-orange-600">Delicute Admin</h1>
+                <p class="text-xs sm:text-sm text-gray-600">Manage Culinary Excellence</p>
             </div>
         </div>
     </header>
@@ -164,8 +85,8 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-30">
-        <div class="modal-content p-8 w-full max-w-md mx-4">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Login</h2>
+        <div class="modal-content p-6 sm:p-8 w-full max-w-md mx-4">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Login</h2>
             <div id="loginForm">
                 <div class="mb-4">
                     <label for="loginEmail" class="block text-gray-700 text-sm font-medium mb-1">Email</label>
@@ -224,8 +145,8 @@
 
     <!-- Signup Modal -->
     <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-30">
-        <div class="modal-content p-8 w-full max-w-md mx-4">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Sign Up</h2>
+        <div class="modal-content p-6 sm:p-8 w-full max-w-md mx-4">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Sign Up</h2>
             <div class="mb-4">
                 <label for="signupName" class="block text-gray-700 text-sm font-medium mb-1">Name</label>
                 <input type="text" id="signupName" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Name">
@@ -260,11 +181,11 @@
     <!-- Footer -->
     <footer class="bg-gray-800 bg-opacity-90 text-white py-4 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center">
-            <p class="text-sm">© 2025 Delicute. All rights reserved.</p>
+            <p class="text-xs sm:text-sm">© 2025 Delicute. All rights reserved.</p>
             <div class="flex space-x-4 mt-2 sm:mt-0">
-                <a href="#" class="hover:text-orange-600 text-sm">Facebook</a>
-                <a href="#" class="hover:text-orange-600 text-sm">Instagram</a>
-                <a href="#" class="hover:text-orange-600 text-sm">Twitter</a>
+                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Facebook</a>
+                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Instagram</a>
+                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Twitter</a>
             </div>
         </div>
     </footer>
