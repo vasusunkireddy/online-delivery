@@ -110,7 +110,7 @@ passport.use(new GoogleStrategy({
 // Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Test Database Connection
@@ -1494,24 +1494,30 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/admin.html', (req, res) => {
+app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('/admindashboard.html', (req, res) => {
+app.get('/admindashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admindashboard.html'));
 });
 
-app.get('/userdashboard.html', (req, res) => {
+app.get('/userdashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'));
 });
 
-app.get('/forgot-password.html', (req, res) => {
+app.get('/forgot-password', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
 });
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err.message, err.stack);
+  res.status(500).json({ message: 'Internal server error', error: err.message });
 });
 
 // Start Server
