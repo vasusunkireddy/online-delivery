@@ -110,19 +110,44 @@ passport.use(new GoogleStrategy({
 // Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false }, // Enable SSL for Render
+  connectionTimeoutMillis: 5000,
+  max: 20
+});
+
+// Enhanced Error Logging for Pool
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client:', {
+    message: err.message,
+    code: err.code,
+    stack: err.stack
+  });
+});
+pool.on('connect', () => {
+  console.log('Pool connected to database');
 });
 
 // Test Database Connection
 async function testDbConnection() {
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     console.log('Database connected successfully');
-    await client.query('SELECT NOW()');
-    client.release();
+    const result = await client.query('SELECT NOW()');
+    console.log('Database time:', result.rows[0].now);
   } catch (error) {
-    console.error('Database connection error:', error.message, error.stack);
+    console.error('Database connection error:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      connectionString: process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@') : 'undefined',
+      stack: error.stack
+    });
     throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 
@@ -922,13 +947,8 @@ app.delete('/api/special-offers/:id', authenticateToken, isAdmin, async (req, re
 
 // Customers Routes
 app.get('/api/customers', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM customers ORDER BY id');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Get Customers Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+  const result = await pool.query('SELECT * FROM customers ORDER BY id');
+  res.json(result.rows);
 });
 
 app.get('/api/customers/:id', authenticateToken, isAdmin, async (req, res) => {
@@ -1498,35 +1518,15 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('/admindashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admindashboard.html'));
-});
-
-app.get('/userdashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'));
-});
-
-app.get('/forgot-password', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err.message, err.stack);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
-});
-
 // Start Server
-const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     await testDbConnection();
     await initializeAndUpdateDatabase();
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      console.log(`🚀 Server running on http://localhost:${port}`);
+    });
   } catch (error) {
     console.error('Failed to start server:', error.message, error.stack);
     process.exit(1);

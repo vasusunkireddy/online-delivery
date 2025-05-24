@@ -27,7 +27,7 @@
             gap: 0.5rem;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.95);
-            padding: 0.5rem 1rem;
+            padding: 0.5rem;
             border-radius: 9999px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
@@ -45,13 +45,6 @@
             object-fit: cover;
             border: 2px solid #f97316;
             transition: border-color 0.3s ease;
-        }
-
-        .welcome-message {
-            color: #f97316;
-            font-weight: 600;
-            font-size: 0.875rem;
-            white-space: nowrap;
         }
 
         /* Dropdown Menu */
@@ -190,10 +183,6 @@
                 padding: 0.5rem;
             }
 
-            .welcome-message {
-                font-size: 0.75rem;
-            }
-
             .dropdown-menu {
                 width: 10rem;
                 right: 0.5rem;
@@ -238,7 +227,6 @@
     <!-- Profile Dropdown -->
     <div class="profile-container" onclick="toggleDropdown()">
         <img id="profileImage" class="profile-image" src="https://via.placeholder.com/40" alt="Profile Image">
-        <span id="welcomeMessage" class="welcome-message">Welcome, Admin</span>
     </div>
 
     <!-- Dropdown Menu -->
@@ -401,7 +389,7 @@
             <h2 class="text-2xl font-bold text-white bg-orange-600 p-4 rounded-lg shadow">Payment Management</h2>
             <div class="card p-4">
                 <h3 class="text-lg font-semibold text-gray-700 mb-4">Payment Tracking</h3>
-                <table classeq="w-full text-left">
+                <table class="w-full text-left">
                     <thead>
                         <tr class="border-b">
                             <th class="py-2">Order ID</th>
@@ -507,9 +495,9 @@
                         <label for="profileImageUpload" class="text-sm font-medium text-gray-700">Profile Image</label>
                         <input type="file" id="profileImageUpload" accept="image/*" class="text-sm w-full">
                     </div>
-                    <div class="sm:col-span-2">
-                        <label for="welcomeMessageInput" class="text-sm font-medium text-gray-700">Welcome Message</label>
-                        <textarea id="welcomeMessageInput" class="border rounded-lg p-2 text-sm w-full" rows="3" placeholder="Enter welcome message"></textarea>
+                    <div>
+                        <label for="userKey" class="text-sm font-medium text-gray-700">Backend Key</label>
+                        <input type="text" id="userKey" class="border rounded-lg p-2 text-sm w-full" placeholder="Enter backend key">
                     </div>
                     <button class="btn btn-primary" onclick="updateProfile()">Update Profile</button>
                 </div>
@@ -578,35 +566,34 @@
         function loadProfile() {
             const profile = JSON.parse(localStorage.getItem('adminProfile')) || {
                 username: 'Admin',
-                welcomeMessage: 'Welcome, Admin',
-                profileImage: 'https://via.placeholder.com/40'
+                profileImage: 'https://via.placeholder.com/40',
+                userKey: ''
             };
             document.getElementById('profileUsername').value = profile.username;
-            document.getElementById('welcomeMessageInput').value = profile.welcomeMessage.replace('Welcome, ', '');
+            document.getElementById('userKey').value = profile.userKey;
             document.getElementById('profileImage').src = profile.profileImage;
-            document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
+            showToast(`Welcome, ${profile.username}!`, 'success');
         }
 
         function updateProfile() {
             const username = document.getElementById('profileUsername').value.trim();
-            const welcomeMessageInput = document.getElementById('welcomeMessageInput').value.trim();
+            const userKey = document.getElementById('userKey').value.trim();
             const profileImageUpload = document.getElementById('profileImageUpload');
-            if (!username || !welcomeMessageInput) {
-                showToast('Username and welcome message are required', 'error');
+            if (!username || !userKey) {
+                showToast('Username and backend key are required', 'error');
                 return;
             }
             showLoading(true);
             try {
                 const profile = JSON.parse(localStorage.getItem('adminProfile')) || {};
                 profile.username = username;
-                profile.welcomeMessage = `Welcome, ${welcomeMessageInput}`;
+                profile.userKey = userKey;
                 if (profileImageUpload.files[0]) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         profile.profileImage = e.target.result;
                         localStorage.setItem('adminProfile', JSON.stringify(profile));
                         document.getElementById('profileImage').src = profile.profileImage;
-                        document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
                         showToast('Profile updated successfully!', 'success');
                         showLoading(false);
                     };
@@ -615,7 +602,6 @@
                     profile.profileImage = profile.profileImage || 'https://via.placeholder.com/40';
                     localStorage.setItem('adminProfile', JSON.stringify(profile));
                     document.getElementById('profileImage').src = profile.profileImage;
-                    document.getElementById('welcomeMessage').textContent = profile.welcomeMessage;
                     showToast('Profile updated successfully!', 'success');
                     showLoading(false);
                 }
@@ -1128,49 +1114,42 @@
         }
 
         async function updateMenuItem(id) {
-    const name = document.getElementById('menuName').value.trim();
-    const description = document.getElementById('menuDescription').value.trim();
-    const category_id = document.getElementById('menuCategory').value;
-    const price = document.getElementById('menuPrice').value;
-    const imageInput = document.getElementById('menuImage');
-    const is_available = document.getElementById('menuAvailable').checked;
-
-    if (!name || !price || !category_id || price < 0) {
-        showToast('Please fill all fields with valid data.', 'error');
-        return;
-    }
-
-    showLoading(true);
-    try {
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('description', description);
-        formData.append('category_id', category_id);
-        formData.append('price', `₹${price}`);
-        formData.append('is_available', is_available);
-        if (imageInput.files[0]) {
-            formData.append('image', imageInput.files[0]);
+            const name = document.getElementById('menuName').value.trim();
+            const description = document.getElementById('menuDescription').value.trim();
+            const category_id = document.getElementById('menuCategory').value;
+            const price = document.getElementById('menuPrice').value;
+            const imageInput = document.getElementById('menuImage');
+            const is_available = document.getElementById('menuAvailable').checked;
+            if (!name || !price || !category_id || price < 0) {
+                showToast('Please fill all fields with valid data.', 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('description', description);
+                formData.append('category_id', category_id);
+                formData.append('price', `₹${price}`);
+                formData.append('is_available', is_available);
+                if (imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update item');
+                showToast('Menu item updated successfully!', 'success');
+                renderAdminMenu();
+            } catch (error) {
+                showToast(`Error updating menu item: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
-        const response = await fetch(`/api/menu/${id}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update item');
-        }
-
-        showToast('Menu item updated successfully!', 'success');
-        renderAdminMenu();
-    } catch (error) {
-        showToast(`Error updating menu item: ${error.message}`, 'error');
-    } finally {
-        showLoading(false);
-    }
-}
         // Toggle Menu Item Availability
         async function toggleMenuAvailability(id, is_available) {
             showLoading(true);
@@ -1562,7 +1541,7 @@
                 queries.forEach(query => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="px-4 py-2">${query.customerName}</td>
+                                                <td class="px-4 py-2">${query.customerName}</td>
                         <td class="px-4 py-2">${query.query}</td>
                         <td class="px-4 py-2">${query.status}</td>
                         <td class="px-4 py-2">
@@ -1592,8 +1571,7 @@
                     <p><strong>Customer:</strong> ${query.customerName}</p>
                     <p><strong>Query:</strong> ${query.query}</p>
                     <p><strong>Status:</strong> ${query.status}</p>
-                    <h4 class="font-semibold mt-4">Response:</h4>
-                    <textarea id="queryResponse" class="border rounded-lg p-2 text-sm w-full" rows="4" placeholder="Enter your response"></textarea>
+                    <textarea id="queryResponse" class="border rounded-lg p-2 text-sm w-full mt-4" placeholder="Enter response"></textarea>
                     <button class="btn btn-primary mt-2" onclick="submitQueryResponse('${query.id}')">Submit Response</button>
                 `;
                 document.getElementById('orderDetailsModal').classList.remove('hidden');
@@ -1645,7 +1623,7 @@
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch payments');
                 const payments = await response.json();
                 payments.forEach(payment => {
-                    const row = document.createElement('tr');
+                    const row = document.createElementatellite
                     row.innerHTML = `
                         <td class="px-4 py-2">${payment.orderId}</td>
                         <td class="px-4 py-2">${payment.customerName}</td>
@@ -1700,15 +1678,17 @@
                 });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch revenue reports');
                 const reports = await response.json();
+                const labels = reports.map(r => r.date);
+                const data = reports.map(r => r.revenue);
                 const ctx = document.getElementById('revenueChart').getContext('2d');
                 if (revenueChart) revenueChart.destroy();
                 revenueChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: reports.labels, // e.g., ['Jan', 'Feb', 'Mar']
+                        labels: labels,
                         datasets: [{
                             label: 'Revenue (₹)',
-                            data: reports.revenue, // e.g., [10000, 15000, 20000]
+                            data: data,
                             borderColor: '#f97316',
                             backgroundColor: 'rgba(249, 115, 22, 0.2)',
                             fill: true
@@ -1718,10 +1698,7 @@
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: value => `₹${value}`
-                                }
+                                beginAtZero: true
                             }
                         }
                     }
@@ -1737,15 +1714,15 @@
         async function fetchBusinessSettings() {
             showLoading(true);
             try {
-                const response = await fetch('/api/settings', {
+                const response = await fetch('/api/business-settings', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to fetch settings');
                 const settings = await response.json();
-                document.getElementById('restaurantName').value = settings.restaurantName || '';
-                document.getElementById('contactEmail').value = settings.contactEmail || '';
-                document.getElementById('contactPhone').value = settings.contactPhone || '';
-                document.getElementById('openingHours').value = JSON.stringify(settings.openingHours || {}, null, 2);
+                document.getElementById('restaurantName').value = settings.name || '';
+                document.getElementById('contactEmail').value = settings.email || '';
+                document.getElementById('contactPhone').value = settings.phone || '';
+                document.getElementById('openingHours').value = JSON.stringify(settings.opening_hours || {}, null, 2);
             } catch (error) {
                 showToast(`Error fetching settings: ${error.message}`, 'error');
             } finally {
@@ -1755,33 +1732,33 @@
 
         // Update Business Settings
         async function updateBusinessSettings() {
-            const restaurantName = document.getElementById('restaurantName').value.trim();
-            const contactEmail = document.getElementById('contactEmail').value.trim();
-            const contactPhone = document.getElementById('contactPhone').value.trim();
+            const name = document.getElementById('restaurantName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const phone = document.getElementById('contactPhone').value.trim();
             const openingHoursText = document.getElementById('openingHours').value.trim();
-            const restaurantLogo = document.getElementById('restaurantLogo');
-            if (!restaurantName || !contactEmail || !contactPhone || !openingHoursText) {
-                showToast('Please fill all fields.', 'error');
+            const logoInput = document.getElementById('restaurantLogo');
+            if (!name || !email || !phone || !openingHoursText) {
+                showToast('Please fill all fields', 'error');
                 return;
             }
             let openingHours;
             try {
                 openingHours = JSON.parse(openingHoursText);
             } catch (error) {
-                showToast('Invalid opening hours format. Please use valid JSON.', 'error');
+                showToast('Invalid opening hours format', 'error');
                 return;
             }
             showLoading(true);
             try {
                 const formData = new FormData();
-                formData.append('restaurantName', restaurantName);
-                formData.append('contactEmail', contactEmail);
-                formData.append('contactPhone', contactPhone);
-                formData.append('openingHours', JSON.stringify(openingHours));
-                if (restaurantLogo.files[0]) {
-                    formData.append('logo', restaurantLogo.files[0]);
+                formData.append('name', name);
+                formData.append('email', email);
+                formData.append('phone', phone);
+                formData.append('opening_hours', JSON.stringify(openingHours));
+                if (logoInput.files[0]) {
+                    formData.append('logo', logoInput.files[0]);
                 }
-                const response = await fetch('/api/settings', {
+                const response = await fetch('/api/business-settings', {
                     method: 'PUT',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
@@ -1795,24 +1772,23 @@
             }
         }
 
-        // Handle Logout
+        // Logout Handler
         function handleLogout() {
             localStorage.removeItem('token');
-            localStorage.removeItem('adminProfile');
             showToast('Logged out successfully!', 'success');
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = 'admin.html';
             }, 1000);
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             if (!token) {
-                window.location.href = '/login';
-                return;
+                window.location.href = 'admin.html';
+            } else {
+                loadProfile();
+                showSection('dashboard');
             }
-            loadProfile();
-            showSection('dashboard');
         });
     </script>
 </body>
