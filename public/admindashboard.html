@@ -8,28 +8,42 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
             color: #1f2937;
             margin: 0;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
         }
         .auth-container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             padding: 2.5rem;
             max-width: 1400px;
             width: 95%;
             margin: 2rem auto;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .auth-container:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
         }
         .input-field {
             transition: all 0.3s ease;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             padding: 0.75rem;
+            background: white;
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -44,6 +58,7 @@
             border-radius: 8px;
             padding: 0.75rem 1.5rem;
             font-weight: 500;
+            color: white;
         }
         .auth-btn:hover {
             transform: translateY(-2px);
@@ -94,6 +109,7 @@
             overflow-y: auto;
             border-radius: 8px;
             background: white;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
         .table-container table {
             width: 100%;
@@ -110,6 +126,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            font-weight: 600;
         }
         .profile-container {
             position: relative;
@@ -244,6 +261,12 @@
             border-radius: 8px;
             border: 2px solid #f59e0b;
         }
+        .contact-message {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -275,7 +298,7 @@
                 <input type="file" id="profileImageUpload" class="input-field w-full" accept="image/*">
             </div>
             <div class="mt-6">
-                <button onclick="updateProfileImage()" class="auth-btn text-white w-full">Update Profile Image</button>
+                <button onclick="updateProfileImage()" class="auth-btn w-full">Update Profile Image</button>
             </div>
         </div>
     </div>
@@ -291,8 +314,16 @@
                 <input type="text" id="editItemName" class="input-field w-full" placeholder="Item Name">
             </div>
             <div class="mt-4">
-                <label for="editItemPrice" class="block text-gray-700 font-medium mb-2">Price (₹)</label>
-                <input type="number" id="editItemPrice" class="input-field w-full" placeholder="Price">
+                <label for="editItemPriceRegular" class="block text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                <input type="number" id="editItemPriceRegular" class="input-field w-full" placeholder="Regular Price">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPriceClassic" class="block text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                <input type="number" id="editItemPriceClassic" class="input-field w-full" placeholder="Classic Price">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPriceLarge" class="block text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                <input type="number" id="editItemPriceLarge" class="input-field w-full" placeholder="Large Price">
             </div>
             <div class="mt-4">
                 <label for="editItemCategory" class="block text-gray-700 font-medium mb-2">Category</label>
@@ -319,11 +350,11 @@
                 <input type="file" id="editItemImageUpload" class="input-field w-full" accept="image/*">
             </div>
             <div class="mt-4">
-                <label for="editItemDescription" class="block text-gray-700 font-medium mb-2">Description</label>
+                <label for="editItemDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
                 <textarea id="editItemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
             </div>
             <div class="mt-6">
-                <button onclick="updateMenuItem()" class="auth-btn text-white w-full">Update Item</button>
+                <button onclick="updateMenuItem()" class="auth-btn w-full">Update Item</button>
             </div>
         </div>
     </div>
@@ -351,11 +382,11 @@
                 <input type="file" id="editOfferImageUpload" class="input-field w-full" accept="image/*">
             </div>
             <div class="mt-4">
-                <label for="editOfferDescription" class="block text-gray-700 font-medium mb-2">Description</label>
+                <label for="editOfferDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
                 <textarea id="editOfferDescription" class="input-field w-full" rows="4" placeholder="Offer Description"></textarea>
             </div>
             <div class="mt-6">
-                <button onclick="updateOffer()" class="auth-btn text-white w-full">Update Offer</button>
+                <button onclick="updateOffer()" class="auth-btn w-full">Update Offer</button>
             </div>
         </div>
     </div>
@@ -367,7 +398,7 @@
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Edit Coupon</h2>
             <input type="hidden" id="editCouponId">
             <div>
-                <label for="editCouponCode" class="block text-gray-700 font-medium mb-2">Coupon Code</label>
+                <label for="editCouponCode" class="block text-gray-700 font-medium mb-2">Coupon Code (Optional)</label>
                 <input type="text" id="editCouponCode" class="input-field w-full" placeholder="Coupon Code">
             </div>
             <div class="mt-4">
@@ -383,11 +414,11 @@
                 <input type="file" id="editCouponImageUpload" class="input-field w-full" accept="image/*">
             </div>
             <div class="mt-4">
-                <label for="editCouponDescription" class="block text-gray-700 font-medium mb-2">Description</label>
+                <label for="editCouponDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
                 <textarea id="editCouponDescription" class="input-field w-full" rows="4" placeholder="Coupon Description"></textarea>
             </div>
             <div class="mt-6">
-                <button onclick="updateCoupon()" class="auth-btn text-white w-full">Update Coupon</button>
+                <button onclick="updateCoupon()" class="auth-btn w-full">Update Coupon</button>
             </div>
         </div>
     </div>
@@ -408,8 +439,29 @@
                 <div id="customerOrderHistory" class="table-container"></div>
             </div>
             <div class="mt-6 flex space-x-4">
-                <button id="blockUnblockBtn" class="auth-btn text-white px-4 py-2"></button>
-                <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 text-white px-4 py-2">Close</button>
+                <button id="blockUnblockBtn" class="auth-btn px-4 py-2"></button>
+                <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 px-4 py-2">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reply to Contact Message Modal -->
+    <div id="replyContactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('replyContactModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reply to Message</h2>
+            <input type="hidden" id="contactMessageId">
+            <div>
+                <label for="contactReplySubject" class="block text-gray-700 font-medium mb-2">Subject</label>
+                <input type="text" id="contactReplySubject" class="input-field w-full" placeholder="Reply Subject">
+            </div>
+            <div class="mt-4">
+                <label for="contactReplyMessage" class="block text-gray-700 font-medium mb-2">Reply Message</label>
+                <textarea id="contactReplyMessage" class="input-field w-full" rows="6" placeholder="Your reply..."></textarea>
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="sendReply()" class="auth-btn w-full">Send Reply</button>
+                <button onclick="closeModal('replyContactModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 w-full">Cancel</button>
             </div>
         </div>
     </div>
@@ -437,6 +489,7 @@
                             <div class="dropdown-item" onclick="showSection('offers')">Special Offers</div>
                             <div class="dropdown-item" onclick="showSection('coupons')">Coupons</div>
                             <div class="dropdown-item" onclick="showSection('customers')">Customers</div>
+                            <div class="dropdown-item" onclick="showSection('contact')">Contact Messages</div>
                             <div class="dropdown-item" onclick="logout()">Logout</div>
                         </div>
                     </div>
@@ -466,14 +519,12 @@
                 <div class="stat-card">
                     <h3 class="text-lg font-semibold text-gray-700">Restaurant Status</h3>
                     <p id="restaurantStatus" class="text-3xl font-bold text-yellow-500 mt-3">Closed</p>
-                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn text-white px-4 py-2 mt-3">Open Restaurant</button>
+                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-4 py-2 mt-3">Open Restaurant</button>
                 </div>
             </div>
         </section>
 
-        <!-- Profile ..
-
-Section -->
+        <!-- Profile Section -->
         <section id="profileSection" class="mb-12 hidden">
             <h3 class="text-3xl font-semibold text-gray-800 mb-6">Admin Profile</h3>
             <div class="bg-white p-8 rounded-lg shadow-md">
@@ -484,7 +535,7 @@ Section -->
                 <p class="text-lg mt-2"><strong>Email:</strong> <span id="displayProfileEmail"></span></p>
                 <p class="text-lg mt-2"><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
                 <div class="mt-6">
-                    <button onclick="showModal('profileModal')" class="auth-btn text-white px-6 py-3">Edit Profile Image</button>
+                    <button onclick="showModal('profileModal')" class="auth-btn px-6 py-3">Edit Profile Image</button>
                 </div>
             </div>
         </section>
@@ -501,8 +552,16 @@ Section -->
                         <input type="text" id="itemName" class="input-field w-full" placeholder="Item Name">
                     </div>
                     <div>
-                        <label for="itemPrice" class="block text-gray-700 font-medium mb-2">Price (₹)</label>
-                        <input type="number" id="itemPrice" class="input-field w-full" placeholder="Price">
+                        <label for="itemPriceRegular" class="block text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                        <input type="number" id="itemPriceRegular" class="input-field w-full" placeholder="Regular Price">
+                    </div>
+                    <div>
+                        <label for="itemPriceClassic" class="block text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                        <input type="number" id="itemPriceClassic" class="input-field w-full" placeholder="Classic Price">
+                    </div>
+                    <div>
+                        <label for="itemPriceLarge" class="block text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                        <input type="number" id="itemPriceLarge" class="input-field w-full" placeholder="Large Price">
                     </div>
                     <div>
                         <label for="itemCategory" class="block text-gray-700 font-medium mb-2">Category</label>
@@ -529,12 +588,12 @@ Section -->
                         <input type="file" id="itemImageUpload" class="input-field w-full" accept="image/*">
                     </div>
                     <div class="md:col-span-2">
-                        <label for="itemDescription" class="block text-gray-700 font-medium mb-2">Description</label>
+                        <label for="itemDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
                         <textarea id="itemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
                     </div>
                 </div>
                 <div class="mt-6">
-                    <button onclick="addMenuItem()" class="auth-btn text-white w-full">Add Item</button>
+                    <button onclick="addMenuItem()" class="auth-btn w-full">Add Item</button>
                 </div>
             </div>
             <!-- Menu Items Table -->
@@ -547,7 +606,7 @@ Section -->
                                 <th>Image</th>
                                 <th>Name</th>
                                 <th>Category</th>
-                                <th>Price</th>
+                                <th>Prices</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -604,12 +663,12 @@ Section -->
                         <input type="file" id="offerImageUpload" class="input-field w-full" accept="image/*">
                     </div>
                     <div class="md:col-span-2">
-                        <label for="offerDescription" class="block text-gray-700 font-medium mb-2">Description</label>
+                        <label for="offerDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
                         <textarea id="offerDescription" class="input-field w-full" rows="4" placeholder="Offer Description"></textarea>
                     </div>
                 </div>
                 <div class="mt-6">
-                    <button onclick="addOffer()" class="auth-btn text-white w-full">Add Offer</button>
+                    <button onclick="addOffer()" class="auth-btn w-full">Add Offer</button>
                 </div>
             </div>
             <!-- Offers Table -->
@@ -638,947 +697,1066 @@ Section -->
             <div class="bg-white p-8 rounded-lg shadow-md mb-8">
                 <h4 class="text-xl font-medium text-gray-700 mb-6">Add New Coupon</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="couponCode" class="block text-gray-700 font-medium mb-2">Coupon Code</label>
-                    <input type="text" id="couponCode" class="input-field w-full" placeholder="Coupon Code">
+                    <div>
+                        <label for="couponCode" class="block text-gray-700 font-medium mb-2">Coupon Code (Optional)</label>
+                        <input type="text" id="couponCode" class="input-field w-full" placeholder="Coupon Code">
+                    </div>
+                    <div>
+                        <label for="couponDiscount" class="block text-gray-700 font-medium mb-2">Discount (%) (Optional)</label>
+                        <input type="number" id="couponDiscount" class="input-field w-full" placeholder="Discount Percentage" min="1" max="100">
+                    </div>
+                    <div>
+                        <label for="couponImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                        <input type="text" id="couponImage" class="input-field w-full" placeholder="Image URL">
+                    </div>
+                    <div>
+                        <label for="couponImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                        <input type="file" id="couponImageUpload" class="input-field w-full" accept="image/*">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="couponDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                        <textarea id="couponDescription" class="input-field w-full" rows="4" placeholder="Coupon Description"></textarea>
+                    </div>
                 </div>
-                <div>
-                    <label for="couponDiscount" class="block text-gray-700 font-medium mb-2">Discount (%)</label>
-                    <input type="number" id="couponDiscount" class="input-field w-full" placeholder="Discount Percentage" min="1" max="100">
-                </div>
-                <div>
-                    <label for="couponImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
-                    <input type="text" id="couponImage" class="input-field w-full" placeholder="Image URL">
-                </div>
-                <div>
-                    <label for="couponImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
-                    <input type="file" id="couponImageUpload" class="input-field w-full" accept="image/*">
-                </div>
-                <div class="md:col-span-2">
-                    <label for="couponDescription" class="block text-gray-700 font-medium mb-2">Description</label>
-                    <textarea id="couponDescription" class="input-field w-full" rows="4" placeholder="Coupon Description"></textarea>
+                <div class="mt-6">
+                    <button onclick="addCoupon()" class="auth-btn w-full">Add Coupon</button>
                 </div>
             </div>
-            <div class="mt-6">
-                <button onclick="addCoupon()" class="auth-btn text-white w-full">Add Coupon</button>
-            </div>
-        </div>
-        <!-- Coupons Table -->
-        <div class="bg-white p-8 rounded-lg shadow-md">
-            <h4 class="text-xl font-medium text-gray-700 mb-6">Coupons</h4>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Code</th>
-                            <th>Discount (%)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="couponTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- Customer Management Section -->
-    <section id="customersSection" class="mb-12 hidden">
-        <h3 class="text-3xl font-semibold text-gray-800 mb-6">Manage Customers</h3>
-        <div class="bg-white p-8 rounded-lg shadow-md">
-            <h4 class="text-xl font-medium text-gray-700 mb-6">Customers</h4>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customerTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-</div>
-
-<script>
-    const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast ${type}`;
-        toast.style.display = 'block';
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 3000);
-    }
-
-    function toggleDropdown() {
-        const dropdown = document.getElementById('profileDropdown');
-        dropdown.classList.toggle('active');
-    }
-
-    function showSection(section) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        document.getElementById(`${section}Section`).classList.remove('hidden');
-        toggleDropdown();
-        if (section === 'menu') fetchMenuItems();
-        else if (section === 'orders') fetchOrders();
-        else if (section === 'offers') fetchOffers();
-        else if (section === 'coupons') fetchCoupons();
-        else if (section === 'customers') fetchCustomers();
-        else if (section === 'profile') fetchAdminDetails();
-    }
-
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    async function uploadImage(file) {
-        if (!file) return null;
-        const formData = new FormData();
-        formData.append('file', file);
-        try {
-            const response = await fetch(`${BASE_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: formData
-            });
-            const data = await response.json();
-            if (response.ok) return data.fileUrl;
-            showToast(data.error || 'Failed to upload image.', 'error');
-            return null;
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            showToast('Failed to upload image.', 'error');
-            return null;
-        }
-    }
-
-    async function fetchAdminDetails() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('welcomeMessage').textContent = `Welcome, ${data.name || 'Admin'}`;
-                document.getElementById('profileName').value = data.name || '';
-                document.getElementById('profileEmail').value = data.email || '';
-                document.getElementById('profilePhone').value = data.phone || '';
-                document.getElementById('displayProfileName').textContent = data.name || '';
-                document.getElementById('displayProfileEmail').textContent = data.email || '';
-                document.getElementById('displayProfilePhone').textContent = data.phone || '';
-                if (data.profileImage) {
-                    document.getElementById('profileImage').src = data.profileImage;
-                    document.getElementById('modalProfileImage').src = data.profileImage;
-                    document.getElementById('displayProfileImage').src = data.profileImage;
-                }
-            } else {
-                showToast(data.error || 'Failed to fetch admin details.', 'error');
-            }
-        } catch (error) {
-            console.error('Error fetching admin details:', error);
-            showToast('Failed to fetch admin details.', 'error');
-        }
-    }
-
-    async function updateProfileImage() {
-        const file = document.getElementById('profileImageUpload').files[0];
-        if (!file) {
-            showToast('Please select an image.', 'error');
-            return;
-        }
-        const imageUrl = await uploadImage(file);
-        if (!imageUrl) return;
-        try {
-            const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({ profileImage: imageUrl })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Profile image updated successfully!', 'success');
-                fetchAdminDetails();
-                closeModal('profileModal');
-            } else {
-                showToast(data.error || 'Failed to update profile image.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating profile image:', error);
-            showToast('Failed to update profile image.', 'error');
-        }
-    }
-
-    async function fetchMenuItems() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/menu`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const items = await response.json();
-            displayMenuItems(items);
-            document.getElementById('totalMenuItems').textContent = items.length;
-        } catch (error) {
-            console.error('Error fetching menu items:', error);
-            showToast('Failed to load menu items.', 'error');
-        }
-    }
-
-    function displayMenuItems(items) {
-        const menuTableBody = document.getElementById('menuTableBody');
-        menuTableBody.innerHTML = items.map(item => `
-            <tr class="border-b">
-                <td class="py-2 px-4">
-                    ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
-                </td>
-                <td class="py-2 px-4">${item.name}</td>
-                <td class="py-2 px-4">${item.category}</td>
-                <td class="py-2 px-4">₹${item.price || 'N/A'}</td>
-                <td class="py-2 px-4">
-                    <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
-                    <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    async function addMenuItem() {
-        const name = document.getElementById('itemName').value;
-        const price = parseFloat(document.getElementById('itemPrice').value) || null;
-        const category = document.getElementById('itemCategory').value;
-        const imageUrl = document.getElementById('itemImage').value;
-        const file = document.getElementById('itemImageUpload').files[0];
-        const description = document.getElementById('itemDescription').value;
-
-        if (!name || !category || !price) {
-            showToast('Please fill in name, category, and price.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/menu`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    name,
-                    price,
-                    category,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Menu item added successfully!', 'success');
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemPrice').value = '';
-                document.getElementById('itemCategory').value = '';
-                document.getElementById('itemImage').value = '';
-                document.getElementById('itemImageUpload').value = '';
-                document.getElementById('itemDescription').value = '';
-                fetchMenuItems();
-            } else {
-                showToast(data.error || 'Failed to add menu item.', 'error');
-            }
-        } catch (error) {
-            console.error('Error adding menu item:', error);
-            showToast('Failed to add menu item.', 'error');
-        }
-    }
-
-    function editMenuItem(itemId) {
-        fetch(`${BASE_URL}/api/menu/${itemId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            }
-        })
-            .then(response => response.json())
-            .then(item => {
-                document.getElementById('editItemId').value = item._id;
-                document.getElementById('editItemName').value = item.name;
-                document.getElementById('editItemPrice').value = item.price || '';
-                document.getElementById('editItemCategory').value = item.category;
-                document.getElementById('editItemImage').value = item.image || '';
-                document.getElementById('editItemDescription').value = item.description || '';
-                showModal('editMenuModal');
-            })
-            .catch(error => {
-                console.error('Error fetching menu item:', error);
-                showToast('Failed to load menu item.', 'error');
-            });
-    }
-
-    async function updateMenuItem() {
-        const id = document.getElementById('editItemId').value;
-        const name = document.getElementById('editItemName').value;
-        const price = parseFloat(document.getElementById('editItemPrice').value) || null;
-        const category = document.getElementById('editItemCategory').value;
-        const imageUrl = document.getElementById('editItemImage').value;
-        const file = document.getElementById('editItemImageUpload').files[0];
-        const description = document.getElementById('editItemDescription').value;
-
-        if (!name || !category || !price) {
-            showToast('Please fill in name, category, and price.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/menu/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    name,
-                    price,
-                    category,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Menu item updated successfully!', 'success');
-                closeModal('editMenuModal');
-                fetchMenuItems();
-            } else {
-                showToast(data.error || 'Failed to update menu item.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating menu item:', error);
-            showToast('Failed to update menu item.', 'error');
-        }
-    }
-
-    async function deleteMenuItem(itemId) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Menu item deleted successfully!', 'success');
-                fetchMenuItems();
-            } else {
-                showToast(data.error || 'Failed to delete menu item.', 'error');
-            }
-        } catch (error) {
-            console.error('Error deleting menu item:', error);
-            showToast('Failed to delete menu item.', 'error');
-        }
-    }
-
-    async function fetchOrders() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/orders`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const orders = await response.json();
-            displayOrders(orders);
-            document.getElementById('totalOrders').textContent = orders.length;
-            document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            showToast('Failed to load orders.', 'error');
-        }
-    }
-
-    function displayOrders(orders) {
-        const orderTableBody = document.getElementById('orderTableBody');
-        orderTableBody.innerHTML = orders.map(order => `
-            <tr class="border-b">
-                <td class="py-2 px-4">${order._id}</td>
-                <td class="py-2 px-4">${order.customerName || 'N/A'}</td>
-                <td class="py-2 px-4">₹${order.total}</td>
-                <td class="py-2 px-4">${order.status}</td>
-                <td class="py-2 px-4">${order.paymentStatus || 'Pending'}</td>
-                <td class="py-2 px-4">
-                    <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-1 border rounded-md">
-                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                    </select>
-                    ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 mt-2">Refund</button>` : ''}
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    async function updateOrderStatus(orderId, status) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({ status })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast(`Order status updated to ${status}!`, 'success');
-                fetchOrders();
-            } else {
-                showToast(data.error || 'Failed to update order status.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating order status:', error);
-            showToast('Failed to update order status.', 'error');
-        }
-    }
-
-    async function refundOrder(orderId) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Order refunded successfully!', 'success');
-                fetchOrders();
-            } else {
-                showToast(data.error || 'Failed to process refund.', 'error');
-            }
-        } catch (error) {
-            console.error('Error processing refund:', error);
-            showToast('Failed to process refund.', 'error');
-        }
-    }
-
-    async function fetchOffers() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/offers`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const offers = await response.json();
-            displayOffers(offers);
-        } catch (error) {
-            console.error('Error fetching offers:', error);
-            showToast('Failed to load offers.', 'error');
-        }
-    }
-
-    function displayOffers(offers) {
-        const offerTableBody = document.getElementById('offerTableBody');
-        offerTableBody.innerHTML = offers.map(offer => `
-            <tr class="border-b">
-                <td class="py-2 px-4">
-                    ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
-                </td>
-                <td class="py-2 px-4">${offer.name}</td>
-                <td class="py-2 px-4">₹${offer.price}</td>
-                <td class="py-2 px-4">
-                    <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
-                    <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    async function addOffer() {
-        const name = document.getElementById('offerName').value;
-        const price = parseFloat(document.getElementById('offerPrice').value) || null;
-        const imageUrl = document.getElementById('offerImage').value;
-        const file = document.getElementById('offerImageUpload').files[0];
-        const description = document.getElementById('offerDescription').value;
-
-        if (!name || !price) {
-            showToast('Please fill in offer name and price.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/offers`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    name,
-                    price,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Offer added successfully!', 'success');
-                document.getElementById('offerName').value = '';
-                document.getElementById('offerPrice').value = '';
-                document.getElementById('offerImage').value = '';
-                document.getElementById('offerImageUpload').value = '';
-                document.getElementById('offerDescription').value = '';
-                fetchOffers();
-            } else {
-                showToast(data.error || 'Failed to add offer.', 'error');
-            }
-        } catch (error) {
-            console.error('Error adding offer:', error);
-            showToast('Failed to add offer.', 'error');
-        }
-    }
-
-    function editOffer(id) {
-        fetch(`${BASE_URL}/api/offers/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            }
-        })
-            .then(response => response.json())
-            .then(offer => {
-                document.getElementById('editOfferId').value = offer._id;
-                document.getElementById('editOfferName').value = offer.name;
-                document.getElementById('editOfferPrice').value = offer.price || '';
-                document.getElementById('editOfferImage').value = offer.image || '';
-                document.getElementById('editOfferDescription').value = offer.description || '';
-                showModal('editOfferModal');
-            })
-            .catch(error => {
-                console.error('Error fetching offer:', error);
-                showToast('Failed to load offer.', 'error');
-            });
-    }
-
-    async function updateOffer() {
-        const id = document.getElementById('editOfferId').value;
-        const name = document.getElementById('editOfferName').value;
-        const price = parseFloat(document.getElementById('editOfferPrice').value) || null;
-        const imageUrl = document.getElementById('editOfferImage').value;
-        const file = document.getElementById('editOfferImageUpload').files[0];
-        const description = document.getElementById('editOfferDescription').value;
-
-        if (!name || !price) {
-            showToast('Please fill in offer name and price.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    name,
-                    price,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Offer updated successfully!', 'success');
-                closeModal('editOfferModal');
-                fetchOffers();
-            } else {
-                showToast(data.error || 'Failed to update offer.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating offer:', error);
-            showToast('Failed to update offer.', 'error');
-        }
-    }
-
-    async function deleteOffer(id) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Offer deleted successfully!', 'success');
-                fetchOffers();
-            } else {
-                showToast(data.error || 'Failed to delete offer.', 'error');
-            }
-        } catch (error) {
-            console.error('Error deleting offer:', error);
-            showToast('Failed to delete offer.', 'error');
-        }
-    }
-
-    async function fetchCoupons() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/coupons`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const coupons = await response.json();
-            displayCoupons(coupons);
-        } catch (error) {
-            console.error('Error fetching coupons:', error);
-            showToast('Failed to load coupons.', 'error');
-        }
-    }
-
-    function displayCoupons(coupons) {
-        const couponTableBody = document.getElementById('couponTableBody');
-        couponTableBody.innerHTML = coupons.map(coupon => `
-            <tr class="border-b">
-                <td class="py-2 px-4">
-                    ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code}" class="menu-img">` : 'No Image'}
-                </td>
-                <td class="py-2 px-4">${coupon.code}</td>
-                <td class="py-2 px-4">${coupon.discount}%</td>
-                <td class="py-2 px-4">
-                    <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
-                    <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    async function addCoupon() {
-        const code = document.getElementById('couponCode').value;
-        const discount = parseFloat(document.getElementById('couponDiscount').value) || null;
-        const imageUrl = document.getElementById('couponImage').value;
-        const file = document.getElementById('couponImageUpload').files[0];
-        const description = document.getElementById('couponDescription').value;
-
-        if (!code || !discount) {
-            showToast('Please fill in coupon code and discount percentage.', 'error');
-            return;
-        }
-
-        if (discount < 1 || discount > 100) {
-            showToast('Discount must be between 1% and 100%.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/coupons`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    code,
-                    discount,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Coupon added successfully!', 'success');
-                document.getElementById('couponCode').value = '';
-                document.getElementById('couponDiscount').value = '';
-                document.getElementById('couponImage').value = '';
-                document.getElementById('couponImageUpload').value = '';
-                document.getElementById('couponDescription').value = '';
-                fetchCoupons();
-            } else {
-                showToast(data.error || 'Failed to add coupon.', 'error');
-            }
-        } catch (error) {
-            console.error('Error adding coupon:', error);
-            showToast('Failed to add coupon.', 'error');
-        }
-    }
-
-    function editCoupon(id) {
-        fetch(`${BASE_URL}/api/coupons/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            }
-        })
-            .then(response => response.json())
-            .then(coupon => {
-                document.getElementById('editCouponId').value = coupon._id;
-                document.getElementById('editCouponCode').value = coupon.code;
-                document.getElementById('editCouponDiscount').value = coupon.discount || '';
-                document.getElementById('editCouponImage').value = coupon.image || '';
-                document.getElementById('editCouponDescription').value = coupon.description || '';
-                showModal('editCouponModal');
-            })
-            .catch(error => {
-                console.error('Error fetching coupon:', error);
-                showToast('Failed to load coupon.', 'error');
-            });
-    }
-
-    async function updateCoupon() {
-        const id = document.getElementById('editCouponId').value;
-        const code = document.getElementById('editCouponCode').value;
-        const discount = parseFloat(document.getElementById('editCouponDiscount').value) || null;
-        const imageUrl = document.getElementById('editCouponImage').value;
-        const file = document.getElementById('editCouponImageUpload').files[0];
-        const description = document.getElementById('editCouponDescription').value;
-
-        if (!code || !discount) {
-            showToast('Please fill in coupon code and discount percentage.', 'error');
-            return;
-        }
-
-        if (discount < 1 || discount > 100) {
-            showToast('Discount must be between 1% and 100%.', 'error');
-            return;
-        }
-
-        const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
-        if (file && !uploadedImageUrl) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({
-                    code,
-                    discount,
-                    image: uploadedImageUrl || null,
-                    description
-                })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Coupon updated successfully!', 'success');
-                closeModal('editCouponModal');
-                fetchCoupons();
-            } else {
-                showToast(data.error || 'Failed to update coupon.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating coupon:', error);
-            showToast('Failed to update coupon.', 'error');
-        }
-    }
-
-    async function deleteCoupon(id) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast('Coupon deleted successfully!', 'success');
-                fetchCoupons();
-            } else {
-                showToast(data.error || 'Failed to delete coupon.', 'error');
-            }
-        } catch (error) {
-            console.error('Error deleting coupon:', error);
-            showToast('Failed to delete coupon.', 'error');
-        }
-    }
-
-    async function fetchCustomers() {
-        try {
-            const response = await fetch(`${BASE_URL}/api/customers`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const customers = await response.json();
-            displayCustomers(customers);
-        } catch (error) {
-            console.error('Error fetching customers:', error);
-            showToast('Failed to load customers.', 'error');
-        }
-    }
-
-    function displayCustomers(customers) {
-        const customerTableBody = document.getElementById('customerTableBody');
-        customerTableBody.innerHTML = customers.map(customer => `
-            <tr class="border-b">
-                <td class="py-2 px-4">${customer.name}</td>
-                <td class="py-2 px-4">${customer.email}</td>
-                <td class="py-2 px-4">${customer.phone || 'N/A'}</td>
-                <td class="py-2 px-4">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
-                <td class="py-2 px-4">
-                    <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">View</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    async function viewCustomerDetails(customerId) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/customers/${customerId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const customer = await response.json();
-            document.getElementById('customerName').textContent = customer.name;
-            document.getElementById('customerEmail').textContent = customer.email;
-            document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
-            document.getElementById('customerStatus').textContent = customer.isBlocked ? 'Blocked' : 'Active';
-            document.getElementById('blockUnblockBtn').textContent = customer.isBlocked ? 'Unblock' : 'Block';
-            document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerBlock(customerId, !customer.isBlocked);
-
-            const ordersResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            const orders = await ordersResponse.json();
-            const orderHistory = document.getElementById('customerOrderHistory');
-            orderHistory.innerHTML = orders.length > 0 ? orders.map(order => `
-                <div class="border-b py-2">
-                    <p><strong>Order ID:</strong> ${order._id}</p>
-                    <p><strong>Total:</strong> ₹${order.total}</p>
-                    <p><strong>Status:</strong> ${order.status}</p>
+            <!-- Coupons Table -->
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Coupons</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Code</th>
+                                <th>Discount (%)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couponTableBody"></tbody>
+                    </table>
                 </div>
-            `).join('') : '<p>No orders found.</p>';
+            </div>
+        </section>
 
-            showModal('customerDetailsModal');
-        } catch (error) {
-            console.error('Error viewing customer details:', error);
-            showToast('Failed to load customer details.', 'error');
-        }
-    }
+        <!-- Customer Management Section -->
+        <section id="customersSection" class="mb-12 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-6">Manage Customers</h3>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Customers</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-    async function toggleCustomerBlock(customerId, block) {
-        try {
-            const response = await fetch(`${BASE_URL}/api/customers/${customerId}/block`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({ isBlocked: block })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showToast(`Customer ${block ? 'blocked' : 'unblocked'} successfully!`, 'success');
-                closeModal('customerDetailsModal');
-                fetchCustomers();
-            } else {
-                showToast(data.error || `Failed to ${block ? 'block' : 'unblock'} customer.`, 'error');
-            }
-        } catch (error) {
-            console.error(`Error ${block ? 'blocking' : 'unblocking'} customer:`, error);
-            showToast(`Failed to ${block ? 'block' : 'unblock'} customer.`, 'error');
-        }
-    }
+        <!-- Contact Messages Section -->
+        <section id="contactSection" class="mb-12 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-6">Manage Contact Messages</h3>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Messages</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
 
-    async function toggleRestaurantStatus() {
-        try {
-            const currentStatus = document.getElementById('restaurantStatus').textContent;
-            const newStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
-            const response = await fetch(`${BASE_URL}/api/restaurant-status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('restaurantStatus').textContent = newStatus;
-                document.getElementById('statusToggleBtn').textContent = newStatus === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
-                showToast(`Restaurant is now ${newStatus}!`, 'success');
-            } else {
-                showToast(data.error || 'Failed to update restaurant status.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating restaurant status:', error);
-            showToast('Failed to update restaurant status.', 'error');
-        }
-    }
+    <script>
+        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
 
-    function logout() {
-        localStorage.removeItem('adminToken');
-        showToast('Logged out successfully!', 'success');
-        setTimeout(() => {
-            window.location.href = '/admin.html';
-        }, 1000);
-    }
-
-    window.onload = () => {
-        const adminToken = localStorage.getItem('adminToken');
-        if (!adminToken) {
-            showToast('Please log in to access the admin panel.', 'error');
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
             setTimeout(() => {
-                window.location.href = '/admin.html';
-            }, 1000);
-            return;
+                toast.style.display = 'none';
+            }, 3000);
         }
-        fetchAdminDetails();
-        fetchMenuItems();
-        fetchOrders();
-        fetchOffers();
-        fetchCoupons();
-        fetchCustomers();
-        fetch(`${BASE_URL}/api/restaurant-status`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`${section}Section`).classList.remove('hidden');
+            toggleDropdown();
+            if (section === 'menu') fetchMenuItems();
+            else if (section === 'orders') fetchOrders();
+            else if (section === 'offers') fetchOffers();
+            else if (section === 'coupons') fetchCoupons();
+            else if (section === 'customers') fetchCustomers();
+            else if (section === 'contact') fetchContactMessages();
+            else if (section === 'profile') fetchAdminDetails();
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function uploadImage(file) {
+            if (!file) return null;
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await fetch(`${BASE_URL}/api/files/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) return data.fileUrl;
+                showToast(data.error || 'Failed to upload image.', 'error');
+                return null;
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                showToast('Failed to upload image.', 'error');
+                return null;
             }
-        })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('restaurantStatus').textContent = data.status || 'Closed';
-                document.getElementById('statusToggleBtn').textContent = data.status === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
+        }
+
+        async function fetchAdminDetails() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('welcomeMessage').textContent = `Welcome, ${data.name || 'Admin'}`;
+                    document.getElementById('profileName').value = data.name || '';
+                    document.getElementById('profileEmail').value = data.email || '';
+                    document.getElementById('profilePhone').value = data.phone || '';
+                    document.getElementById('displayProfileName').textContent = data.name || '';
+                    document.getElementById('displayProfileEmail').textContent = data.email || '';
+                    document.getElementById('displayProfilePhone').textContent = data.phone || '';
+                    if (data.profileImage) {
+                        document.getElementById('profileImage').src = data.profileImage;
+                        document.getElementById('modalProfileImage').src = data.profileImage;
+                        document.getElementById('displayProfileImage').src = data.profileImage;
+                    }
+                } else {
+                    showToast(data.error || 'Failed to fetch admin details.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching admin details:', error);
+                showToast('Failed to fetch admin details.', 'error');
+            }
+        }
+
+        async function updateProfileImage() {
+            const file = document.getElementById('profileImageUpload').files[0];
+            if (!file) {
+                showToast('Please select an image.', 'error');
+                return;
+            }
+            const imageUrl = await uploadImage(file);
+            if (!imageUrl) return;
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({ profileImage: imageUrl })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Profile image updated successfully!', 'success');
+                    fetchAdminDetails();
+                    closeModal('profileModal');
+                } else {
+                    showToast(data.error || 'Failed to update profile image.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile image:', error);
+                showToast('Failed to update profile image.', 'error');
+            }
+        }
+
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const items = await response.json();
+                displayMenuItems(items);
+                document.getElementById('totalMenuItems').textContent = items.length;
+            } catch (error) {
+                console.error('Error fetching menu items:', error);
+                showToast('Failed to load menu items.', 'error');
+            }
+        }
+
+        function displayMenuItems(items) {
+            const menuTableBody = document.getElementById('menuTableBody');
+            menuTableBody.innerHTML = items.map(item => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">
+                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${item.name}</td>
+                    <td class="py-2 px-4">${item.category}</td>
+                    <td class="py-2 px-4">
+                        ${item.prices ? `
+                            ${item.prices.regular ? `Regular: ₹${item.prices.regular}<br>` : ''}
+                            ${item.prices.classic ? `Classic: ₹${item.prices.classic}<br>` : ''}
+                            ${item.prices.large ? `Large: ₹${item.prices.large}` : ''}
+                        ` : 'N/A'}
+                    </td>
+                    <td class="py-2 px-4">
+                        <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function addMenuItem() {
+            const name = document.getElementById('itemName').value;
+            const priceRegular = parseFloat(document.getElementById('itemPriceRegular').value) || null;
+            const priceClassic = parseFloat(document.getElementById('itemPriceClassic').value) || null;
+            const priceLarge = parseFloat(document.getElementById('itemPriceLarge').value) || null;
+            const category = document.getElementById('itemCategory').value;
+            const imageUrl = document.getElementById('itemImage').value;
+            const file = document.getElementById('itemImageUpload').files[0];
+            const description = document.getElementById('itemDescription').value;
+
+            if (!name && !category && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const prices = {};
+            if (priceRegular) prices.regular = priceRegular;
+            if (priceClassic) prices.classic = priceClassic;
+            if (priceLarge) prices.large = priceLarge;
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        prices: Object.keys(prices).length ? prices : null,
+                        category,
+                        image: uploadedImageUrl || null,
+                        description
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Menu item added successfully!', 'success');
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('itemPriceRegular').value = '';
+                    document.getElementById('itemPriceClassic').value = '';
+                    document.getElementById('itemPriceLarge').value = '';
+                    document.getElementById('itemCategory').value = '';
+                    document.getElementById('itemImage').value = '';
+                    document.getElementById('itemImageUpload').value = '';
+                    document.getElementById('itemDescription').value = '';
+                    fetchMenuItems();
+                } else {
+                    showToast(data.error || 'Failed to add menu item.', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding menu item:', error);
+                showToast('Failed to add menu item.', 'error');
+            }
+        }
+
+        function editMenuItem(itemId) {
+            fetch(`${BASE_URL}/api/menu/${itemId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
             })
-            .catch(error => {
-                console.error('Error fetching restaurant status:', error);
-                showToast('Failed to fetch restaurant status.', 'error');
-            });
-        showSection('home');
-    };
-</script>
+                .then(response => response.json())
+                .then(item => {
+                    document.getElementById('editItemId').value = item._id;
+                    document.getElementById('editItemName').value = item.name || '';
+                    document.getElementById('editItemPriceRegular').value = item.prices?.regular || '';
+                    document.getElementById('editItemPriceClassic').value = item.prices?.classic || '';
+                    document.getElementById('editItemPriceLarge').value = item.prices?.large || '';
+                    document.getElementById('editItemCategory').value = item.category || '';
+                    document.getElementById('editItemImage').value = item.image || '';
+                    document.getElementById('editItemDescription').value = item.description || '';
+                    showModal('editMenuModal');
+                })
+                .catch(error => {
+                    console.error('Error fetching menu item:', error);
+                    showToast('Failed to load menu item.', 'error');
+                });
+        }
+
+        async function updateMenuItem() {
+            const id = document.getElementById('editItemId').value;
+            const name = document.getElementById('editItemName').value;
+            const priceRegular = parseFloat(document.getElementById('editItemPriceRegular').value) || null;
+            const priceClassic = parseFloat(document.getElementById('editItemPriceClassic').value) || null;
+            const priceLarge = parseFloat(document.getElementById('editItemPriceLarge').value) || null;
+            const category = document.getElementById('editItemCategory').value;
+            const imageUrl = document.getElementById('editItemImage').value;
+            const file = document.getElementById('editItemImageUpload').files[0];
+            const description = document.getElementById('editItemDescription').value;
+
+            if (!name && !category && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const prices = {};
+            if (priceRegular) prices.regular = priceRegular;
+            if (priceClassic) prices.classic = priceClassic;
+            if (priceLarge) prices.large = priceLarge;
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        prices: Object.keys(prices).length ? prices : null,
+                        category,
+                        image: uploadedImageUrl || null,
+                        description
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Menu item updated successfully!', 'success');
+                    closeModal('editMenuModal');
+                    fetchMenuItems();
+                } else {
+                    showToast(data.error || 'Failed to update menu item.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating menu item:', error);
+                showToast('Failed to update menu item.', 'error');
+            }
+        }
+
+        async function deleteMenuItem(itemId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Menu item deleted successfully!', 'success');
+                    fetchMenuItems();
+                } else {
+                    showToast(data.error || 'Failed to delete menu item.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting menu item:', error);
+                showToast('Failed to delete menu item.', 'error');
+            }
+        }
+
+        async function fetchOrders() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const orders = await response.json();
+                displayOrders(orders);
+                document.getElementById('totalOrders').textContent = orders.length;
+                document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                showToast('Failed to load orders.', 'error');
+            }
+        }
+
+        function displayOrders(orders) {
+            const orderTableBody = document.getElementById('orderTableBody');
+            orderTableBody.innerHTML = orders.map(order => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">${order._id}</td>
+                    <td class="py-2 px-4">${order.customerName || 'N/A'}</td>
+                    <td class="py-2 px-4">₹${order.total}</td>
+                    <td class="py-2 px-4">${order.status}</td>
+                    <td class="py-2 px-4">${order.paymentStatus || 'Pending'}</td>
+                    <td class="py-2 px-4">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-1 border rounded-md">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 mt-2">Refund</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(`Order status updated to ${status}!`, 'success');
+                    fetchOrders();
+                } else {
+                    showToast(data.error || 'Failed to update order status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                showToast('Failed to update order status.', 'error');
+            }
+        }
+
+        async function refundOrder(orderId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Order refunded successfully!', 'success');
+                    fetchOrders();
+                } else {
+                    showToast(data.error || 'Failed to process refund.', 'error');
+                }
+            } catch (error) {
+                console.error('Error processing refund:', error);
+                showToast('Failed to process refund.', 'error');
+            }
+        }
+
+        async function fetchOffers() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const offers = await response.json();
+                displayOffers(offers);
+            } catch (error) {
+                console.error('Error fetching offers:', error);
+                showToast('Failed to load offers.', 'error');
+            }
+        }
+
+        function displayOffers(offers) {
+            const offerTableBody = document.getElementById('offerTableBody');
+            offerTableBody.innerHTML = offers.map(offer => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">
+                        ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${offer.name}</td>
+                    <td class="py-2 px-4">₹${offer.price}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function addOffer() {
+            const name = document.getElementById('offerName').value;
+            const price = parseFloat(document.getElementById('offerPrice').value) || null;
+            const imageUrl = document.getElementById('offerImage').value;
+            const file = document.getElementById('offerImageUpload').files[0];
+            const description = document.getElementById('offerDescription').value;
+
+            if (!name && !price && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        price,
+                        image: uploadedImageUrl || null,
+                        description
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Offer added successfully!', 'success');
+                    document.getElementById('offerName').value = '';
+                    document.getElementById('offerPrice').value = '';
+                    document.getElementById('offerImage').value = '';
+                    document.getElementById('offerImageUpload').value = '';
+                    document.getElementById('offerDescription').value = '';
+                    fetchOffers();
+                } else {
+                    showToast(data.error || 'Failed to add offer.', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding offer:', error);
+                showToast('Failed to add offer.', 'error');
+            }
+        }
+
+        function editOffer(id) {
+            fetch(`${BASE_URL}/api/offers/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            })
+                .then(response => response.json())
+                .then(offer => {
+                    document.getElementById('editOfferId').value = offer._id;
+                    document.getElementById('editOfferName').value = offer.name || '';
+                    document.getElementById('editOfferPrice').value = offer.price || '';
+                    document.getElementById('editOfferImage').value = offer.image || '';
+                    document.getElementById('editOfferDescription').value = offer.description || '';
+                    showModal('editOfferModal');
+                })
+                .catch(error => {
+                    console.error('Error fetching offer:', error);
+                    showToast('Failed to load offer.', 'error');
+                });
+        }
+
+        async function updateOffer() {
+            const id = document.getElementById('editOfferId').value;
+            const name = document.getElementById('editOfferName').value;
+            const price = parseFloat(document.getElementById('editOfferPrice').value) || null;
+            const imageUrl = document.getElementById('editOfferImage').value;
+            const file = document.getElementById('editOfferImageUpload').files[0];
+            const description = document.getElementById('editOfferDescription').value;
+
+            if (!name && !price && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        price,
+                        image: uploadedImageUrl || null,
+                        description
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Offer updated successfully!', 'success');
+                    closeModal('editOfferModal');
+                    fetchOffers();
+                } else {
+                    showToast(data.error || 'Failed to update offer.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating offer:', error);
+                showToast('Failed to update offer.', 'error');
+            }
+        }
+
+        async function deleteOffer(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Offer deleted successfully!', 'success');
+                    fetchOffers();
+                } else {
+                    showToast(data.error || 'Failed to delete offer.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting offer:', error);
+                showToast('Failed to delete offer.', 'error');
+            }
+        }
+
+        async function fetchCoupons() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const coupons = await response.json();
+                displayCoupons(coupons);
+            } catch (error) {
+                console.error('Error fetching coupons:', error);
+                showToast('Failed to load coupons.', 'error');
+            }
+        }
+
+        function displayCoupons(coupons) {
+            const couponTableBody = document.getElementById('couponTableBody');
+            couponTableBody.innerHTML = coupons.map(coupon => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">
+                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${coupon.code || 'N/A'}</td>
+                    <td class="py-2 px-4">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function addCoupon() {
+            const code = document.getElementById('couponCode').value;
+            const discount = parseFloat(document.getElementById('couponDiscount').value) || null;
+            const imageUrl = document.getElementById('couponImage').value;
+            const file = document.getElementById('couponImageUpload').files[0];
+            const description = document.getElementById('couponDescription').value;
+
+            if (!code && !discount && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            if (discount && (discount < 1 || discount > 100)) {
+                showToast('Discount must be between 1% and 100%.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        code: code || null,
+                        discount: discount || null,
+                        image: uploadedImageUrl || null,
+                        description: description || null
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Coupon added successfully!', 'success');
+                    document.getElementById('couponCode').value = '';
+                    document.getElementById('couponDiscount').value = '';
+                    document.getElementById('couponImage').value = '';
+                    document.getElementById('couponImageUpload').value = '';
+                    document.getElementById('couponDescription').value = '';
+                    fetchCoupons();
+                } else {
+                    showToast(data.error || 'Failed to add coupon.', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding coupon:', error);
+                showToast('Failed to add coupon.', 'error');
+            }
+        }
+
+        function editCoupon(id) {
+            fetch(`${BASE_URL}/api/coupons/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            })
+                .then(response => response.json())
+                .then(coupon => {
+                    document.getElementById('editCouponId').value = coupon._id;
+                    document.getElementById('editCouponCode').value = coupon.code || '';
+                    document.getElementById('editCouponDiscount').value = coupon.discount || '';
+                    document.getElementById('editCouponImage').value = coupon.image || '';
+                    document.getElementById('editCouponDescription').value = coupon.description || '';
+                    showModal('editCouponModal');
+                })
+                .catch(error => {
+                    console.error('Error fetching coupon:', error);
+                    showToast('Failed to load coupon.', 'error');
+                });
+        }
+
+        async function updateCoupon() {
+            const id = document.getElementById('editCouponId').value;
+            const code = document.getElementById('editCouponCode').value;
+            const discount = parseFloat(document.getElementById('editCouponDiscount').value) || null;
+            const imageUrl = document.getElementById('editCouponImage').value;
+            const file = document.getElementById('editCouponImageUpload').files[0];
+            const description = document.getElementById('editCouponDescription').value;
+
+            if (!code && !discount && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            if (discount && (discount < 1 || discount > 100)) {
+                showToast('Discount must be between 1% and 100%.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        code: code || null,
+                        discount: discount || null,
+                        image: uploadedImageUrl || null,
+                        description: description || null
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Coupon updated successfully!', 'success');
+                    closeModal('editCouponModal');
+                    fetchCoupons();
+                } else {
+                    showToast(data.error || 'Failed to update coupon.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating coupon:', error);
+                showToast('Failed to update coupon.', 'error');
+            }
+        }
+
+        async function deleteCoupon(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Coupon deleted successfully!', 'success');
+                    fetchCoupons();
+                } else {
+                    showToast(data.error || 'Failed to delete coupon.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting coupon:', error);
+                showToast('Failed to delete coupon.', 'error');
+            }
+        }
+
+        async function fetchCustomers() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/customers`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const customers = await response.json();
+                displayCustomers(customers);
+            } catch (error) {
+                console.error('Error fetching customers:', error);
+                showToast('Failed to load customers.', 'error');
+            }
+        }
+
+        function displayCustomers(customers) {
+            const customerTableBody = document.getElementById('customerTableBody');
+            customerTableBody.innerHTML = customers.map(customer => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">${customer.name}</td>
+                    <td class="py-2 px-4">${customer.email}</td>
+                    <td class="py-2 px-4">${customer.phone || 'N/A'}</td>
+                    <td class="py-2 px-4">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function viewCustomerDetails(customerId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/customers/${customerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const customer = await response.json();
+                document.getElementById('customerName').textContent = customer.name;
+                document.getElementById('customerEmail').textContent = customer.email;
+                document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
+                document.getElementById('customerStatus').textContent = customer.isBlocked ? 'Blocked' : 'Active';
+                document.getElementById('blockUnblockBtn').textContent = customer.isBlocked ? 'Unblock' : 'Block';
+                document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerBlock(customerId, !customer.isBlocked);
+
+                const ordersResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const orders = await ordersResponse.json();
+                const orderHistory = document.getElementById('customerOrderHistory');
+                orderHistory.innerHTML = orders.length > 0 ? orders.map(order => `
+                    <div class="border-b py-2">
+                        <p><strong>Order ID:</strong> ${order._id}</p>
+                        <p><strong>Total:</strong> ₹${order.total}</p>
+                        <p><strong>Status:</strong> ${order.status}</p>
+                    </div>
+                `).join('') : '<p>No orders found.</p>';
+
+                                     showModal('customerDetailsModal');
+            } catch (error) {
+                console.error('Error viewing customer details:', error);
+                showToast('Failed to load customer details.', 'error');
+            }
+        }
+
+        async function toggleCustomerBlock(customerId, block) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/customers/${customerId}/block`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({ isBlocked: block })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(`Customer ${block ? 'blocked' : 'unblocked'} successfully!`, 'success');
+                    closeModal('customerDetailsModal');
+                    fetchCustomers();
+                } else {
+                    showToast(data.error || 'Failed to update customer status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling customer block:', error);
+                showToast('Failed to update customer status.', 'error');
+            }
+        }
+
+        async function fetchContactMessages() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const messages = await response.json();
+                displayContactMessages(messages);
+            } catch (error) {
+                console.error('Error fetching contact messages:', error);
+                showToast('Failed to load contact messages.', 'error');
+            }
+        }
+
+        function displayContactMessages(messages) {
+            const contactTableBody = document.getElementById('contactTableBody');
+            contactTableBody.innerHTML = messages.map(message => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">${message.name}</td>
+                    <td class="py-2 px-4">${message.email}</td>
+                    <td class="py-2 px-4">${message.subject}</td>
+                    <td class="py-2 px-4">
+                        <div class="contact-message">${message.message}</div>
+                    </td>
+                    <td class="py-2 px-4">${message.status || 'Pending'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Reply</button>
+                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function replyToMessage(messageId) {
+            document.getElementById('contactMessageId').value = messageId;
+            document.getElementById('contactReplySubject').value = '';
+            document.getElementById('contactReplyMessage').value = '';
+            showModal('replyContactModal');
+        }
+
+        async function sendReply() {
+            const messageId = document.getElementById('contactMessageId').value;
+            const subject = document.getElementById('contactReplySubject').value;
+            const replyMessage = document.getElementById('contactReplyMessage').value;
+
+            if (!subject || !replyMessage) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({ subject, reply: replyMessage })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Reply sent successfully!', 'success');
+                    closeModal('replyContactModal');
+                    fetchContactMessages();
+                } else {
+                    showToast(data.error || 'Failed to send reply.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending reply:', error);
+                showToast('Failed to send reply.', 'error');
+            }
+        }
+
+        async function deleteContactMessage(messageId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Message deleted successfully!', 'success');
+                    fetchContactMessages();
+                } else {
+                    showToast(data.error || 'Failed to delete message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting contact message:', error);
+                showToast('Failed to delete message.', 'error');
+            }
+        }
+
+        async function toggleRestaurantStatus() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const status = data.isOpen ? 'Open' : 'Closed';
+                    document.getElementById('restaurantStatus').textContent = status;
+                    document.getElementById('statusToggleBtn').textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+                    showToast(`Restaurant is now ${status}!`, 'success');
+                } else {
+                    showToast(data.error || 'Failed to update restaurant status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling restaurant status:', error);
+                showToast('Failed to update restaurant status.', 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin.html';
+        }
+
+        // Initialize
+        if (!localStorage.getItem('adminToken')) {
+            window.location.href = 'login.html';
+        } else {
+            fetchAdminDetails();
+            showSection('home');
+            fetchMenuItems();
+            fetchOrders();
+            fetchOffers();
+            fetchCoupons();
+            fetchCustomers();
+            fetchContactMessages();
+        }
+    </script>
 </body>
 </html>
