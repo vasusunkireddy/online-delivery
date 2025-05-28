@@ -3,433 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delicute - Admin Login</title>
+    <title>Delicute - Admin Login & Signup</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=sans-serif" rel="stylesheet">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            font-family: 'Arial', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
         }
-        .smooth-scroll {
-            scroll-behavior: smooth;
-        }
-        .modal-content {
+        .auth-container {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            animation: fadeIn 0.4s ease-out;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            backdrop-filter: blur(5px);
         }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            outline: none;
+        }
+        .auth-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        .auth-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        .auth-btn:hover::after {
+            width: 200px;
+            height: 200px;
+        }
+        .toggle-link {
+            transition: color 0.3s ease;
+        }
+        .toggle-link:hover {
+            color: #b45309;
+        }
+        .form-section {
+            transition: all 0.5s ease;
+        }
+        .form-section.hidden {
+            display: none;
+        }
+        /* Toast Notification Styles */
         .toast {
             position: fixed;
-            bottom: 16px;
-            right: 16px;
-            padding: 12px 24px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            min-width: 300px;
+            padding: 1rem 1.5rem;
             border-radius: 8px;
             color: white;
-            z-index: 50;
-            display: none;
-            transition: opacity 0.3s ease;
-            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            z-index: 1000;
         }
-        .toast-success {
-            background-color: #10b981;
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
-        .toast-error {
-            background-color: #ef4444;
+        .toast.success {
+            background-color: #10b981; /* Green for success */
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        @media (max-width: 640px) {
-            .modal-content {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-            .toast {
-                bottom: 12px;
-                right: 12px;
-                font-size: 12px;
-                padding: 10px 20px;
-            }
+        .toast.error {
+            background-color: #ef4444; /* Red for error */
         }
     </style>
 </head>
-<body class="smooth-scroll">
-    <!-- Header -->
-    <header class="bg-white shadow-md w-full">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-center">
-            <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 sm:h-12 w-auto">
-            <div class="ml-3">
-                <h1 class="text-xl sm:text-2xl font-bold text-orange-600">Delicute Admin</h1>
-                <p class="text-xs sm:text-sm text-gray-600">Manage Culinary Excellence</p>
+<body>
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Admin Auth Section -->
+    <div class="auth-container">
+        <div class="flex justify-center items-center space-x-3 mb-6">
+            <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">DELICUTE</h1>
+                <p class="text-sm text-gray-500">Admin Portal</p>
             </div>
         </div>
-    </header>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-30">
-        <div class="modal-content p-6 sm:p-8 w-full max-w-md mx-4">
-            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Login</h2>
-            <div id="loginForm">
-                <div class="mb-4">
-                    <label for="loginEmail" class="block text-gray-700 text-sm font-medium mb-1">Email</label>
-                    <input type="email" id="loginEmail" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Email">
-                </div>
-                <div class="mb-6">
-                    <label for="loginPassword" class="block text-gray-700 text-sm font-medium mb-1">Password</label>
-                    <input type="password" id="loginPassword" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Password">
-                </div>
-                <button class="bg-orange-600 text-white w-full py-3 rounded-lg hover:bg-orange-700 transition text-sm font-medium" onclick="handleAdminLogin()">Login</button>
-                <p class="text-center my-4 text-gray-600 text-sm">or</p>
-                <button class="flex items-center justify-center w-full py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-sm font-medium" onclick="handleGoogleLogin()">
-                    <img src="https://t4.ftcdn.net/jpg/03/91/79/25/360_F_391792593_BYfEk8FhvfNvXC5ERCw166qRFb8mYWya.jpg" alt="Google Icon" class="h-5 mr-2">
-                    Login with Google
-                </button>
-                <p class="text-center mt-4">
-                    <a href="#" onclick="showForgotPassword()" class="text-orange-600 hover:underline text-sm font-medium">Forgot Password?</a>
-                </p>
-                <p class="text-center mt-3">
-                    <button onclick="openModal('signupModal'); closeModal('loginModal')" class="text-orange-600 hover:underline text-sm font-medium">Don't have an account? Sign Up</button>
+        <!-- Login Form -->
+        <div id="adminLoginForm" class="form-section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Admin Login</h2>
+            <div>
+                <label for="adminEmail" class="block text-gray-700 font-medium mb-1">Email</label>
+                <input type="email" id="adminEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Admin Email">
+            </div>
+            <div class="mt-4">
+                <label for="adminPassword" class="block text-gray-700 font-medium mb-1">Password</label>
+                <input type="password" id="adminPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Password">
+            </div>
+            <div class="mt-4 text-right">
+                <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline toggle-link">Forgot Password?</a>
+            </div>
+            <div class="mt-6">
+                <button onclick="adminLogin()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Login</button>
+            </div>
+            <div class="mt-4 text-center">
+                <p class="text-gray-600 text-sm">
+                    Don't have an account? 
+                    <a href="#" onclick="showSignup()" class="text-yellow-500 hover:underline toggle-link font-medium">Signup</a>
                 </p>
             </div>
-            <!-- Forgot Password Form -->
-            <div id="forgotPasswordForm" class="hidden">
-                <div class="mb-6">
-                    <label for="forgotEmail" class="block text-gray-700 text-sm font-medium mb-1">Email</label>
-                    <input type="email" id="forgotEmail" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Email">
-                </div>
-                <button class="bg-orange-600 text-white w-full py-3 rounded-lg hover:bg-orange-700 transition text-sm font-medium" onclick="sendOtp()">Send OTP</button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="adminSignupForm" class="form-section hidden">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Admin Signup</h2>
+            <div>
+                <label for="signupName" class="block text-gray-700 font-medium mb-1">Name</label>
+                <input type="text" id="signupName" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Full Name">
             </div>
-            <!-- OTP Verification Form -->
-            <div id="otpForm" class="hidden">
-                <div class="mb-6">
-                    <label for="otp" class="block text-gray-700 text-sm font-medium mb-1">Enter OTP</label>
-                    <input type="text" id="otp" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter OTP">
-                </div>
-                <button class="bg-orange-600 text-white w-full py-3 rounded-lg hover:bg-orange-700 transition text-sm font-medium" onclick="verifyOtp()">Verify OTP</button>
+            <div class="mt-4">
+                <label for="signupEmail" class="block text-gray-700 font-medium mb-1">Email</label>
+                <input type="email" id="signupEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Email">
             </div>
-            <!-- Reset Password Form -->
-            <div id="resetPasswordForm" class="hidden">
-                <div class="mb-4">
-                    <label for="newPassword" class="block text-gray-700 text-sm font-medium mb-1">New Password</label>
-                    <input type="password" id="newPassword" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter New Password">
-                </div>
-                <div class="mb-6">
-                    <label for="confirmPassword" class="block text-gray-700 text-sm font-medium mb-1">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Confirm Password">
-                </div>
-                <button class="bg-orange-600 text-white w-full py-3 rounded-lg hover:bg-orange-700 transition text-sm font-medium" onclick="resetPassword()">Reset Password</button>
+            <div class="mt-4">
+                <label for="signupPhone" class="block text-gray-700 font-medium mb-1">Phone Number</label>
+                <input type="tel" id="signupPhone" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Phone Number">
             </div>
-            <p class="text-center mt-4">
-                <button onclick="closeModal('loginModal')" class="text-gray-600 hover:underline text-sm font-medium">Close</button>
-            </p>
+            <div class="mt-4">
+                <label for="signupPassword" class="block text-gray-700 font-medium mb-1">Password</label>
+                <input type="password" id="signupPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Create Password">
+            </div>
+            <div class="mt-6">
+                <button onclick="adminSignup()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Signup</button>
+            </div>
+            <div class="mt-4 text-center">
+                <p class="text-gray-600 text-sm">
+                    Already have an account? 
+                    <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link font-medium">Login</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Forgot Password Step 1: Enter Email -->
+        <div id="forgotPasswordEmail" class="form-section hidden">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Forgot Password</h2>
+            <div>
+                <label for="forgotEmail" class="block text-gray-700 font-medium mb-1">Enter Email</label>
+                <input type="email" id="forgotEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Email">
+            </div>
+            <div class="mt-6">
+                <button onclick="sendAdminOTP()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Send OTP</button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- Forgot Password Step 2: Enter OTP -->
+        <div id="forgotPasswordOTP" class="form-section hidden">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Verify OTP</h2>
+            <div>
+                <label for="otpInput" class="block text-gray-700 font-medium mb-1">Enter OTP</label>
+                <input type="text" id="otpInput" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Enter OTP">
+            </div>
+            <div class="mt-6">
+                <button onclick="verifyAdminOTP()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Verify OTP</button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- Forgot Password Step 3: Reset Password -->
+        <div id="forgotPasswordReset" class="form-section hidden">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reset Password</h2>
+            <div>
+                <label for="newPassword" class="block text-gray-700 font-medium mb-1">New Password</label>
+                <input type="password" id="newPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="New Password">
+            </div>
+            <div class="mt-4">
+                <label for="confirmPassword" class="block text-gray-700 font-medium mb-1">Confirm Password</label>
+                <input type="password" id="confirmPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Confirm Password">
+            </div>
+            <div class="mt-6">
+                <button onclick="resetAdminPassword()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Reset Password</button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
+            </div>
         </div>
     </div>
-
-    <!-- Signup Modal -->
-    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-30">
-        <div class="modal-content p-6 sm:p-8 w-full max-w-md mx-4">
-            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 text-center">Admin Sign Up</h2>
-            <div class="mb-4">
-                <label for="signupName" class="block text-gray-700 text-sm font-medium mb-1">Name</label>
-                <input type="text" id="signupName" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Name">
-            </div>
-            <div class="mb-4">
-                <label for="signupEmail" class="block text-gray-700 text-sm font-medium mb-1">Email</label>
-                <input type="email" id="signupEmail" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Email">
-            </div>
-            <div class="mb-4">
-                <label for="signupPhone" class="block text-gray-700 text-sm font-medium mb-1">Phone Number</label>
-                <input type="tel" id="signupPhone" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Enter Phone Number">
-            </div>
-            <div class="mb-6">
-                <label for="signupPassword" class="block text-gray-700 text-sm font-medium mb-1">Create Password</label>
-                <input type="password" id="signupPassword" class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent transition" placeholder="Create Password">
-            </div>
-            <button class="bg-orange-600 text-white w-full py-3 rounded-lg hover:bg-orange-700 transition text-sm font-medium" onclick="handleAdminSignup()">Sign Up</button>
-            <p class="text-center my-4 text-gray-600 text-sm">or</p>
-            <button class="flex items-center justify-center w-full py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-sm font-medium" onclick="handleGoogleLogin()">
-                <img src="https://t4.ftcdn.net/jpg/03/91/79/25/360_F_391792593_BYfEk8FhvfNvXC5ERCw166qRFb8mYWya.jpg" alt="Google Icon" class="h-5 mr-2">
-                Sign Up with Google
-            </button>
-            <p class="text-center mt-4 text-xs">
-                By signing up, you agree to our <a href="terms.html" class="text-orange-600 hover:underline">Terms and Conditions</a>.
-            </p>
-            <p class="text-center mt-3">
-                <button onclick="openModal('loginModal'); closeModal('signupModal')" class="text-orange-600 hover:underline text-sm font-medium">Already have an account? Login</button>
-            </p>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 bg-opacity-90 text-white py-4 w-full">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center">
-            <p class="text-xs sm:text-sm">© 2025 Delicute. All rights reserved.</p>
-            <div class="flex space-x-4 mt-2 sm:mt-0">
-                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Facebook</a>
-                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Instagram</a>
-                <a href="#" class="hover:text-orange-600 text-xs sm:text-sm">Twitter</a>
-            </div>
-        </div>
-    </footer>
 
     <script>
-        // Toast Notification
-        function showToast(message, type) {
-            console.log(`Toast: ${message} (${type})`);
-            const toast = document.getElementById('toast');
+        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+
+        // Toast Notification Function
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
             toast.textContent = message;
-            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
-            toast.style.display = 'block';
-            toast.style.opacity = '1';
+            toastContainer.appendChild(toast);
+
+            // Show toast
             setTimeout(() => {
-                toast.style.opacity = '0';
+                toast.classList.add('show');
+            }, 100);
+
+            // Auto-remove toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
                 setTimeout(() => {
-                    toast.style.display = 'none';
+                    toast.remove();
                 }, 300);
             }, 3000);
         }
 
-        // Modal handling
-        function openModal(modalId) {
-            console.log(`Opening modal: ${modalId}`);
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
+        function showLogin() {
+            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
+            document.getElementById('adminLoginForm').classList.remove('hidden');
         }
 
-        function closeModal(modalId) {
-            console.log(`Closing modal: ${modalId}`);
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.add('hidden');
-                if (modalId === 'loginModal') {
-                    showLoginForm();
-                }
-            }
+        function showSignup() {
+            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
+            document.getElementById('adminSignupForm').classList.remove('hidden');
         }
 
-        // Forgot Password Flow
         function showForgotPassword() {
-            console.log('Showing forgot password form');
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.remove('hidden');
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
+            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
+            document.getElementById('forgotPasswordEmail').classList.remove('hidden');
         }
 
-        function showOtpForm() {
-            console.log('Showing OTP form');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('otpForm').classList.remove('hidden');
-        }
-
-        function showResetPassword() {
-            console.log('Showing reset password form');
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.remove('hidden');
-        }
-
-        function showLoginForm() {
-            console.log('Showing login form');
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
-            // Clear input fields
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-        }
-
-        // Admin Login Handler
-        async function handleAdminLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+        async function adminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
             if (!email || !password) {
-                showToast('Please enter both email and password', 'error');
+                showToast('Please enter both email and password.', 'error');
                 return;
             }
             try {
-                console.log('Sending login request:', { email });
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                console.log('Login response status:', response.status);
-                const data = await response.json();
-                console.log('Login response data:', data);
-                if (!response.ok) {
-                    throw new Error(data.message || 'Login failed');
+                const text = await response.text();
+                console.log('Admin login response:', text);
+                const data = JSON.parse(text);
+                if (response.ok) {
+                    localStorage.setItem('adminToken', data.token);
+                    showToast('Admin login successful!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admindashboard.html';
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Admin login failed.', 'error');
                 }
-                if (!data.token) {
-                    throw new Error('No token received from server');
-                }
-                if (data.user?.role !== 'admin') {
-                    throw new Error('Admin access required');
-                }
-                localStorage.setItem('token', data.token);
-                console.log('Token stored:', localStorage.getItem('token'));
-                showToast('Admin login successful!', 'success');
-                setTimeout(() => {
-                    console.log('Redirecting to admindashboard.html');
-                    window.location.href = '/admindashboard.html';
-                }, 1000);
             } catch (error) {
-                console.error('Login error:', error.message);
-                showToast(`Login failed: ${error.message}`, 'error');
+                console.error('Admin login error:', error);
+                showToast('Failed to log in. Please check your connection and try again.', 'error');
             }
         }
 
-        // Admin Signup Handler
-        async function handleAdminSignup() {
-            const name = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
+        async function adminSignup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
             const password = document.getElementById('signupPassword').value;
+
             if (!name || !email || !phone || !password) {
-                showToast('Please fill all fields', 'error');
+                showToast('Please fill in all fields.', 'error');
                 return;
             }
+
             try {
-                console.log('Sending signup request:', { name, email, phone });
-                const response = await fetch('/api/auth/register', {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone, password, role: 'admin' })
+                    body: JSON.stringify({ name, email, phone, password })
                 });
-                console.log('Signup response status:', response.status);
-                const data = await response.json();
-                console.log('Signup response data:', data);
-                if (!response.ok) {
-                    throw new Error(data.message || 'Sign up failed');
+                const text = await response.text();
+                console.log('Admin signup response:', text);
+                const data = JSON.parse(text);
+
+                if (response.ok) {
+                    localStorage.setItem('adminToken', data.token);
+                    showToast('Admin signup successful! You are now logged in.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admindashboard.html';
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Admin signup failed.', 'error');
                 }
-                showToast('Admin sign up successful! Please log in.', 'success');
-                openModal('loginModal');
-                closeModal('signupModal');
             } catch (error) {
-                console.error('Signup error:', error.message);
-                showToast(`Sign up failed: ${error.message}`, 'error');
+                console.error('Admin signup error:', error);
+                showToast('Failed to sign up. Please check your connection and try again.', 'error');
             }
         }
 
-        // Google Login Handler
-        function handleGoogleLogin() {
-            console.log('Initiating Google login');
-            window.location.href = '/api/auth/google';
-        }
-
-        // Password Reset Flow
-        async function sendOtp() {
-            const email = document.getElementById('forgotEmail').value.trim();
+        async function sendAdminOTP() {
+            const email = document.getElementById('forgotEmail').value;
             if (!email) {
-                showToast('Please enter your email', 'error');
+                showToast('Please enter your email.', 'error');
                 return;
             }
             try {
-                console.log('Sending OTP request for:', email);
-                const response = await fetch('/api/auth/forgot-password', {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-                console.log('OTP response status:', response.status);
-                const data = await response.json();
-                console.log('OTP response data:', data);
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to send OTP');
+                const text = await response.text();
+                console.log('Send OTP response:', text);
+                const data = JSON.parse(text);
+                if (response.ok) {
+                    showToast(data.message, 'success');
+                    document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
+                    document.getElementById('forgotPasswordOTP').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Failed to send OTP.', 'error');
                 }
-                showToast(data.message, 'success');
-                showOtpForm();
             } catch (error) {
-                console.error('OTP error:', error.message);
-                showToast(`Error: ${error.message}`, 'error');
+                console.error('Error sending OTP:', error);
+                showToast('Failed to send OTP. Please check your connection and try again.', 'error');
             }
         }
 
-        async function verifyOtp() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            const otp = document.getElementById('otp').value.trim();
+        async function verifyAdminOTP() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
             if (!otp) {
-                showToast('Please enter the OTP', 'error');
+                showToast('Please enter the OTP.', 'error');
                 return;
             }
             try {
-                console.log('Verifying OTP for:', email);
-                const response = await fetch('/api/auth/verify-otp', {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp })
+                    body: JSON.stringify({ email, otp, newPassword: null })
                 });
-                console.log('OTP verify response status:', response.status);
-                const data = await response.json();
-                console.log('OTP verify response data:', data);
-                if (!response.ok) {
-                    throw new Error(data.message || 'OTP verification failed');
+                const text = await response.text();
+                console.log('Verify OTP response:', text);
+                const data = JSON.parse(text);
+                if (response.ok) {
+                    showToast('OTP verified successfully!', 'success');
+                    document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
+                    document.getElementById('forgotPasswordReset').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Invalid OTP.', 'error');
                 }
-                showToast(data.message, 'success');
-                showResetPassword();
             } catch (error) {
-                console.error('OTP verify error:', error.message);
-                showToast(`Error: ${error.message}`, 'error');
+                console.error('Error verifying OTP:', error);
+                showToast('Failed to verify OTP. Please try again.', 'error');
             }
         }
 
-        async function resetPassword() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            const password = document.getElementById('newPassword').value;
+        async function resetAdminPassword() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
+            const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            if (!password || !confirmPassword) {
-                showToast('Please enter both passwords', 'error');
+            if (!newPassword || !confirmPassword) {
+                showToast('Please fill in both password fields.', 'error');
                 return;
             }
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match.', 'error');
                 return;
             }
             try {
-                console.log('Resetting password for:', email);
-                const response = await fetch('/api/auth/reset-password', {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, otp, newPassword })
                 });
-                console.log('Reset password response status:', response.status);
-                const data = await response.json();
-                console.log('Reset password response data:', data);
-                if (!response.ok) {
-                    throw new Error(data.message || 'Password reset failed');
+                const text = await response.text();
+                console.log('Reset password response:', text);
+                const data = JSON.parse(text);
+                if (response.ok) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        showLogin();
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Failed to reset password.', 'error');
                 }
-                showToast(data.message, 'success');
-                showLoginForm();
-                closeModal('loginModal');
             } catch (error) {
-                console.error('Reset password error:', error.message);
-                showToast(`Error: ${error.message}`, 'error');
+                console.error('Error resetting password:', error);
+                showToast('Failed to reset password. Please try again.', 'error');
             }
         }
 
-        // Open login modal by default
-        console.log('Initializing page: opening login modal');
-        openModal('loginModal');
+        window.onload = () => {
+            const adminToken = localStorage.getItem('adminToken');
+            if (adminToken) {
+                window.location.href = '/admindashboard.html';
+            }
+            showLogin(); // Ensure login form is shown by default
+        };
     </script>
 </body>
 </html>

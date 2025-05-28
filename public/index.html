@@ -5,721 +5,993 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - Cloud Kitchen</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=sans-serif" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f6;
         }
-        .smooth-scroll {
-            scroll-behavior: smooth;
+        .hero-bg {
+            background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #374151;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #f59e0b;
+        }
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+            margin: 10px 0;
+            transition: background 0.2s;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #f59e0b;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .range-slider:hover {
+            background: #ccc;
         }
         .toast {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             right: 20px;
-            padding: 12px 24px;
+            padding: 16px;
             border-radius: 8px;
             color: white;
-            z-index: 50;
+            z-index: 2000;
             display: none;
-            transition: opacity 0.3s ease;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        .toast-success {
-            background-color: #10b981;
+        .toast.success {
+            background-color: #22c55e;
         }
-        .toast-error {
+        .toast.error {
             background-color: #ef4444;
+        }
+        .menu-card, .offer-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .menu-card:hover, .offer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .pagination-btn {
+            transition: background 0.2s, color 0.2s;
+        }
+        .pagination-btn:hover:not(.disabled) {
+            background: #f59e0b;
+            color: white;
+        }
+        .pagination-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .full-menu-container {
+            display: none;
+            background: #f0f2f6;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .full-menu-container.active {
+            display: block;
+        }
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        .input-field {
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-field:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            outline: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 smooth-scroll">
+<body>
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg fixed w-full z-20">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 w-auto">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-orange-600">Delicute</h1>
-                        <p class="text-xs sm:text-sm text-gray-600">Every bite tells a story</p>
+                        <h1 class="text-2xl font-bold text-gray-800">DELICUTE</h1>
+                        <p class="text-sm text-gray-500">Every bite tells a story</p>
                     </div>
                 </div>
-                <div class="flex items-center sm:hidden">
-                    <button id="menuToggle" class="text-gray-700 hover:text-orange-600 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div id="navMenu" class="hidden sm:flex sm:items-center sm:space-x-4">
-                    <a href="#home" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">Home</a>
-                    <a href="#about" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">About</a>
-                    <a href="#menu" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">Menu</a>
-                    <a href="#contact" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">Contact</a>
-                    <button onclick="openModal('loginModal')" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">Login</button>
-                    <button onclick="openModal('signupModal')" class="bg-orange-600 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full hover:bg-orange-700 text-sm sm:text-base">Sign Up</button>
-                </div>
-            </div>
-            <div id="mobileMenu" class="hidden sm:hidden bg-white shadow-lg">
-                <div class="flex flex-col space-y-2 px-4 py-2">
-                    <a href="#home" class="text-gray-700 hover:text-orange-600 text-sm">Home</a>
-                    <a href="#about" class="text-gray-700 hover:text-orange-600 text-sm">About</a>
-                    <a href="#menu" class="text-gray-700 hover:text-orange-600 text-sm">Menu</a>
-                    <a href="#contact" class="text-gray-700 hover:text-orange-600 text-sm">Contact</a>
-                    <button onclick="openModal('loginModal')" class="text-gray-700 hover:text-orange-600 text-sm text-left">Login</button>
-                    <button onclick="openModal('signupModal')" class="bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 text-sm">Sign Up</button>
+                <div class="flex items-center space-x-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900">About</a>
+                    <a href="#offers" class="text-gray-600 hover:text-gray-900">Offers</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900">Contact</a>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900">Login</button>
+                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900">Signup</button>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-30">
-        <div class="bg-white p-4 sm:p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Login</h2>
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('loginModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Login</h2>
             <div id="loginForm">
-                <div class="mb-4">
-                    <label for="loginEmail" class="block text-gray-700 text-sm sm:text-base">Email or Mobile Number</label>
-                    <input type="text" id="loginEmail" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Email or Mobile">
+                <div>
+                    <label for="loginEmail" class="block text-gray-700 font-medium mb-1">Email or Mobile Number</label>
+                    <input type="text" id="loginEmail" class="input-field w-full p-2 border rounded-md" placeholder="Email or Mobile">
                 </div>
-                <div class="mb-4">
-                    <label for="loginPassword" class="block text-gray-700 text-sm sm:text-base">Password</label>
-                    <input type="password" id="loginPassword" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Password">
+                <div class="mt-4">
+                    <label for="loginPassword" class="block text-gray-700 font-medium mb-1">Password</label>
+                    <input type="password" id="loginPassword" class="input-field w-full p-2 border rounded-md" placeholder="Password">
                 </div>
-                <button class="bg-orange-600 text-white w-full py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="handleUserLogin()">Login</button>
-                <p class="text-center my-4 text-gray-600 text-sm sm:text-base">or</p>
-                <button class="flex items-center justify-center w-full py-2 sm:py-3 border rounded-full hover:bg-gray-100 transition text-sm sm:text-base" onclick="handleGoogleLogin()">
-                    <img src="https://t4.ftcdn.net/jpg/03/91/79/25/360_F_391792593_BYfEk8FhvfNvXC5ERCw166qRFb8mYWya.jpg" alt="Google Icon" class="h-5 sm:h-6 mr-2">
-                    Login with Google
-                </button>
-                <p class="text-center mt-4">
-                    <a href="#" onclick="showForgotPassword()" class="text-orange-600 hover:underline text-sm sm:text-base">Forgot Password?</a>
-                </p>
+                <div class="mt-4 text-right">
+                    <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline">Forgot Password?</a>
+                </div>
+                <div class="mt-6">
+                    <button onclick="login()" class="btn-primary w-full">Login</button>
+                </div>
+                <div class="mt-4 text-center">OR</div>
+                <div class="mt-4">
+                    <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-full w-full flex items-center justify-center hover:bg-gray-50">
+                        <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Login with Google
+                    </button>
+                </div>
             </div>
-            <!-- Forgot Password Form -->
-            <div id="forgotPasswordForm" class="hidden">
-                <div class="mb-4">
-                    <label for="forgotEmail" class="block text-gray-700 text-sm sm:text-base">Email</label>
-                    <input type="email" id="forgotEmail" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Email">
+            <div id="forgotPasswordEmail" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Forgot Password</h2>
+                <div>
+                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-1">Enter Email</label>
+                    <input type="email" id="forgotEmail" class="input-field w-full p-2 border rounded-md" placeholder="Your Email">
                 </div>
-                <button class="bg-orange-600 text-white w-full py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="sendOtp()">Send OTP</button>
-                <p class="text-center mt-4">
-                    <a href="#" onclick="showLoginForm()" class="text-orange-600 hover:underline text-sm sm:text-base">Back to Login</a>
-                </p>
+                <div class="mt-6">
+                    <button onclick="sendOTP()" class="btn-primary w-full">Send OTP</button>
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline">Back to Login</a>
+                </div>
             </div>
-            <!-- OTP Verification Form -->
-            <div id="otpForm" class="hidden">
-                <div class="mb-4">
-                    <label for="otp" class="block text-gray-700 text-sm sm:text-base">Enter OTP</label>
-                    <input type="text" id="otp" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter OTP">
+            <div id="forgotPasswordOTP" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Verify OTP</h2>
+                <div>
+                    <label for="otpInput" class="block text-gray-700 font-medium mb-1">Enter OTP</label>
+                    <input type="text" id="otpInput" class="input-field w-full p-2 border rounded-md" placeholder="Enter OTP">
                 </div>
-                <button class="bg-orange-600 text-white w-full py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="verifyOtp()">Verify OTP</button>
-                <p class="text-center mt-4">
-                    <a href="#" onclick="showForgotPassword()" class="text-orange-600 hover:underline text-sm sm:text-base">Resend OTP</a>
-                </p>
+                <div class="mt-6">
+                    <button onclick="verifyOTP()" class="btn-primary w-full">Verify OTP</button>
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline">Back to Login</a>
+                </div>
             </div>
-            <!-- Reset Password Form -->
-            <div id="resetPasswordForm" class="hidden">
-                <div class="mb-4">
-                    <label for="newPassword" class="block text-gray-700 text-sm sm:text-base">New Password</label>
-                    <input type="password" id="newPassword" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter New Password">
+            <div id="forgotPasswordReset" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reset Password</h2>
+                <div>
+                    <label for="newPassword" class="block text-gray-700 font-medium mb-1">New Password</label>
+                    <input type="password" id="newPassword" class="input-field w-full p-2 border rounded-md" placeholder="New Password">
                 </div>
-                <div class="mb-4">
-                    <label for="confirmPassword" class="block text-gray-700 text-sm sm:text-base">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Confirm Password">
+                <div class="mt-4">
+                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-1">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="input-field w-full p-2 border rounded-md" placeholder="Confirm Password">
                 </div>
-                <button class="bg-orange-600 text-white w-full py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="resetPassword()">Reset Password</button>
-                <p class="text-center mt-4">
-                    <a href="#" onclick="showLoginForm()" class="text-orange-600 hover:underline text-sm sm:text-base">Back to Login</a>
-                </p>
+                <div class="mt-6">
+                    <button onclick="resetPassword()" class="btn-primary w-full">Reset Password</button>
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline">Back to Login</a>
+                </div>
             </div>
-            <p class="text-center mt-4">
-                <button onclick="closeModal('loginModal')" class="text-gray-700 hover:underline text-sm sm:text-base">Close</button>
-            </p>
         </div>
     </div>
 
     <!-- Signup Modal -->
-    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-30">
-        <div class="bg-white p-4 sm:p-6 rounded-lg w-full max-w-md mx-4">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Sign Up</h2>
-            <div class="mb-4">
-                <label for="signupName" class="block text-gray-700 text-sm sm:text-base">Name</label>
-                <input type="text" id="signupName" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Name">
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('signupModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Signup</h2>
+            <div>
+                <label for="signupName" class="block text-gray-700 font-medium mb-1">Name</label>
+                <input type="text" id="signupName" class="input-field w-full p-2 border rounded-md" placeholder="Your Name">
             </div>
-            <div class="mb-4">
-                <label for="signupEmail" class="block text-gray-700 text-sm sm:text-base">Email</label>
-                <input type="email" id="signupEmail" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Email">
+            <div class="mt-4">
+                <label for="signupEmail" class="block text-gray-700 font-medium mb-1">Email</label>
+                <input type="email" id="signupEmail" class="input-field w-full p-2 border rounded-md" placeholder="Your Email">
             </div>
-            <div class="mb-4">
-                <label for="signupPhone" class="block text-gray-700 text-sm sm:text-base">Phone Number</label>
-                <input type="tel" id="signupPhone" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Enter Phone Number">
+            <div class="mt-4">
+                <label for="signupPhone" class="block text-gray-700 font-medium mb-1">Phone Number</label>
+                <input type="tel" id="signupPhone" class="input-field w-full p-2 border rounded-md" placeholder="Your Phone Number">
             </div>
-            <div class="mb-4">
-                <label for="signupPassword" class="block text-gray-700 text-sm sm:text-base">Create Password</label>
-                <input type="password" id="signupPassword" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Create Password">
+            <div class="mt-4">
+                <label for="signupPassword" class="block text-gray-700 font-medium mb-1">Create Password</label>
+                <input type="password" id="signupPassword" class="input-field w-full p-2 border rounded-md" placeholder="Create Password">
             </div>
-            <button class="bg-orange-600 text-white w-full py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="handleSignup()">Sign Up</button>
-            <p class="text-center my-4 text-gray-600 text-sm sm:text-base">or</p>
-            <button class="flex items-center justify-center w-full py-2 sm:py-3 border rounded-full hover:bg-gray-100 transition text-sm sm:text-base" onclick="handleGoogleLogin()">
-                <img src="https://t4.ftcdn.net/jpg/03/91/79/25/360_F_391792593_BYfEk8FhvfNvXC5ERCw166qRFb8mYWya.jpg" alt="Google Icon" class="h-5 sm:h-6 mr-2">
-                Sign Up with Google
-            </button>
-            <p class="text-center mt-4 text-xs sm:text-sm">
-                By signing up, you agree to our <a href="terms.html" class="text-orange-600 hover:underline">Terms and Conditions</a>.
-            </p>
-            <p class="text-center mt-2">
-                <button onclick="openModal('loginModal'); closeModal('signupModal')" class="text-gray-700 hover:underline text-sm sm:text-base">Already have an account? Login</button>
-            </p>
+            <div class="mt-4 flex items-center">
+                <input type="checkbox" id="termsAgree" class="mr-2">
+                <label for="termsAgree" class="text-gray-700">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
+            </div>
+            <div class="mt-6">
+                <button onclick="signup()" class="btn-primary w-full">Signup</button>
+            </div>
+            <div class="mt-4 text-center">OR</div>
+            <div class="mt-4">
+                <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-full w-full flex items-center justify-center hover:bg-gray-50">
+                    <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Signup with Google
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="showModal('loginModal')" class="text-yellow-500 hover:underline">Already have an account? Login</a>
+            </div>
         </div>
     </div>
 
-    <!-- Hero Section -->
-    <section id="home" class="min-h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
-        <div class="text-center text-white bg-black bg-opacity-50 p-4 sm:p-8 rounded-lg">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Welcome to Delicute</h2>
-            <p class="text-base sm:text-lg md:text-xl mb-6">Delicious meals crafted with love, delivered straight to your door.</p>
-            <a href="#menu" class="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base">Explore Menu</a>
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('cartModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Your Cart</h2>
+            <div id="cartItems" class="mb-6"></div>
+            <div class="text-center">
+                <button onclick="placeOrder()" class="btn-primary text-lg">Place Order</button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline">Close</a>
+            </div>
         </div>
-    </section>
+    </div>
 
-    <!-- About Section -->
-    <section id="about" class="py-12 sm:py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-8">About Delicute</h2>
-            <p class="text-base sm:text-lg text-gray-600 text-center max-w-3xl mx-auto">
-                Delicute is your go-to cloud kitchen for fresh, flavorful, and high-quality meals. We specialize in a variety of cuisines, prepared with the finest ingredients and delivered with care. Our mission is to bring restaurant-quality food to your doorstep, hassle-free.
-            </p>
-        </div>
-    </section>
+    <!-- Main Content -->
+    <div id="mainContent">
+        <!-- Hero Section -->
+        <section id="home" class="hero-bg h-screen flex items-center justify-center text-white">
+            <div class="text-center bg-black bg-opacity-50 p-8 rounded-lg">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">Welcome to Delicute</h2>
+                <p class="text-lg md:text-xl mb-6">Savor the taste of home, delivered fresh from our cloud kitchen!</p>
+                <a href="#menu" class="btn-primary text-lg">Explore Menu</a>
+            </div>
+        </section>
 
-    <!-- Menu Section -->
-    <section id="menu" class="py-12 sm:py-16 bg-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-8">Special Offers</h2>
-            <div id="specialOffers" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-12">
-                <!-- Special offers will be dynamically added here -->
+        <!-- About Section -->
+        <section id="about" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">About Delicute</h2>
+                <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto">
+                    Delicute is your go-to cloud kitchen, crafting delicious, wholesome meals with love and care. 
+                    We specialize in a variety of cuisines, ensuring every bite is a delightful experience. 
+                    Order online and enjoy restaurant-quality food delivered straight to your door!
+                </p>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-8">Our Menu</h2>
-            <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-                <!-- Menu items will be dynamically added here -->
-            </div>
-            <div class="text-center mt-8">
-                <a href="#contact" class="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base">Order Now</a>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="py-12 sm:py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-8">Get in Touch</h2>
-            <div class="max-w-lg mx-auto">
-                <div class="mb-4">
-                    <label for="name" class="block text-gray-700 text-sm sm:text-base">Name</label>
-                    <input type="text" id="name" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Your Name">
-                </div>
-                <div class="mb-4">
-                    <label for="email" class="block text-gray-700 text-sm sm:text-base">Email</label>
-                    <input type="email" id="email" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Your Email">
-                </div>
-                <div class="mb-4">
-                    <label for="message" class="block text-gray-700 text-sm sm:text-base">Message</label>
-                    <textarea id="message" class="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base" rows="5" placeholder="Your Message"></textarea>
-                </div>
-                <div class="text-center">
-                    <button class="bg-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="submitContactForm()">Send Message</button>
-                </div>
+        <!-- Special Offers Section -->
+        <section id="offers" class="py-16 bg-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Special Offers</h2>
+                <div id="offerItems" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 sm:py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-sm sm:text-base">© 2025 Delicute. All rights reserved.</p>
-                <div class="flex space-x-4 mt-4 md:mt-0">
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Facebook</a>
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Instagram</a>
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Twitter</a>
+        <!-- Menu Section -->
+        <section id="menu" class="py-16 bg-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Our Menu</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" id="searchInput" class="input-field w-full p-2 border rounded-md" placeholder="Search menu items..." oninput="filterMenu()">
+                        </div>
+                        <div class="flex-1">
+                            <select id="categoryFilter" class="input-field w-full p-2 border rounded-md" onchange="filterMenu()">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-gray-700 font-medium mb-1">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
+                            <input type="range" id="priceRange" min="30" max="999" value="999" class="range-slider" oninput="updatePriceRange()">
+                        </div>
+                    </div>
+                </div>
+                <div id="menuItems" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+                <div class="text-center mt-8 space-y-4">
+                    <button onclick="showCart()" class="btn-primary text-lg">View Cart & Order</button>
+                    <div>
+                        <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-6 py-3 rounded-full text-lg">View Full Menu</button>
+                    </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Contact Us</h2>
+                <div class="max-w-lg mx-auto">
+                    <div class="bg-gray-100 p-6 rounded-lg">
+                        <div>
+                            <label for="name" class="block text-gray-700 font-medium mb-1">Name</label>
+                            <input type="text" id="name" class="input-field w-full p-2 border rounded-md" placeholder="Your Name">
+                        </div>
+                        <div class="mt-4">
+                            <label for="email" class="block text-gray-700 font-medium mb-1">Email</label>
+                            <input type="email" id="email" class="input-field w-full p-2 border rounded-md" placeholder="Your Email">
+                        </div>
+                        <div class="mt-4">
+                            <label for="message" class="block text-gray-700 font-medium mb-1">Message</label>
+                            <textarea id="message" class="input-field w-full p-2 border rounded-md" rows="4" placeholder="Your Message"></textarea>
+                        </div>
+                        <div class="mt-6">
+                            <button onclick="submitForm()" class="btn-primary w-full">Send Message</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="flex justify-center items-center space-x-3 mb-4">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
+                    <div>
+                        <h1 class="text-xl font-bold text-white">DELICUTE</h1>
+                        <p class="text-sm text-gray-300">Every bite tells a story</p>
+                    </div>
+                </div>
+                <p>© 2025 Delicute. All rights reserved.</p>
+                <p class="mt-2">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Full Menu Page -->
+    <div id="fullMenuContainer" class="full-menu-container">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Full Menu</h2>
+                <button onclick="hideFullMenu()" class="btn-primary">Back to Home</button>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="fullMenuSearchInput" class="input-field w-full p-2 border rounded-md" placeholder="Search menu items..." oninput="filterFullMenu()">
+                    </div>
+                    <div class="flex-1">
+                        <select id="fullMenuCategoryFilter" class="input-field w-full p-2 border rounded-md" onchange="filterFullMenu()">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-700 font-medium mb-1">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
+                        <input type="range" id="fullMenuPriceRange" min="30" max="999" value="999" class="range-slider" oninput="updateFullMenuPriceRange()">
+                    </div>
+                </div>
+            </div>
+            <div id="fullMenuItems" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+            <div class="flex justify-center mt-8 space-x-4">
+                <button id="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
+                <span id="pageInfo" class="flex items-center text-gray-700"></span>
+                <button id="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="changePage(1)">Next</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
     <script>
-        // Prevent double initialization
-        let isInitialized = false;
+        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+        let menuItemsData = [];
+        let offerItemsData = [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentPage = 1;
+        const itemsPerPage = 9;
+        let categories = [];
 
-        // Base API URL
-        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-
-        // Toast Notification
-        function showToast(message, type) {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+            toast.className = `toast ${type}`;
             toast.style.display = 'block';
-            toast.style.opacity = '1';
             setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 300);
+                toast.style.display = 'none';
             }, 3000);
         }
 
-        // Smooth scrolling for navigation links
-        function setupSmoothScrolling() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-            });
-        }
-
-        // Hamburger menu toggle
-        function setupHamburgerMenu() {
-            const menuToggle = document.getElementById('menuToggle');
-            if (menuToggle) {
-                menuToggle.addEventListener('click', () => {
-                    const mobileMenu = document.getElementById('mobileMenu');
-                    mobileMenu.classList.toggle('hidden');
-                });
-            }
-        }
-
-        // Modal handling
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.remove('hidden');
-                const mobileMenu = document.getElementById('mobileMenu');
-                if (mobileMenu) mobileMenu.classList.add('hidden');
-            }
+        function showModal(modalId) {
+            closeAllModals();
+            document.getElementById(modalId).style.display = 'flex';
         }
 
         function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.add('hidden');
-                if (modalId === 'loginModal') {
-                    showLoginForm();
-                }
-            }
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'loginModal') backToLogin();
         }
 
-        // Forgot Password Flow
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
+        }
+
         function showForgotPassword() {
             document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.remove('hidden');
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
+            document.getElementById('forgotPasswordEmail').classList.remove('hidden');
         }
 
-        function showOtpForm() {
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('otpForm').classList.remove('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
-        }
-
-        function showResetPassword() {
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.remove('hidden');
-        }
-
-        function showLoginForm() {
+        function backToLogin() {
+            document.getElementById('forgotPasswordEmail').classList.add('hidden');
+            document.getElementById('forgotPasswordOTP').classList.add('hidden');
+            document.getElementById('forgotPasswordReset').classList.add('hidden');
             document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('otpForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('forgotEmail').value = '';
-            document.getElementById('otp').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
         }
 
-        // User Login Handler
-        async function handleUserLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            if (!email || !password) {
-                showToast('Please enter both email and password', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Login failed');
-                }
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                showToast('Login successful!', 'success');
-                closeModal('loginModal');
-                window.location.href = '/userdashboard.html';
-            } catch (error) {
-                showToast('Login failed: ' + error.message, 'error');
-            }
-        }
-
-        // Google Login Handler
-        async function handleGoogleLogin() {
-            try {
-                // Generate a random state for CSRF protection
-                const state = Math.random().toString(36).substring(2);
-                localStorage.setItem('oauth_state', state);
-                localStorage.setItem('returnUrl', '/userdashboard.html');
-
-                // Construct the Google OAuth URL
-                const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback`);
-                const googleAuthUrl = `${API_BASE_URL}/api/auth/google?state=${state}&redirect_uri=${redirectUri}`;
-
-                // Redirect to Google OAuth
-                window.location.href = googleAuthUrl;
-            } catch (error) {
-                console.error('Error initiating Google login:', error);
-                showToast('Failed to initiate Google login', 'error');
-            }
-        }
-
-        // Google OAuth Callback Handler
-        async function handleGoogleCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            const user = urlParams.get('user');
-            const error = urlParams.get('error');
-            const state = urlParams.get('state');
-            const storedState = localStorage.getItem('oauth_state');
-
-            console.log('Google Callback:', { token, user, error, state, pathname: window.location.pathname });
-
-            // Validate state to prevent CSRF
-            if (state !== storedState) {
-                showToast('Invalid state parameter. Possible CSRF attack.', 'error');
-                localStorage.removeItem('oauth_state');
-                window.history.replaceState({}, document.title, '/');
-                return;
-            }
-
-            localStorage.removeItem('oauth_state');
-
-            if (error) {
-                showToast(`Google login failed: ${decodeURIComponent(error)}`, 'error');
-                window.history.replaceState({}, document.title, '/');
-                return;
-            }
-
-            if (token && user) {
-                try {
-                    const parsedUser = JSON.parse(decodeURIComponent(user));
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('user', JSON.stringify(parsedUser));
-                    showToast('Google login successful!', 'success');
-                    const returnUrl = localStorage.getItem('returnUrl') || '/userdashboard.html';
-                    localStorage.removeItem('returnUrl');
-                    window.history.replaceState({}, document.title, '/');
-                    console.log('Redirecting to:', returnUrl);
-                    window.location.href = returnUrl;
-                } catch (err) {
-                    console.error('Error processing Google login:', err);
-                    showToast('Error processing Google login', 'error');
-                    window.history.replaceState({}, document.title, '/');
-                }
-            } else {
-                console.warn('No token or user data in callback');
-                showToast('Google login failed: Missing token or user data', 'error');
-                window.history.replaceState({}, document.title, '/');
-            }
-        }
-
-        // Signup Handler
-        async function handleSignup() {
-            const name = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            if (!name || !email || !phone || !password) {
-                showToast('Please fill in all fields', 'error');
-                return;
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showToast('Invalid email format', 'error');
-                return;
-            }
-            if (!/^\+?\d{10,15}$/.test(phone)) {
-                showToast('Invalid phone number format', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone, password })
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Sign up failed');
-                }
-                showToast('Sign up successful! Please log in.', 'success');
-                openModal('loginModal');
-                closeModal('signupModal');
-            } catch (error) {
-                showToast('Sign up failed: ' + error.message, 'error');
-            }
-        }
-
-        // Password Reset Flow
-        async function sendOtp() {
-            const email = document.getElementById('forgotEmail').value.trim();
+        async function sendOTP() {
+            const email = document.getElementById('forgotEmail').value;
             if (!email) {
-                showToast('Please enter your email', 'error');
-                return;
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showToast('Invalid email format', 'error');
+                showToast('Please enter your email.', 'error');
                 return;
             }
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+                const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to send OTP');
+                if (response.ok) {
+                    showToast(data.message, 'success');
+                    document.getElementById('forgotPasswordEmail').classList.add('hidden');
+                    document.getElementById('forgotPasswordOTP').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Failed to send OTP.', 'error');
                 }
-                showToast('OTP sent to your email!', 'success');
-                showOtpForm();
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('Error sending OTP:', error);
+                showToast('Failed to send OTP.', 'error');
             }
         }
 
-        async function verifyOtp() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            const otp = document.getElementById('otp').value.trim();
+        async function verifyOTP() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
             if (!otp) {
-                showToast('Please enter the OTP', 'error');
-                return;
-            }
-            if (!/^\d{6}$/.test(otp)) {
-                showToast('OTP must be a 6-digit number', 'error');
+                showToast('Please enter the OTP.', 'error');
                 return;
             }
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp })
+                    body: JSON.stringify({ email, otp, newPassword: null })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Invalid OTP');
+                if (response.ok) {
+                    document.getElementById('forgotPasswordOTP').classList.add('hidden');
+                    document.getElementById('forgotPasswordReset').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Invalid OTP.', 'error');
                 }
-                showToast('OTP verified successfully!', 'success');
-                showResetPassword();
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('Error verifying OTP:', error);
+                showToast('Failed to verify OTP.', 'error');
             }
         }
 
         async function resetPassword() {
-            const email = document.getElementById('forgotEmail').value.trim();
-            const password = document.getElementById('newPassword').value;
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
+            const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            if (!password || !confirmPassword) {
-                showToast('Please enter and confirm your new password', 'error');
+            if (!newPassword || !confirmPassword) {
+                showToast('Please fill in both password fields.', 'error');
                 return;
             }
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters long', 'error');
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match.', 'error');
                 return;
             }
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(data.message, 'success');
+                    backToLogin();
+                    closeModal('loginModal');
+                } else {
+                    showToast(data.error || 'Failed to reset password.', 'error');
+                }
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showToast('Failed to reset password.', 'error');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                showToast('Please enter both email/mobile and password.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to reset password');
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    closeModal('loginModal');
+                    showToast('Login successful!', 'success');
+                    window.location.href = '/userdashboard.html';
+                } else {
+                    showToast(data.error || 'Login failed.', 'error');
                 }
-                showToast('Password reset successfully! Please log in.', 'success');
-                showLoginForm();
-                closeModal('loginModal');
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('Login error:', error);
+                showToast('Failed to log in.', 'error');
             }
         }
 
-        // Cart Management
-        function addToCart(item) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const existingItem = cart.find(cartItem => cartItem.id === item.id);
-            if (existingItem) {
-                existingItem.quantity = (existingItem.quantity || 1) + 1;
-            } else {
-                item.quantity = 1;
-                cart.push(item);
-            }
-            localStorage.setItem('cart', JSON.stringify(cart));
-            showToast(`${item.name} added to cart!`, 'success');
-        }
-
-        // Render Special Offers
-        async function renderSpecialOffers() {
-            const specialOffersContainer = document.getElementById('specialOffers');
-            if (!specialOffersContainer) return;
-            specialOffersContainer.innerHTML = '';
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/special-offers`);
-                if (!response.ok) {
-                    throw new Error((await response.json()).message || 'Failed to load special offers');
-                }
-                const offers = await response.json();
-                if (offers.length === 0) {
-                    specialOffersContainer.innerHTML = '<p class="text-center col-span-full text-gray-600">No special offers available at the moment.</p>';
-                    return;
-                }
-                offers.forEach(offer => {
-                    const offerItem = document.createElement('div');
-                    offerItem.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
-                    offerItem.innerHTML = `
-                        <img src="${offer.image || 'https://via.placeholder.com/150'}" alt="${offer.name}" class="w-full h-40 sm:h-48 object-cover">
-                        <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">${offer.name}</h3>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${offer.description || 'No description'}</p>
-                            <p class="text-orange-600 font-bold mt-2 text-sm sm:text-base">${offer.price}</p>
-                            <button class="bg-orange-600 text-white px-4 py-2 mt-2 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick='addToCart(${JSON.stringify(offer)})'>Add to Cart</button>
-                        </div>
-                    `;
-                    specialOffersContainer.appendChild(offerItem);
-                });
-            } catch (error) {
-                console.error('Error rendering special offers:', error);
-                showToast('Failed to load special offers.', 'error');
-            }
-        }
-
-        // Render Menu
-        async function renderMenu() {
-            const menuContainer = document.getElementById('menuItems');
-            if (!menuContainer) return;
-            menuContainer.innerHTML = '';
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/menu`);
-                if (!response.ok) {
-                    throw new Error((await response.json()).message || 'Failed to load menu items');
-                }
-                const items = await response.json();
-                items.forEach(item => {
-                    const menuItem = document.createElement('div');
-                    menuItem.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
-                    menuItem.innerHTML = `
-                        <img src="${item.image || item.image_url || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-40 sm:h-48 object-cover">
-                        <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">${item.name}</h3>
-                            <p class="text-gray-600 mt-2 text-sm sm:text-base">${item.description || 'No description'}</p>
-                            <p class="text-orange-600 font-bold mt-2 text-sm sm:text-base">${item.price}</p>
-                            <button class="bg-orange-600 text-white px-4 py-2 mt-2 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick='addToCart(${JSON.stringify(item)})'>Add to Cart</button>
-                        </div>
-                    `;
-                    menuContainer.appendChild(menuItem);
-                });
-            } catch (error) {
-                console.error('Error fetching menu items:', error);
-                showToast('Failed to load menu items.', 'error');
-            }
-        }
-
-        // Contact Form Submission
-        async function submitContactForm() {
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const message = document.getElementById('message').value.trim();
-            if (!name || !email || !message) {
-                showToast('Please fill in all fields', 'error');
+        async function signup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const termsAgreed = document.getElementById('termsAgree').checked;
+            if (!name || !email || !phone || !password) {
+                showToast('Please fill in all fields.', 'error');
                 return;
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showToast('Invalid email format', 'error');
+            if (!termsAgreed) {
+                showToast('Please agree to the Terms and Conditions.', 'error');
                 return;
             }
             try {
-                const response = await fetch(`${API_BASE_URL}/api/customer-queries`, {
+                const response = await fetch(`${BASE_URL}/api/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, query_text: message })
+                    body: JSON.stringify({ name, email, phone, password })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to send message');
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    closeModal('signupModal');
+                    showToast('Signup successful!', 'success');
+                    window.location.href = '/userdashboard.html';
+                } else {
+                    showToast(data.error || 'Signup failed.', 'error');
                 }
-                showToast('Message sent successfully!', 'success');
+            } catch (error) {
+                console.error('Signup error:', error);
+                showToast('Failed to sign up.', 'error');
+            }
+        }
+
+        function googleLogin() {
+            window.location.href = `${BASE_URL}/api/auth/google`;
+        }
+
+        function addToCart(item, type = 'menu') {
+            const sizeSelect = type === 'menu' ? document.getElementById(`size-${item._id}`) : null;
+            let price, size;
+            if (type === 'menu') {
+                size = sizeSelect ? sizeSelect.value : null;
+                if (!size) {
+                    showToast('Please select a size.', 'error');
+                    return;
+                }
+                price = item.prices[size];
+                if (!price) {
+                    showToast(`No price available for ${size} size.`, 'error');
+                    return;
+                }
+            } else {
+                price = item.price;
+                size = null;
+            }
+            cart.push({ id: item._id, name: item.name, price, size, type });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showToast(`${item.name} ${size ? `(${size})` : ''} added to cart!`, 'success');
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCart();
+            showToast('Item removed from cart.', 'success');
+        }
+
+        function showCart() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to view your cart.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            showModal('cartModal');
+            displayCart();
+        }
+
+        function displayCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p class="text-gray-600">Your cart is empty.</p>';
+                return;
+            }
+            let total = 0;
+            cartItemsDiv.innerHTML = cart.map((item, index) => {
+                total += item.price;
+                return `
+                    <div class="flex justify-between py-2 border-b items-center">
+                        <div>
+                            <span class="font-medium">${item.name}</span>
+                            ${item.size ? `<span class="text-gray-500 text-sm">(${item.size})</span>` : ''}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span>₹${item.price}</span>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700">Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            cartItemsDiv.innerHTML += `
+                <div class="flex justify-between py-2 font-bold">
+                    <span>Total</span>
+                    <span>₹${total}</span>
+                </div>
+            `;
+        }
+
+        async function placeOrder() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to place your order.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ items: cart, total })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const options = {
+                        key: 'rzp_test_1a2b3c4d5e6f7g', // Replace with actual RAZORPAY_KEY_ID
+                        amount: data.amount,
+                        currency: data.currency,
+                        name: 'Delicute',
+                        description: 'Order Payment',
+                        order_id: data.orderId,
+                        handler: async function (response) {
+                            const verifyResponse = await fetch(`${BASE_URL}/api/payment/verify`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    orderId: response.razorpay_order_id,
+                                    paymentId: response.razorpay_payment_id,
+                                    signature: response.razorpay_signature
+                                })
+                            });
+                            const verifyData = await verifyResponse.json();
+                            if (verifyResponse.ok) {
+                                showToast('Order placed successfully!', 'success');
+                                cart = [];
+                                localStorage.removeItem('cart');
+                                closeModal('cartModal');
+                                displayCart();
+                            } else {
+                                showToast(verifyData.error || 'Payment verification failed.', 'error');
+                            }
+                        },
+                        prefill: {
+                            name: 'Customer Name',
+                            email: 'customer@example.com',
+                            contact: '9999999999'
+                        },
+                        theme: { color: '#f59e0b' }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    showToast(data.error || 'Failed to create order.', 'error');
+                }
+            } catch (error) {
+                console.error('Order placement error:', error);
+                showToast('Failed to place order.', 'error');
+            }
+        }
+
+        async function submitForm() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            if (name && email && message) {
+                showToast('Thank you for your message!', 'success');
                 document.getElementById('name').value = '';
                 document.getElementById('email').value = '';
                 document.getElementById('message').value = '';
-            } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+            } else {
+                showToast('Please fill in all fields.', 'error');
             }
         }
 
-        // Initialize page
-        function initialize() {
-            if (isInitialized) return;
-            isInitialized = true;
-
-            setupSmoothScrolling();
-            setupHamburgerMenu();
-            renderSpecialOffers();
-            renderMenu();
-
-            // Handle Google OAuth callback
-            if (window.location.pathname === '/auth/callback' || window.location.search.includes('token')) {
-                handleGoogleCallback();
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu`);
+                menuItemsData = await response.json();
+                categories = [...new Set(menuItemsData.map(item => item.category))];
+                populateCategoryFilters();
+                displayMenuItems(menuItemsData.slice(0, 6));
+            } catch (error) {
+                console.error('Error fetching menu items:', error);
+                document.getElementById('menuItems').innerHTML = '<p class="text-red-500">Failed to load menu items.</p>';
             }
+        }
 
-            // Check if already logged in
+        async function fetchOfferItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers`);
+                offerItemsData = await response.json();
+                displayOfferItems(offerItemsData);
+            } catch (error) {
+                console.error('Error fetching offer items:', error);
+                document.getElementById('offerItems').innerHTML = '<p class="text-red-500">Failed to load offers.</p>';
+            }
+        }
+
+        function populateCategoryFilters() {
+            const categoryFilter = document.getElementById('categoryFilter');
+            const fullMenuCategoryFilter = document.getElementById('fullMenuCategoryFilter');
+            categoryFilter.innerHTML = '<option value="">All Categories</option>' + 
+                categories.map(category => `<option value="${category}">${category}</option>`).join('');
+            fullMenuCategoryFilter.innerHTML = categoryFilter.innerHTML;
+        }
+
+        function displayMenuItems(items) {
+            const menuItemsDiv = document.getElementById('menuItems');
+            if (items.length === 0) {
+                menuItemsDiv.innerHTML = '<p class="text-gray-600">No items found.</p>';
+                return;
+            }
+            menuItemsDiv.innerHTML = items.map(item => {
+                const availableSizes = Object.keys(item.prices).filter(size => item.prices[size]);
+                return `
+                    <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
+                            <p class="text-gray-600 mt-2">${item.description || 'No description available'}</p>
+                            <div class="mt-2">
+                                <p class="text-gray-700">Prices:</p>
+                                <ul class="text-yellow-500">
+                                    ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="mt-4">
+                                <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
+                                    <option value="">Select Size</option>
+                                    ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-4 btn-primary w-full">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayOfferItems(items) {
+            const offerItemsDiv = document.getElementById('offerItems');
+            if (items.length === 0) {
+                offerItemsDiv.innerHTML = '<p class="text-gray-600">No offers available.</p>';
+                return;
+            }
+            offerItemsDiv.innerHTML = items.map(item => `
+                <div class="offer-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
+                        <p class="text-gray-600 mt-2">${item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)}, "offer")' class="mt-4 btn-primary w-full">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayFullMenuItems(items) {
+            const fullMenuItemsDiv = document.getElementById('fullMenuItems');
+            if (items.length === 0) {
+                fullMenuItemsDiv.innerHTML = '<p class="text-gray-600">No items found.</p>';
+                return;
+            }
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = items.slice(start, end);
+            fullMenuItemsDiv.innerHTML = paginatedItems.map(item => {
+                const availableSizes = Object.keys(item.prices).filter(size => item.prices[size]);
+                return `
+                    <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
+                            <p class="text-gray-600 mt-2">${item.description || 'No description available'}</p>
+                            <div class="mt-2">
+                                <p class="text-gray-700">Prices:</p>
+                                <ul class="text-yellow-500">
+                                    ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="mt-4">
+                                <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
+                                    <option value="">Select Size</option>
+                                    ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-4 btn-primary w-full">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            updatePagination(items.length);
+        }
+
+        function updatePagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevPage').classList.toggle('disabled', currentPage === 1);
+            document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            filterFullMenu();
+        }
+
+        function showFullMenu() {
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('fullMenuContainer').classList.add('active');
+            currentPage = 1;
+            filterFullMenu();
+        }
+
+        function hideFullMenu() {
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('fullMenuContainer').classList.remove('active');
+            filterMenu();
+        }
+
+        function updatePriceRange() {
+            const priceRange = document.getElementById('priceRange').value;
+            document.getElementById('priceRangeValue').textContent = `₹30 - ₹${priceRange}`;
+            filterMenu();
+        }
+
+        function updateFullMenuPriceRange() {
+            const priceRange = document.getElementById('fullMenuPriceRange').value;
+            document.getElementById('fullMenuPriceRangeValue').textContent = `₹30 - ₹${priceRange}`;
+            filterFullMenu();
+        }
+
+        function filterMenu() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('priceRange').value);
+
+            const filteredItems = menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
+                    (item.description && item.description.toLowerCase().includes(searchQuery));
+                const matchesCategory = category ? item.category === category : true;
+                const matchesPrice = Object.values(item.prices).some(price => price && price <= maxPrice);
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+
+            displayMenuItems(filteredItems.slice(0, 6));
+        }
+
+        function filterFullMenu() {
+            const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase();
+            const category = document.getElementById('fullMenuCategoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange').value);
+
+            const filteredItems = menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
+                    (item.description && item.description.toLowerCase().includes(searchQuery));
+                const matchesCategory = category ? item.category === category : true;
+                const matchesPrice = Object.values(item.prices).some(price => price && price <= maxPrice);
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+
+            displayFullMenuItems(filteredItems);
+        }
+
+        window.onload = () => {
             const token = localStorage.getItem('token');
             if (token) {
-                try {
-                    const user = JSON.parse(localStorage.getItem('user'));
-                    if (user) {
-                        console.log('User already logged in:', user);
-                        // Optionally redirect to dashboard
-                        // window.location.href = '/userdashboard.html';
-                    }
-                } catch (err) {
-                    console.error('Invalid user data in localStorage:', err);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
+                window.location.href = '/userdashboard.html';
             }
-        }
-
-        // Run initialization
-        document.addEventListener('DOMContentLoaded', initialize);
+            const urlParams = new URLSearchParams(window.location.search);
+            const googleToken = urlParams.get('token');
+            if (googleToken) {
+                localStorage.setItem('token', googleToken);
+                window.location.href = '/userdashboard.html';
+            }
+            fetchMenuItems();
+            fetchOfferItems();
+        };
     </script>
 </body>
 </html>
