@@ -15,6 +15,7 @@
               "dotenv": "^16.5.0",
               "express": "^4.21.2",
               "fs": "^0.0.1-security",
+              "googleapis": "^149.0.0",
               "jsonwebtoken": "^9.0.2",
               "multer": "^1.4.5-lts.1",
               "nodemailer": "^7.0.3",
