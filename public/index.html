@@ -632,22 +632,31 @@
         }
 
         function addToCart(item, type = 'menu') {
-            const sizeSelect = type === 'menu' ? document.getElementById(`size-${item._id}`) : null;
-            let price, size;
+            let price, size = null;
             if (type === 'menu') {
-                size = sizeSelect ? sizeSelect.value : null;
-                if (!size) {
-                    showToast('Please select a size.', 'error');
-                    return;
-                }
-                price = item.prices[size];
-                if (!price) {
-                    showToast(`No price available for ${size} size.`, 'error');
+                if (item.price && !item.prices) {
+                    // Single price, no sizes
+                    price = item.price;
+                } else if (item.prices) {
+                    // Multiple sizes available
+                    const sizeSelect = document.getElementById(`size-${item._id}`);
+                    size = sizeSelect ? sizeSelect.value : null;
+                    if (!size) {
+                        showToast('Please select a size.', 'error');
+                        return;
+                    }
+                    price = item.prices[size];
+                    if (!price) {
+                        showToast(`No price available for ${size} size.`, 'error');
+                        return;
+                    }
+                } else {
+                    showToast('No price available for this item.', 'error');
                     return;
                 }
             } else {
+                // Offer item
                 price = item.price;
-                size = null;
             }
             cart.push({ id: item._id, name: item.name, price, size, type });
             localStorage.setItem('cart', JSON.stringify(cart));
@@ -827,25 +836,30 @@
                 return;
             }
             menuItemsDiv.innerHTML = items.map(item => {
-                const availableSizes = Object.keys(item.prices).filter(size => item.prices[size]);
+                const hasSizes = item.prices && Object.keys(item.prices).length > 0;
+                const availableSizes = hasSizes ? Object.keys(item.prices).filter(size => item.prices[size]) : [];
                 return `
                     <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
                         <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover">
                         <div class="p-6">
                             <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
                             <p class="text-gray-600 mt-2">${item.description || 'No description available'}</p>
-                            <div class="mt-2">
-                                <p class="text-gray-700">Prices:</p>
-                                <ul class="text-yellow-500">
-                                    ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
-                                </ul>
-                            </div>
-                            <div class="mt-4">
-                                <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
-                                    <option value="">Select Size</option>
-                                    ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
-                                </select>
-                            </div>
+                            ${item.price && !hasSizes ? `
+                                <p class="text-yellow-500 font-bold mt-2">₹${item.price}</p>
+                            ` : hasSizes ? `
+                                <div class="mt-2">
+                                    <p class="text-gray-700">Prices:</p>
+                                    <ul class="text-yellow-500">
+                                        ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="mt-4">
+                                    <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
+                                        <option value="">Select Size</option>
+                                        ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
+                                    </select>
+                                </div>
+                            ` : ''}
                             <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-4 btn-primary w-full">Add to Cart</button>
                         </div>
                     </div>
@@ -882,25 +896,30 @@
             const end = start + itemsPerPage;
             const paginatedItems = items.slice(start, end);
             fullMenuItemsDiv.innerHTML = paginatedItems.map(item => {
-                const availableSizes = Object.keys(item.prices).filter(size => item.prices[size]);
+                const hasSizes = item.prices && Object.keys(item.prices).length > 0;
+                const availableSizes = hasSizes ? Object.keys(item.prices).filter(size => item.prices[size]) : [];
                 return `
                     <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
                         <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover">
                         <div class="p-6">
                             <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
                             <p class="text-gray-600 mt-2">${item.description || 'No description available'}</p>
-                            <div class="mt-2">
-                                <p class="text-gray-700">Prices:</p>
-                                <ul class="text-yellow-500">
-                                    ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
-                                </ul>
-                            </div>
-                            <div class="mt-4">
-                                <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
-                                    <option value="">Select Size</option>
-                                    ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
-                                </select>
-                            </div>
+                            ${item.price && !hasSizes ? `
+                                <p class="text-yellow-500 font-bold mt-2">₹${item.price}</p>
+                            ` : hasSizes ? `
+                                <div class="mt-2">
+                                    <p class="text-gray-700">Prices:</p>
+                                    <ul class="text-yellow-500">
+                                        ${availableSizes.map(size => `<li>${size.charAt(0).toUpperCase() + size.slice(1)}: ₹${item.prices[size]}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="mt-4">
+                                    <select id="size-${item._id}" class="input-field w-full p-2 border rounded-md">
+                                        <option value="">Select Size</option>
+                                        ${availableSizes.map(size => `<option value="${size}">${size.charAt(0).toUpperCase() + size.slice(1)}</option>`).join('')}
+                                    </select>
+                                </div>
+                            ` : ''}
                             <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-4 btn-primary w-full">Add to Cart</button>
                         </div>
                     </div>
@@ -955,7 +974,9 @@
                 const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
                     (item.description && item.description.toLowerCase().includes(searchQuery));
                 const matchesCategory = category ? item.category === category : true;
-                const matchesPrice = Object.values(item.prices).some(price => price && price <= maxPrice);
+                const matchesPrice = item.price ? 
+                    item.price <= maxPrice : 
+                    (item.prices && Object.values(item.prices).some(price => price && price <= maxPrice));
                 return matchesSearch && matchesCategory && matchesPrice;
             });
 
@@ -971,7 +992,9 @@
                 const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
                     (item.description && item.description.toLowerCase().includes(searchQuery));
                 const matchesCategory = category ? item.category === category : true;
-                const matchesPrice = Object.values(item.prices).some(price => price && price <= maxPrice);
+                const matchesPrice = item.price ? 
+                    item.price <= maxPrice : 
+                    (item.prices && Object.values(item.prices).some(price => price && price <= maxPrice));
                 return matchesSearch && matchesCategory && matchesPrice;
             });
 
