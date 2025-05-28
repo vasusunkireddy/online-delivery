@@ -307,26 +307,30 @@
     <div id="editMenuModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editMenuModal')">×</span>
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Edit Menu Item</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-3">Edit Menu Item</h2>
             <input type="hidden" id="editItemId">
             <div>
-                <label for="editItemName" class="block text-gray-700 font-medium mb-2">Item Name</label>
+                <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-2">Item Name</label>
                 <input type="text" id="editItemName" class="input-field w-full" placeholder="Item Name">
             </div>
             <div class="mt-4">
-                <label for="editItemPriceRegular" class="block text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
-                <input type="number" id="editItemPriceRegular" class="input-field w-full" placeholder="Regular Price">
+                <label for="editItemPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹, Optional)</label>
+                <input type="number" id="editItemPrice" class="input-field w-full" placeholder="Price">
             </div>
             <div class="mt-4">
-                <label for="editItemPriceClassic" class="block text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
-                <input type="number" id="editItemPriceClassic" class="input-field w-full" placeholder="Classic Price">
+                <label for="editItemPriceRegular" class="block text-sm text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                <input type="number" id="editItemPriceRegular" class="input-field w-full" placeholder="Price Regular">
             </div>
             <div class="mt-4">
-                <label for="editItemPriceLarge" class="block text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
-                <input type="number" id="editItemPriceLarge" class="input-field w-full" placeholder="Large Price">
+                <label for="editItemPriceClassic" class="block text-sm text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                <input type="number" id="editItemPriceClassic" class="input-field w-full" placeholder="Price Classic">
             </div>
             <div class="mt-4">
-                <label for="editItemCategory" class="block text-gray-700 font-medium mb-2">Category</label>
+                <label for="editItemPriceLarge" class="block text-sm text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                <input type="number" id="editItemPriceLarge" class="input-field w-full" placeholder="Price Large">
+            </div>
+            <div class="mt-4">
+                <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
                 <select id="editItemCategory" class="input-field w-full">
                     <option value="">Select Category</option>
                     <option value="Veg Pizza">Veg Pizza</option>
@@ -342,15 +346,15 @@
                 </select>
             </div>
             <div class="mt-4">
-                <label for="editItemImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
                 <input type="text" id="editItemImage" class="input-field w-full" placeholder="Image URL">
             </div>
             <div class="mt-4">
-                <label for="editItemImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                <label for="editItemImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
                 <input type="file" id="editItemImageUpload" class="input-field w-full" accept="image/*">
             </div>
             <div class="mt-4">
-                <label for="editItemDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
                 <textarea id="editItemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
             </div>
             <div class="mt-6">
@@ -548,23 +552,27 @@
                 <h4 class="text-xl font-medium text-gray-700 mb-6">Add New Menu Item</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="itemName" class="block text-gray-700 font-medium mb-2">Item Name</label>
+                        <label for="itemName" class="block text-sm text-gray-700 font-medium mb-2">Item Name</label>
                         <input type="text" id="itemName" class="input-field w-full" placeholder="Item Name">
                     </div>
                     <div>
-                        <label for="itemPriceRegular" class="block text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
-                        <input type="number" id="itemPriceRegular" class="input-field w-full" placeholder="Regular Price">
+                        <label for="itemPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹, Optional)</label>
+                        <input type="number" id="itemPrice" class="input-field w-full" placeholder="Price">
                     </div>
                     <div>
-                        <label for="itemPriceClassic" class="block text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
-                        <input type="number" id="itemPriceClassic" class="input-field w-full" placeholder="Classic Price">
+                        <label for="itemPriceRegular" class="block text-sm text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                        <input type="number" id="itemPriceRegular" class="input-field w-full" placeholder="Price Regular">
                     </div>
                     <div>
-                        <label for="itemPriceLarge" class="block text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
-                        <input type="number" id="itemPriceLarge" class="input-field w-full" placeholder="Large Price">
+                        <label for="itemPriceClassic" class="block text-sm text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                        <input type="number" id="itemPriceClassic" class="input-field w-full" placeholder="Price Classic">
                     </div>
                     <div>
-                        <label for="itemCategory" class="block text-gray-700 font-medium mb-2">Category</label>
+                        <label for="itemPriceLarge" class="block text-sm text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                        <input type="number" id="itemPriceLarge" class="input-field w-full" placeholder="Price Large">
+                    </div>
+                    <div>
+                        <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
                         <select id="itemCategory" class="input-field w-full">
                             <option value="">Select Category</option>
                             <option value="Veg Pizza">Veg Pizza</option>
@@ -580,15 +588,15 @@
                         </select>
                     </div>
                     <div>
-                        <label for="itemImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                        <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
                         <input type="text" id="itemImage" class="input-field w-full" placeholder="Image URL">
                     </div>
                     <div class="md:col-span-2">
-                        <label for="itemImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                        <label for="itemImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
                         <input type="file" id="itemImageUpload" class="input-field w-full" accept="image/*">
                     </div>
                     <div class="md:col-span-2">
-                        <label for="itemDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                        <label for="itemDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
                         <textarea id="itemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
                     </div>
                 </div>
@@ -606,6 +614,7 @@
                                 <th>Image</th>
                                 <th>Name</th>
                                 <th>Category</th>
+                                <th>Price</th>
                                 <th>Prices</th>
                                 <th>Actions</th>
                             </tr>
@@ -935,6 +944,7 @@
                     </td>
                     <td class="py-2 px-4">${item.name}</td>
                     <td class="py-2 px-4">${item.category}</td>
+                    <td class="py-2 px-4">${item.price ? `₹${item.price}` : 'N/A'}</td>
                     <td class="py-2 px-4">
                         ${item.prices ? `
                             ${item.prices.regular ? `Regular: ₹${item.prices.regular}<br>` : ''}
@@ -952,6 +962,7 @@
 
         async function addMenuItem() {
             const name = document.getElementById('itemName').value;
+            const price = parseFloat(document.getElementById('itemPrice').value) || null;
             const priceRegular = parseFloat(document.getElementById('itemPriceRegular').value) || null;
             const priceClassic = parseFloat(document.getElementById('itemPriceClassic').value) || null;
             const priceLarge = parseFloat(document.getElementById('itemPriceLarge').value) || null;
@@ -960,7 +971,7 @@
             const file = document.getElementById('itemImageUpload').files[0];
             const description = document.getElementById('itemDescription').value;
 
-            if (!name && !category && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+            if (!name && !category && !price && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
                 showToast('Please fill in at least one field.', 'error');
                 return;
             }
@@ -982,6 +993,7 @@
                     },
                     body: JSON.stringify({
                         name,
+                        price,
                         prices: Object.keys(prices).length ? prices : null,
                         category,
                         image: uploadedImageUrl || null,
@@ -992,6 +1004,7 @@
                 if (response.ok) {
                     showToast('Menu item added successfully!', 'success');
                     document.getElementById('itemName').value = '';
+                    document.getElementById('itemPrice').value = '';
                     document.getElementById('itemPriceRegular').value = '';
                     document.getElementById('itemPriceClassic').value = '';
                     document.getElementById('itemPriceLarge').value = '';
@@ -1019,6 +1032,7 @@
                 .then(item => {
                     document.getElementById('editItemId').value = item._id;
                     document.getElementById('editItemName').value = item.name || '';
+                    document.getElementById('editItemPrice').value = item.price || '';
                     document.getElementById('editItemPriceRegular').value = item.prices?.regular || '';
                     document.getElementById('editItemPriceClassic').value = item.prices?.classic || '';
                     document.getElementById('editItemPriceLarge').value = item.prices?.large || '';
@@ -1036,6 +1050,7 @@
         async function updateMenuItem() {
             const id = document.getElementById('editItemId').value;
             const name = document.getElementById('editItemName').value;
+            const price = parseFloat(document.getElementById('editItemPrice').value) || null;
             const priceRegular = parseFloat(document.getElementById('editItemPriceRegular').value) || null;
             const priceClassic = parseFloat(document.getElementById('editItemPriceClassic').value) || null;
             const priceLarge = parseFloat(document.getElementById('editItemPriceLarge').value) || null;
@@ -1044,7 +1059,7 @@
             const file = document.getElementById('editItemImageUpload').files[0];
             const description = document.getElementById('editItemDescription').value;
 
-            if (!name && !category && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+            if (!name && !category && !price && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
                 showToast('Please fill in at least one field.', 'error');
                 return;
             }
@@ -1066,6 +1081,7 @@
                     },
                     body: JSON.stringify({
                         name,
+                        price,
                         prices: Object.keys(prices).length ? prices : null,
                         category,
                         image: uploadedImageUrl || null,
@@ -1563,6 +1579,7 @@
         async function viewCustomerDetails(customerId) {
             try {
                 const response = await fetch(`${BASE_URL}/api/customers/${customerId}`, {
+                    
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     }
@@ -1570,27 +1587,35 @@
                 const customer = await response.json();
                 document.getElementById('customerName').textContent = customer.name;
                 document.getElementById('customerEmail').textContent = customer.email;
-                document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
+                                document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
                 document.getElementById('customerStatus').textContent = customer.isBlocked ? 'Blocked' : 'Active';
-                document.getElementById('blockUnblockBtn').textContent = customer.isBlocked ? 'Unblock' : 'Block';
-                document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerBlock(customerId, !customer.isBlocked);
+                document.getElementById('blockUnblockBtn').textContent = customer.isBlocked ? 'Unblock Customer' : 'Block Customer';
+                document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerBlock(customer._id, !customer.isBlocked);
 
-                const ordersResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const orders = await ordersResponse.json();
-                const orderHistory = document.getElementById('customerOrderHistory');
-                orderHistory.innerHTML = orders.length > 0 ? orders.map(order => `
-                    <div class="border-b py-2">
-                        <p><strong>Order ID:</strong> ${order._id}</p>
-                        <p><strong>Total:</strong> ₹${order.total}</p>
-                        <p><strong>Status:</strong> ${order.status}</p>
-                    </div>
-                `).join('') : '<p>No orders found.</p>';
-
-                                     showModal('customerDetailsModal');
+                const orderHistory = customer.orderHistory || [];
+                document.getElementById('customerOrderHistory').innerHTML = `
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="py-2 px-4">Order ID</th>
+                                <th class="py-2 px-4">Total</th>
+                                <th class="py-2 px-4">Status</th>
+                                <th class="py-2 px-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orderHistory.map(order => `
+                                <tr class="border-b">
+                                    <td class="py-2 px-4">${order._id}</td>
+                                    <td class="py-2 px-4">₹${order.total}</td>
+                                    <td class="py-2 px-4">${order.status}</td>
+                                    <td class="py-2 px-4">${new Date(order.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                showModal('customerDetailsModal');
             } catch (error) {
                 console.error('Error viewing customer details:', error);
                 showToast('Failed to load customer details.', 'error');
