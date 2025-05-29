@@ -27,7 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 // File Upload Setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/uploads/');
+    cb(null, 'public/uploads');
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -61,91 +61,140 @@ const pool = new Pool({
 // Initialize Database
 async function initializeDatabase() {
   try {
-    console.log('Attempting to connect to PostgreSQL with DATABASE_URL:', DATABASE_URL ? '[REDACTED]' : 'undefined');
+    console.log('Attempting to connect to PostgreSQL...');
     const client = await pool.connect();
     console.log('✅ Connected to PostgreSQL database');
 
-    // Drop existing tables
-    await client.query(`
-      DROP TABLE IF EXISTS orders CASCADE;
-      DROP TABLE IF EXISTS offers CASCADE;
-      DROP TABLE IF EXISTS menu_items CASCADE;
-      DROP TABLE IF EXISTS users CASCADE;
-      DROP TABLE IF EXISTS restaurant_status CASCADE;
+    const tableCheck = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name IN ('users', 'menu_items', 'offers', 'orders', 'restaurant_status', 'coupons', 'contact_messages')
     `);
-    console.log('🧹 Dropped existing tables');
+    const existingTables = tableCheck.rows.map(row => row.table_name);
 
-    // Create tables
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        phone VARCHAR(20),
-        password VARCHAR(255),
-        is_admin BOOLEAN DEFAULT FALSE,
-        is_blocked BOOLEAN DEFAULT FALSE,
-        profile_image VARCHAR(255),
-        reset_otp VARCHAR(6),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    if (!existingTables.includes('users')) {
+      await client.query(`
+        CREATE TABLE users (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          phone VARCHAR(20),
+          password VARCHAR(255),
+          is_admin BOOLEAN DEFAULT FALSE,
+          is_blocked BOOLEAN DEFAULT FALSE,
+          profile_image VARCHAR(255),
+          reset_otp VARCHAR(6),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created users table');
+    }
+
+    if (!existingTables.includes('menu_items')) {
+      await client.query(`
+        CREATE TABLE menu_items (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          category VARCHAR(100) NOT NULL,
+          description TEXT,
+          prices JSONB NOT NULL,
+          image VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created menu_items table');
+    }
+
+    if (!existingTables.includes('offers')) {
+      await client.query(`
+        CREATE TABLE offers (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          description TEXT,
+          price INTEGER NOT NULL,
+          image VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created offers table');
+    }
+
+    if (!existingTables.includes('orders')) {
+      await client.query(`
+        CREATE TABLE orders (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          items JSONB NOT NULL,
+          total INTEGER NOT NULL,
+          status VARCHAR(50) DEFAULT 'Pending',
+          payment_status VARCHAR(50) DEFAULT 'Pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created orders table');
+    }
+
+    if (!existingTables.includes('restaurant_status')) {
+      await client.query(`
+        CREATE TABLE restaurant_status (
+          id SERIAL PRIMARY KEY,
+          status VARCHAR(50) DEFAULT 'Closed',
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        INSERT INTO restaurant_status (status) 
+        VALUES ('Closed') 
+        ON CONFLICT DO NOTHING;
+      `);
+      console.log('✅ Created restaurant_status table and initialized status');
+    }
+
+    if (!existingTables.includes('coupons')) {
+      await client.query(`
+        CREATE TABLE coupons (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          discount INTEGER NOT NULL,
+          description TEXT,
+          image VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created coupons table');
+    }
+
+    if (!existingTables.includes('contact_messages')) {
+      await client.query(`
+        CREATE TABLE contact_messages (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          subject VARCHAR(255) NOT NULL,
+          message TEXT NOT NULL,
+          status VARCHAR(50) DEFAULT 'Pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created contact_messages table');
+    }
+
+    const adminCheck = await client.query('SELECT * FROM users WHERE is_admin = TRUE LIMIT 1');
+    if (adminCheck.rows.length === 0) {
+      const defaultAdminEmail = 'admin@delicute.com';
+      const defaultAdminPassword = await bcrypt.hash('Admin123!', 10);
+      await client.query(
+        `INSERT INTO users (name, email, phone, password, is_admin) 
+         VALUES ($1, $2, $3, $4, $5) 
+         ON CONFLICT (email) DO NOTHING`,
+        ['Default Admin', defaultAdminEmail, '1234567890', defaultAdminPassword, true]
       );
+      console.log('✅ Created default admin user');
+    }
 
-      CREATE TABLE IF NOT EXISTS menu_items (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        category VARCHAR(100) NOT NULL,
-        description TEXT,
-        prices JSONB NOT NULL,
-        image VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS offers (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        price INTEGER NOT NULL,
-        image VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        items JSONB NOT NULL,
-        total INTEGER NOT NULL,
-        status VARCHAR(50) DEFAULT 'Pending',
-        payment_status VARCHAR(50) DEFAULT 'Pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS restaurant_status (
-        id SERIAL PRIMARY KEY,
-        status VARCHAR(50) DEFAULT 'Closed',
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Initialize restaurant status
-    await client.query(`
-      INSERT INTO restaurant_status (status) 
-      VALUES ('Closed') 
-      ON CONFLICT DO NOTHING;
-    `);
-
-    console.log('✅ Database tables created successfully');
-    const tables = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-    console.log('📋 Public tables:', tables.rows.map(row => row.table_name));
-
+    console.log('✅ Database initialization completed');
     client.release();
   } catch (error) {
-    console.error('❌ Database initialization failed:', {
-      message: error.message,
-      code: error.code,
-      errno: error.errno,
-      syscall: error.syscall,
-      stack: error.stack
-    });
+    console.error('❌ Database initialization failed:', error);
     throw error;
   }
 }
@@ -204,33 +253,28 @@ async function authenticateAdmin(req, res, next) {
     next();
   } catch (error) {
     console.error('Admin authentication error:', error);
-    res.status(403).json({ error: 'Invalid token or user not found' });
+    res.status(500).json({ error: 'Invalid token or user not found' });
   }
 }
 
 // Routes
 
-// Serve Index Page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Serve Admin Page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Serve Admin Dashboard
 app.get('/admindashboard.html', authenticateToken, authenticateAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admindashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Serve User Dashboard
 app.get('/userdashboard.html', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'));
 });
 
-// File Upload Endpoint
 app.post('/api/files/upload', authenticateToken, authenticateAdmin, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
@@ -239,7 +283,6 @@ app.post('/api/files/upload', authenticateToken, authenticateAdmin, upload.singl
   res.json({ fileUrl });
 });
 
-// Get Admin Profile
 app.get('/api/auth/admin/me', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT id, email, name, phone, profile_image, is_admin FROM users WHERE id = $1', [req.user.id]);
@@ -259,7 +302,6 @@ app.get('/api/auth/admin/me', authenticateToken, authenticateAdmin, async (req, 
   }
 });
 
-// Update Admin Profile Image
 app.put('/api/auth/admin/profile', authenticateToken, authenticateAdmin, async (req, res) => {
   const { profileImage } = req.body;
   if (!profileImage) {
@@ -286,7 +328,6 @@ app.put('/api/auth/admin/profile', authenticateToken, authenticateAdmin, async (
   }
 });
 
-// Get Menu Items
 app.get('/api/menu', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM menu_items ORDER BY created_at DESC');
@@ -306,7 +347,6 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-// Get Menu Item by ID
 app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -327,16 +367,28 @@ app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
   }
 });
 
-// Add Menu Item
 app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => {
   const { name, category, prices, image, description } = req.body;
-  if (!name || !category || !prices || (!prices.regular && !prices.medium && !prices.large)) {
-    return res.status(400).json({ error: 'Name, category, and at least one price required' });
+  console.log('Received menu item data:', { name, category, prices, image, description }); // Debug log
+
+  if (!name || !category) {
+    return res.status(400).json({ error: 'Name and category are required' });
   }
+
+  // Allow prices to be optional, default to empty object
+  const validatedPrices = prices && typeof prices === 'object' ? prices : {};
+  
+  // Validate prices if provided
+  for (const [key, value] of Object.entries(validatedPrices)) {
+    if (typeof value !== 'number' || value <= 0) {
+      return res.status(400).json({ error: `Price for ${key} must be a positive number` });
+    }
+  }
+
   try {
     const result = await pool.query(
       'INSERT INTO menu_items (name, category, prices, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, category, prices, image, description]
+      [name, category, JSON.stringify(validatedPrices), image, description]
     );
     const item = result.rows[0];
     res.status(201).json({
@@ -353,17 +405,29 @@ app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => 
   }
 });
 
-// Update Menu Item
 app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { name, category, prices, image, description } = req.body;
-  if (!name || !category || !prices || (!prices.regular && !prices.medium && !prices.large)) {
-    return res.status(400).json({ error: 'Name, category, and at least one price required' });
+  console.log('Received update menu item data:', { id, name, category, prices, image, description }); // Debug log
+
+  if (!name || !category) {
+    return res.status(400).json({ error: 'Name and category are required' });
   }
+
+  // Allow prices to be optional, default to empty object
+  const validatedPrices = prices && typeof prices === 'object' ? prices : {};
+  
+  // Validate prices if provided
+  for (const [key, value] of Object.entries(validatedPrices)) {
+    if (typeof value !== 'number' || value <= 0) {
+      return res.status(400).json({ error: `Price for ${key} must be a positive number` });
+    }
+  }
+
   try {
     const result = await pool.query(
       'UPDATE menu_items SET name = $1, category = $2, prices = $3, image = $4, description = $5 WHERE id = $6 RETURNING *',
-      [name, category, prices, image, description, id]
+      [name, category, JSON.stringify(validatedPrices), image, description, id]
     );
     const item = result.rows[0];
     if (!item) return res.status(404).json({ error: 'Menu item not found' });
@@ -381,7 +445,6 @@ app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
   }
 });
 
-// Delete Menu Item
 app.delete('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -396,7 +459,6 @@ app.delete('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, re
   }
 });
 
-// Get Offers
 app.get('/api/offers', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM offers ORDER BY created_at DESC');
@@ -415,7 +477,6 @@ app.get('/api/offers', async (req, res) => {
   }
 });
 
-// Get Offer by ID
 app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -435,7 +496,6 @@ app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
   }
 });
 
-// Add Offer
 app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) => {
   const { name, price, image, description } = req.body;
   if (!name || !price) {
@@ -460,7 +520,6 @@ app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) =
   }
 });
 
-// Update Offer
 app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { name, price, image, description } = req.body;
@@ -487,7 +546,6 @@ app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res
   }
 });
 
-// Delete Offer
 app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -502,7 +560,242 @@ app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, 
   }
 });
 
-// Get All Orders (Admin)
+app.get('/api/coupons', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
+    const coupons = result.rows.map(coupon => ({
+      _id: coupon.id,
+      code: coupon.code,
+      discount: coupon.discount,
+      description: coupon.description,
+      image: coupon.image,
+      created_at: coupon.created_at
+    }));
+    res.json(coupons);
+  } catch (error) {
+    console.error('Error fetching coupons:', error);
+    res.status(500).json({ error: 'Failed to fetch coupons' });
+  }
+});
+
+app.get('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM coupons WHERE id = $1', [id]);
+    const coupon = result.rows[0];
+    if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
+    res.json({
+      _id: coupon.id,
+      code: coupon.code,
+      discount: coupon.discount,
+      description: coupon.description,
+      image: coupon.image
+    });
+  } catch (error) {
+    console.error('Error fetching coupon:', error);
+    res.status(500).json({ error: 'Failed to fetch coupon' });
+  }
+});
+
+app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { code, discount, image, description } = req.body;
+  if (!code || !discount) {
+    return res.status(400).json({ error: 'Code and discount are required' });
+  }
+  if (typeof discount !== 'number' || discount < 1 || discount > 100) {
+    return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
+  }
+  try {
+    const codeCheck = await pool.query('SELECT * FROM coupons WHERE code = $1', [code]);
+    if (codeCheck.rows.length > 0) {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+    const result = await pool.query(
+      'INSERT INTO coupons (code, discount, image, description) VALUES ($1, $2, $3, $4) RETURNING *',
+      [code, discount, image, description]
+    );
+    const coupon = result.rows[0];
+    res.status(201).json({
+      _id: coupon.id,
+      code: coupon.code,
+      discount: coupon.discount,
+      description: coupon.description,
+      image: coupon.image,
+      created_at: coupon.created_at
+    });
+  } catch (error) {
+    console.error('Error adding coupon:', error);
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+    res.status(500).json({ error: 'Failed to add coupon' });
+  }
+});
+
+app.put('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { code, discount, image, description } = req.body;
+  if (!code || !discount) {
+    return res.status(400).json({ error: 'Code and discount are required' });
+  }
+  if (typeof discount !== 'number' || discount < 1 || discount > 100) {
+    return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
+  }
+  try {
+    const codeCheck = await pool.query('SELECT * FROM coupons WHERE code = $1 AND id != $2', [code, id]);
+    if (codeCheck.rows.length > 0) {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+    const result = await pool.query(
+      'UPDATE coupons SET code = $1, discount = $2, image = $3, description = $4 WHERE id = $5 RETURNING *',
+      [code, discount, image, description, id]
+    );
+    const coupon = result.rows[0];
+    if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
+    res.json({
+      _id: coupon.id,
+      code: coupon.code,
+      discount: coupon.discount,
+      description: coupon.description,
+      image: coupon.image
+    });
+  } catch (error) {
+    console.error('Error updating coupon:', error);
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+    res.status(500).json({ error: 'Failed to update coupon' });
+  }
+});
+
+app.delete('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM coupons WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+    res.json({ message: 'Coupon deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting coupon:', error);
+    res.status(500).json({ error: 'Failed to delete coupon' });
+  }
+});
+
+app.get('/api/contact', authenticateToken, authenticateAdmin, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const messages = result.rows.map(message => ({
+      _id: message.id,
+      name: message.name,
+      email: message.email,
+      subject: message.subject,
+      message: message.message,
+      status: message.status,
+      created_at: message.created_at
+    }));
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching contact messages:', error);
+    res.status(500).json({ error: 'Failed to fetch contact messages' });
+  }
+});
+
+app.get('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM contact_messages WHERE id = $1', [id]);
+    const message = result.rows[0];
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    res.json({
+      _id: message.id,
+      name: message.name,
+      email: message.email,
+      subject: message.subject,
+      message: message.message,
+      status: message.status,
+      created_at: message.created_at
+    });
+  } catch (error) {
+    console.error('Error fetching contact message:', error);
+    res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  try {
+    const result = await pool.query(
+      'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, email, subject, message]
+    );
+    const newMessage = result.rows[0];
+    res.status(201).json({
+      _id: newMessage.id,
+      name: newMessage.name,
+      email: newMessage.email,
+      subject: newMessage.subject,
+      message: newMessage.message,
+      status: newMessage.status,
+      created_at: newMessage.created_at
+    });
+  } catch (error) {
+    console.error('Error adding contact message:', error);
+    res.status(500).json({ error: 'Failed to add contact message' });
+  }
+});
+
+app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { subject, reply } = req.body;
+  if (!subject || !reply) {
+    return res.status(400).json({ error: 'Subject and reply are required' });
+  }
+  try {
+    const messageResult = await pool.query('SELECT email, name FROM contact_messages WHERE id = $1', [id]);
+    const message = messageResult.rows[0];
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    await transporter.sendMail({
+      from: `"Delicute" <${EMAIL_USER}>`,
+      to: message.email,
+      subject: subject,
+      text: reply,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #f59e0b;">Delicute</h2>
+          <p>Dear ${message.name},</p>
+          <p>${reply}</p>
+          <p>Best regards,<br>Delicute Team</p>
+        </div>
+      `
+    });
+
+    await pool.query('UPDATE contact_messages SET status = $1 WHERE id = $2', ['Replied', id]);
+    res.json({ message: 'Reply sent successfully' });
+  } catch (error) {
+    console.error('Error sending reply:', error);
+    res.status(500).json({ error: 'Failed to send reply' });
+  }
+});
+
+app.delete('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM contact_messages WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+    res.json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting contact message:', error);
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
 app.get('/api/orders', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -528,7 +821,6 @@ app.get('/api/orders', authenticateToken, authenticateAdmin, async (req, res) =>
   }
 });
 
-// Update Order Status
 app.put('/api/orders/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -554,7 +846,6 @@ app.put('/api/orders/:id', authenticateToken, authenticateAdmin, async (req, res
   }
 });
 
-// Refund Order
 app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -565,7 +856,6 @@ app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    // Note: Actual Razorpay refund logic would go here if implemented
     res.json({ message: 'Order refunded successfully' });
   } catch (error) {
     console.error('Error processing refund:', error);
@@ -573,8 +863,7 @@ app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (
   }
 });
 
-// Get Orders by Customer
-app.get('/api/orders/customer/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+app.get('/api/orders/customer/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [id]);
@@ -582,6 +871,7 @@ app.get('/api/orders/customer/:id', authenticateToken, authenticateAdmin, async 
       _id: order.id,
       total: order.total,
       status: order.status,
+      paymentStatus: order.payment_status,
       items: order.items,
       created_at: order.created_at
     }));
@@ -592,8 +882,7 @@ app.get('/api/orders/customer/:id', authenticateToken, authenticateAdmin, async 
   }
 });
 
-// Get All Customers
-app.get('/api/customers', authenticateToken, authenticateAdmin, async (req, res) => {
+app.get('/api/users', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT id, name, email, phone, is_blocked FROM users WHERE is_admin = FALSE ORDER BY created_at DESC');
     const customers = result.rows.map(user => ({
@@ -601,7 +890,7 @@ app.get('/api/customers', authenticateToken, authenticateAdmin, async (req, res)
       name: user.name,
       email: user.email,
       phone: user.phone,
-      isBlocked: user.is_blocked
+      status: user.is_blocked ? 'Blocked' : 'Active'
     }));
     res.json(customers);
   } catch (error) {
@@ -610,19 +899,28 @@ app.get('/api/customers', authenticateToken, authenticateAdmin, async (req, res)
   }
 });
 
-// Get Customer by ID
-app.get('/api/customers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
+app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT id, name, email, phone, is_blocked FROM users WHERE id = $1 AND is_admin = FALSE', [id]);
-    const user = result.rows[0];
+    const userResult = await pool.query('SELECT id, name, email, phone, is_blocked FROM users WHERE id = $1 AND is_admin = FALSE', [id]);
+    const user = userResult.rows[0];
     if (!user) return res.status(404).json({ error: 'Customer not found' });
+
+    const ordersResult = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [id]);
+    const orders = ordersResult.rows.map(order => ({
+      _id: order.id,
+      total: order.total,
+      status: order.status,
+      createdAt: order.created_at
+    }));
+
     res.json({
       _id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
-      isBlocked: user.is_blocked
+      status: user.is_blocked ? 'Blocked' : 'Active',
+      orders
     });
   } catch (error) {
     console.error('Error fetching customer:', error);
@@ -630,10 +928,10 @@ app.get('/api/customers/:id', authenticateToken, authenticateAdmin, async (req, 
   }
 });
 
-// Block/Unblock Customer
-app.put('/api/customers/:id/block', authenticateToken, authenticateAdmin, async (req, res) => {
+app.put('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { isBlocked } = req.body;
+  const { status } = req.body;
+  const isBlocked = status === 'Blocked';
   try {
     const result = await pool.query(
       'UPDATE users SET is_blocked = $1 WHERE id = $2 AND is_admin = FALSE RETURNING id, name, email, phone, is_blocked',
@@ -648,16 +946,15 @@ app.put('/api/customers/:id/block', authenticateToken, authenticateAdmin, async 
       name: user.name,
       email: user.email,
       phone: user.phone,
-      isBlocked: user.is_blocked
+      status: user.is_blocked ? 'Blocked' : 'Active'
     });
   } catch (error) {
-    console.error('Error updating customer block status:', error);
-    res.status(500).json({ error: 'Failed to update customer block status' });
+    console.error('Error updating customer status:', error);
+    res.status(500).json({ error: 'Failed to update customer status' });
   }
 });
 
-// Get Restaurant Status
-app.get('/api/restaurant-status', authenticateToken, authenticateAdmin, async (req, res) => {
+app.get('/api/restaurant/status', async (req, res) => {
   try {
     const result = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
     const status = result.rows[0]?.status || 'Closed';
@@ -668,17 +965,23 @@ app.get('/api/restaurant-status', authenticateToken, authenticateAdmin, async (r
   }
 });
 
-// Update Restaurant Status
-app.put('/api/restaurant-status', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { status } = req.body;
+app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (req, res) => {
+  let { status } = req.body;
+  status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   if (!['Open', 'Closed'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
   try {
-    await pool.query(
-      'UPDATE restaurant_status SET status = $1, updated_at = CURRENT_TIMESTAMP',
+    const result = await pool.query(
+      'UPDATE restaurant_status SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1 RETURNING *',
       [status]
     );
+    if (result.rows.length === 0) {
+      await pool.query(
+        'INSERT INTO restaurant_status (id, status, updated_at) VALUES (1, $1, CURRENT_TIMESTAMP) RETURNING *',
+        [status]
+      );
+    }
     res.json({ status });
   } catch (error) {
     console.error('Error updating restaurant status:', error);
@@ -686,7 +989,6 @@ app.put('/api/restaurant-status', authenticateToken, authenticateAdmin, async (r
   }
 });
 
-// User Signup
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !phone || !password) {
@@ -711,7 +1013,6 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// User Login
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -734,7 +1035,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Admin Signup
 app.post('/api/auth/admin/signup', async (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !phone || !password) {
@@ -759,7 +1059,6 @@ app.post('/api/auth/admin/signup', async (req, res) => {
   }
 });
 
-// Admin Login
 app.post('/api/auth/admin/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -782,7 +1081,6 @@ app.post('/api/auth/admin/login', async (req, res) => {
   }
 });
 
-// User Forgot Password
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -806,7 +1104,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
-// User Reset Password
 app.post('/api/auth/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
   if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
@@ -827,7 +1124,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// Admin Forgot Password
 app.post('/api/auth/admin/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -851,8 +1147,7 @@ app.post('/api/auth/admin/forgot-password', async (req, res) => {
   }
 });
 
-// Admin Reset Password
-app.post('/api/auth/admin/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password/admin', async (req, res) => {
   const { email, otp, newPassword } = req.body;
   if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
   try {
@@ -872,7 +1167,6 @@ app.post('/api/auth/admin/reset-password', async (req, res) => {
   }
 });
 
-// Google OAuth Login
 app.get('/api/auth/google', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     scope: ['profile', 'email'],
@@ -899,7 +1193,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       user = result.rows[0];
     }
     if (user.is_blocked) {
-      return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
+      res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
     }
     const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
     res.redirect(`${CLIENT_URL}/userdashboard.html?token=${encodeURIComponent(token)}`);
@@ -909,7 +1203,6 @@ app.get('/api/auth/google/callback', async (req, res) => {
   }
 });
 
-// Create Order
 app.post('/api/orders', authenticateToken, async (req, res) => {
   const { items, total } = req.body;
   const userId = req.user.id;
@@ -935,8 +1228,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
   }
 });
 
-// Verify Payment
-app.post('/api/payment/verify', authenticateToken, async (req, res) => {
+app.post('/api/payment/verify', async (req, res) => {
   const { orderId, paymentId, signature } = req.body;
   try {
     const generatedSignature = crypto
@@ -944,30 +1236,32 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
       .update(`${orderId}|${paymentId}`)
       .digest('hex');
     if (generatedSignature === signature) {
-      await pool.query('UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3', ['Confirmed', 'Paid', orderId.split('_')[1]]);
+      const orderNum = orderId.split('_')[1];
+      await pool.query(
+        'UPDATE orders SET status=$1, payment_status=$2 WHERE id=$3',
+        ['Confirmed', 'Paid', orderNum]
+      );
       res.json({ message: 'Payment verified successfully' });
     } else {
       res.status(400).json({ error: 'Payment verification failed' });
     }
   } catch (error) {
-    console.error('Payment verification error:', error);
+    console.error('Error:', error);
     res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
 
-// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error('Unexpected error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start Server
 async function startServer() {
   try {
     await initializeDatabase();
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 }
