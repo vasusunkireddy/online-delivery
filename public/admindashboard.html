@@ -13,7 +13,10 @@
             color: #1f2937;
             margin: 0;
             position: relative;
+<<<<<<< HEAD
             min-height: 100vh;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
         }
         body::before {
             content: '';
@@ -29,7 +32,11 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+<<<<<<< HEAD
             padding: 2rem;
+=======
+            padding: 2.5rem;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             max-width: 1400px;
             width: 90%;
             margin: 2rem auto;
@@ -45,7 +52,10 @@
             border-radius: 8px;
             padding: 0.75rem;
             background: white;
+<<<<<<< HEAD
             width: 100%;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -269,6 +279,7 @@
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
+<<<<<<< HEAD
             word-break: break-word;
         }
         /* Mobile Responsive Styles */
@@ -324,6 +335,8 @@
                 width: 36px;
                 height: 36px;
             }
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
         }
     </style>
 </head>
@@ -356,6 +369,21 @@
                 <input type="file" id="profileImageUpload" class="input-field" accept="image/*">
             </div>
             <div class="mt-4">
+<<<<<<< HEAD
+=======
+                <label for="profileEmail" class="block text-gray-700 font-medium mb-2">Email</label>
+                <input type="email" id="profileEmail" class="input-field w-full" readonly>
+            </div>
+            <div class="mt-4">
+                <label for="profilePhone" class="block text-gray-700 font-medium mb-2">Phone Number</label>
+                <input type="tel" id="profilePhone" class="input-field w-full" readonly>
+            </div>
+            <div class="mt-4">
+                <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2">Upload Profile Image</label>
+                <input type="file" id="profileImageUpload" class="input-field w-full" accept="image/*">
+            </div>
+            <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button onclick="updateProfileImage()" class="auth-btn w-full">Update Profile Image</button>
             </div>
         </div>
@@ -365,6 +393,7 @@
     <div id="editMenuModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editMenuModal')">×</span>
+<<<<<<< HEAD
             <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Menu Item</h2>
             <input type="hidden" id="editItemId">
             <div>
@@ -390,6 +419,33 @@
             <div class="mt-3">
                 <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
                 <select id="editItemCategory" class="input-field">
+=======
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-3">Edit Menu Item</h2>
+            <input type="hidden" id="editItemId">
+            <div>
+                <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-2">Item Name</label>
+                <input type="text" id="editItemName" class="input-field w-full" placeholder="Item Name">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹, Optional)</label>
+                <input type="number" id="editItemPrice" class="input-field w-full" placeholder="Price">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPriceRegular" class="block text-sm text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                <input type="number" id="editItemPriceRegular" class="input-field w-full" placeholder="Price Regular">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPriceClassic" class="block text-sm text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                <input type="number" id="editItemPriceClassic" class="input-field w-full" placeholder="Price Classic">
+            </div>
+            <div class="mt-4">
+                <label for="editItemPriceLarge" class="block text-sm text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                <input type="number" id="editItemPriceLarge" class="input-field w-full" placeholder="Price Large">
+            </div>
+            <div class="mt-4">
+                <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
+                <select id="editItemCategory" class="input-field w-full">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     <option value="">Select Category</option>
                     <option value="Veg Pizza">Veg Pizza</option>
                     <option value="Non-Veg Pizza">Non-Veg Pizza</option>
@@ -403,6 +459,7 @@
                     <option value="Desserts">Desserts</option>
                 </select>
             </div>
+<<<<<<< HEAD
             <div class="mt-3">
                 <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
                 <input type="text" id="editItemImage" class="input-field" placeholder="Image URL">
@@ -416,6 +473,21 @@
                 <textarea id="editItemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
             </div>
             <div class="mt-4">
+=======
+            <div class="mt-4">
+                <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                <input type="text" id="editItemImage" class="input-field w-full" placeholder="Image URL">
+            </div>
+            <div class="mt-4">
+                <label for="editItemImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                <input type="file" id="editItemImageUpload" class="input-field w-full" accept="image/*">
+            </div>
+            <div class="mt-4">
+                <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
+                <textarea id="editItemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
+            </div>
+            <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button onclick="updateMenuItem()" class="auth-btn w-full">Update Item</button>
             </div>
         </div>
@@ -448,6 +520,25 @@
                 <textarea id="editOfferDescription" class="input-field" rows="4" placeholder="Offer Description"></textarea>
             </div>
             <div class="mt-4">
+<<<<<<< HEAD
+=======
+                <label for="editOfferPrice" class="block text-gray-700 font-medium mb-2">Price (₹)</label>
+                <input type="number" id="editOfferPrice" class="input-field w-full" placeholder="Price">
+            </div>
+            <div class="mt-4">
+                <label for="editOfferImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                <input type="text" id="editOfferImage" class="input-field w-full" placeholder="Image URL">
+            </div>
+            <div class="mt-4">
+                <label for="editOfferImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                <input type="file" id="editOfferImageUpload" class="input-field w-full" accept="image/*">
+            </div>
+            <div class="mt-4">
+                <label for="editOfferDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                <textarea id="editOfferDescription" class="input-field w-full" rows="4" placeholder="Offer Description"></textarea>
+            </div>
+            <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button onclick="updateOffer()" class="auth-btn w-full">Update Offer</button>
             </div>
         </div>
@@ -460,6 +551,7 @@
             <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Coupon</h2>
             <input type="hidden" id="editCouponId">
             <div>
+<<<<<<< HEAD
                 <label for="editCouponCode" class="block text-sm text-gray-700 font-medium mb-1">Coupon Code</label>
                 <input type="text" id="editCouponCode" class="input-field" placeholder="e.g., DELICUTE10">
             </div>
@@ -480,6 +572,28 @@
                 <textarea id="editCouponDescription" class="input-field" rows="4" placeholder="Coupon Description"></textarea>
             </div>
             <div class="mt-4">
+=======
+                <label for="editCouponCode" class="block text-gray-700 font-medium mb-2">Coupon Code (Optional)</label>
+                <input type="text" id="editCouponCode" class="input-field w-full" placeholder="Coupon Code">
+            </div>
+            <div class="mt-4">
+                <label for="editCouponDiscount" class="block text-gray-700 font-medium mb-2">Discount (%)</label>
+                <input type="number" id="editCouponDiscount" class="input-field w-full" placeholder="Discount Percentage" min="1" max="100">
+            </div>
+            <div class="mt-4">
+                <label for="editCouponImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                <input type="text" id="editCouponImage" class="input-field w-full" placeholder="Image URL">
+            </div>
+            <div class="mt-4">
+                <label for="editCouponImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                <input type="file" id="editCouponImageUpload" class="input-field w-full" accept="image/*">
+            </div>
+            <div class="mt-4">
+                <label for="editCouponDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                <textarea id="editCouponDescription" class="input-field w-full" rows="4" placeholder="Coupon Description"></textarea>
+            </div>
+            <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button onclick="updateCoupon()" class="auth-btn w-full">Update Coupon</button>
             </div>
         </div>
@@ -500,7 +614,11 @@
                 <h3 class="text-base font-medium text-gray-700 mb-2">Order History</h3>
                 <div id="customerOrderHistory" class="table-container"></div>
             </div>
+<<<<<<< HEAD
             <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+=======
+            <div class="mt-6 flex space-x-4">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button id="blockUnblockBtn" class="auth-btn px-4 py-2"></button>
                 <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 px-4 py-2">Close</button>
             </div>
@@ -511,6 +629,7 @@
     <div id="replyContactModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('replyContactModal')">×</span>
+<<<<<<< HEAD
             <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Reply to Message</h2>
             <input type="hidden" id="contactMessageId">
             <div>
@@ -522,6 +641,19 @@
                 <textarea id="contactReplyMessage" class="input-field" rows="5" placeholder="Your reply..."></textarea>
             </div>
             <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+=======
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reply to Message</h2>
+            <input type="hidden" id="contactMessageId">
+            <div>
+                <label for="contactReplySubject" class="block text-gray-700 font-medium mb-2">Subject</label>
+                <input type="text" id="contactReplySubject" class="input-field w-full" placeholder="Reply Subject">
+            </div>
+            <div class="mt-4">
+                <label for="contactReplyMessage" class="block text-gray-700 font-medium mb-2">Reply Message</label>
+                <textarea id="contactReplyMessage" class="input-field w-full" rows="6" placeholder="Your reply..."></textarea>
+            </div>
+            <div class="mt-6 flex space-x-4">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <button onclick="sendReply()" class="auth-btn w-full">Send Reply</button>
                 <button onclick="closeModal('replyContactModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 w-full">Cancel</button>
             </div>
@@ -579,14 +711,21 @@
                     <p id="pendingOrders" class="text-2xl font-bold text-yellow-500 mt-2">0</p>
                 </div>
                 <div class="stat-card">
+<<<<<<< HEAD
                     <h3 class="text-sm font-semibold text-gray-700">Restaurant Status</h3>
                     <p id="restaurantStatus" class="text-2xl font-bold text-yellow-500 mt-2">Closed</p>
                     <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-3 py-1 mt-2 text-sm">Open Restaurant</button>
+=======
+                    <h3 class="text-lg font-semibold text-gray-700">Restaurant Status</h3>
+                    <p id="restaurantStatus" class="text-3xl font-bold text-yellow-500 mt-3">Closed</p>
+                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-4 py-2 mt-3">Open Restaurant</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 </div>
             </div>
         </section>
 
         <!-- Profile Section -->
+<<<<<<< HEAD
         <section id="profileSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Admin Profile</h3>
             <div class="bg-white p-6 rounded-lg shadow-md">
@@ -598,6 +737,19 @@
                 <p class="text-sm mt-2"><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
                 <div class="mt-4">
                     <button onclick="showModal('profileModal')" class="auth-btn px-4 py-2">Edit Profile Image</button>
+=======
+        <section id="profileSection" class="mb-12 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-6">Admin Profile</h3>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <div class="flex justify-center mb-6">
+                    <img id="displayProfileImage" src="https://via.placeholder.com/100" alt="Profile" class="w-28 h-28 rounded-full border-4 border-yellow-500 object-cover">
+                </div>
+                <p class="text-lg"><strong>Name:</strong> <span id="displayProfileName"></span></p>
+                <p class="text-lg mt-2"><strong>Email:</strong> <span id="displayProfileEmail"></span></p>
+                <p class="text-lg mt-2"><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
+                <div class="mt-6">
+                    <button onclick="showModal('profileModal')" class="auth-btn px-6 py-3">Edit Profile Image</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 </div>
             </div>
         </section>
@@ -610,6 +762,7 @@
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Menu Item</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
+<<<<<<< HEAD
                         <label for="itemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
                         <input type="text" id="itemName" class="input-field" placeholder="Item Name">
                     </div>
@@ -632,6 +785,30 @@
                     <div>
                         <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
                         <select id="itemCategory" class="input-field">
+=======
+                        <label for="itemName" class="block text-sm text-gray-700 font-medium mb-2">Item Name</label>
+                        <input type="text" id="itemName" class="input-field w-full" placeholder="Item Name">
+                    </div>
+                    <div>
+                        <label for="itemPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹, Optional)</label>
+                        <input type="number" id="itemPrice" class="input-field w-full" placeholder="Price">
+                    </div>
+                    <div>
+                        <label for="itemPriceRegular" class="block text-sm text-gray-700 font-medium mb-2">Price Regular (₹, Optional)</label>
+                        <input type="number" id="itemPriceRegular" class="input-field w-full" placeholder="Price Regular">
+                    </div>
+                    <div>
+                        <label for="itemPriceClassic" class="block text-sm text-gray-700 font-medium mb-2">Price Classic (₹, Optional)</label>
+                        <input type="number" id="itemPriceClassic" class="input-field w-full" placeholder="Price Classic">
+                    </div>
+                    <div>
+                        <label for="itemPriceLarge" class="block text-sm text-gray-700 font-medium mb-2">Price Large (₹, Optional)</label>
+                        <input type="number" id="itemPriceLarge" class="input-field w-full" placeholder="Price Large">
+                    </div>
+                    <div>
+                        <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
+                        <select id="itemCategory" class="input-field w-full">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                             <option value="">Select Category</option>
                             <option value="Veg Pizza">Veg Pizza</option>
                             <option value="Non-Veg Pizza">Non-Veg Pizza</option>
@@ -646,6 +823,7 @@
                         </select>
                     </div>
                     <div>
+<<<<<<< HEAD
                         <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
                         <input type="text" id="itemImage" class="input-field" placeholder="Image URL">
                     </div>
@@ -659,6 +837,21 @@
                     </div>
                 </div>
                 <div class="mt-4">
+=======
+                        <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                        <input type="text" id="itemImage" class="input-field w-full" placeholder="Image URL">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="itemImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                        <input type="file" id="itemImageUpload" class="input-field w-full" accept="image/*">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="itemDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
+                        <textarea id="itemDescription" class="input-field w-full" rows="4" placeholder="Item Description"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     <button onclick="addMenuItem()" class="auth-btn w-full">Add Item</button>
                 </div>
             </div>
@@ -729,12 +922,21 @@
                         <label for="offerImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
                         <input type="file" id="offerImageUpload" class="input-field" accept="image/*">
                     </div>
+<<<<<<< HEAD
                     <div class="sm:col-span-2">
                         <label for="offerDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
                         <textarea id="offerDescription" class="input-field" rows="4" placeholder="Offer Description"></textarea>
                     </div>
                 </div>
                 <div class="mt-4">
+=======
+                    <div class="md:col-span-2">
+                        <label for="offerDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                        <textarea id="offerDescription" class="input-field w-full" rows="4" placeholder="Offer Description"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     <button onclick="addOffer()" class="auth-btn w-full">Add Offer</button>
                 </div>
             </div>
@@ -761,6 +963,7 @@
         <section id="couponsSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Coupons</h3>
             <!-- Add Coupon Form -->
+<<<<<<< HEAD
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Coupon</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -786,12 +989,44 @@
                     </div>
                 </div>
                 <div class="mt-4">
+=======
+            <div class="bg-white p-8 rounded-lg shadow-md mb-8">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Add New Coupon</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="couponCode" class="block text-gray-700 font-medium mb-2">Coupon Code (Optional)</label>
+                        <input type="text" id="couponCode" class="input-field w-full" placeholder="Coupon Code">
+                    </div>
+                    <div>
+                        <label for="couponDiscount" class="block text-gray-700 font-medium mb-2">Discount (%) (Optional)</label>
+                        <input type="number" id="couponDiscount" class="input-field w-full" placeholder="Discount Percentage" min="1" max="100">
+                    </div>
+                    <div>
+                        <label for="couponImage" class="block text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                        <input type="text" id="couponImage" class="input-field w-full" placeholder="Image URL">
+                    </div>
+                    <div>
+                        <label for="couponImageUpload" class="block text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                        <input type="file" id="couponImageUpload" class="input-field w-full" accept="image/*">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="couponDescription" class="block text-gray-700 font-medium mb-2">Description (Optional)</label>
+                        <textarea id="couponDescription" class="input-field w-full" rows="4" placeholder="Coupon Description"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     <button onclick="addCoupon()" class="auth-btn w-full">Add Coupon</button>
                 </div>
             </div>
             <!-- Coupons Table -->
+<<<<<<< HEAD
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Coupons</h4>
+=======
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Coupons</h4>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <div class="table-container">
                     <table>
                         <thead>
@@ -809,10 +1044,17 @@
         </section>
 
         <!-- Customer Management Section -->
+<<<<<<< HEAD
         <section id="customersSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Customers</h3>
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Customers</h4>
+=======
+        <section id="customersSection" class="mb-12 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-6">Manage Customers</h3>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Customers</h4>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <div class="table-container">
                     <table>
                         <thead>
@@ -831,10 +1073,17 @@
         </section>
 
         <!-- Contact Messages Section -->
+<<<<<<< HEAD
         <section id="contactSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Contact Messages</h3>
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Messages</h4>
+=======
+        <section id="contactSection" class="mb-12 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-6">Manage Contact Messages</h3>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h4 class="text-xl font-medium text-gray-700 mb-6">Messages</h4>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 <div class="table-container">
                     <table>
                         <thead>
@@ -997,6 +1246,7 @@
             const menuTableBody = document.getElementById('menuTableBody');
             menuTableBody.innerHTML = items.map(item => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">
                         ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
                     </td>
@@ -1013,17 +1263,40 @@
                     <td class="py-2 px-3 flex space-x-2">
                         <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
                         <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+=======
+                    <td class="py-2 px-4">
+                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${item.name}</td>
+                    <td class="py-2 px-4">${item.category}</td>
+                    <td class="py-2 px-4">${item.price ? `₹${item.price}` : 'N/A'}</td>
+                    <td class="py-2 px-4">
+                        ${item.prices ? `
+                            ${item.prices.regular ? `Regular: ₹${item.prices.regular}<br>` : ''}
+                            ${item.prices.classic ? `Classic: ₹${item.prices.classic}<br>` : ''}
+                            ${item.prices.large ? `Large: ₹${item.prices.large}` : ''}
+                        ` : 'N/A'}
+                    </td>
+                    <td class="py-2 px-4">
+                        <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
         }
 
         async function addMenuItem() {
+<<<<<<< HEAD
             const name = document.getElementById('itemName').value.trim();
+=======
+            const name = document.getElementById('itemName').value;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             const price = parseFloat(document.getElementById('itemPrice').value) || null;
             const priceRegular = parseFloat(document.getElementById('itemPriceRegular').value) || null;
             const priceClassic = parseFloat(document.getElementById('itemPriceClassic').value) || null;
             const priceLarge = parseFloat(document.getElementById('itemPriceLarge').value) || null;
+<<<<<<< HEAD
             const category = document.getElementById('itemCategory').value.trim();
             const imageUrl = document.getElementById('itemImage').value.trim();
             const file = document.getElementById('itemImageUpload').files[0];
@@ -1036,6 +1309,15 @@
 
             if (!price && !priceRegular && !priceClassic && !priceLarge) {
                 showToast('At least one price field (Price, Regular, Classic, or Large) must be provided.', 'error');
+=======
+            const category = document.getElementById('itemCategory').value;
+            const imageUrl = document.getElementById('itemImage').value;
+            const file = document.getElementById('itemImageUpload').files[0];
+            const description = document.getElementById('itemDescription').value;
+
+            if (!name && !category && !price && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 return;
             }
 
@@ -1044,7 +1326,12 @@
             if (priceClassic) prices.classic = priceClassic;
             if (priceLarge) prices.large = priceLarge;
 
+<<<<<<< HEAD
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`, {
@@ -1054,12 +1341,21 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
+<<<<<<< HEAD
                         name: name || null,
                         price: price || null,
                         prices: Object.keys(prices).length ? prices : null,
                         category: category || null,
                         image: uploadedImageUrl || null,
                         description: description || null
+=======
+                        name,
+                        price,
+                        prices: Object.keys(prices).length ? prices : null,
+                        category,
+                        image: uploadedImageUrl || null,
+                        description
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     })
                 });
                 const data = await response.json();
@@ -1111,11 +1407,16 @@
 
         async function updateMenuItem() {
             const id = document.getElementById('editItemId').value;
+<<<<<<< HEAD
             const name = document.getElementById('editItemName').value.trim();
+=======
+            const name = document.getElementById('editItemName').value;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             const price = parseFloat(document.getElementById('editItemPrice').value) || null;
             const priceRegular = parseFloat(document.getElementById('editItemPriceRegular').value) || null;
             const priceClassic = parseFloat(document.getElementById('editItemPriceClassic').value) || null;
             const priceLarge = parseFloat(document.getElementById('editItemPriceLarge').value) || null;
+<<<<<<< HEAD
             const category = document.getElementById('editItemCategory').value.trim();
             const imageUrl = document.getElementById('editItemImage').value.trim();
             const file = document.getElementById('editItemImageUpload').files[0];
@@ -1128,6 +1429,15 @@
 
             if (!price && !priceRegular && !priceClassic && !priceLarge) {
                 showToast('At least one price field (Price, Regular, Classic, or Large) must be provided.', 'error');
+=======
+            const category = document.getElementById('editItemCategory').value;
+            const imageUrl = document.getElementById('editItemImage').value;
+            const file = document.getElementById('editItemImageUpload').files[0];
+            const description = document.getElementById('editItemDescription').value;
+
+            if (!name && !category && !price && !priceRegular && !priceClassic && !priceLarge && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 return;
             }
 
@@ -1136,7 +1446,12 @@
             if (priceClassic) prices.classic = priceClassic;
             if (priceLarge) prices.large = priceLarge;
 
+<<<<<<< HEAD
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/menu/${id}`, {
@@ -1146,12 +1461,21 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
+<<<<<<< HEAD
                         name: name || null,
                         price: price || null,
                         prices: Object.keys(prices).length ? prices : null,
                         category: category || null,
                         image: uploadedImageUrl || null,
                         description: description || null
+=======
+                        name,
+                        price,
+                        prices: Object.keys(prices).length ? prices : null,
+                        category,
+                        image: uploadedImageUrl || null,
+                        description
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     })
                 });
                 const data = await response.json();
@@ -1169,7 +1493,10 @@
         }
 
         async function deleteMenuItem(itemId) {
+<<<<<<< HEAD
             if (!confirm('Are you sure you want to delete this menu item?')) return;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
                     method: 'DELETE',
@@ -1211,6 +1538,7 @@
             const orderTableBody = document.getElementById('orderTableBody');
             orderTableBody.innerHTML = orders.map(order => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">${order._id}</td>
                     <td class="py-2 px-3">${order.customerName || 'N/A'}</td>
                     <td class="py-2 px-3">₹${order.total.toFixed(2)}</td>
@@ -1218,12 +1546,25 @@
                     <td class="py-2 px-3">${order.paymentStatus || 'Pending'}</td>
                     <td class="py-2 px-3 flex space-x-2">
                         <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-1 border rounded-md text-sm">
+=======
+                    <td class="py-2 px-4">${order._id}</td>
+                    <td class="py-2 px-4">${order.customerName || 'N/A'}</td>
+                    <td class="py-2 px-4">₹${order.total}</td>
+                    <td class="py-2 px-4">${order.status}</td>
+                    <td class="py-2 px-4">${order.paymentStatus || 'Pending'}</td>
+                    <td class="py-2 px-4">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-1 border rounded-md">
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                             <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                             <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
+<<<<<<< HEAD
                         ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Refund</button>` : ''}
+=======
+                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 mt-2">Refund</button>` : ''}
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
@@ -1253,7 +1594,10 @@
         }
 
         async function refundOrder(orderId) {
+<<<<<<< HEAD
             if (!confirm('Are you sure you want to refund this order?')) return;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
                     method: 'POST',
@@ -1293,6 +1637,7 @@
             const offerTableBody = document.getElementById('offerTableBody');
             offerTableBody.innerHTML = offers.map(offer => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">
                         ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
                     </td>
@@ -1301,12 +1646,23 @@
                     <td class="py-2 px-3 flex space-x-2">
                         <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
                         <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+=======
+                    <td class="py-2 px-4">
+                        ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${offer.name}</td>
+                    <td class="py-2 px-4">₹${offer.price}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
         }
 
         async function addOffer() {
+<<<<<<< HEAD
             const name = document.getElementById('offerName').value.trim();
             const price = parseFloat(document.getElementById('offerPrice').value) || null;
             const imageUrl = document.getElementById('offerImage').value.trim();
@@ -1319,6 +1675,21 @@
             }
 
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const name = document.getElementById('offerName').value;
+            const price = parseFloat(document.getElementById('offerPrice').value) || null;
+            const imageUrl = document.getElementById('offerImage').value;
+            const file = document.getElementById('offerImageUpload').files[0];
+            const description = document.getElementById('offerDescription').value;
+
+            if (!name && !price && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/offers`, {
@@ -1328,10 +1699,17 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
+<<<<<<< HEAD
                         name: name || null,
                         price: price || null,
                         image: uploadedImageUrl || null,
                         description: description || null
+=======
+                        name,
+                        price,
+                        image: uploadedImageUrl || null,
+                        description
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     })
                 });
                 const data = await response.json();
@@ -1375,6 +1753,7 @@
 
         async function updateOffer() {
             const id = document.getElementById('editOfferId').value;
+<<<<<<< HEAD
             const name = document.getElementById('editOfferName').value.trim();
             const price = parseFloat(document.getElementById('editOfferPrice').value) || null;
             const imageUrl = document.getElementById('editOfferImage').value.trim();
@@ -1387,6 +1766,21 @@
             }
 
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const name = document.getElementById('editOfferName').value;
+            const price = parseFloat(document.getElementById('editOfferPrice').value) || null;
+            const imageUrl = document.getElementById('editOfferImage').value;
+            const file = document.getElementById('editOfferImageUpload').files[0];
+            const description = document.getElementById('editOfferDescription').value;
+
+            if (!name && !price && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
@@ -1396,10 +1790,17 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
+<<<<<<< HEAD
                         name: name || null,
                         price: price || null,
                         image: uploadedImageUrl || null,
                         description: description || null
+=======
+                        name,
+                        price,
+                        image: uploadedImageUrl || null,
+                        description
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     })
                 });
                 const data = await response.json();
@@ -1417,7 +1818,10 @@
         }
 
         async function deleteOffer(id) {
+<<<<<<< HEAD
             if (!confirm('Are you sure you want to delete this offer?')) return;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
                     method: 'DELETE',
@@ -1457,6 +1861,7 @@
             const couponTableBody = document.getElementById('couponTableBody');
             couponTableBody.innerHTML = coupons.map(coupon => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">
                         ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
                     </td>
@@ -1465,12 +1870,23 @@
                     <td class="py-2 px-3 flex space-x-2">
                         <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
                         <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+=======
+                    <td class="py-2 px-4">
+                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
+                    </td>
+                    <td class="py-2 px-4">${coupon.code || 'N/A'}</td>
+                    <td class="py-2 px-4">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Edit</button>
+                        <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
         }
 
         async function addCoupon() {
+<<<<<<< HEAD
             const code = document.getElementById('couponCode').value.trim();
             const discount = parseInt(document.getElementById('couponDiscount').value) || null;
             const imageUrl = document.getElementById('couponImage').value.trim();
@@ -1483,11 +1899,30 @@
             }
 
             if (discount < 1 || discount > 100) {
+=======
+            const code = document.getElementById('couponCode').value;
+            const discount = parseFloat(document.getElementById('couponDiscount').value) || null;
+            const imageUrl = document.getElementById('couponImage').value;
+            const file = document.getElementById('couponImageUpload').files[0];
+            const description = document.getElementById('couponDescription').value;
+
+            if (!code && !discount && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            if (discount && (discount < 1 || discount > 100)) {
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
+<<<<<<< HEAD
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
@@ -1544,6 +1979,7 @@
 
         async function updateCoupon() {
             const id = document.getElementById('editCouponId').value;
+<<<<<<< HEAD
             const code = document.getElementById('editCouponCode').value.trim();
             const discount = parseInt(document.getElementById('editCouponDiscount').value) || null;
             const imageUrl = document.getElementById('editCouponImage').value.trim();
@@ -1556,11 +1992,30 @@
             }
 
             if (discount < 1 || discount > 100) {
+=======
+            const code = document.getElementById('editCouponCode').value;
+            const discount = parseFloat(document.getElementById('editCouponDiscount').value) || null;
+            const imageUrl = document.getElementById('editCouponImage').value;
+            const file = document.getElementById('editCouponImageUpload').files[0];
+            const description = document.getElementById('editCouponDescription').value;
+
+            if (!code && !discount && !imageUrl && !file && !description) {
+                showToast('Please fill in at least one field.', 'error');
+                return;
+            }
+
+            if (discount && (discount < 1 || discount > 100)) {
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
+<<<<<<< HEAD
             const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+=======
+            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl;
+            if (file && !uploadedImageUrl) return;
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
@@ -1576,7 +2031,11 @@
                         description: description || null
                     })
                 });
+<<<<<<< HEAD
                                 const data = await response.json();
+=======
+                const data = await response.json();
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 if (response.ok) {
                     showToast('Coupon updated successfully!', 'success');
                     closeModal('editCouponModal');
@@ -1591,7 +2050,10 @@
         }
 
         async function deleteCoupon(id) {
+<<<<<<< HEAD
             if (!confirm('Are you sure you want to delete this coupon?')) return;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
                     method: 'DELETE',
@@ -1614,7 +2076,11 @@
 
         async function fetchCustomers() {
             try {
+<<<<<<< HEAD
                 const response = await fetch(`${BASE_URL}/api/users`, {
+=======
+                const response = await fetch(`${BASE_URL}/api/customers`, {
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     }
@@ -1631,12 +2097,21 @@
             const customerTableBody = document.getElementById('customerTableBody');
             customerTableBody.innerHTML = customers.map(customer => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">${customer.name || 'N/A'}</td>
                     <td class="py-2 px-3">${customer.email || 'N/A'}</td>
                     <td class="py-2 px-3">${customer.phone || 'N/A'}</td>
                     <td class="py-2 px-3">${customer.status || 'Active'}</td>
                     <td class="py-2 px-3">
                         <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">View</button>
+=======
+                    <td class="py-2 px-4">${customer.name}</td>
+                    <td class="py-2 px-4">${customer.email}</td>
+                    <td class="py-2 px-4">${customer.phone || 'N/A'}</td>
+                    <td class="py-2 px-4">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">View</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
@@ -1644,12 +2119,18 @@
 
         async function viewCustomerDetails(customerId) {
             try {
+<<<<<<< HEAD
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
+=======
+                const response = await fetch(`${BASE_URL}/api/customers/${customerId}`, {
+                    
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 });
                 const customer = await response.json();
+<<<<<<< HEAD
                 if (response.ok) {
                     document.getElementById('customerName').textContent = customer.name || 'N/A';
                     document.getElementById('customerEmail').textContent = customer.email || 'N/A';
@@ -1687,19 +2168,61 @@
                 }
             } catch (error) {
                 console.error('Error fetching customer details:', error);
+=======
+                document.getElementById('customerName').textContent = customer.name;
+                document.getElementById('customerEmail').textContent = customer.email;
+                                document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
+                document.getElementById('customerStatus').textContent = customer.isBlocked ? 'Blocked' : 'Active';
+                document.getElementById('blockUnblockBtn').textContent = customer.isBlocked ? 'Unblock Customer' : 'Block Customer';
+                document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerBlock(customer._id, !customer.isBlocked);
+
+                const orderHistory = customer.orderHistory || [];
+                document.getElementById('customerOrderHistory').innerHTML = `
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="py-2 px-4">Order ID</th>
+                                <th class="py-2 px-4">Total</th>
+                                <th class="py-2 px-4">Status</th>
+                                <th class="py-2 px-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orderHistory.map(order => `
+                                <tr class="border-b">
+                                    <td class="py-2 px-4">${order._id}</td>
+                                    <td class="py-2 px-4">₹${order.total}</td>
+                                    <td class="py-2 px-4">${order.status}</td>
+                                    <td class="py-2 px-4">${new Date(order.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                showModal('customerDetailsModal');
+            } catch (error) {
+                console.error('Error viewing customer details:', error);
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 showToast('Failed to load customer details.', 'error');
             }
         }
 
+<<<<<<< HEAD
         async function toggleCustomerStatus(customerId, currentStatus) {
             const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
             try {
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
+=======
+        async function toggleCustomerBlock(customerId, block) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/customers/${customerId}/block`, {
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
+<<<<<<< HEAD
                     body: JSON.stringify({ status: newStatus })
                 });
                 const data = await response.json();
@@ -1713,6 +2236,21 @@
             } catch (error) {
                 console.error(`Error ${newStatus.toLowerCase()}ing customer:`, error);
                 showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+=======
+                    body: JSON.stringify({ isBlocked: block })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(`Customer ${block ? 'blocked' : 'unblocked'} successfully!`, 'success');
+                    closeModal('customerDetailsModal');
+                    fetchCustomers();
+                } else {
+                    showToast(data.error || 'Failed to update customer status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling customer block:', error);
+                showToast('Failed to update customer status.', 'error');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             }
         }
 
@@ -1735,6 +2273,7 @@
             const contactTableBody = document.getElementById('contactTableBody');
             contactTableBody.innerHTML = messages.map(message => `
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="py-2 px-3">${message.name || 'N/A'}</td>
                     <td class="py-2 px-3">${message.email || 'N/A'}</td>
                     <td class="py-2 px-3">${message.subject || 'No Subject'}</td>
@@ -1743,11 +2282,24 @@
                     <td class="py-2 px-3 flex space-x-2">
                         <button onclick="viewContactMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">View</button>
                         <button onclick="deleteContactMessage('${message._id}') || ''} class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+=======
+                    <td class="py-2 px-4">${message.name}</td>
+                    <td class="py-2 px-4">${message.email}</td>
+                    <td class="py-2 px-4">${message.subject}</td>
+                    <td class="py-2 px-4">
+                        <div class="contact-message">${message.message}</div>
+                    </td>
+                    <td class="py-2 px-4">${message.status || 'Pending'}</td>
+                    <td class="py-2 px-4">
+                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1">Reply</button>
+                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1">Delete</button>
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                     </td>
                 </tr>
             `).join('');
         }
 
+<<<<<<< HEAD
         async function viewContactMessage(messageId) {
             try {
                 const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
@@ -1768,15 +2320,30 @@
                 console.error('Error fetching contact message:', error);
                 showToast('Failed to load message.', 'error');
             }
+=======
+        function replyToMessage(messageId) {
+            document.getElementById('contactMessageId').value = messageId;
+            document.getElementById('contactReplySubject').value = '';
+            document.getElementById('contactReplyMessage').value = '';
+            showModal('replyContactModal');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
         }
 
         async function sendReply() {
             const messageId = document.getElementById('contactMessageId').value;
+<<<<<<< HEAD
             const subject = document.getElementById('contactReplySubject').value.trim();
             const replyMessage = document.getElementById('contactReplyMessage').value.trim();
 
             if (!subject || !replyMessage) {
                 showToast('Subject and reply message are required.', 'error');
+=======
+            const subject = document.getElementById('contactReplySubject').value;
+            const replyMessage = document.getElementById('contactReplyMessage').value;
+
+            if (!subject || !replyMessage) {
+                showToast('Please fill in all fields.', 'error');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 return;
             }
 
@@ -1804,7 +2371,10 @@
         }
 
         async function deleteContactMessage(messageId) {
+<<<<<<< HEAD
             if (!confirm('Are you sure you want to delete this message?')) return;
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
                     method: 'DELETE',
@@ -1820,19 +2390,27 @@
                     showToast(data.error || 'Failed to delete message.', 'error');
                 }
             } catch (error) {
+<<<<<<< HEAD
                 console.error('Error deleting message:', error);
+=======
+                console.error('Error deleting contact message:', error);
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 showToast('Failed to delete message.', 'error');
             }
         }
 
         async function toggleRestaurantStatus() {
+<<<<<<< HEAD
             const statusToggleBtn = document.getElementById('statusToggleBtn');
             const restaurantStatus = document.getElementById('restaurantStatus');
             const newStatus = restaurantStatus.textContent === 'Open' ? 'Closed' : 'Open';
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
             try {
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
                     method: 'PUT',
                     headers: {
+<<<<<<< HEAD
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
@@ -1843,18 +2421,37 @@
                     restaurantStatus.textContent = newStatus;
                     statusToggleBtn.textContent = newStatus === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
                     showToast(`Restaurant is now ${newStatus.toLowerCase()}!`, 'success');
+=======
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const status = data.isOpen ? 'Open' : 'Closed';
+                    document.getElementById('restaurantStatus').textContent = status;
+                    document.getElementById('statusToggleBtn').textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+                    showToast(`Restaurant is now ${status}!`, 'success');
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 } else {
                     showToast(data.error || 'Failed to update restaurant status.', 'error');
                 }
             } catch (error) {
+<<<<<<< HEAD
                 console.error('Error updating restaurant status:', error);
+=======
+                console.error('Error toggling restaurant status:', error);
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
                 showToast('Failed to update restaurant status.', 'error');
             }
         }
 
         function logout() {
             localStorage.removeItem('adminToken');
+<<<<<<< HEAD
             window.location.href = 'login.html';
+=======
+            window.location.href = 'admin.html';
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
         }
 
         // Initialize
@@ -1870,6 +2467,7 @@
             fetchCustomers();
             fetchContactMessages();
         }
+<<<<<<< HEAD
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
@@ -1879,6 +2477,8 @@
                 dropdown.classList.remove('active');
             }
         });
+=======
+>>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     </script>
 </body>
 </html>
