@@ -65,10 +65,7 @@ async function initializeDatabase() {
     const client = await pool.connect();
     console.log('✅ Connected to PostgreSQL database');
 
-<<<<<<< HEAD
-=======
     // Check if tables exist
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     const tableCheck = await client.query(`
       SELECT table_name 
       FROM information_schema.tables 
@@ -77,10 +74,7 @@ async function initializeDatabase() {
     `);
     const existingTables = tableCheck.rows.map(row => row.table_name);
 
-<<<<<<< HEAD
-=======
     // Create tables only if they don't exist
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     if (!existingTables.includes('users')) {
       await client.query(`
         CREATE TABLE users (
@@ -186,10 +180,7 @@ async function initializeDatabase() {
       console.log('✅ Created contact_messages table');
     }
 
-<<<<<<< HEAD
-=======
     // Ensure at least one admin user exists
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     const adminCheck = await client.query('SELECT * FROM users WHERE is_admin = TRUE LIMIT 1');
     if (adminCheck.rows.length === 0) {
       const defaultAdminEmail = 'admin@delicute.com';
@@ -204,12 +195,9 @@ async function initializeDatabase() {
     }
 
     console.log('✅ Database initialization completed');
-<<<<<<< HEAD
-=======
     const tables = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
     console.log('📋 Public tables:', tables.rows.map(row => row.table_name));
 
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     client.release();
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
@@ -276,7 +264,6 @@ async function authenticateAdmin(req, res, next) {
 }
 
 // Routes
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -387,24 +374,15 @@ app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
 
 app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => {
   const { name, category, prices, image, description } = req.body;
-<<<<<<< HEAD
-  console.log('Received menu item data:', { name, category, prices, image, description }); // Debug log
-
-  if (!name || !category) {
-    return res.status(400).json({ error: 'Name and category are required' });
-=======
   if (!name || !category || !prices) {
     return res.status(400).json({ error: 'Name, category, and prices are required' });
   }
   if (!prices.regular && !prices.classic && !prices.large) {
     return res.status(400).json({ error: 'At least one price variant (regular, classic, or large) is required' });
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
   }
 
-  // Allow prices to be optional, default to empty object
+  // Validate prices
   const validatedPrices = prices && typeof prices === 'object' ? prices : {};
-  
-  // Validate prices if provided
   for (const [key, value] of Object.entries(validatedPrices)) {
     if (typeof value !== 'number' || value <= 0) {
       return res.status(400).json({ error: `Price for ${key} must be a positive number` });
@@ -414,11 +392,7 @@ app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => 
   try {
     const result = await pool.query(
       'INSERT INTO menu_items (name, category, prices, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-<<<<<<< HEAD
       [name, category, JSON.stringify(validatedPrices), image, description]
-=======
-      [name, category, JSON.stringify(prices), image, description]
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     );
     const item = result.rows[0];
     res.status(201).json({
@@ -438,24 +412,15 @@ app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => 
 app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { name, category, prices, image, description } = req.body;
-<<<<<<< HEAD
-  console.log('Received update menu item data:', { id, name, category, prices, image, description }); // Debug log
-
-  if (!name || !category) {
-    return res.status(400).json({ error: 'Name and category are required' });
-=======
   if (!name || !category || !prices) {
     return res.status(400).json({ error: 'Name, category, and prices are required' });
   }
   if (!prices.regular && !prices.classic && !prices.large) {
     return res.status(400).json({ error: 'At least one price variant (regular, classic, or large) is required' });
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
   }
 
-  // Allow prices to be optional, default to empty object
+  // Validate prices
   const validatedPrices = prices && typeof prices === 'object' ? prices : {};
-  
-  // Validate prices if provided
   for (const [key, value] of Object.entries(validatedPrices)) {
     if (typeof value !== 'number' || value <= 0) {
       return res.status(400).json({ error: `Price for ${key} must be a positive number` });
@@ -465,11 +430,7 @@ app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
   try {
     const result = await pool.query(
       'UPDATE menu_items SET name = $1, category = $2, prices = $3, image = $4, description = $5 WHERE id = $6 RETURNING *',
-<<<<<<< HEAD
       [name, category, JSON.stringify(validatedPrices), image, description, id]
-=======
-      [name, category, JSON.stringify(prices), image, description, id]
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     );
     const item = result.rows[0];
     if (!item) return res.status(404).json({ error: 'Menu item not found' });
@@ -602,10 +563,6 @@ app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, 
   }
 });
 
-<<<<<<< HEAD
-=======
-// Get Coupons
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.get('/api/coupons', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
@@ -624,10 +581,6 @@ app.get('/api/coupons', async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-=======
-// Get Coupon by ID
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.get('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -647,16 +600,11 @@ app.get('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, re
   }
 });
 
-<<<<<<< HEAD
-=======
-// Add Coupon
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) => {
   const { code, discount, image, description } = req.body;
   if (!code || !discount) {
     return res.status(400).json({ error: 'Code and discount are required' });
   }
-<<<<<<< HEAD
   if (typeof discount !== 'number' || discount < 1 || discount > 100) {
     return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
   }
@@ -665,12 +613,6 @@ app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) 
     if (codeCheck.rows.length > 0) {
       return res.status(400).json({ error: 'Coupon code already exists' });
     }
-=======
-  if (discount < 1 || discount > 100) {
-    return res.status(400).json({ error: 'Discount must be between 1 and 100' });
-  }
-  try {
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     const result = await pool.query(
       'INSERT INTO coupons (code, discount, image, description) VALUES ($1, $2, $3, $4) RETURNING *',
       [code, discount, image, description]
@@ -681,7 +623,6 @@ app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) 
       code: coupon.code,
       discount: coupon.discount,
       description: coupon.description,
-<<<<<<< HEAD
       image: coupon.image,
       created_at: coupon.created_at
     });
@@ -690,27 +631,16 @@ app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) 
     if (error.code === '23505') {
       return res.status(400).json({ error: 'Coupon code already exists' });
     }
-=======
-      image: coupon.image
-    });
-  } catch (error) {
-    console.error('Error adding coupon:', error);
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     res.status(500).json({ error: 'Failed to add coupon' });
   }
 });
 
-<<<<<<< HEAD
-=======
-// Update Coupon
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.put('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { code, discount, image, description } = req.body;
   if (!code || !discount) {
     return res.status(400).json({ error: 'Code and discount are required' });
   }
-<<<<<<< HEAD
   if (typeof discount !== 'number' || discount < 1 || discount > 100) {
     return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
   }
@@ -719,12 +649,6 @@ app.put('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, re
     if (codeCheck.rows.length > 0) {
       return res.status(400).json({ error: 'Coupon code already exists' });
     }
-=======
-  if (discount < 1 || discount > 100) {
-    return res.status(400).json({ error: 'Discount must be between 1 and 100' });
-  }
-  try {
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     const result = await pool.query(
       'UPDATE coupons SET code = $1, discount = $2, image = $3, description = $4 WHERE id = $5 RETURNING *',
       [code, discount, image, description, id]
@@ -740,20 +664,13 @@ app.put('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, re
     });
   } catch (error) {
     console.error('Error updating coupon:', error);
-<<<<<<< HEAD
     if (error.code === '23505') {
       return res.status(400).json({ error: 'Coupon code already exists' });
     }
-=======
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     res.status(500).json({ error: 'Failed to update coupon' });
   }
 });
 
-<<<<<<< HEAD
-=======
-// Delete Coupon
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.delete('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -768,10 +685,6 @@ app.delete('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req,
   }
 });
 
-<<<<<<< HEAD
-=======
-// Get Contact Messages
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.get('/api/contact', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
@@ -791,7 +704,6 @@ app.get('/api/contact', authenticateToken, authenticateAdmin, async (req, res) =
   }
 });
 
-<<<<<<< HEAD
 app.get('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -813,9 +725,6 @@ app.get('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, re
   }
 });
 
-=======
-// Add Contact Message (Public)
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.post('/api/contact', async (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !email || !subject || !message) {
@@ -833,12 +742,8 @@ app.post('/api/contact', async (req, res) => {
       email: newMessage.email,
       subject: newMessage.subject,
       message: newMessage.message,
-<<<<<<< HEAD
       status: newMessage.status,
       created_at: newMessage.created_at
-=======
-      status: newMessage.status
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     });
   } catch (error) {
     console.error('Error adding contact message:', error);
@@ -846,10 +751,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-=======
-// Reply to Contact Message
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   const { subject, reply } = req.body;
@@ -857,11 +758,7 @@ app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (
     return res.status(400).json({ error: 'Subject and reply are required' });
   }
   try {
-<<<<<<< HEAD
     const messageResult = await pool.query('SELECT email, name FROM contact_messages WHERE id = $1', [id]);
-=======
-    const messageResult = await pool.query('SELECT email FROM contact_messages WHERE id = $1', [id]);
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     const message = messageResult.rows[0];
     if (!message) return res.status(404).json({ error: 'Message not found' });
 
@@ -870,7 +767,6 @@ app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (
       to: message.email,
       subject: subject,
       text: reply,
-<<<<<<< HEAD
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #f59e0b;">Delicute</h2>
@@ -879,9 +775,6 @@ app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (
           <p>Best regards,<br>Delicute Team</p>
         </div>
       `
-=======
-      html: `<p>${reply}</p>`
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     });
 
     await pool.query('UPDATE contact_messages SET status = $1 WHERE id = $2', ['Replied', id]);
@@ -892,10 +785,6 @@ app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (
   }
 });
 
-<<<<<<< HEAD
-=======
-// Delete Contact Message
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.delete('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -910,10 +799,6 @@ app.delete('/api/contact/:id', authenticateToken, authenticateAdmin, async (req,
   }
 });
 
-<<<<<<< HEAD
-=======
-// Get All Orders (Admin)
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.get('/api/orders', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -981,10 +866,6 @@ app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (
   }
 });
 
-<<<<<<< HEAD
-=======
-// Get Orders by Customer
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
 app.get('/api/orders/customer/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -1029,11 +910,7 @@ app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res)
     if (!user) return res.status(404).json({ error: 'Customer not found' });
 
     const ordersResult = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [id]);
-<<<<<<< HEAD
     const orders = ordersResult.rows.map(order => ({
-=======
-    const orderHistory = ordersResult.rows.map(order => ({
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
       _id: order.id,
       total: order.total,
       status: order.status,
@@ -1045,13 +922,8 @@ app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res)
       name: user.name,
       email: user.email,
       phone: user.phone,
-<<<<<<< HEAD
       status: user.is_blocked ? 'Blocked' : 'Active',
       orders
-=======
-      isBlocked: user.is_blocked,
-      orderHistory
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
     });
   } catch (error) {
     console.error('Error fetching customer:', error);
@@ -1085,12 +957,7 @@ app.put('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res)
   }
 });
 
-<<<<<<< HEAD
 app.get('/api/restaurant/status', async (req, res) => {
-=======
-// Get Restaurant Status
-app.get('/api/restaurant-status', async (req, res) => {
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
   try {
     const result = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
     const status = result.rows[0]?.status || 'Closed';
@@ -1112,7 +979,6 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
       'UPDATE restaurant_status SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1 RETURNING *',
       [status]
     );
-<<<<<<< HEAD
     if (result.rows.length === 0) {
       await pool.query(
         'INSERT INTO restaurant_status (id, status, updated_at) VALUES (1, $1, CURRENT_TIMESTAMP) RETURNING *',
@@ -1120,9 +986,6 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
       );
     }
     res.json({ status });
-=======
-    res.json({ status, isOpen: status === 'Open' });
->>>>>>> fcbcb02b9190f1f31c739b5be62995ff7796a385
   } catch (error) {
     console.error('Error updating restaurant status:', error);
     res.status(500).json({ error: 'Failed to update restaurant status' });
