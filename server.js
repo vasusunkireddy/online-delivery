@@ -233,14 +233,24 @@ const razorpay = new Razorpay({
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access denied, no token provided' });
+  if (!token) {
+    console.warn('No token provided for request:', req.url);
+    return res.status(401).json({ error: 'Access denied, no token provided' });
+  }
 
+  if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+    console.error('Malformed token received:', token);
+    return res.status(403).json({ error: 'Invalid token format' });
+  }
+
+  console.log('Verifying token:', token);
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    console.log('Token verified, user:', decoded);
     next();
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('Token verification error:', error.message, error.stack);
     res.status(403).json({ error: 'Invalid or expired token' });
   }
 }
@@ -251,9 +261,11 @@ async function authenticateAdmin(req, res, next) {
     const result = await pool.query('SELECT is_admin, is_blocked FROM users WHERE id = $1', [req.user.id]);
     const user = result.rows[0];
     if (!user || !user.is_admin) {
+      console.warn('Admin access denied for user:', req.user.id);
       return res.status(403).json({ error: 'Admin access required' });
     }
     if (user.is_blocked) {
+      console.warn('Blocked admin user attempted access:', req.user.id);
       return res.status(403).json({ error: 'Account is blocked' });
     }
     next();
@@ -1158,6 +1170,7 @@ app.get('/api/auth/google', (req, res) => {
     scope: ['profile', 'email'],
     redirect_uri: `${CLIENT_URL}/api/auth/google/callback`
   });
+  console.log('Google OAuth URL generated:', url);
   res.redirect(url);
 });
 
@@ -1171,11 +1184,13 @@ app.get('/api/auth/google/callback', async (req, res) => {
     // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
+    console.log('Google OAuth tokens received:', tokens);
 
     // Fetch user info
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data } = await oauth2.userinfo.get();
     const { email, name } = data;
+    console.log('Google user info:', { email, name });
 
     // Check if user exists or create new user
     let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -1186,10 +1201,14 @@ app.get('/api/auth/google/callback', async (req, res) => {
         [name || 'Google User', email, false]
       );
       user = result.rows[0];
+      console.log('New user created:', user);
+    } else {
+      console.log('Existing user found:', user);
     }
 
     // Check if user is blocked
     if (user.is_blocked) {
+      console.log('User is blocked:', email);
       return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
     }
 
@@ -1199,9 +1218,12 @@ app.get('/api/auth/google/callback', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '1h' }
     );
+    console.log('JWT token generated:', token);
 
     // Redirect to frontend with token
-    res.redirect(`${CLIENT_URL}/?token=${encodeURIComponent(token)}`);
+    const redirectUrl = `${CLIENT_URL}/?token=${encodeURIComponent(token)}`;
+    console.log('Redirecting to:', redirectUrl);
+    res.redirect(redirectUrl);
   } catch (error) {
     console.error('Google OAuth error:', error);
     res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication error')}`);
@@ -1251,7 +1273,7 @@ app.post('/api/payment/verify', async (req, res) => {
       res.status(400).json({ error: 'Payment verification failed' });
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Payment verification error:', error);
     res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
