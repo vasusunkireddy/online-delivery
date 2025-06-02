@@ -27,25 +27,26 @@
         }
         .auth-container {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
             max-width: 1400px;
-            width: 90%;
-            margin: 2rem auto;
+            width: 95%;
+            margin: 1.5rem auto;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .auth-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         .input-field {
             transition: all 0.3s ease;
             border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 0.75rem;
+            border-radius: 6px;
+            padding: 0.5rem;
             background: white;
             width: 100%;
+            font-size: 0.875rem;
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -57,14 +58,15 @@
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
-            border-radius: 8px;
-            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
             font-weight: 500;
             color: white;
+            font-size: 0.875rem;
         }
         .auth-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
             background: linear-gradient(90deg, #f97316, #f59e0b);
         }
         .auth-btn::after {
@@ -80,20 +82,20 @@
             transition: width 0.4s ease, height 0.4s ease;
         }
         .auth-btn:hover::after {
-            width: 300px;
-            height: 300px;
+            width: 200px;
+            height: 200px;
         }
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
+            top: 16px;
+            right: 16px;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
             color: white;
             z-index: 1000;
             display: none;
-            min-width: 200px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 160px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             animation: slideIn 0.3s ease;
         }
         .toast.success {
@@ -107,11 +109,11 @@
             to { transform: translateX(0); opacity: 1; }
         }
         .table-container {
-            max-height: 400px;
+            max-height: 360px;
             overflow-y: auto;
-            border-radius: 8px;
+            border-radius: 6px;
             background: white;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .table-container table {
             width: 100%;
@@ -119,10 +121,10 @@
             border-spacing: 0;
         }
         .table-container th, .table-container td {
-            padding: 0.75rem;
+            padding: 0.5rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
         }
         .table-container th {
             background: #f9fafb;
@@ -135,8 +137,8 @@
             position: relative;
         }
         .profile-img {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
             cursor: pointer;
@@ -149,12 +151,12 @@
         .dropdown-menu {
             display: none;
             position: absolute;
-            top: 50px;
+            top: 40px;
             right: 0;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            min-width: 180px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            min-width: 160px;
             z-index: 100;
             overflow: hidden;
         }
@@ -167,9 +169,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .dropdown-item {
-            padding: 0.75rem 1rem;
+            padding: 0.5rem 0.75rem;
             color: #1f2937;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -179,20 +181,20 @@
         }
         .stat-card {
             background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
         .home-bg {
             background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 12px;
+            padding: 1.5rem;
             color: white;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             position: relative;
@@ -233,12 +235,12 @@
         }
         .modal-content {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            max-width: 90%;
-            width: 500px;
+            padding: 1rem;
+            border-radius: 8px;
+            max-width: 95%;
+            width: 400px;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             animation: modalPop 0.3s ease;
         }
         @keyframes modalPop {
@@ -247,9 +249,9 @@
         }
         .close-btn {
             position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 1.25rem;
+            top: 8px;
+            right: 8px;
+            font-size: 1rem;
             cursor: pointer;
             color: #374151;
             transition: color 0.2s ease;
@@ -258,22 +260,26 @@
             color: #f59e0b;
         }
         .menu-img {
-            width: 48px;
-            height: 48px;
+            width: 36px;
+            height: 36px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 2px solid #f59e0b;
         }
         .contact-message {
             background: #f9fafb;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
             word-break: break-word;
+            font-size: 0.75rem;
+        }
+        .navbar-menu {
+            transition: max-height 0.3s ease-in-out;
         }
         @media (max-width: 768px) {
             .auth-container {
-                padding: 1.5rem;
+                padding: 1rem;
                 margin: 1rem auto;
             }
             .table-container {
@@ -283,45 +289,69 @@
                 min-width: 600px;
             }
             .stat-card {
-                padding: 0.75rem;
+                padding: 0.5rem;
             }
             .stat-card h3 {
-                font-size: 0.875rem;
+                font-size: 0.75rem;
             }
             .stat-card p {
-                font-size: 1.25rem;
+                font-size: 1rem;
             }
             .modal-content {
                 width: 95%;
-                padding: 1rem;
+                padding: 0.75rem;
             }
             .dropdown-menu {
-                min-width: 150px;
+                min-width: 140px;
             }
             .dropdown-item {
                 font-size: 0.75rem;
                 padding: 0.5rem;
             }
-        }
-        @media (max-width: 640px) {
-            .grid-cols-2, .grid-cols-4 {
-                grid-template-columns: 1fr;
-            }
             .auth-btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
             }
             .input-field {
                 padding: 0.5rem;
-                font-size: 0.875rem;
-            }
-            .table-container th, .table-container td {
-                padding: 0.5rem;
                 font-size: 0.75rem;
             }
+            .navbar-menu {
+                max-height: 0;
+                overflow: hidden;
+            }
+            .navbar-menu.active {
+                max-height: 400px;
+            }
+        }
+        @media (min-width: 769px) {
+            .auth-container {
+                padding: 2rem;
+                margin: 2rem auto;
+            }
+            .table-container th, .table-container td {
+                padding: 0.75rem;
+                font-size: 0.875rem;
+            }
             .menu-img {
-                width: 36px;
-                height: 36px;
+                width: 48px;
+                height: 48px;
+            }
+            .profile-img {
+                width: 40px;
+                height: 40px;
+            }
+            .modal-content {
+                padding: 1.5rem;
+                width: 500px;
+            }
+            .auth-btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+            }
+            .input-field {
+                padding: 0.75rem;
+                font-size: 0.875rem;
             }
         }
     </style>
@@ -334,27 +364,27 @@
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('profileModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Admin Profile</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Admin Profile</h2>
             <div class="flex justify-center mb-4">
-                <img id="modalProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-20 h-20 rounded-full border-3 border-yellow-500 object-cover">
+                <img id="modalProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-yellow-500 object-cover">
             </div>
             <div>
                 <label for="profileName" class="block text-sm text-gray-700 font-medium mb-1">Name</label>
                 <input type="text" id="profileName" class="input-field" readonly>
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <label for="profileEmail" class="block text-sm text-gray-700 font-medium mb-1">Email</label>
                 <input type="email" id="profileEmail" class="input-field" readonly>
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <label for="profilePhone" class="block text-sm text-gray-700 font-medium mb-1">Phone Number</label>
                 <input type="tel" id="profilePhone" class="input-field" readonly>
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <label for="profileImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Profile Image</label>
                 <input type="file" id="profileImageUpload" class="input-field" accept="image/*">
             </div>
-            <div class="mt-6">
+            <div class="mt-4">
                 <button onclick="updateProfileImage()" class="auth-btn w-full">Update Profile Image</button>
             </div>
         </div>
@@ -363,10 +393,10 @@
     <!-- Edit Menu Item Modal -->
     <div id="editMenuModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('editMenuModal')">&times;</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Menu Item</h2>
+            <span class="close-btn" onclick="closeModal('editMenuModal')">×</span>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Edit Menu Item</h2>
             <input type="hidden" id="editItemId">
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 gap-3">
                 <div>
                     <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
                     <input type="text" id="editItemName" class="input-field" placeholder="Item Name">
@@ -401,10 +431,10 @@
                 </div>
                 <div>
                     <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                    <textarea id="editItemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+                    <textarea id="editItemDescription" class="input-field" rows="3" placeholder="Item Description"></textarea>
                 </div>
             </div>
-            <div class="mt-6">
+            <div class="mt-4">
                 <button onclick="updateMenuItem()" class="auth-btn w-full">Update Item</button>
             </div>
         </div>
@@ -414,29 +444,31 @@
     <div id="editOfferModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editOfferModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Special Offer</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Edit Special Offer</h2>
             <input type="hidden" id="editOfferId">
-            <div>
-                <label for="editOfferName" class="block text-sm text-gray-700 font-medium mb-1">Offer Name</label>
-                <input type="text" id="editOfferName" class="input-field" placeholder="Offer Name">
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label for="editOfferName" class="block text-sm text-gray-700 font-medium mb-1">Offer Name</label>
+                    <input type="text" id="editOfferName" class="input-field" placeholder="Offer Name">
+                </div>
+                <div>
+                    <label for="editOfferPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
+                    <input type="number" id="editOfferPrice" class="input-field" placeholder="Price" step="0.01" min="0">
+                </div>
+                <div>
+                    <label for="editOfferImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                    <input type="text" id="editOfferImage" class="input-field" placeholder="Image URL">
+                </div>
+                <div>
+                    <label for="editOfferImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                    <input type="file" id="editOfferImageUpload" class="input-field" accept="image/*">
+                </div>
+                <div>
+                    <label for="editOfferDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
+                    <textarea id="editOfferDescription" class="input-field" rows="3" placeholder="Offer Description"></textarea>
+                </div>
             </div>
             <div class="mt-4">
-                <label for="editOfferPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
-                <input type="number" id="editOfferPrice" class="input-field" placeholder="Price" step="0.01" min="0">
-            </div>
-            <div class="mt-4">
-                <label for="editOfferImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
-                <input type="text" id="editOfferImage" class="input-field" placeholder="Image URL">
-            </div>
-            <div class="mt-4">
-                <label for="editOfferImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
-                <input type="file" id="editOfferImageUpload" class="input-field" accept="image/*">
-            </div>
-            <div class="mt-4">
-                <label for="editOfferDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                <textarea id="editOfferDescription" class="input-field" rows="4" placeholder="Offer Description"></textarea>
-            </div>
-            <div class="mt-6">
                 <button onclick="updateOffer()" class="auth-btn w-full">Update Offer</button>
             </div>
         </div>
@@ -446,29 +478,31 @@
     <div id="editCouponModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editCouponModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Coupon</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Edit Coupon</h2>
             <input type="hidden" id="editCouponId">
-            <div>
-                <label for="editCouponCode" class="block text-sm text-gray-700 font-medium mb-1">Coupon Code</label>
-                <input type="text" id="editCouponCode" class="input-field" placeholder="e.g., DELICUTE10">
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label for="editCouponCode" class="block text-sm text-gray-700 font-medium mb-1">Coupon Code</label>
+                    <input type="text" id="editCouponCode" class="input-field" placeholder="e.g., DELICUTE10">
+                </div>
+                <div>
+                    <label for="editCouponDiscount" class="block text-sm text-gray-700 font-medium mb-1">Discount (%)</label>
+                    <input type="number" id="editCouponDiscount" class="input-field" placeholder="Discount Percentage" min="1" max="100" step="1">
+                </div>
+                <div>
+                    <label for="editCouponImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                    <input type="text" id="editCouponImage" class="input-field" placeholder="Image URL">
+                </div>
+                <div>
+                    <label for="editCouponImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                    <input type="file" id="editCouponImageUpload" class="input-field" accept="image/*">
+                </div>
+                <div>
+                    <label for="editCouponDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
+                    <textarea id="editCouponDescription" class="input-field" rows="3" placeholder="Coupon Description"></textarea>
+                </div>
             </div>
             <div class="mt-4">
-                <label for="editCouponDiscount" class="block text-sm text-gray-700 font-medium mb-1">Discount (%)</label>
-                <input type="number" id="editCouponDiscount" class="input-field" placeholder="Discount Percentage" min="1" max="100" step="1">
-            </div>
-            <div class="mt-4">
-                <label for="editCouponImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
-                <input type="text" id="editCouponImage" class="input-field" placeholder="Image URL">
-            </div>
-            <div class="mt-4">
-                <label for="editCouponImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
-                <input type="file" id="editCouponImageUpload" class="input-field" accept="image/*">
-            </div>
-            <div class="mt-4">
-                <label for="editCouponDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                <textarea id="editCouponDescription" class="input-field" rows="4" placeholder="Coupon Description"></textarea>
-            </div>
-            <div class="mt-6">
                 <button onclick="updateCoupon()" class="auth-btn w-full">Update Coupon</button>
             </div>
         </div>
@@ -478,20 +512,20 @@
     <div id="customerDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('customerDetailsModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Customer Details</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Customer Details</h2>
             <div class="text-sm">
                 <p><strong>Name:</strong> <span id="customerName"></span></p>
                 <p class="mt-2"><strong>Email:</strong> <span id="customerEmail"></span></p>
                 <p class="mt-2"><strong>Phone:</strong> <span id="customerPhone"></span></p>
                 <p class="mt-2"><strong>Status:</strong> <span id="customerStatus"></span></p>
             </div>
-            <div class="mt-4">
-                <h3 class="text-base font-medium text-gray-700 mb-2">Order History</h3>
+            <div class="mt-3">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Order History</h3>
                 <div id="customerOrderHistory" class="table-container"></div>
             </div>
-            <div class="mt-6 flex space-x-4">
-                <button id="blockUnblockBtn" class="auth-btn px-4 py-2"></button>
-                <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 px-4 py-2">Close</button>
+            <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <button id="blockUnblockBtn" class="auth-btn px-3 py-1.5"></button>
+                <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 px-3 py-1.5">Close</button>
             </div>
         </div>
     </div>
@@ -500,17 +534,17 @@
     <div id="replyContactModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('replyContactModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Reply to Message</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 text-center mb-4">Reply to Message</h2>
             <input type="hidden" id="contactMessageId">
             <div>
                 <label for="contactReplySubject" class="block text-sm text-gray-700 font-medium mb-1">Subject</label>
                 <input type="text" id="contactReplySubject" class="input-field" placeholder="Reply Subject">
             </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <label for="contactReplyMessage" class="block text-sm text-gray-700 font-medium mb-1">Reply Message</label>
-                <textarea id="contactReplyMessage" class="input-field" rows="5" placeholder="Your reply..."></textarea>
+                <textarea id="contactReplyMessage" class="input-field" rows="4" placeholder="Your reply..."></textarea>
             </div>
-            <div class="mt-6 flex space-x-4">
+            <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button onclick="sendReply()" class="auth-btn w-full">Send Reply</button>
                 <button onclick="closeModal('replyContactModal')" class="auth-btn bg-gray-500 hover:bg-gray-600 w-full">Cancel</button>
             </div>
@@ -518,20 +552,27 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-8 sm:h-10">
                     <div>
-                        <h1 class="text-xl font-bold text-gray-800">DELICUTE</h1>
+                        <h1 class="text-lg sm:text-xl font-bold text-gray-800">DELICUTE</h1>
                         <p class="text-xs text-gray-500">Admin Panel</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span id="welcomeMessage" class="text-sm text-gray-600 font-medium hidden sm:block"></span>
-                    <div class="profile-container">
-                        <img id="profileImage" src="https://via.placeholder.com/40" alt="Profile" class="profile-img" onclick="toggleDropdown()">
+                <div class="flex items-center space-x-3">
+                    <span id="welcomeMessage" class="text-xs sm:text-sm text-gray-600 font-medium hidden sm:block"></span>
+                    <div class="flex items-center sm:hidden">
+                        <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none" aria-label="Toggle menu">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="hidden sm:flex profile-container">
+                        <img id="profileImage" src="https://via.placeholder.com/40" alt="Profile" class="profile-img" onclick="toggleDropdown()" aria-label="Profile menu">
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="dropdown-item" onclick="showSection('home')">Home</div>
                             <div class="dropdown-item" onclick="showSection('profile')">Profile</div>
@@ -546,69 +587,84 @@
                     </div>
                 </div>
             </div>
+            <div id="navbarMenu" class="navbar-menu sm:hidden">
+                <div class="flex flex-col space-y-2 px-4 py-2">
+                    <div class="dropdown-item" onclick="showSection('home')">Home</div>
+                    <div class="dropdown-item" onclick="showSection('profile')">Profile</div>
+                    <div class="dropdown-item" onclick="showSection('menu')">Menu</div>
+                    <div class="dropdown-item" onclick="showSection('orders')">Orders</div>
+                    <div class="dropdown-item" onclick="showSection('offers')">Special Offers</div>
+                    <div class="dropdown-item" onclick="showSection('coupons')">Coupons</div>
+                    <div class="dropdown-item" onclick="showSection('customers')">Customers</div>
+                    <div class="dropdown-item" onclick="showSection('contact')">Contact Messages</div>
+                    <div class="dropdown-item" onclick="logout()">Logout</div>
+                </div>
+            </div>
         </div>
     </nav>
 
     <!-- Main Dashboard -->
     <div class="auth-container">
         <!-- Home Section -->
-        <section id="homeSection" class="home-bg mb-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">Welcome to Delicute Admin Panel</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section id="homeSection" class="home-bg mb-6">
+            <h2 class="text-lg sm:text-2xl font-bold text-center mb-4">Welcome to Delicute Admin Panel</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="stat-card">
-                    <h3 class="text-sm font-semibold text-gray-700">Total Orders</h3>
-                    <p id="totalOrders" class="text-2xl font-bold text-yellow-500 mt-2">0</p>
+                    <h3 class Ost-md">Total Orders</h3>
+                    <p id="totalOrders" class="text-lg sm:text-2xl font-bold text-yellow-600 mt-1">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-semibold text-gray-700">Menu Items</h3>
-                    <p id="totalMenuItems" class="text-2xl font-bold text-yellow-500 mt-2">0</p>
+                    <h3 class="text-sm font-medium text-gray-600">Menu Items</h3>
+                    <p id="totalMenuItems" class="text-lg sm:text-2xl font-bold text-yellow-600 mt-1">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-semibold text-gray-700">Pending Orders</h3>
-                    <p id="pendingOrders" class="text-2xl font-bold text-yellow-500 mt-2">0</p>
+                    <h3 class="text-sm font-medium text-gray-600">Pending Orders</h3>
+                    <p id="pendingOrders" class="text-lg sm:text-2xl font-bold text-yellow-600 mt-1">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-semibold text-gray-700">Restaurant Status</h3>
-                    <p id="restaurantStatus" class="text-2xl font-bold text-yellow-500 mt-2">Closed</p>
-                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-3 py-1 mt-2 text-sm">Open Restaurant</button>
+                    <h3 class="text-sm font-medium text-gray-600">Restaurant Status</h3>
+                    <p id="restaurantStatus" class="text-lg sm:text-2xl font-bold text-yellow-600 mt-1">Closed</p>
+                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-3 py-1 mt-2">Open Restaurant</button>
                 </div>
             </div>
         </section>
 
         <!-- Profile Section -->
-        <section id="profileSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Admin Profile</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-center mb-4">
-                    <img id="displayProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-20 h-20 rounded-full border-3 border-yellow-500 object-cover">
+        <section id="profileSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Admin Profile</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <div class="flex justify-center mb-3">
+                    <img id="displayProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-12 h-12 sm:w-20 sm:h-20 rounded-lg border-2 border-yellow-600 object-cover">
                 </div>
-                <p class="text-sm"><strong>Name:</strong> <span id="displayProfileName"></span></p>
-                <p class="text-sm mt-2"><strong>Email:</strong> <span id="displayProfileEmail"></span></p>
-                <p class="text-sm mt-2"><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
-                <div class="mt-4">
+                <div class="text-sm">
+                    <p><strong>Name:</strong> <span id="displayProfileName"></span></p>
+                    <p class="mt-2"><strong>Email:</strong> <span id="displayProfileEmail"></span></p>
+                    <p class="mt-2"><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
+                </div>
+                <div class="mt-4 flex justify-center">
                     <button onclick="showModal('profileModal')" class="auth-btn px-4 py-2">Edit Profile Image</button>
                 </div>
             </div>
         </section>
 
         <!-- Menu Management Section -->
-        <section id="menuSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Menu</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section id="menuSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Manage Menu</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Add Menu Item Form -->
-                <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-1">
-                    <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Menu Item</h4>
-                    <div class="grid grid-cols-1 gap-4">
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md lg:col-span-1">
+                    <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-4">Add New Menu Item</h4>
+                    <div class="grid grid-cols-1 gap-3">
                         <div>
-                            <label for="itemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
+                            <label for="itemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
                             <input type="text" id="itemName" class="input-field" placeholder="Item Name">
                         </div>
                         <div>
-                            <label for="itemPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
+                            <label for="itemPrice" class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                             <input type="number" id="itemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
                         </div>
                         <div>
-                            <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
+                            <label for="itemCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <select id="itemCategory" class="input-field">
                                 <option value="">Select Category</option>
                                 <option value="Veg Pizza">Veg Pizza</option>
@@ -624,23 +680,23 @@
                             </select>
                         </div>
                         <div>
-                            <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                            <label for="itemImage" class="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
                             <input type="text" id="itemImage" class="input-field" placeholder="Image URL">
                         </div>
                         <div>
-                            <label for="itemImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                            <label for="itemImageUpload" class="block text-sm font-medium text-gray-700 mb-1">Upload Image (Optional)</label>
                             <input type="file" id="itemImageUpload" class="input-field" accept="image/*">
                         </div>
                         <div>
-                            <label for="itemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                            <textarea id="itemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+                            <label for="itemDescription" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                            <textarea id="itemDescription" class="input-field" rows="3" placeholder="Description"></textarea>
                         </div>
-                        <button onclick="addMenuItem()" class="auth-btn w-full mt-4">Add Item</button>
+                        <button onclick="addMenuItem()" class="auth-btn mt-3">Add Item</button>
                     </div>
                 </div>
                 <!-- Menu Items Table -->
-                <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-2">
-                    <h4 class="text-lg font-medium text-gray-700 mb-4">Menu Items</h4>
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md lg:col-span-2">
+                    <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-2">Menu Items</h4>
                     <div class="table-container">
                         <table>
                             <thead>
@@ -661,10 +717,10 @@
         </section>
 
         <!-- Order Management Section -->
-        <section id="ordersSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Orders</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Orders</h4>
+        <section id="ordersSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Order Management</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-2">Orders</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -684,38 +740,38 @@
         </section>
 
         <!-- Special Offers Section -->
-        <section id="offersSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Special Offers</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Offer</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <section id="offersSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Manage Special Offers</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-4">Add New Offer</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="offerName" class="block text-sm text-gray-700 font-medium mb-1">Offer Name</label>
+                        <label for="offerName" class="block text-sm font-medium text-gray-700 mb-1">Offer Name</label>
                         <input type="text" id="offerName" class="input-field" placeholder="Offer Name">
                     </div>
                     <div>
-                        <label for="offerPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
+                        <label for="offerPrice" class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                         <input type="number" id="offerPrice" class="input-field" placeholder="Price" step="0.01" min="0">
                     </div>
                     <div>
-                        <label for="offerImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                        <label for="offerImage" class="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
                         <input type="text" id="offerImage" class="input-field" placeholder="Image URL">
                     </div>
                     <div>
-                        <label for="offerImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                        <label for="offerImageUpload" class="block text-sm font-medium text-gray-700 mb-1">Upload Image (Optional)</label>
                         <input type="file" id="offerImageUpload" class="input-field" accept="image/*">
                     </div>
                     <div class="sm:col-span-2">
-                        <label for="offerDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                        <textarea id="offerDescription" class="input-field" rows="4" placeholder="Offer Description"></textarea>
+                        <label for="offerDescription" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                        <textarea id="offerDescription" class="input-field" rows="3" placeholder="Description"></textarea>
                     </div>
                 </div>
-                <div class="mt-4">
+                <div class="mt-3">
                     <button onclick="addOffer()" class="auth-btn w-full">Add Offer</button>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Special Offers</h4>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-2">Special Offers</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -733,38 +789,38 @@
         </section>
 
         <!-- Coupons Management Section -->
-        <section id="couponsSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Coupons</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Coupon</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <section id="couponsSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Manage Coupons</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-4">Add New Coupon</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="couponCode" class="block text-sm text-gray-700 font-medium mb-1">Coupon Code</label>
+                        <label for="couponCode" class="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
                         <input type="text" id="couponCode" class="input-field" placeholder="e.g., DELICUTE10">
                     </div>
                     <div>
-                        <label for="couponDiscount" class="block text-sm text-gray-700 font-medium mb-1">Discount (%)</label>
+                        <label for="couponDiscount" class="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
                         <input type="number" id="couponDiscount" class="input-field" placeholder="Discount Percentage" min="1" max="100" step="1">
                     </div>
                     <div>
-                        <label for="couponImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                        <label for="couponImage" class="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
                         <input type="text" id="couponImage" class="input-field" placeholder="Image URL">
                     </div>
                     <div>
-                        <label for="couponImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                        <label for="couponImageUpload" class="block text-sm font-medium text-gray-700 mb-1">Upload Image (Optional)</label>
                         <input type="file" id="couponImageUpload" class="input-field" accept="image/*">
                     </div>
                     <div class="sm:col-span-2">
-                        <label for="couponDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                        <textarea id="couponDescription" class="input-field" rows="4" placeholder="Coupon Description"></textarea>
+                        <label for="couponDescription" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                        <textarea id="couponDescription" class="input-field" rows="3" placeholder="Description"></textarea>
                     </div>
                 </div>
-                <div class="mt-4">
+                <div class="mt-3">
                     <button onclick="addCoupon()" class="auth-btn w-full">Add Coupon</button>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Coupons</h4>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600">Coupons</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -782,10 +838,10 @@
         </section>
 
         <!-- Customer Management Section -->
-        <section id="customersSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Customers</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Customers</h4>
+        <section id="customersSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Manage Customers</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-2">Customers</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -804,10 +860,10 @@
         </section>
 
         <!-- Contact Messages Section -->
-        <section id="contactSection" class="mb-8 hidden">
-            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Contact Messages</h3>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Messages</h4>
+        <section id="contactSection" class="hidden mb-6">
+            <h3 class="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">Manage Contact Messages</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-2">Messages</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -835,7 +891,7 @@
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = `toast ${type}`;
-            toast.style.display = 'block';
+            toast.style.display = 'flex';
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 3000);
@@ -862,11 +918,16 @@
         }
 
         function showModal(modalId) {
+            closeModalAll();
             document.getElementById(modalId).style.display = 'flex';
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+        }
+
+        function closeModalAll() {
+            document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
         }
 
         async function uploadImage(file) {
@@ -966,6 +1027,8 @@
                 } else {
                     fetchAdminDetails();
                     showSection('home');
+                    fetchOrders();
+                    fetchMenuItems();
                 }
             } catch (error) {
                 console.error('Error checking auth:', error);
@@ -993,16 +1056,16 @@
             const menuTableBody = document.getElementById('menuTableBody');
             menuTableBody.innerHTML = items.map(item => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">
+                    <td class="py-2 px-2">
                         ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
                     </td>
-                    <td class="py-2 px-3">${item.name || 'N/A'}</td>
-                    <td class="py-2 px-3">${item.category || 'N/A'}</td>
-                    <td class="py-2 px-3">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</td>
-                    <td class="py-2 px-3">${item.description || 'N/A'}</td>
-                    <td class="py-2 px-3 flex space-x-2">
-                        <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
-                        <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+                    <td class="py-2 px-2">${item.name || 'N/A'}</td>
+                    <td class="py-2 px-2">${item.category || 'N/A'}</td>
+                    <td class="py-2 px-2 text-right">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</td>
+                    <td class="py-2 px-2">${truncateText(item.description || 'N/A', 20)}</td>
+                    <td class="py-2 px-2 flex space-x-1">
+                        <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Edit</button>
+                        <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -1155,7 +1218,7 @@
                 const orders = await response.json();
                 displayOrders(orders);
                 document.getElementById('totalOrders').textContent = orders.length;
-                document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
+                document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'pending').length;
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 showToast('Failed to load orders.', 'error');
@@ -1165,19 +1228,19 @@
         function displayOrders(orders) {
             document.getElementById('orderTableBody').innerHTML = orders.map(order => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">${order._id}</td>
-                    <td class="py-2 px-3">${order.customerName || 'N/A'}</td>
-                    <td class="py-2 px-3">₹${order.total.toFixed(2)}</td>
-                    <td class="py-2 px-3">${order.status}</td>
-                    <td class="py-2 px-3">${order.paymentStatus || 'Pending'}</td>
-                    <td class="py-2 px-3 flex space-x-2">
-                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-1 border rounded-md text-sm">
+                    <td class="py-2 px-2">${truncateText(order._id || '10', 'N/A')}</td>
+                    <td class="py-2 px-2">${order.customerName || 'N/A'}</td>
+                    <td class="py-2 px-2 text-right">₹${order.total.toFixed(2)}</td>
+                    <td class="py-2 px-2 text-center">${order.status}</td>
+                    <td class="py-2 px-2 px-2 text-center">${order.paymentStatus || 'Pending'}</td>
+                    <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
+                        <select onchange="updateOrderStatus('${order._id}', 'this.value)" class="input-field p-2 border rounded-md text-xs sm:text-sm">
                             <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                             <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
-                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Refund</button>` : ''}
+                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-600 hover:bg-red-600 text-xs px-2 py-1">Refund</button>` : ''}>
                     </td>
                 </tr>
             `).join('');
@@ -1191,7 +1254,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ status })
+                    body: JSON.stringify({ status: status })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1243,14 +1306,14 @@
         function displayOffers(offers) {
             document.getElementById('offerTableBody').innerHTML = offers.map(offer => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">
+                    <td class="py-2 px-2">
                         ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
                     </td>
-                    <td class="py-2 px-3">${offer.name || 'N/A'}</td>
-                    <td class="py-2 px-3">₹${offer.price.toFixed(2)}</td>
-                    <td class="py-2 px-3 flex space-x-2">
-                        <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
-                        <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+                    <td class="py-2 px-2">${offer.name || 'N/A'}</td>
+                    <td class="py-2 px-2 text-right">₹${offer.price.toFixed(2)}</td>
+                    <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
+                        <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Edit</button>
+                        <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -1406,14 +1469,14 @@
         function displayCoupons(coupons) {
             document.getElementById('couponTableBody').innerHTML = coupons.map(coupon => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">
-                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu by the menu-img">` : 'No Image'}
+                    <td class="py-2 px-2">
+                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
                     </td>
-                    <td class="py-2 px-3">${coupon.code || 'N/A'}</td>
-                    <td class="py-2 px-3">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
-                    <td class="py-2 px-3 flex space-x-2">
-                        <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
-                        <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+                    <td class="py-2 px-2">${coupon.code || 'N/A'}</td>
+                    <td class="py-2 px-2 text-right">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
+                    <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
+                        <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Edit</button>
+                        <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -1492,7 +1555,7 @@
             }
         }
 
-        async function updateCoupon() {
+                async function updateCoupon() {
             const coupon = {
                 id: document.getElementById('editCouponId').value,
                 code: document.getElementById('editCouponCode').value.trim(),
@@ -1579,12 +1642,12 @@
         function displayCustomers(customers) {
             document.getElementById('customerTableBody').innerHTML = customers.map(customer => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">${customer.name || 'N/A'}</td>
-                    <td class="py-2 px-3">${customer.email || 'N/A'}</td>
-                    <td class="py-2 px-3">${customer.phone || 'N/A'}</td>
-                    <td class="py-2 px-3">${customer.status || 'Active'}</td>
-                    <td class="py-2 px-3">
-                        <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">View</button>
+                    <td class="py-2 px-2">${customer.name || 'N/A'}</td>
+                    <td class="py-2 px-2">${customer.email || 'N/A'}</td>
+                    <td class="py-2 px-2">${customer.phone || 'N/A'}</td>
+                    <td class="py-2 px-2">${customer.status || 'Active'}</td>
+                    <td class="py-2 px-2">
+                        <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">View</button>
                     </td>
                 </tr>
             `).join('');
@@ -1601,26 +1664,27 @@
                     document.getElementById('customerEmail').textContent = customer.email || 'N/A';
                     document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
                     document.getElementById('customerStatus').textContent = customer.status || 'Active';
-                    document.getElementById('blockUnblockBtn').textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
-                    document.getElementById('blockUnblockBtn').onclick = () => toggleCustomerStatus(customerId, customer.status);
+                    const blockUnblockBtn = document.getElementById('blockUnblockBtn');
+                    blockUnblockBtn.textContent = customer.status === 'Blocked' ? 'Unblock' : 'Block';
+                    blockUnblockBtn.onclick = () => toggleCustomerStatus(customer._id, customer.status);
                     const orderHistory = customer.orders || [];
                     document.getElementById('customerOrderHistory').innerHTML = `
-                        <table class="w-full">
+                        <table class="w-full text-sm">
                             <thead>
                                 <tr>
-                                    <th>Order ID</th>
-                                    <th>Total</thy>
-                                    <th>Status</th>
+                                    <th class="py-1 px-2">Order ID</th>
+                                    <th class="py-1 px-2">Total</th>
+                                    <th class="py-1 px-2">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${orderHistory.map(order => `
                                     <tr class="border-b">
-                                        <td class="py-2 px-3">${order._id}</td>
-                                        <td class="py-2 px-3">₹${order.total.toFixed(2)}</td>
-                                        <td class="py-2 px-3">${order.status}</td>
+                                        <td class="py-1 px-2">${truncateText(order._id, 10)}</td>
+                                        <td class="py-1 px-2 text-right">₹${order.total.toFixed(2)}</td>
+                                        <td class="py-1 px-2">${order.status}</td>
                                     </tr>
-                                `).join('') || '<tr><td colspan="3" class="py-2 px-3 text-center">No orders found.</td></tr>'}
+                                `).join('') || '<tr><td colspan="3" class="py-1 px-2 text-center">No orders found</td></tr>'}
                             </tbody>
                         </table>
                     `;
@@ -1635,7 +1699,7 @@
         }
 
         async function toggleCustomerStatus(customerId, currentStatus) {
-            const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
+            const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
             try {
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
                     method: 'PUT',
@@ -1676,32 +1740,32 @@
         function displayContactMessages(messages) {
             document.getElementById('contactTableBody').innerHTML = messages.map(message => `
                 <tr class="border-b">
-                    <td class="py-2 px-3">${message.name || 'N/A'}</td>
-                    <td class="py-2 px-3">${message.email || 'N/A'}</td>
-                    <td class="py-2 px-3">${message.subject || 'N/A'}</td>
-                    <td class="py-2 px-3"><div class="contact-message">${message.message || 'N/A'}</div></td>
-                    <td class="py-2 px-3">${message.status || 'Pending'}</td>
-                    <td class="py-2 px-3 flex space-x-2">
-                        <button onclick="replyContactMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Reply</button>
-                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
+                    <td class="py-2 px-2">${message.name || 'N/A'}</td>
+                    <td class="py-2 px-2">${message.email || 'N/A'}</td>
+                    <td class="py-2 px-2">${message.subject || 'N/A'}</td>
+                    <td class="py-2 px-2">${truncateText(message.message || 'N/A', 20)}</td>
+                    <td class="py-2 px-2">${message.status || 'Pending'}</td>
+                    <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
+                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Reply</button>
+                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function replyContactMessage(messageId) {
+        function replyToMessage(messageId) {
             document.getElementById('contactMessageId').value = messageId;
+            document.getElementById('contactReplySubject').value = '';
+            document.getElementById('contactReplyMessage').value = '';
             showModal('replyContactModal');
         }
 
         async function sendReply() {
             const messageId = document.getElementById('contactMessageId').value;
-            const reply = {
-                subject: document.getElementById('contactReplySubject').value.trim(),
-                message: document.getElementById('contactReplyMessage').value.trim()
-            };
+            const subject = document.getElementById('contactReplySubject').value.trim();
+            const message = document.getElementById('contactReplyMessage').value.trim();
 
-            if (!reply.subject || !reply.message) {
+            if (!subject || !message) {
                 showToast('Subject and message are required.', 'error');
                 return;
             }
@@ -1713,14 +1777,12 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify(reply)
+                    body: JSON.stringify({ subject, message })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Reply sent successfully!', 'success');
                     closeModal('replyContactModal');
-                    document.getElementById('contactReplySubject').value = '';
-                    document.getElementById('contactReplyMessage').value = '';
                     fetchContactMessages();
                 } else {
                     showToast(data.error || 'Failed to send reply.', 'error');
@@ -1784,8 +1846,21 @@
             window.location.href = 'admin.html';
         }
 
+        // Helper Functions
+        function truncateText(text, length) {
+            if (text.length <= length) return text;
+            return text.substring(0, length) + '...';
+        }
+
+        // Mobile Menu Toggle
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            const navbarMenu = document.getElementById('navbarMenu');
+            navbarMenu.classList.toggle('active');
+        });
+
         // Initialize
         checkAuth();
     </script>
 </body>
 </html>
+<xaiArtifact/>
