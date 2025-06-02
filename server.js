@@ -1152,6 +1152,7 @@ app.post('/api/auth/reset-password/admin', async (req, res) => {
   }
 });
 
+// Google OAuth Routes
 app.get('/api/auth/google', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     scope: ['profile', 'email'],
@@ -1161,27 +1162,46 @@ app.get('/api/auth/google', (req, res) => {
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
-  const { code } = req.query;
+  const { code, error } = req.query;
+  if (error) {
+    console.error('Google OAuth callback error:', error);
+    return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication failed')}`);
+  }
   try {
+    // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
+
+    // Fetch user info
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data } = await oauth2.userinfo.get();
     const { email, name } = data;
+
+    // Check if user exists or create new user
     let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     let user = result.rows[0];
     if (!user) {
       result = await pool.query(
         'INSERT INTO users (name, email, is_admin) VALUES ($1, $2, $3) RETURNING id, email, is_admin',
-        [name, email, false]
+        [name || 'Google User', email, false]
       );
       user = result.rows[0];
     }
+
+    // Check if user is blocked
     if (user.is_blocked) {
-      res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
+      return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
     }
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-    res.redirect(`${CLIENT_URL}/userdashboard.html?token=${encodeURIComponent(token)}`);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, isAdmin: user.is_admin },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Redirect to frontend with token
+    res.redirect(`${CLIENT_URL}/?token=${encodeURIComponent(token)}`);
   } catch (error) {
     console.error('Google OAuth error:', error);
     res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication error')}`);
