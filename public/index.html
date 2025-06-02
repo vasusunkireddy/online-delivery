@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delicute - Every Bite Tells a Story</title>
+    <title>Delicute - Cloud Kitchen</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            margin: 0;
+            background: #f0f2f6;
         }
         .hero-bg {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
         }
         .modal {
             display: none;
@@ -22,99 +24,211 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            overflow-y: auto;
         }
         .modal-content {
             background: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            width: 90%;
-            max-width: 400px;
+            padding: 16px;
+            border-radius: 12px;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
         }
-        /* Mobile-friendly adjustments */
-        .nav-links {
-            transition: all 0.3s ease;
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #374151;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #f59e0b;
+        }
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+            margin: 10px 0;
+            transition: background 0.2s;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #f59e0b;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .range-slider:hover {
+            background: #ccc;
+        }
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            z-index: 2000;
+            display: none;
+            min-width: 180px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .toast.success {
+            background-color: #22c55e;
+        }
+        .toast.error {
+            background-color: #ef4444;
+        }
+        .menu-card, .offer-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .menu-card:hover, .offer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .pagination-btn {
+            transition: background 0.2s, color 0.2s;
+        }
+        .pagination-btn:hover:not(.disabled) {
+            background: #f59e0b;
+            color: white;
+        }
+        .pagination-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .full-menu-container {
+            display: none;
+            background: #f0f2f6;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .full-menu-container.active {
+            display: block;
+        }
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        .input-field {
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-field:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            outline: none;
+        }
+        .navbar-menu {
+            transition: max-height 0.3s ease-in-out;
         }
         @media (max-width: 640px) {
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                padding: 1rem;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            .modal-content {
+                padding: 12px;
+                width: 95%;
             }
-            .nav-links.active {
-                display: flex;
+            .close-btn {
+                font-size: 18px;
             }
-            .hamburger {
-                display: block;
+            .toast {
+                top: 12px;
+                right: 12px;
+                padding: 10px;
+                min-width: 160px;
+            }
+            .menu-card img, .offer-card img {
+                height: 150px;
+            }
+            .menu-card, .offer-card {
+                padding: 12px;
+            }
+            .btn-primary {
+                padding: 8px 16px;
+                font-size: 0.875rem;
+            }
+            .input-field {
+                padding: 8px;
+                font-size: 0.875rem;
+            }
+            .navbar-menu {
+                max-height: 0;
+                overflow: hidden;
+            }
+            .navbar-menu.active {
+                max-height: 300px;
             }
         }
-        .hamburger {
-            display: none;
-            cursor: pointer;
-        }
-        /* Side animation for offers */
-        .offer-card {
-            opacity: 0;
-            transform: translateX(-50px);
-            transition: all 0.5s ease-in-out;
-        }
-        .offer-card.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        /* Section colors */
-        #home {
-            background-color: #f9fafb; /* Light gray for hero */
-        }
-        #about {
-            background-color: #fef3c7; /* Warm yellow for about */
-        }
-        #special-offers {
-            background-color: #e6f3fa; /* Light blue for offers */
-        }
-        #contact {
-            background-color: #f3e8ff; /* Light purple for contact */
-        }
-        footer {
-            background-color: #1f2937; /* Dark gray for footer */
+        @media (min-width: 641px) {
+            .menu-card img, .offer-card img {
+                height: 200px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
-                    <div class="ml-2">
-                        <h1 class="text-2xl font-bold text-gray-800">Delicute</h1>
-                        <p class="text-sm text-gray-600">Every Bite Tells a Story</p>
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">DELICUTE</h1>
+                        <p class="text-xs text-gray-500 sm:text-sm">Every bite tells a story</p>
                     </div>
                 </div>
                 <div class="flex items-center sm:hidden">
-                    <button class="hamburger" onclick="toggleMenu()">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
                 </div>
-                <div class="nav-links flex items-center space-x-4 sm:flex">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-lg">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-lg">About</a>
-                    <a href="#special-offers" class="text-gray-600 hover:text-gray-900 text-lg">Special Offers</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-lg">Contact</a>
-                    <button onclick="openModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-lg">Login</button>
-                    <button onclick="openModal('signupModal')" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 text-lg">Sign Up</button>
+                <div class="hidden sm:flex sm:items-center sm:space-x-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
+                    <a href="#offers" class="text-gray-600 hover:text-gray-900 text-sm">Offers</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm">Login</button>
+                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm">Signup</button>
+                </div>
+            </div>
+            <div id="navbarMenu" class="navbar-menu sm:hidden">
+                <div class="flex flex-col space-y-2 px-4 pb-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
+                    <a href="#offers" class="text-gray-600 hover:text-gray-900 text-sm">Offers</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
+                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Login</button>
+                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Signup</button>
                 </div>
             </div>
         </div>
@@ -123,249 +237,796 @@
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Login</h2>
-            <input type="text" id="loginEmail" placeholder="Email or Mobile Number" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <button onclick="login()" class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600 mb-2 text-lg">Login</button>
-            <p class="text-center text-gray-600 mb-2">or</p>
-            <button onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 p-3 border rounded-lg flex items-center justify-center hover:bg-gray-100 mb-2 text-lg">
-                <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 mr-2"> Login with Google
-            </button>
-            <a href="#" onclick="openModal('forgotPasswordModal'); closeModal('loginModal')" class="text-blue-500 hover:underline text-lg">Forgot Password?</a>
-            <button onclick="closeModal('loginModal')" class="mt-4 text-gray-600 text-lg">Close</button>
+            <span class="close-btn" onclick="closeModal('loginModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Login</h2>
+            <div id="loginForm">
+                <div>
+                    <label for="loginEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email or Mobile Number</label>
+                    <input type="text" id="loginEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Email or Mobile">
+                </div>
+                <div class="mt-3">
+                    <label for="loginPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Password</label>
+                    <input type="password" id="loginPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Password">
+                </div>
+                <div class="mt-3 text-right">
+                    <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline text-sm">Forgot Password?</a>
+                </div>
+                <div class="mt-4">
+                    <button onclick="login()" class="btn-primary w-full text-sm sm:text-base">Login</button>
+                </div>
+                <div class="mt-3 text-center text-sm">OR</div>
+                <div class="mt-3">
+                    <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
+                        <img src="https://www.google.com/favicon.ico" alt="Google" class="h-4 mr-2 sm:h-5"> Login with Google
+                    </button>
+                </div>
+            </div>
+            <div id="forgotPasswordEmail" class="hidden">
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Forgot Password</h2>
+                <div>
+                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Enter Email</label>
+                    <input type="email" id="forgotEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                </div>
+                <div class="mt-4">
+                    <button onclick="sendOTP()" class="btn-primary w-full text-sm sm:text-base">Send OTP</button>
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
+                </div>
+            </div>
+            <div id="forgotPasswordOTP" class="hidden">
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Verify OTP</h2>
+                <div>
+                    <label for="otpInput" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Enter OTP</label>
+                    <input type="text" id="otpInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Enter OTP">
+                </div>
+                <div class="mt-4">
+                    <button onclick="verifyOTP()" class="btn-primary w-full text-sm sm:text-base">Verify OTP</button>
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
+                </div>
+            </div>
+            <div id="forgotPasswordReset" class="hidden">
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Reset Password</h2>
+                <div>
+                    <label for="newPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">New Password</label>
+                    <input type="password" id="newPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="New Password">
+                </div>
+                <div class="mt-3">
+                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Confirm Password">
+                </div>
+                <div class="mt-4">
+                    <button onclick="resetPassword()" class="btn-primary w-full text-sm sm:text-base">Reset Password</button>
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Signup Modal -->
     <div id="signupModal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Sign Up</h2>
-            <input type="text" id="signupName" placeholder="Full Name" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <input type="email" id="signupEmail" placeholder="Email" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <input type="text" id="signupMobile" placeholder="Mobile Number" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <input type="password" id="signupPassword" placeholder="Create Password" class="w-full p-3 mb-4 border rounded-lg text-lg">
-            <p class="text-sm text-gray-600 mb-4">By signing up, you agree to our <a href="terms.html" class="text-blue-500 hover:underline">Terms and Conditions</a>.</p>
-            <button onclick="signup()" class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600 mb-2 text-lg">Sign Up</button>
-            <p class="text-center text-gray-600 mb-2">or</p>
-            <button onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 p-3 border rounded-lg flex items-center justify-center hover:bg-gray-100 mb-2 text-lg">
-                <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 mr-2"> Sign Up with Google
-            </button>
-            <button onclick="closeModal('signupModal')" class="mt-4 text-gray-600 text-lg">Close</button>
+            <span class="close-btn" onclick="closeModal('signupModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Signup</h2>
+            <div>
+                <label for="signupName" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Name</label>
+                <input type="text" id="signupName" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Name">
+            </div>
+            <div class="mt-3">
+                <label for="signupEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email</label>
+                <input type="email" id="signupEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+            </div>
+            <div class="mt-3">
+                <label for="signupPhone" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Phone Number</label>
+                <input type="tel" id="signupPhone" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Phone Number">
+            </div>
+            <div class="mt-3">
+                <label for="signupPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Create Password</label>
+                <input type="password" id="signupPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Create Password">
+            </div>
+            <div class="mt-3 flex items-center">
+                <input type="checkbox" id="termsAgree" class="mr-2">
+                <label for="termsAgree" class="text-gray-700 text-sm sm:text-base">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
+            </div>
+            <div class="mt-4">
+                <button onclick="signup()" class="btn-primary w-full text-sm sm:text-base">Signup</button>
+            </div>
+            <div class="mt-3 text-center text-sm">OR</div>
+            <div class="mt-3">
+                <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
+                    <img src="https://www.google.com/favicon.ico" alt="Google" class="h-4 mr-2 sm:h-5"> Signup with Google
+                </button>
+            </div>
+            <div class="mt-3 text-center">
+                <a href="#" onclick="showModal('loginModal')" class="text-yellow-500 hover:underline text-sm">Already have an account? Login</a>
+            </div>
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
-    <div id="forgotPasswordModal" class="modal">
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Forgot Password</h2>
-            <div id="forgotPasswordStep1">
-                <input type="email" id="forgotEmail" placeholder="Enter Email" class="w-full p-3 mb-4 border rounded-lg text-lg">
-                <button onclick="sendOTP()" class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600 mb-2 text-lg">Send OTP</button>
+            <span class="close-btn" onclick="closeModal('cartModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Your Cart</h2>
+            <div id="cartItems" class="mb-4"></div>
+            <div class="text-center">
+                <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
             </div>
-            <div id="forgotPasswordStep2" class="hidden">
-                <input type="text" id="otp" placeholder="Enter OTP" class="w-full p-3 mb-4 border rounded-lg text-lg">
-                <input type="password" id="newPassword" placeholder="New Password" class="w-full p-3 mb-4 border rounded-lg text-lg">
-                <input type="password" id="confirmPassword" placeholder="Confirm Password" class="w-full p-3 mb-4 border rounded-lg text-lg">
-                <button onclick="resetPassword()" class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600 mb-2 text-lg">Reset Password</button>
+            <div class="mt-3 text-center">
+                <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
             </div>
-            <button onclick="closeModal('forgotPasswordModal')" class="mt-4 text-gray-600 text-lg">Close</button>
         </div>
     </div>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero-bg h-screen flex items-center justify-center text-center text-white">
-        <div>
-            <h1 class="text-5xl font-bold mb-4 sm:text-4xl">Delicute</h1>
-            <p class="text-2xl mb-6 sm:text-xl">Every Bite Tells a Story</p>
-            <a href="#special-offers" class="bg-yellow-500 text-white px-6 py-3 rounded-full hover:bg-yellow-600 text-lg sm:text-base">Explore Our Offers</a>
-        </div>
-    </section>
+    <!-- Main Content -->
+    <div id="mainContent">
+        <!-- Hero Section -->
+        <section id="home" class="hero-bg h-screen flex items-center justify-center text-white">
+            <div class="text-center bg-black bg-opacity-50 p-6 rounded-lg sm:p-8">
+                <h2 class="text-3xl font-bold mb-4 sm:text-4xl md:text-5xl">Welcome to Delicute</h2>
+                <p class="text-base mb-6 sm:text-lg md:text-xl">Savor the taste of home, delivered fresh from our cloud kitchen!</p>
+                <a href="#menu" class="btn-primary text-sm sm:text-base">Explore Menu</a>
+            </div>
+        </section>
 
-    <!-- About Section -->
-    <section id="about" class="py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-8 sm:text-2xl">About Delicute</h2>
-            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto sm:text-base">
-                At Delicute, we craft every dish with passion and creativity, turning simple ingredients into unforgettable stories. 
-                Our cloud kitchen brings gourmet meals straight to your door, blending bold flavors with the comfort of home dining.
-            </p>
-        </div>
-    </section>
+        <!-- About Section -->
+        <section id="about" class="py-12 bg-white sm:py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">About Delicute</h2>
+                <p class="text-base text-gray-600 text-center max-w-3xl mx-auto sm:text-lg">
+                    Delicute is your go-to cloud kitchen, crafting delicious, wholesome meals with love and care. 
+                    We specialize in a variety of cuisines, ensuring every bite is a delightful experience. 
+                    Order online and enjoy restaurant-quality food delivered straight to your door!
+                </p>
+            </div>
+        </section>
 
-    <!-- Special Offers Section -->
-    <section id="special-offers" class="py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-8 sm:text-2xl">Special Offers</h2>
-            <div id="offers-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-        </div>
-    </section>
+        <!-- Special Offers Section -->
+        <section id="offers" class="py-12 bg-gray-100 sm:py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Special Offers</h2>
+                <div id="offerItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+            </div>
+        </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-8 sm:text-2xl">Get in Touch</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <p class="text-lg text-gray-600 mb-4 sm:text-base">Have questions or want to reach out? Contact us!</p>
-                    <p class="text-gray-600 sm:text-base"><strong>Email:</strong> hello@delicute.com</p>
-                    <p class="text-gray-600 sm:text-base"><strong>Phone:</strong> +1 (555) 123-4567</p>
-                    <p class="text-gray-600 sm:text-base"><strong>Hours:</strong> Mon-Sun, 11 AM - 10 PM</p>
+        <!-- Menu Section -->
+        <section id="menu" class="py-12 bg-gray-100 sm:py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Our Menu</h2>
+                <div class="bg-white p-4 rounded-lg shadow-md mb-6 sm:p-6">
+                    <div class="flex flex-col gap-4 sm:flex-row">
+                        <div class="flex-1">
+                            <input type="text" id="searchInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterMenu()">
+                        </div>
+                        <div class="flex-1">
+                            <select id="categoryFilter" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" onchange="filterMenu()">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
+                            <input type="range" id="priceRange" min="30" max="999" value="999" class="range-slider" oninput="updatePriceRange()">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4 sm:text-lg">Contact Us</h3>
+                <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+                <div class="text-center mt-6 space-y-4">
+                    <button onclick="showCart()" class="btn-primary text-sm sm:text-base">View Cart & Order</button>
+                    <div>
+                        <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-4 py-2 rounded-full text-sm sm:text-base">View Full Menu</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-12 bg-white sm:py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Contact Us</h2>
+                <div class="max-w-lg mx-auto">
+                    <div class="bg-gray-100 p-4 rounded-lg sm:p-6">
                         <div>
-                            <input type="text" id="name" placeholder="Your Name" class="w-full p-3 mb-4 border rounded-lg text-lg sm:text-base">
-                            <input type="email" id="email" placeholder="Your Email" class="w-full p-3 mb-4 border rounded-lg text-lg sm:text-base">
-                            <textarea id="message" placeholder="Your Message" class="w-full p-3 mb-4 border rounded-lg text-lg sm:text-base" rows="4"></textarea>
-                            <button onclick="submitForm()" class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 text-lg sm:text-base">Submit</button>
+                            <label for="name" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Name</label>
+                            <input type="text" id="name" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Name">
+                        </div>
+                        <div class="mt-3">
+                            <label for="email" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email</label>
+                            <input type="email" id="email" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                        </div>
+                        <div class="mt-3">
+                            <label for="message" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Message</label>
+                            <textarea id="message" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" rows="4" placeholder="Your Message"></textarea>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="submitForm()" class="btn-primary w-full text-sm sm:text-base">Send Message</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="text-white py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p class="sm:text-base">© 2025 Delicute. All rights reserved.</p>
-            <p class="mt-2 sm:text-base">Follow us on social media: <a href="#" class="text-yellow-500 hover:underline">Instagram</a> | <a href="#" class="text-yellow-500 hover:underline">Twitter</a></p>
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="flex justify-center items-center space-x-3 mb-4">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 sm:h-12">
+                    <div>
+                        <h1 class="text-lg font-bold text-white sm:text-xl">DELICUTE</h1>
+                        <p class="text-xs text-gray-300 sm:text-sm">Every bite tells a story</p>
+                    </div>
+                </div>
+                <p class="text-sm sm:text-base">© 2025 Delicute. All rights reserved.</p>
+                <p class="mt-2 text-sm sm:text-base">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Full Menu Page -->
+    <div id="fullMenuContainer" class="full-menu-container">
+        <div class="max-w-7xl mx-auto px-4 sm:px 6px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 sm:text-3xl">Full Menu</h2>
+                <button onclick="hideFullMenu()" class="btn-primary text-sm sm:text-base">Back to Home</button>
+            </div>
+            <div>
+            <div class="bg-white p-4 rounded-lg shadow-md mb-6 sm:p-6">
+                <div class="flex flex-col gap-4 sm:flex-row">
+                    <div class="flex-1">
+                        <input type="text" id="fullMenuSearchInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterFullMenu()">
+                    </div>
+                    <div class="flex-1">
+                        <select id="fullMenuCategoryFilter" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" onchange="filterFullMenu()">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="flex-3">
+                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
+                        <input type="range" id="fullMenuPriceRange" min="30" max="999" value="999" class="range-slider" oninput="updateFullMenuPriceRange()">
+                    </div>
+                </div>
+            </div>
+            <div id="fullMenuItems" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <div>
+            <div class="flex justify-center mt-6 space-x-4">
+                <div>
+                <button onclick="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
+                <span id="pageInfo" class="flex items-center text-gray-700"></span>
+                <button onclick="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="nextPage()">Next</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
     <script>
-        // Sample offers data (replace with backend API in production)
-        const offers = [
-            {
-                title: "Combo Meal Deal",
-                description: "Pizza, Salad, and Drink for a perfect meal.",
-                price: "₹999",
-                image: "https://images.unsplash.com/photo-1627308595324-0d1014ea1d2e"
-            },
-            {
-                title: "Dessert Delight",
-                description: "Any dessert free with orders above ₹500.",
-                price: "Free with ₹500+",
-                image: "https://images.unsplash.com/photo-1559054663-7fd8ab3625de"
-            }
-        ];
+        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+        let menuItemsData = [];
+        let offerItemsData = [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentPage = 1;
+        const itemsPerPage = 9;
+        let categories = [];
 
-        // Function to render offers with animation
-        function renderOffers() {
-            const container = document.getElementById('offers-container');
-            container.innerHTML = '';
-            offers.forEach((offer, index) => {
-                const offerCard = document.createElement('div');
-                offerCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden offer-card';
-                offerCard.innerHTML = `
-                    <img src="${offer.image}" alt="${offer.title}" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold text-gray-800 sm:text-lg">${offer.title}</h3>
-                        <p class="text-gray-600 sm:text-base">${offer.description}</p>
-                        <p class="text-yellow-500 font-bold mt-2 sm:text-base">${offer.price}</p>
-                    </div>
-                `;
-                container.appendChild(offerCard);
-                // Trigger animation with delay for each card
-                setTimeout(() => {
-                    offerCard.classList.add('visible');
-                }, index * 200);
-            });
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
         }
 
-        // Call renderOffers on page load
-        window.onload = renderOffers;
-
-        function toggleMenu() {
-            const navLinks = document.querySelector('.nav-links');
-            navLinks.classList.toggle('active');
-        }
-
-        function openModal(modalId) {
+        function showModal(modalId) {
+            closeModalAll();
             document.getElementById(modalId).style.display = 'flex';
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            if (modalId === 'forgotPasswordModal') {
-                document.getElementById('forgotPasswordStep1').classList.remove('hidden');
-                document.getElementById('forgotPasswordStep2').classList.add('hidden');
-                document.getElementById('forgotEmail').value = '';
-                document.getElementById('otp').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            }
+            if (modalId === 'loginModal') backToLogin();
         }
 
-        function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            if (email && password) {
-                window.location.href = 'userdashboard.html';
-            } else {
-                alert('Please fill out all fields.');
-            }
+        function closeModalAll() {
+            document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
         }
 
-        function loginWithGoogle() {
-            alert('Google login initiated (backend integration required).');
-            window.location.href = 'userdashboard.html';
+        function showForgotPassword() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('forgotPassword').classList.remove('hidden');
         }
 
-        function signup() {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const mobile = document.getElementById('signupMobile').value;
-            const password = document.getElementById('signupPassword').value;
-            if (name && email && mobile && password) {
-                alert('Sign up successful! Please log in.');
-                closeModal('signupModal');
-                openModal('loginModal');
-            } else {
-                alert('Please fill out all fields.');
-            }
+        function backToLogin() {
+            document.getElementById('forgotPasswordEmail').classList.add('hidden');
+            document.getElementById('forgotPasswordOTP').classList.add('hidden');
+            document.getElementById('forgotPasswordReset').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
         }
 
-        function sendOTP() {
+        async function sendOTP() {
             const email = document.getElementById('forgotEmail').value;
-            if (email) {
-                alert('OTP sent to ' + email);
-                document.getElementById('forgotPasswordStep1').classList.add('hidden');
-                document.getElementById('forgotPasswordStep2').classList.remove('hidden');
-            } else {
-                alert('Please enter your email.');
+            if (!email) {
+                showToast('Please enter your email.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/forgot-password}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(data.message, 'Success');
+                    document.getElementById('forgotPasswordEmail').classList.add('hidden');
+                    document.getElementById('forgotPasswordOTP').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Failed to send OTP.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending OTP: ', error);
+                showToast('Failed to send OTP.', 'error');
             }
         }
 
-        function resetPassword() {
-            const otp = document.getElementById('otp').value;
+        async function verifyOTP() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
+            if (!otp) {
+                showToast('Please enter the OTP.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword: null })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('forgotPasswordOTP').classList.add('hidden');
+                    document.getElementById('forgotPasswordReset').classList.remove('hidden');
+                } else {
+                    showToast(data.error || 'Invalid OTP.', 'error');
+                }
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                showToast('Failed to verify OTP.', 'error');
+            }
+        }
+
+        async function resetPassword() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('otpInput').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            if (otp && newPassword && confirmPassword) {
-                if (newPassword === confirmPassword) {
-                    alert('Password reset successfully!');
-                    closeModal('forgotPasswordModal');
-                    openModal('loginModal');
+            if (!newPassword || !confirmPassword) {
+                showToast('Please fill in both password fields.', 'error');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(data.message, 'success');
+                    backToLogin();
+                    closeModal('loginModal');
                 } else {
-                    alert('Passwords do not match.');
+                    showToast(data.error || 'Failed to reset password.', 'error');
                 }
-            } else {
-                alert('Please fill out all fields.');
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showToast('Failed to reset password.', 'error');
             }
         }
 
-        function submitForm() {
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                showToast('Please enter both email/mobile and password.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    closeModal('loginModal');
+                    showToast('Login successful!', 'success');
+                    window.location.href = '/userdashboard.html';
+                } else {
+                    showToast(data.error || 'Login failed.', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Failed to log in.', 'error');
+            }
+        }
+
+        async function signup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const termsAgreed = document.getElementById('termsAgree').checked;
+            if (!name || !email || !phone || !password) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+            if (!termsAgreed) {
+                showToast('Please agree to the Terms and Conditions.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    closeModal('signupModal');
+                    showToast('Signup successful!', 'success');
+                    window.location.href = '/userdashboard.html';
+                } else {
+                    showToast(data.error || 'Signup failed.', 'error');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showToast('Failed to sign up.', 'error');
+            }
+        }
+
+        function googleLogin() {
+            window.location.href = `${BASE_URL}/api/auth/google`;
+        }
+
+        function addToCart(item, type = 'menu') {
+            let price;
+            if (type === 'menu') {
+                if (item.price) {
+                    price = item.price;
+                } else {
+                    showToast('No price available for this item.', 'error');
+                    return;
+                }
+            } else {
+                price = item.price;
+            }
+            cart.push({ id: item._id, name: item.name, price, type });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showToast(`${item.name} added to cart!`, 'success');
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCart();
+            showToast('Item removed from cart.', 'success');
+        }
+
+        function showCart() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to view your cart.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            showModal('cartModal');
+            displayCart();
+        }
+
+        function displayCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">Your cart is empty.</p>';
+                return;
+            }
+            let total = 0;
+            cartItemsDiv.innerHTML = cart.map((item, index) => {
+                total += item.price;
+                return `
+                    <div class="flex justify-between py-2 border-b items-center text-sm sm:text-base">
+                        <div>
+                            <span class="font-medium">${item.name}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span>₹${item.price}</span>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            cartItemsDiv.innerHTML += `
+                <div class="flex justify-between py-2 font-bold text-sm sm:text-base">
+                    <span>Total</span>
+                    <span>₹${total}</span>
+                </div>
+            `;
+        }
+
+        async function placeOrder() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to place your order.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ items: cart, total })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const options = {
+                        key: 'rzp_test_1a2b3c4d5e6f7g', // Replace with actual RAZORPAY_KEY_ID
+                        amount: data.amount,
+                        currency: data.currency,
+                        name: 'Delicute',
+                        description: 'Order Payment',
+                        order_id: data.orderId,
+                        handler: async function (response) {
+                            const verifyResponse = await fetch(`${BASE_URL}/api/payment/verify`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    orderId: response.razorpay_order_id,
+                                    paymentId: response.razorpay_payment_id,
+                                    signature: response.razorpay_signature
+                                })
+                            });
+                            const verifyData = await verifyResponse.json();
+                            if (verifyResponse.ok) {
+                                showToast('Order placed successfully!', 'success');
+                                cart = [];
+                                localStorage.removeItem('cart');
+                                closeModal('cartModal');
+                                displayCart();
+                            } else {
+                                showToast(verifyData.error || 'Payment verification failed.', 'error');
+                            }
+                        },
+                        prefill: {
+                            name: 'Customer Name',
+                            email: 'customer@example.com',
+                            contact: '9999999999'
+                        },
+                        theme: { color: '#f59e0b' }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    showToast(data.error || 'Failed to create order.', 'error');
+                }
+            } catch (error) {
+                console.error('Order placement error:', error);
+                showToast('Failed to place order.', 'error');
+            }
+        }
+
+        async function submitForm() {
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
             if (name && email && message) {
-                alert('Thank you for your message, ' + name + '! It has been sent to our team.');
-                window.location.href = 'admindashboard.html';
+                showToast('Thank you for your message!', 'success');
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('message').value = '';
             } else {
-                alert('Please fill out all fields.');
+                showToast('Please fill in all fields.', 'error');
             }
         }
+
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu`);
+                menuItemsData = await response.json();
+                categories = [...new Set(menuItemsData.map(item => item.category))];
+                populateCategoryFilters();
+                displayMenuItems(menuItemsData.slice(0, 6));
+            } catch (error) {
+                console.error('Error fetching menu items:', error);
+                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+            }
+        }
+
+        async function fetchOfferItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers`);
+                offerItemsData = await response.json();
+                displayOfferItems(offerItemsData);
+            } catch (error) {
+                console.error('Error fetching offer items:', error);
+                document.getElementById('offerItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load offers.</p>';
+            }
+        }
+
+        function populateCategoryFilters() {
+            const categoryFilter = document.getElementById('categoryFilter');
+            const fullMenuCategoryFilter = document.getElementById('fullMenuCategoryFilter');
+            categoryFilter.innerHTML = '<option value="">All Categories</option>' + 
+                categories.map(category => `<option value="${category}">${category}</option>`).join('');
+            fullMenuCategoryFilter.innerHTML = categoryFilter.innerHTML;
+        }
+
+        function displayMenuItems(items) {
+            const menuItemsDiv = document.getElementById('menuItems');
+            if (items.length === 0) {
+                menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
+                return;
+            }
+            menuItemsDiv.innerHTML = items.map(item => `
+                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayOfferItems(items) {
+            const offerItemsDiv = document.getElementById('offerItems');
+            if (items.length === 0) {
+                offerItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No offers available.</p>';
+                return;
+            }
+            offerItemsDiv.innerHTML = items.map(item => `
+                <div class="offer-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)}, "offer")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayFullMenuItems(items) {
+            const fullMenuItemsDiv = document.getElementById('fullMenuItems');
+            if (items.length === 0) {
+                fullMenuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
+                return;
+            }
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = items.slice(start, end);
+            fullMenuItemsDiv.innerHTML = paginatedItems.map(item => `
+                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">{item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">{item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+            updatePagination(items.length);
+        }
+
+        function updatePagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevPage').classList.toggle('disabled', currentPage === 1);
+            document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            filterFullMenu();
+        }
+
+        function showFullMenu() {
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('fullMenuContainer').classList.add('active');
+            currentPage = 1;
+            filterFullMenu();
+        }
+
+        function hideFullMenu() {
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('fullMenuContainer').classList.remove('active');
+            filterMenu();
+        }
+
+        function updatePriceRange() {
+            const priceRange = document.getElementById('priceRange').value;
+            document.getElementById('priceRangeValue').textContent = `₹30 - ₹${priceRange}`;
+            filterMenu();
+        }
+
+        function updateFullMenuPriceRange() {
+            const priceRange = document.getElementById('fullMenuPriceRange').value;
+            document.getElementById('fullMenuPriceRangeValue').textContent = `₹30 - ₹${priceRange}`;
+            filterFullMenu();
+        }
+
+        function filterMenu() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('priceRange').value);
+
+            const filteredItems = menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+                const matchesCategory = category ? item.category === category : true;
+                const matchesPrice = item.price <= maxPrice;
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+
+            displayMenuItems(filteredItems.slice(0, 6));
+        }
+
+        function filterFullMenu() {
+            const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase();
+            const category = document.getElementById('fullMenuCategoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange')).value;
+
+            const filteredItems = menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+                const matchesCategory = category ? item.category === category : true;
+                const matchesPrice = item.price <= maxPrice;
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+
+            displayFullMenuItems(filteredItems);
+        }
+
+        // Navbar Toggle
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            const navbarMenu = document.getElementById('navbarMenu');
+            navbarMenu.classList.toggle('active');
+        });
+
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                window.location.href = '/userdashboard.html';
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            const googleToken = urlParams.get('token');
+            if (googleToken) {
+                localStorage.setItem('token', googleToken);
+                window.location.href = '/userdashboard.html';
+            }
+            fetchMenuItems();
+            fetchOfferItems();
+        };
     </script>
 </body>
 </html>

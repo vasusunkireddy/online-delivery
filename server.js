@@ -99,8 +99,8 @@ async function initializeDatabase() {
           id SERIAL PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
           category VARCHAR(100) NOT NULL,
+          price INTEGER NOT NULL,
           description TEXT,
-          prices JSONB NOT NULL,
           image VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -340,7 +340,7 @@ app.get('/api/menu', async (req, res) => {
       _id: item.id,
       name: item.name,
       category: item.category,
-      prices: item.prices,
+      price: item.price,
       description: item.description,
       image: item.image,
       created_at: item.created_at
@@ -362,7 +362,7 @@ app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
       _id: item.id,
       name: item.name,
       category: item.category,
-      prices: item.prices,
+      price: item.price,
       description: item.description,
       image: item.image
     });
@@ -373,33 +373,24 @@ app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
 });
 
 app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { name, category, prices, image, description } = req.body;
-  if (!name || !category || !prices) {
-    return res.status(400).json({ error: 'Name, category, and prices are required' });
+  const { name, category, price, image, description } = req.body;
+  if (!name || !category || !price) {
+    return res.status(400).json({ error: 'Name, category, and price are required' });
   }
-  if (!prices.regular && !prices.classic && !prices.large) {
-    return res.status(400).json({ error: 'At least one price variant (regular, classic, or large) is required' });
+  if (typeof price !== 'number' || price <= 0) {
+    return res.status(400).json({ error: 'Price must be a positive number' });
   }
-
-  // Validate prices
-  const validatedPrices = prices && typeof prices === 'object' ? prices : {};
-  for (const [key, value] of Object.entries(validatedPrices)) {
-    if (typeof value !== 'number' || value <= 0) {
-      return res.status(400).json({ error: `Price for ${key} must be a positive number` });
-    }
-  }
-
   try {
     const result = await pool.query(
-      'INSERT INTO menu_items (name, category, prices, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, category, JSON.stringify(validatedPrices), image, description]
+      'INSERT INTO menu_items (name, category, price, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, category, price, image, description]
     );
     const item = result.rows[0];
     res.status(201).json({
       _id: item.id,
       name: item.name,
       category: item.category,
-      prices: item.prices,
+      price: item.price,
       description: item.description,
       image: item.image
     });
@@ -411,26 +402,17 @@ app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => 
 
 app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { name, category, prices, image, description } = req.body;
-  if (!name || !category || !prices) {
-    return res.status(400).json({ error: 'Name, category, and prices are required' });
+  const { name, category, price, image, description } = req.body;
+  if (!name || !category || !price) {
+    return res.status(400).json({ error: 'Name, category, and price are required' });
   }
-  if (!prices.regular && !prices.classic && !prices.large) {
-    return res.status(400).json({ error: 'At least one price variant (regular, classic, or large) is required' });
+  if (typeof price !== 'number' || price <= 0) {
+    return res.status(400).json({ error: 'Price must be a positive number' });
   }
-
-  // Validate prices
-  const validatedPrices = prices && typeof prices === 'object' ? prices : {};
-  for (const [key, value] of Object.entries(validatedPrices)) {
-    if (typeof value !== 'number' || value <= 0) {
-      return res.status(400).json({ error: `Price for ${key} must be a positive number` });
-    }
-  }
-
   try {
     const result = await pool.query(
-      'UPDATE menu_items SET name = $1, category = $2, prices = $3, image = $4, description = $5 WHERE id = $6 RETURNING *',
-      [name, category, JSON.stringify(validatedPrices), image, description, id]
+      'UPDATE menu_items SET name = $1, category = $2, price = $3, image = $4, description = $5 WHERE id = $6 RETURNING *',
+      [name, category, price, image, description, id]
     );
     const item = result.rows[0];
     if (!item) return res.status(404).json({ error: 'Menu item not found' });
@@ -438,7 +420,7 @@ app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
       _id: item.id,
       name: item.name,
       category: item.category,
-      prices: item.prices,
+      price: item.price,
       description: item.description,
       image: item.image
     });
@@ -753,7 +735,7 @@ app.post('/api/contact', async (req, res) => {
 
 app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { subject, reply } = req.body;
+  const { subject, message: reply } = req.body;
   if (!subject || !reply) {
     return res.status(400).json({ error: 'Subject and reply are required' });
   }

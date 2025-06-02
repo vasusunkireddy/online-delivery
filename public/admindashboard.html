@@ -271,7 +271,6 @@
             margin-bottom: 1rem;
             word-break: break-word;
         }
-        /* Mobile Responsive Styles */
         @media (max-width: 768px) {
             .auth-container {
                 padding: 1.5rem;
@@ -364,44 +363,46 @@
     <!-- Edit Menu Item Modal -->
     <div id="editMenuModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('editMenuModal')">×</span>
+            <span class="close-btn" onclick="closeModal('editMenuModal')">&times;</span>
             <h2 class="text-xl font-bold text-gray-800 text-center mb-4">Edit Menu Item</h2>
             <input type="hidden" id="editItemId">
-            <div>
-                <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
-                <input type="text" id="editItemName" class="input-field" placeholder="Item Name">
-            </div>
-            <div class="mt-4">
-                <label for="editItemPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
-                <input type="number" id="editItemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
-            </div>
-            <div class="mt-4">
-                <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
-                <select id="editItemCategory" class="input-field">
-                    <option value="">Select Category</option>
-                    <option value="Veg Pizza">Veg Pizza</option>
-                    <option value="Non-Veg Pizza">Non-Veg Pizza</option>
-                    <option value="Mocktails">Mocktails</option>
-                    <option value="Juice">Juice</option>
-                    <option value="Maggie">Maggie</option>
-                    <option value="Pasta">Pasta</option>
-                    <option value="Shakes">Shakes</option>
-                    <option value="Waffles">Waffles</option>
-                    <option value="French Fries">French Fries</option>
-                    <option value="Desserts">Desserts</option>
-                </select>
-            </div>
-            <div class="mt-4">
-                <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
-                <input type="text" id="editItemImage" class="input-field" placeholder="Image URL">
-            </div>
-            <div class="mt-4">
-                <label for="editItemImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
-                <input type="file" id="editItemImageUpload" class="input-field" accept="image/*">
-            </div>
-            <div class="mt-4">
-                <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                <textarea id="editItemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
+                    <input type="text" id="editItemName" class="input-field" placeholder="Item Name">
+                </div>
+                <div>
+                    <label for="editItemPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
+                    <input type="number" id="editItemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
+                </div>
+                <div>
+                    <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
+                    <select id="editItemCategory" class="input-field">
+                        <option value="">Select Category</option>
+                        <option value="Veg Pizza">Veg Pizza</option>
+                        <option value="Non-Veg Pizza">Non-Veg Pizza</option>
+                        <option value="Mocktails">Mocktails</option>
+                        <option value="Juice">Juice</option>
+                        <option value="Maggie">Maggie</option>
+                        <option value="Pasta">Pasta</option>
+                        <option value="Shakes">Shakes</option>
+                        <option value="Waffles">Waffles</option>
+                        <option value="French Fries">French Fries</option>
+                        <option value="Desserts">Desserts</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                    <input type="text" id="editItemImage" class="input-field" placeholder="Image URL">
+                </div>
+                <div>
+                    <label for="editItemImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                    <input type="file" id="editItemImageUpload" class="input-field" accept="image/*">
+                </div>
+                <div>
+                    <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
+                    <textarea id="editItemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+                </div>
             </div>
             <div class="mt-6">
                 <button onclick="updateMenuItem()" class="auth-btn w-full">Update Item</button>
@@ -593,67 +594,68 @@
         <!-- Menu Management Section -->
         <section id="menuSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Menu</h3>
-            <!-- Add Menu Item Form -->
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Menu Item</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="itemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
-                        <input type="text" id="itemName" class="input-field" placeholder="Item Name">
-                    </div>
-                    <div>
-                        <label for="itemPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
-                        <input type="number" id="itemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
-                    </div>
-                    <div>
-                        <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
-                        <select id="itemCategory" class="input-field">
-                            <option value="">Select Category</option>
-                            <option value="Veg Pizza">Veg Pizza</option>
-                            <option value="Non-Veg Pizza">Non-Veg Pizza</option>
-                            <option value="Mocktails">Mocktails</option>
-                            <option value="Juice">Juice</option>
-                            <option value="Maggie">Maggie</option>
-                            <option value="Pasta">Pasta</option>
-                            <option value="Shakes">Shakes</option>
-                            <option value="Waffles">Waffles</option>
-                            <option value="French Fries">French Fries</option>
-                            <option value="Desserts">Desserts</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
-                        <input type="text" id="itemImage" class="input-field" placeholder="Image URL">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label for="itemImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
-                        <input type="file" id="itemImageUpload" class="input-field" accept="image/*">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label for="itemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
-                        <textarea id="itemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Menu Item Form -->
+                <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-1">
+                    <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Menu Item</h4>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label for="itemName" class="block text-sm text-gray-700 font-medium mb-1">Item Name</label>
+                            <input type="text" id="itemName" class="input-field" placeholder="Item Name">
+                        </div>
+                        <div>
+                            <label for="itemPrice" class="block text-sm text-gray-700 font-medium mb-1">Price (₹)</label>
+                            <input type="number" id="itemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
+                        </div>
+                        <div>
+                            <label for="itemCategory" class="block text-sm text-gray-700 font-medium mb-1">Category</label>
+                            <select id="itemCategory" class="input-field">
+                                <option value="">Select Category</option>
+                                <option value="Veg Pizza">Veg Pizza</option>
+                                <option value="Non-Veg Pizza">Non-Veg Pizza</option>
+                                <option value="Mocktails">Mocktails</option>
+                                <option value="Juice">Juice</option>
+                                <option value="Maggie">Maggie</option>
+                                <option value="Pasta">Pasta</option>
+                                <option value="Shakes">Shakes</option>
+                                <option value="Waffles">Waffles</option>
+                                <option value="French Fries">French Fries</option>
+                                <option value="Desserts">Desserts</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="itemImage" class="block text-sm text-gray-700 font-medium mb-1">Image URL (Optional)</label>
+                            <input type="text" id="itemImage" class="input-field" placeholder="Image URL">
+                        </div>
+                        <div>
+                            <label for="itemImageUpload" class="block text-sm text-gray-700 font-medium mb-1">Upload Image (Optional)</label>
+                            <input type="file" id="itemImageUpload" class="input-field" accept="image/*">
+                        </div>
+                        <div>
+                            <label for="itemDescription" class="block text-sm text-gray-700 font-medium mb-1">Description (Optional)</label>
+                            <textarea id="itemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
+                        </div>
+                        <button onclick="addMenuItem()" class="auth-btn w-full mt-4">Add Item</button>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <button onclick="addMenuItem()" class="auth-btn w-full">Add Item</button>
-                </div>
-            </div>
-            <!-- Menu Items Table -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Menu Items</h4>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="menuTableBody"></tbody>
-                    </table>
+                <!-- Menu Items Table -->
+                <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-2">
+                    <h4 class="text-lg font-medium text-gray-700 mb-4">Menu Items</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -684,7 +686,6 @@
         <!-- Special Offers Section -->
         <section id="offersSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Special Offers</h3>
-            <!-- Add Offer Form -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Offer</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -713,7 +714,6 @@
                     <button onclick="addOffer()" class="auth-btn w-full">Add Offer</button>
                 </div>
             </div>
-            <!-- Offers Table -->
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Special Offers</h4>
                 <div class="table-container">
@@ -735,7 +735,6 @@
         <!-- Coupons Management Section -->
         <section id="couponsSection" class="mb-8 hidden">
             <h3 class="text-2xl font-semibold text-gray-800 mb-4">Manage Coupons</h3>
-            <!-- Add Coupon Form -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Add New Coupon</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -764,7 +763,6 @@
                     <button onclick="addCoupon()" class="auth-btn w-full">Add Coupon</button>
                 </div>
             </div>
-            <!-- Coupons Table -->
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h4 class="text-lg font-medium text-gray-700 mb-4">Coupons</h4>
                 <div class="table-container">
@@ -832,6 +830,7 @@
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
 
+        // Utility Functions
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -843,21 +842,23 @@
         }
 
         function toggleDropdown() {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('active');
+            document.getElementById('profileDropdown').classList.toggle('active');
         }
 
         function showSection(section) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.getElementById(`${section}Section`).classList.remove('hidden');
             toggleDropdown();
-            if (section === 'menu') fetchMenuItems();
-            else if (section === 'orders') fetchOrders();
-            else if (section === 'offers') fetchOffers();
-            else if (section === 'coupons') fetchCoupons();
-            else if (section === 'customers') fetchCustomers();
-            else if (section === 'contact') fetchContactMessages();
-            else if (section === 'profile') fetchAdminDetails();
+            const actions = {
+                menu: fetchMenuItems,
+                orders: fetchOrders,
+                offers: fetchOffers,
+                coupons: fetchCoupons,
+                customers: fetchCustomers,
+                contact: fetchContactMessages,
+                profile: fetchAdminDetails
+            };
+            actions[section]?.();
         }
 
         function showModal(modalId) {
@@ -875,9 +876,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/files/upload`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
                     body: formData
                 });
                 const data = await response.json();
@@ -891,12 +890,11 @@
             }
         }
 
+        // Authentication and Profile
         async function fetchAdminDetails() {
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -952,12 +950,35 @@
             }
         }
 
+        async function checkAuth() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = 'admin.html';
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    localStorage.removeItem('adminToken');
+                    window.location.href = 'admin.html';
+                } else {
+                    fetchAdminDetails();
+                    showSection('home');
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+                localStorage.removeItem('adminToken');
+                window.location.href = 'admin.html';
+            }
+        }
+
+        // Menu Management
         async function fetchMenuItems() {
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const items = await response.json();
                 displayMenuItems(items);
@@ -978,6 +999,7 @@
                     <td class="py-2 px-3">${item.name || 'N/A'}</td>
                     <td class="py-2 px-3">${item.category || 'N/A'}</td>
                     <td class="py-2 px-3">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</td>
+                    <td class="py-2 px-3">${item.description || 'N/A'}</td>
                     <td class="py-2 px-3 flex space-x-2">
                         <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Edit</button>
                         <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
@@ -987,24 +1009,21 @@
         }
 
         async function addMenuItem() {
-            const name = document.getElementById('itemName').value.trim();
-            const price = parseFloat(document.getElementById('itemPrice').value) || null;
-            const category = document.getElementById('itemCategory').value.trim();
-            const imageUrl = document.getElementById('itemImage').value.trim();
-            const file = document.getElementById('itemImageUpload').files[0];
-            const description = document.getElementById('itemDescription').value.trim();
+            const item = {
+                name: document.getElementById('itemName').value.trim(),
+                price: parseFloat(document.getElementById('itemPrice').value) || null,
+                category: document.getElementById('itemCategory').value.trim(),
+                imageUrl: document.getElementById('itemImage').value.trim(),
+                file: document.getElementById('itemImageUpload').files[0],
+                description: document.getElementById('itemDescription').value.trim()
+            };
 
-            if (!name || !category) {
-                showToast('Item name and category are required.', 'error');
+            if (!item.name || !item.category || !item.price) {
+                showToast('Item name, category, and price are required.', 'error');
                 return;
             }
 
-            if (!price) {
-                showToast('Price is required.', 'error');
-                return;
-            }
-
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`, {
@@ -1014,22 +1033,19 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        name,
-                        price,
-                        category,
+                        name: item.name,
+                        price: item.price,
+                        category: item.category,
                         image: uploadedImageUrl,
-                        description
+                        description: item.description
                     })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Menu item added successfully!', 'success');
-                    document.getElementById('itemName').value = '';
-                    document.getElementById('itemPrice').value = '';
-                    document.getElementById('itemCategory').value = '';
-                    document.getElementById('itemImage').value = '';
-                    document.getElementById('itemImageUpload').value = '';
-                    document.getElementById('itemDescription').value = '';
+                    ['itemName', 'itemPrice', 'itemCategory', 'itemImage', 'itemImageUpload', 'itemDescription'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
                     fetchMenuItems();
                 } else {
                     showToast(data.error || 'Failed to add menu item.', 'error');
@@ -1040,14 +1056,13 @@
             }
         }
 
-        function editMenuItem(itemId) {
-            fetch(`${BASE_URL}/api/menu/${itemId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            })
-                .then(response => response.json())
-                .then(item => {
+        async function editMenuItem(itemId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const item = await response.json();
+                if (response.ok) {
                     document.getElementById('editItemId').value = item._id;
                     document.getElementById('editItemName').value = item.name || '';
                     document.getElementById('editItemPrice').value = item.price || '';
@@ -1055,47 +1070,46 @@
                     document.getElementById('editItemImage').value = item.image || '';
                     document.getElementById('editItemDescription').value = item.description || '';
                     showModal('editMenuModal');
-                })
-                .catch(error => {
-                    console.error('Error fetching menu item:', error);
-                    showToast('Failed to load menu item.', 'error');
-                });
+                } else {
+                    showToast(item.error || 'Failed to load menu item.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching menu item:', error);
+                showToast('Failed to load menu item.', 'error');
+            }
         }
 
         async function updateMenuItem() {
-            const id = document.getElementById('editItemId').value;
-            const name = document.getElementById('editItemName').value.trim();
-            const price = parseFloat(document.getElementById('editItemPrice').value) || null;
-            const category = document.getElementById('editItemCategory').value.trim();
-            const imageUrl = document.getElementById('editItemImage').value.trim();
-            const file = document.getElementById('editItemImageUpload').files[0];
-            const description = document.getElementById('editItemDescription').value.trim();
+            const item = {
+                id: document.getElementById('editItemId').value,
+                name: document.getElementById('editItemName').value.trim(),
+                price: parseFloat(document.getElementById('editItemPrice').value) || null,
+                category: document.getElementById('editItemCategory').value.trim(),
+                imageUrl: document.getElementById('editItemImage').value.trim(),
+                file: document.getElementById('editItemImageUpload').files[0],
+                description: document.getElementById('editItemDescription').value.trim()
+            };
 
-            if (!name || !category) {
-                showToast('Item name and category are required.', 'error');
+            if (!item.name || !item.category || !item.price) {
+                showToast('Item name, category, and price are required.', 'error');
                 return;
             }
 
-            if (!price) {
-                showToast('Price is required.', 'error');
-                return;
-            }
-
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
 
             try {
-                const response = await fetch(`${BASE_URL}/api/menu/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/menu/${item.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        name,
-                        price,
-                        category,
+                        name: item.name,
+                        price: item.price,
+                        category: item.category,
                         image: uploadedImageUrl,
-                        description
+                        description: item.description
                     })
                 });
                 const data = await response.json();
@@ -1117,9 +1131,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1134,12 +1146,11 @@
             }
         }
 
+        // Order Management
         async function fetchOrders() {
             try {
                 const response = await fetch(`${BASE_URL}/api/orders`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const orders = await response.json();
                 displayOrders(orders);
@@ -1152,8 +1163,7 @@
         }
 
         function displayOrders(orders) {
-            const orderTableBody = document.getElementById('orderTableBody');
-            orderTableBody.innerHTML = orders.map(order => `
+            document.getElementById('orderTableBody').innerHTML = orders.map(order => `
                 <tr class="border-b">
                     <td class="py-2 px-3">${order._id}</td>
                     <td class="py-2 px-3">${order.customerName || 'N/A'}</td>
@@ -1201,9 +1211,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1218,12 +1226,11 @@
             }
         }
 
+        // Special Offers
         async function fetchOffers() {
             try {
                 const response = await fetch(`${BASE_URL}/api/offers`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const offers = await response.json();
                 displayOffers(offers);
@@ -1234,8 +1241,7 @@
         }
 
         function displayOffers(offers) {
-            const offerTableBody = document.getElementById('offerTableBody');
-            offerTableBody.innerHTML = offers.map(offer => `
+            document.getElementById('offerTableBody').innerHTML = offers.map(offer => `
                 <tr class="border-b">
                     <td class="py-2 px-3">
                         ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
@@ -1251,18 +1257,20 @@
         }
 
         async function addOffer() {
-            const name = document.getElementById('offerName').value.trim();
-            const price = parseFloat(document.getElementById('offerPrice').value) || null;
-            const imageUrl = document.getElementById('offerImage').value.trim();
-            const file = document.getElementById('offerImageUpload').files[0];
-            const description = document.getElementById('offerDescription').value.trim();
+            const offer = {
+                name: document.getElementById('offerName').value.trim(),
+                price: parseFloat(document.getElementById('offerPrice').value) || null,
+                imageUrl: document.getElementById('offerImage').value.trim(),
+                file: document.getElementById('offerImageUpload').files[0],
+                description: document.getElementById('offerDescription').value.trim()
+            };
 
-            if (!name || !price) {
+            if (!offer.name || !offer.price) {
                 showToast('Offer name and price are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/offers`, {
@@ -1272,20 +1280,18 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        name,
-                        price,
+                        name: offer.name,
+                        price: offer.price,
                         image: uploadedImageUrl,
-                        description
+                        description: offer.description
                     })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Offer added successfully!', 'success');
-                    document.getElementById('offerName').value = '';
-                    document.getElementById('offerPrice').value = '';
-                    document.getElementById('offerImage').value = '';
-                    document.getElementById('offerImageUpload').value = '';
-                    document.getElementById('offerDescription').value = '';
+                    ['offerName', 'offerPrice', 'offerImage', 'offerImageUpload', 'offerDescription'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
                     fetchOffers();
                 } else {
                     showToast(data.error || 'Failed to add offer.', 'error');
@@ -1296,54 +1302,57 @@
             }
         }
 
-        function editOffer(id) {
-            fetch(`${BASE_URL}/api/offers/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            })
-                .then(response => response.json())
-                .then(offer => {
+        async function editOffer(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const offer = await response.json();
+                if (response.ok) {
                     document.getElementById('editOfferId').value = offer._id;
                     document.getElementById('editOfferName').value = offer.name || '';
                     document.getElementById('editOfferPrice').value = offer.price || '';
                     document.getElementById('editOfferImage').value = offer.image || '';
                     document.getElementById('editOfferDescription').value = offer.description || '';
                     showModal('editOfferModal');
-                })
-                .catch(error => {
-                    console.error('Error fetching offer:', error);
-                    showToast('Failed to load offer.', 'error');
-                });
+                } else {
+                    showToast(offer.error || 'Failed to load offer.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching offer:', error);
+                showToast('Failed to load offer.', 'error');
+            }
         }
 
         async function updateOffer() {
-            const id = document.getElementById('editOfferId').value;
-            const name = document.getElementById('editOfferName').value.trim();
-            const price = parseFloat(document.getElementById('editOfferPrice').value) || null;
-            const imageUrl = document.getElementById('editOfferImage').value.trim();
-            const file = document.getElementById('editOfferImageUpload').files[0];
-            const description = document.getElementById('editOfferDescription').value.trim();
+            const offer = {
+                id: document.getElementById('editOfferId').value,
+                name: document.getElementById('editOfferName').value.trim(),
+                price: parseFloat(document.getElementById('editOfferPrice').value) || null,
+                imageUrl: document.getElementById('editOfferImage').value.trim(),
+                file: document.getElementById('editOfferImageUpload').files[0],
+                description: document.getElementById('editOfferDescription').value.trim()
+            };
 
-            if (!name || !price) {
+            if (!offer.name || !offer.price) {
                 showToast('Offer name and price are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
 
             try {
-                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        name,
-                        price,
+                        name: offer.name,
+                        price: offer.price,
                         image: uploadedImageUrl,
-                        description
+                        description: offer.description
                     })
                 });
                 const data = await response.json();
@@ -1365,9 +1374,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1382,12 +1389,11 @@
             }
         }
 
+        // Coupon Management
         async function fetchCoupons() {
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const coupons = await response.json();
                 displayCoupons(coupons);
@@ -1398,11 +1404,10 @@
         }
 
         function displayCoupons(coupons) {
-            const couponTableBody = document.getElementById('couponTableBody');
-            couponTableBody.innerHTML = coupons.map(coupon => `
+            document.getElementById('couponTableBody').innerHTML = coupons.map(coupon => `
                 <tr class="border-b">
                     <td class="py-2 px-3">
-                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
+                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu by the menu-img">` : 'No Image'}
                     </td>
                     <td class="py-2 px-3">${coupon.code || 'N/A'}</td>
                     <td class="py-2 px-3">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
@@ -1415,23 +1420,25 @@
         }
 
         async function addCoupon() {
-            const code = document.getElementById('couponCode').value.trim();
-            const discount = parseInt(document.getElementById('couponDiscount').value) || null;
-            const imageUrl = document.getElementById('couponImage').value.trim();
-            const file = document.getElementById('couponImageUpload').files[0];
-            const description = document.getElementById('couponDescription').value.trim();
+            const coupon = {
+                code: document.getElementById('couponCode').value.trim(),
+                discount: parseInt(document.getElementById('couponDiscount').value) || null,
+                imageUrl: document.getElementById('couponImage').value.trim(),
+                file: document.getElementById('couponImageUpload').files[0],
+                description: document.getElementById('couponDescription').value.trim()
+            };
 
-            if (!code || !discount) {
+            if (!coupon.code || !coupon.discount) {
                 showToast('Coupon code and discount are required.', 'error');
                 return;
             }
 
-            if (discount < 1 || discount > 100) {
+            if (coupon.discount < 1 || coupon.discount > 100) {
                 showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
@@ -1441,20 +1448,18 @@
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        code,
-                        discount,
+                        code: coupon.code,
+                        discount: coupon.discount,
                         image: uploadedImageUrl,
-                        description
+                        description: coupon.description
                     })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Coupon added successfully!', 'success');
-                    document.getElementById('couponCode').value = '';
-                    document.getElementById('couponDiscount').value = '';
-                    document.getElementById('couponImage').value = '';
-                    document.getElementById('couponImageUpload').value = '';
-                    document.getElementById('couponDescription').value = '';
+                    ['couponCode', 'couponDiscount', 'couponImage', 'couponImageUpload', 'couponDescription'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
                     fetchCoupons();
                 } else {
                     showToast(data.error || 'Failed to add coupon.', 'error');
@@ -1465,59 +1470,62 @@
             }
         }
 
-        function editCoupon(id) {
-            fetch(`${BASE_URL}/api/coupons/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            })
-                .then(response => response.json())
-                .then(coupon => {
+        async function editCoupon(id) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const coupon = await response.json();
+                if (response.ok) {
                     document.getElementById('editCouponId').value = coupon._id;
                     document.getElementById('editCouponCode').value = coupon.code || '';
                     document.getElementById('editCouponDiscount').value = coupon.discount || '';
                     document.getElementById('editCouponImage').value = coupon.image || '';
                     document.getElementById('editCouponDescription').value = coupon.description || '';
                     showModal('editCouponModal');
-                })
-                .catch(error => {
-                    console.error('Error fetching coupon:', error);
-                    showToast('Failed to load coupon.', 'error');
-                });
+                } else {
+                    showToast(coupon.error || 'Failed to load coupon.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching coupon:', error);
+                showToast('Failed to load coupon.', 'error');
+            }
         }
 
         async function updateCoupon() {
-            const id = document.getElementById('editCouponId').value;
-            const code = document.getElementById('editCouponCode').value.trim();
-            const discount = parseInt(document.getElementById('editCouponDiscount').value) || null;
-            const imageUrl = document.getElementById('editCouponImage').value.trim();
-            const file = document.getElementById('editCouponImageUpload').files[0];
-            const description = document.getElementById('editCouponDescription').value.trim();
+            const coupon = {
+                id: document.getElementById('editCouponId').value,
+                code: document.getElementById('editCouponCode').value.trim(),
+                discount: parseInt(document.getElementById('editCouponDiscount').value) || null,
+                imageUrl: document.getElementById('editCouponImage').value.trim(),
+                file: document.getElementById('editCouponImageUpload').files[0],
+                description: document.getElementById('editCouponDescription').value.trim()
+            };
 
-            if (!code || !discount) {
+            if (!coupon.code || !coupon.discount) {
                 showToast('Coupon code and discount are required.', 'error');
                 return;
             }
 
-            if (discount < 1 || discount > 100) {
+            if (coupon.discount < 1 || coupon.discount > 100) {
                 showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = file ? await uploadImage(file) : imageUrl || null;
+            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
 
             try {
-                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/coupons/${coupon.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
-                        code,
-                        discount,
+                        code: coupon.code,
+                        discount: coupon.discount,
                         image: uploadedImageUrl,
-                        description
+                        description: coupon.description
                     })
                 });
                 const data = await response.json();
@@ -1539,9 +1547,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1556,12 +1562,11 @@
             }
         }
 
+        // Customer Management
         async function fetchCustomers() {
             try {
                 const response = await fetch(`${BASE_URL}/api/users`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const customers = await response.json();
                 displayCustomers(customers);
@@ -1572,8 +1577,7 @@
         }
 
         function displayCustomers(customers) {
-            const customerTableBody = document.getElementById('customerTableBody');
-            customerTableBody.innerHTML = customers.map(customer => `
+            document.getElementById('customerTableBody').innerHTML = customers.map(customer => `
                 <tr class="border-b">
                     <td class="py-2 px-3">${customer.name || 'N/A'}</td>
                     <td class="py-2 px-3">${customer.email || 'N/A'}</td>
@@ -1589,9 +1593,7 @@
         async function viewCustomerDetails(customerId) {
             try {
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const customer = await response.json();
                 if (response.ok) {
@@ -1607,7 +1609,7 @@
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Total</th>
+                                    <th>Total</thy>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -1652,17 +1654,16 @@
                     showToast(data.error || `Failed to ${newStatus.toLowerCase()} customer.`, 'error');
                 }
             } catch (error) {
-                console.error(`Error ${newStatus.toLowerCase()} customer:`, error);
+                console.error(`Error toggling customer status:`, error);
                 showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
             }
         }
 
+        // Contact Messages
         async function fetchContactMessages() {
             try {
                 const response = await fetch(`${BASE_URL}/api/contact`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const messages = await response.json();
                 displayContactMessages(messages);
@@ -1673,37 +1674,34 @@
         }
 
         function displayContactMessages(messages) {
-            const contactTableBody = document.getElementById('contactTableBody');
-            contactTableBody.innerHTML = messages.map(message => `
+            document.getElementById('contactTableBody').innerHTML = messages.map(message => `
                 <tr class="border-b">
                     <td class="py-2 px-3">${message.name || 'N/A'}</td>
                     <td class="py-2 px-3">${message.email || 'N/A'}</td>
                     <td class="py-2 px-3">${message.subject || 'N/A'}</td>
-                    <td class="py-2 px-3">
-                        <div class="contact-message">${message.message || 'N/A'}</div>
-                    </td>
+                    <td class="py-2 px-3"><div class="contact-message">${message.message || 'N/A'}</div></td>
                     <td class="py-2 px-3">${message.status || 'Pending'}</td>
                     <td class="py-2 px-3 flex space-x-2">
-                        <button onclick="replyToContact('${message._id}', '${message.subject || ''}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Reply</button>
+                        <button onclick="replyContactMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-sm">Reply</button>
                         <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-sm">Delete</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function replyToContact(messageId, subject) {
+        function replyContactMessage(messageId) {
             document.getElementById('contactMessageId').value = messageId;
-            document.getElementById('contactReplySubject').value = `Re: ${subject}`;
-            document.getElementById('contactReplyMessage').value = '';
             showModal('replyContactModal');
         }
 
         async function sendReply() {
             const messageId = document.getElementById('contactMessageId').value;
-            const subject = document.getElementById('contactReplySubject').value.trim();
-            const message = document.getElementById('contactReplyMessage').value.trim();
+            const reply = {
+                subject: document.getElementById('contactReplySubject').value.trim(),
+                message: document.getElementById('contactReplyMessage').value.trim()
+            };
 
-            if (!subject || !message) {
+            if (!reply.subject || !reply.message) {
                 showToast('Subject and message are required.', 'error');
                 return;
             }
@@ -1715,12 +1713,14 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ subject, message })
+                    body: JSON.stringify(reply)
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Reply sent successfully!', 'success');
                     closeModal('replyContactModal');
+                    document.getElementById('contactReplySubject').value = '';
+                    document.getElementById('contactReplyMessage').value = '';
                     fetchContactMessages();
                 } else {
                     showToast(data.error || 'Failed to send reply.', 'error');
@@ -1736,9 +1736,7 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1753,12 +1751,10 @@
             }
         }
 
+        // Restaurant Status
         async function toggleRestaurantStatus() {
-            const statusText = document.getElementById('restaurantStatus');
-            const button = document.getElementById('statusToggleBtn');
-            const currentStatus = statusText.textContent === 'Open' ? 'open' : 'closed';
-            const newStatus = currentStatus === 'open' ? 'closed' : 'open';
-
+            const currentStatus = document.getElementById('restaurantStatus').textContent;
+            const newStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
             try {
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
                     method: 'PUT',
@@ -1770,8 +1766,8 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    statusText.textContent = newStatus === 'open' ? 'Open' : 'Closed';
-                    button.textContent = newStatus === 'open' ? 'Close Restaurant' : 'Open Restaurant';
+                    document.getElementById('restaurantStatus').textContent = newStatus;
+                    document.getElementById('statusToggleBtn').textContent = newStatus === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
                     showToast(`Restaurant is now ${newStatus}!`, 'success');
                 } else {
                     showToast(data.error || 'Failed to update restaurant status.', 'error');
@@ -1782,58 +1778,14 @@
             }
         }
 
+        // Logout
         function logout() {
             localStorage.removeItem('adminToken');
             window.location.href = 'admin.html';
         }
 
-        async function checkAuth() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                window.location.href = 'admin.html';
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (!response.ok) {
-                    localStorage.removeItem('adminToken');
-                    window.location.href = 'admin.html';
-                } else {
-                    fetchAdminDetails();
-                    showSection('home');
-                }
-            } catch (error) {
-                console.error('Error checking auth:', error);
-                localStorage.removeItem('adminToken');
-                window.location.href = 'admin.html';
-            }
-        }
-
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            // Fetch restaurant status
-            fetch(`${BASE_URL}/api/restaurant/status`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const statusText = document.getElementById('restaurantStatus');
-                    const button = document.getElementById('statusToggleBtn');
-                    statusText.textContent = data.status === 'open' ? 'Open' : 'Closed';
-                    button.textContent = data.status === 'open' ? 'Close Restaurant' : 'Open Restaurant';
-                })
-                .catch(error => {
-                    console.error('Error fetching restaurant status:', error);
-                    showToast('Failed to load restaurant status.', 'error');
-                });
-        });
+        checkAuth();
     </script>
 </body>
 </html>
