@@ -995,7 +995,7 @@
         function filterFullMenu() {
             const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase();
             const category = document.getElementById('fullMenuCategoryFilter').value;
-            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange')).value;
+            const maxPrice = document.getElementById('fullMenuPriceRange').value;
 
             const filteredItems = menuItemsData.filter(item => {
                 const matchesSearch = item.name.toLowerCase().includes(searchQuery);
