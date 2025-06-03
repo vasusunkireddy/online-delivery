@@ -32,10 +32,10 @@
         }
         .modal-content {
             background: white;
-            padding: 16px;
+            padding: 24px;
             border-radius: 12px;
             max-width: 90%;
-            width: 400px;
+            width: 450px;
             position: relative;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             animation: slideIn 0.3s ease-out;
@@ -46,9 +46,9 @@
         }
         .close-btn {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 20px;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
             cursor: pointer;
             color: #374151;
             transition: color 0.2s;
@@ -82,12 +82,12 @@
             position: fixed;
             top: 16px;
             right: 16px;
-            padding: 12px;
+            padding: 12px 16px;
             border-radius: 8px;
             color: white;
             z-index: 2000;
             display: none;
-            min-width: 180px;
+            min-width: 200px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .toast.success {
@@ -118,7 +118,7 @@
             display: none;
             background: #f0f2f6;
             min-height: 100vh;
-            padding: 1rem;
+            padding: 2rem;
         }
         .full-menu-container.active {
             display: block;
@@ -126,7 +126,7 @@
         .btn-primary {
             background: #f59e0b;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 9999px;
             transition: background 0.3s, transform 0.2s;
         }
@@ -145,13 +145,33 @@
         .navbar-menu {
             transition: max-height 0.3s ease-in-out;
         }
+        .contact-form {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .contact-form label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .contact-form input, .contact-form textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .contact-form textarea {
+            resize: vertical;
+        }
         @media (max-width: 640px) {
             .modal-content {
-                padding: 12px;
+                padding: 16px;
                 width: 95%;
             }
             .close-btn {
-                font-size: 18px;
+                font-size: 20px;
             }
             .toast {
                 top: 12px;
@@ -166,11 +186,11 @@
                 padding: 12px;
             }
             .btn-primary {
-                padding: 8px 16px;
+                padding: 10px 20px;
                 font-size: 0.875rem;
             }
             .input-field {
-                padding: 8px;
+                padding: 10px;
                 font-size: 0.875rem;
             }
             .navbar-menu {
@@ -179,6 +199,9 @@
             }
             .navbar-menu.active {
                 max-height: 300px;
+            }
+            .contact-form {
+                padding: 1.5rem;
             }
         }
         @media (min-width: 641px) {
@@ -238,69 +261,69 @@
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('loginModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Login</h2>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Login</h2>
             <div id="loginForm">
                 <div>
-                    <label for="loginEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email or Mobile Number</label>
-                    <input type="text" id="loginEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Email or Mobile">
-                </div>
-                <div class="mt-3">
-                    <label for="loginPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Password</label>
-                    <input type="password" id="loginPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Password">
-                </div>
-                <div class="mt-3 text-right">
-                    <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline text-sm">Forgot Password?</a>
+                    <label for="loginEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email or Mobile Number</label>
+                    <input type="text" id="loginEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Email or Mobile">
                 </div>
                 <div class="mt-4">
+                    <label for="loginPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Password</label>
+                    <input type="password" id="loginPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Password">
+                </div>
+                <div class="mt-4 text-right">
+                    <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline text-sm">Forgot Password?</a>
+                </div>
+                <div class="mt-6">
                     <button onclick="login()" class="btn-primary w-full text-sm sm:text-base">Login</button>
                 </div>
-                <div class="mt-3 text-center text-sm">OR</div>
-                <div class="mt-3">
+                <div class="mt-4 text-center text-sm">OR</div>
+                <div class="mt-4">
                     <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" class="h-4 mr-2 sm:h-5"> Login with Google
+                        <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Login with Google
                     </button>
                 </div>
             </div>
             <div id="forgotPasswordEmail" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Forgot Password</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Forgot Password</h2>
                 <div>
-                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Enter Email</label>
-                    <input type="email" id="forgotEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter Email</label>
+                    <input type="email" id="forgotEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Email">
                 </div>
-                <div class="mt-4">
+                <div class="mt-6">
                     <button onclick="sendOTP()" class="btn-primary w-full text-sm sm:text-base">Send OTP</button>
                 </div>
-                <div class="mt-3 text-center">
+                <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
                 </div>
             </div>
             <div id="forgotPasswordOTP" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Verify OTP</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Verify OTP</h2>
                 <div>
-                    <label for="otpInput" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Enter OTP</label>
-                    <input type="text" id="otpInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Enter OTP">
+                    <label for="otpInput" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter OTP</label>
+                    <input type="text" id="otpInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter OTP">
                 </div>
-                <div class="mt-4">
+                <div class="mt-6">
                     <button onclick="verifyOTP()" class="btn-primary w-full text-sm sm:text-base">Verify OTP</button>
                 </div>
-                <div class="mt-3 text-center">
+                <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
                 </div>
             </div>
             <div id="forgotPasswordReset" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Reset Password</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Reset Password</h2>
                 <div>
-                    <label for="newPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">New Password</label>
-                    <input type="password" id="newPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="New Password">
-                </div>
-                <div class="mt-3">
-                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Confirm Password">
+                    <label for="newPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">New Password</label>
+                    <input type="password" id="newPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="New Password">
                 </div>
                 <div class="mt-4">
+                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Confirm Password">
+                </div>
+                <div class="mt-6">
                     <button onclick="resetPassword()" class="btn-primary w-full text-sm sm:text-base">Reset Password</button>
                 </div>
-                <div class="mt-3 text-center">
+                <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
                 </div>
             </div>
@@ -311,37 +334,37 @@
     <div id="signupModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('signupModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Signup</h2>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Signup</h2>
             <div>
-                <label for="signupName" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Name</label>
-                <input type="text" id="signupName" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Name">
+                <label for="signupName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
+                <input type="text" id="signupName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Name">
             </div>
-            <div class="mt-3">
-                <label for="signupEmail" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email</label>
-                <input type="email" id="signupEmail" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+            <div class="mt-4">
+                <label for="signupEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
+                <input type="email" id="signupEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Email">
             </div>
-            <div class="mt-3">
-                <label for="signupPhone" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Phone Number</label>
-                <input type="tel" id="signupPhone" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Phone Number">
+            <div class="mt-4">
+                <label for="signupPhone" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Phone Number</label>
+                <input type="tel" id="signupPhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Phone Number">
             </div>
-            <div class="mt-3">
-                <label for="signupPassword" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Create Password</label>
-                <input type="password" id="signupPassword" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Create Password">
+            <div class="mt-4">
+                <label for="signupPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Create Password</label>
+                <input type="password" id="signupPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Create Password">
             </div>
-            <div class="mt-3 flex items-center">
+            <div class="mt-4 flex items-center">
                 <input type="checkbox" id="termsAgree" class="mr-2">
                 <label for="termsAgree" class="text-gray-700 text-sm sm:text-base">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
             </div>
-            <div class="mt-4">
+            <div class="mt-6">
                 <button onclick="signup()" class="btn-primary w-full text-sm sm:text-base">Signup</button>
             </div>
-            <div class="mt-3 text-center text-sm">OR</div>
-            <div class="mt-3">
+            <div class="mt-4 text-center text-sm">OR</div>
+            <div class="mt-4">
                 <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
-                    <img src="https://www.google.com/favicon.ico" alt="Google" class="h-4 mr-2 sm:h-5"> Signup with Google
+                    <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Signup with Google
                 </button>
             </div>
-            <div class="mt-3 text-center">
+            <div class="mt-4 text-center">
                 <a href="#" onclick="showModal('loginModal')" class="text-yellow-500 hover:underline text-sm">Already have an account? Login</a>
             </div>
         </div>
@@ -351,12 +374,12 @@
     <div id="cartModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('cartModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-4 sm:text-2xl">Your Cart</h2>
-            <div id="cartItems" class="mb-4"></div>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Your Cart</h2>
+            <div id="cartItems" class="mb-6"></div>
             <div class="text-center">
                 <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
             </div>
-            <div class="mt-3 text-center">
+            <div class="mt-4 text-center">
                 <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
             </div>
         </div>
@@ -366,7 +389,7 @@
     <div id="mainContent">
         <!-- Hero Section -->
         <section id="home" class="hero-bg h-screen flex items-center justify-center text-white">
-            <div class="text-center bg-black bg-opacity-50 p-6 rounded-lg sm:p-8">
+            <div class="text-center bg-black bg-opacity-50 p-8 rounded-lg sm:p-10">
                 <h2 class="text-3xl font-bold mb-4 sm:text-4xl md:text-5xl">Welcome to Delicute</h2>
                 <p class="text-base mb-6 sm:text-lg md:text-xl">Savor the taste of home, delivered fresh from our cloud kitchen!</p>
                 <a href="#menu" class="btn-primary text-sm sm:text-base">Explore Menu</a>
@@ -374,7 +397,7 @@
         </section>
 
         <!-- About Section -->
-        <section id="about" class="py-12 bg-white sm:py-16">
+        <section id="about" class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">About Delicute</h2>
                 <p class="text-base text-gray-600 text-center max-w-3xl mx-auto sm:text-lg">
@@ -386,7 +409,7 @@
         </section>
 
         <!-- Special Offers Section -->
-        <section id="offers" class="py-12 bg-gray-100 sm:py-16">
+        <section id="offers" class="py-16 bg-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Special Offers</h2>
                 <div id="offerItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
@@ -394,27 +417,27 @@
         </section>
 
         <!-- Menu Section -->
-        <section id="menu" class="py-12 bg-gray-100 sm:py-16">
+        <section id="menu" class="py-16 bg-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Our Menu</h2>
-                <div class="bg-white p-4 rounded-lg shadow-md mb-6 sm:p-6">
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <div class="flex flex-col gap-4 sm:flex-row">
                         <div class="flex-1">
-                            <input type="text" id="searchInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterMenu()">
+                            <input type="text" id="searchInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterMenu()">
                         </div>
                         <div class="flex-1">
-                            <select id="categoryFilter" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" onchange="filterMenu()">
+                            <select id="categoryFilter" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" onchange="filterMenu()">
                                 <option value="">All Categories</option>
                             </select>
                         </div>
                         <div class="flex-1">
-                            <label class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
+                            <label class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
                             <input type="range" id="priceRange" min="30" max="999" value="999" class="range-slider" oninput="updatePriceRange()">
                         </div>
                     </div>
                 </div>
                 <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
-                <div class="text-center mt-6 space-y-4">
+                <div class="text-center mt-8 space-y-4">
                     <button onclick="showCart()" class="btn-primary text-sm sm:text-base">View Cart & Order</button>
                     <div>
                         <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-4 py-2 rounded-full text-sm sm:text-base">View Full Menu</button>
@@ -424,24 +447,24 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="py-12 bg-white sm:py-16">
+        <section id="contact" class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Contact Us</h2>
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8 sm:text-3xl">Get in Touch</h2>
                 <div class="max-w-lg mx-auto">
-                    <div class="bg-gray-100 p-4 rounded-lg sm:p-6">
+                    <div class="contact-form">
                         <div>
-                            <label for="name" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Name</label>
-                            <input type="text" id="name" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Name">
+                            <label for="name" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
+                            <input type="text" id="name" class="input-field" placeholder="Your Name">
                         </div>
-                        <div class="mt-3">
-                            <label for="email" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Email</label>
-                            <input type="email" id="email" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                        <div class="mt-6">
+                            <label for="email" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
+                            <input type="email" id="email" class="input-field" placeholder="Your Email">
                         </div>
-                        <div class="mt-3">
-                            <label for="message" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Message</label>
-                            <textarea id="message" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" rows="4" placeholder="Your Message"></textarea>
+                        <div class="mt-6">
+                            <label for="message" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Message</label>
+                            <textarea id="message" class="input-field" rows="5" placeholder="Your Message"></textarea>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-8">
                             <button onclick="submitForm()" class="btn-primary w-full text-sm sm:text-base">Send Message</button>
                         </div>
                     </div>
@@ -450,13 +473,13 @@
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-6 sm:py-8">
+        <footer class="bg-gray-800 text-white py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <div class="flex justify-center items-center space-x-3 mb-4">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 sm:h-12">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
                     <div>
                         <h1 class="text-lg font-bold text-white sm:text-xl">DELICUTE</h1>
-                        <p class="text-xs text-gray-300 sm:text-sm">Every bite tells a story</p>
+                        <p class="text-sm text-gray-300">Every bite tells a story</p>
                     </div>
                 </div>
                 <p class="text-sm sm:text-base">© 2025 Delicute. All rights reserved.</p>
@@ -467,35 +490,32 @@
 
     <!-- Full Menu Page -->
     <div id="fullMenuContainer" class="full-menu-container">
-        <div class="max-w-7xl mx-auto px-4 sm:px 6px-6 lg:px-8">
-            <div class="flex justify-between items-center mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold text-gray-800 sm:text-3xl">Full Menu</h2>
                 <button onclick="hideFullMenu()" class="btn-primary text-sm sm:text-base">Back to Home</button>
             </div>
-            <div>
-            <div class="bg-white p-4 rounded-lg shadow-md mb-6 sm:p-6">
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <div class="flex flex-col gap-4 sm:flex-row">
                     <div class="flex-1">
-                        <input type="text" id="fullMenuSearchInput" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterFullMenu()">
+                        <input type="text" id="fullMenuSearchInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterFullMenu()">
                     </div>
                     <div class="flex-1">
-                        <select id="fullMenuCategoryFilter" class="input-field w-full p-2 border rounded-md text-sm sm:text-base" onchange="filterFullMenu()">
+                        <select id="fullMenuCategoryFilter" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" onchange="filterFullMenu()">
                             <option value="">All Categories</option>
                         </select>
                     </div>
-                    <div class="flex-3">
-                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-1 text-sm sm:text-base">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
+                    <div class="flex-1">
+                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
                         <input type="range" id="fullMenuPriceRange" min="30" max="999" value="999" class="range-slider" oninput="updateFullMenuPriceRange()">
                     </div>
                 </div>
             </div>
-            <div id="fullMenuItems" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-            <div>
-            <div class="flex justify-center mt-6 space-x-4">
-                <div>
-                <button onclick="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
+            <div id="fullMenuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <div class="flex justify-center mt-8 space-x-4">
+                <button id="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
                 <span id="pageInfo" class="flex items-center text-gray-700"></span>
-                <button onclick="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="nextPage()">Next</button>
+                <button id="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="changePage(1)">Next</button>
             </div>
         </div>
     </div>
@@ -535,7 +555,7 @@
 
         function showForgotPassword() {
             document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPassword').classList.remove('hidden');
+            document.getElementById('forgotPasswordEmail').classList.remove('hidden');
         }
 
         function backToLogin() {
@@ -552,21 +572,21 @@
                 return;
             }
             try {
-                const response = await fetch(`${BASE_URL}/api/auth/forgot-password}`, {
+                const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(data.message, 'Success');
+                    showToast(data.message, 'success');
                     document.getElementById('forgotPasswordEmail').classList.add('hidden');
                     document.getElementById('forgotPasswordOTP').classList.remove('hidden');
                 } else {
                     showToast(data.error || 'Failed to send OTP.', 'error');
                 }
             } catch (error) {
-                console.error('Error sending OTP: ', error);
+                console.error('Error sending OTP:', error);
                 showToast('Failed to send OTP.', 'error');
             }
         }
@@ -742,11 +762,11 @@
             cartItemsDiv.innerHTML = cart.map((item, index) => {
                 total += item.price;
                 return `
-                    <div class="flex justify-between py-2 border-b items-center text-sm sm:text-base">
+                    <div class="flex justify-between py-3 border-b items-center text-sm sm:text-base">
                         <div>
                             <span class="font-medium">${item.name}</span>
                         </div>
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-3">
                             <span>₹${item.price}</span>
                             <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
                         </div>
@@ -754,7 +774,7 @@
                 `;
             }).join('');
             cartItemsDiv.innerHTML += `
-                <div class="flex justify-between py-2 font-bold text-sm sm:text-base">
+                <div class="flex justify-between py-3 font-bold text-sm sm:text-base">
                     <span>Total</span>
                     <span>₹${total}</span>
                 </div>
@@ -888,7 +908,7 @@
             menuItemsDiv.innerHTML = items.map(item => `
                 <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
                     <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-4 sm:p-6">
+                    <div class="p-6">
                         <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                         <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
@@ -907,7 +927,7 @@
             offerItemsDiv.innerHTML = items.map(item => `
                 <div class="offer-card bg-white rounded-lg shadow-md overflow-hidden">
                     <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-4 sm:p-6">
+                    <div class="p-6">
                         <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                         <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
@@ -929,9 +949,9 @@
             fullMenuItemsDiv.innerHTML = paginatedItems.map(item => `
                 <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
                     <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-4 sm:p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">{item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">{item.description || 'No description available'}</p>
+                    <div class="p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                         <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
                         <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
                     </div>
@@ -995,7 +1015,7 @@
         function filterFullMenu() {
             const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase();
             const category = document.getElementById('fullMenuCategoryFilter').value;
-            const maxPrice = document.getElementById('fullMenuPriceRange').value;
+            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange').value);
 
             const filteredItems = menuItemsData.filter(item => {
                 const matchesSearch = item.name.toLowerCase().includes(searchQuery);
