@@ -747,31 +747,44 @@ app.post('/api/contact', async (req, res) => {
 
 app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { subject, message: reply } = req.body;
-  if (!subject || !reply) {
-    return res.status(400).json({ error: 'Subject and reply are required' });
-  }
-  try {
-    const messageResult = await pool.query('SELECT email, name FROM contact_messages WHERE id = $1', [id]);
-    const message = messageResult.rows[0];
-    if (!message) return res.status(404).json({ error: 'Message not found' });
+  const { subject, message: replyMessage } = req.body;
 
+  // Input validation
+  if (!subject || !replyMessage) {
+    return res.status(400).json({ error: 'Subject and reply message are required' });
+  }
+
+  try {
+    // Fetch the contact message
+    const messageResult = await pool.query('SELECT name, email, subject AS original_subject FROM contact_messages WHERE id = $1', [id]);
+    const contactMessage = messageResult.rows[0];
+    if (!contactMessage) {
+      return res.status(404).json({ error: 'Contact message not found' });
+    }
+
+    // Send email to the user
     await transporter.sendMail({
       from: `"Delicute" <${EMAIL_USER}>`,
-      to: message.email,
-      subject: subject,
-      text: reply,
+      to: contactMessage.email,
+      subject: `Re: ${contactMessage.original_subject}`,
+      text: replyMessage,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #f59e0b;">Delicute</h2>
-          <p>Dear ${message.name},</p>
-          <p>${reply}</p>
-          <p>Best regards,<br>Delicute Team</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #f59e0b; font-size: 24px;">Delicute</h2>
+          <p style="font-size: 16px;">Dear ${contactMessage.name},</p>
+          <p style="font-size: 16px; line-height: 1.6;">Thank you for reaching out to us. Below is our response to your inquiry:</p>
+          <p style="font-size: 16px; line-height: 1.6; background-color: #f9f9f9; padding: 15px; border-radius: 4px;">${replyMessage}</p>
+          <p style="font-size: 16px;">If you have any further questions, feel free to contact us.</p>
+          <p style="font-size: 16px;">Best regards,<br>Delicute Team</p>
+          <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+          <p style="font-size: 14px; color: #666;">Original Message:<br>${contactMessage.original_subject}</p>
         </div>
       `
     });
 
+    // Update message status to 'Replied'
     await pool.query('UPDATE contact_messages SET status = $1 WHERE id = $2', ['Replied', id]);
+
     res.json({ message: 'Reply sent successfully' });
   } catch (error) {
     console.error('Error sending reply:', error);

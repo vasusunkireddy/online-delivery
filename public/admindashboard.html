@@ -276,6 +276,11 @@
         }
         .navbar-menu {
             transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .navbar-menu.active {
+            max-height: 400px;
         }
         @media (max-width: 768px) {
             .auth-container {
@@ -303,6 +308,8 @@
             }
             .dropdown-menu {
                 min-width: 140px;
+                right: 8px;
+                top: 48px;
             }
             .dropdown-item {
                 font-size: 0.75rem;
@@ -315,13 +322,6 @@
             .input-field {
                 padding: 0.5rem;
                 font-size: 0.75rem;
-            }
-            .navbar-menu {
-                max-height: 0;
-                overflow: hidden;
-            }
-            .navbar-menu.active {
-                max-height: 400px;
             }
         }
         @media (min-width: 769px) {
@@ -564,14 +564,14 @@
                 </div>
                 <div class="flex items-center space-x-3">
                     <span id="welcomeMessage" class="text-xs sm:text-sm text-gray-600 font-medium hidden sm:block"></span>
-                    <div class="flex items-center sm:hidden">
-                        <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none" aria-label="Toggle menu">
+                    <div class="flex items-center">
+                        <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none sm:hidden" aria-label="Toggle menu">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
                     </div>
-                    <div class="hidden sm:flex profile-container">
+                    <div class="profile-container">
                         <img id="profileImage" src="https://via.placeholder.com/40" alt="Profile" class="profile-img" onclick="toggleDropdown()" aria-label="Profile menu">
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="dropdown-item" onclick="showSection('home')">Home</div>
@@ -610,7 +610,7 @@
             <h2 class="text-lg sm:text-2xl font-bold text-center mb-4">Welcome to Delicute Admin Panel</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="stat-card">
-                    <h3 class Ost-md">Total Orders</h3>
+                    <h3 class="text-sm font-medium text-gray-600">Total Orders</h3>
                     <p id="totalOrders" class="text-lg sm:text-2xl font-bold text-yellow-600 mt-1">0</p>
                 </div>
                 <div class="stat-card">
@@ -889,6 +889,7 @@
         // Utility Functions
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
+            if (!toast) return;
             toast.textContent = message;
             toast.className = `toast ${type}`;
             toast.style.display = 'flex';
@@ -898,12 +899,26 @@
         }
 
         function toggleDropdown() {
-            document.getElementById('profileDropdown').classList.toggle('active');
+            const dropdown = document.getElementById('profileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+            const navbarMenu = document.getElementById('navbarMenu');
+            if (navbarMenu && navbarMenu.classList.contains('active')) {
+                navbarMenu.classList.remove('active');
+            }
         }
 
         function showSection(section) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`${section}Section`).classList.remove('hidden');
+            const sectionElement = document.getElementById(`${section}Section`);
+            if (sectionElement) {
+                sectionElement.classList.remove('hidden');
+            }
+            const navbarMenu = document.getElementById('navbarMenu');
+            if (navbarMenu) {
+                navbarMenu.classList.remove('active');
+            }
             toggleDropdown();
             const actions = {
                 menu: fetchMenuItems,
@@ -914,16 +929,24 @@
                 contact: fetchContactMessages,
                 profile: fetchAdminDetails
             };
-            actions[section]?.();
+            if (actions[section]) {
+                actions[section]();
+            }
         }
 
         function showModal(modalId) {
             closeModalAll();
-            document.getElementById(modalId).style.display = 'flex';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function closeModalAll() {
@@ -959,17 +982,29 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    document.getElementById('welcomeMessage').textContent = `Welcome, ${data.name || 'Admin'}`;
-                    document.getElementById('profileName').value = data.name || '';
-                    document.getElementById('profileEmail').value = data.email || '';
-                    document.getElementById('profilePhone').value = data.phone || '';
-                    document.getElementById('displayProfileName').textContent = data.name || '';
-                    document.getElementById('displayProfileEmail').textContent = data.email || '';
-                    document.getElementById('displayProfilePhone').textContent = data.phone || '';
+                    const welcomeMessage = document.getElementById('welcomeMessage');
+                    if (welcomeMessage) {
+                        welcomeMessage.textContent = `Welcome, ${data.name || 'Admin'}`;
+                    }
+                    const profileName = document.getElementById('profileName');
+                    if (profileName) profileName.value = data.name || '';
+                    const profileEmail = document.getElementById('profileEmail');
+                    if (profileEmail) profileEmail.value = data.email || '';
+                    const profilePhone = document.getElementById('profilePhone');
+                    if (profilePhone) profilePhone.value = data.phone || '';
+                    const displayProfileName = document.getElementById('displayProfileName');
+                    if (displayProfileName) displayProfileName.textContent = data.name || '';
+                    const displayProfileEmail = document.getElementById('displayProfileEmail');
+                    if (displayProfileEmail) displayProfileEmail.textContent = data.email || '';
+                    const displayProfilePhone = document.getElementById('displayProfilePhone');
+                    if (displayProfilePhone) displayProfilePhone.textContent = data.phone || '';
                     if (data.profileImage) {
-                        document.getElementById('profileImage').src = data.profileImage;
-                        document.getElementById('modalProfileImage').src = data.profileImage;
-                        document.getElementById('displayProfileImage').src = data.profileImage;
+                        const profileImage = document.getElementById('profileImage');
+                        if (profileImage) profileImage.src = data.profileImage;
+                        const modalProfileImage = document.getElementById('modalProfileImage');
+                        if (modalProfileImage) modalProfileImage.src = data.profileImage;
+                        const displayProfileImage = document.getElementById('displayProfileImage');
+                        if (displayProfileImage) displayProfileImage.src = data.profileImage;
                     }
                 } else {
                     showToast(data.error || 'Failed to fetch admin details.', 'error');
@@ -981,7 +1016,9 @@
         }
 
         async function updateProfileImage() {
-            const file = document.getElementById('profileImageUpload').files[0];
+            const fileInput = document.getElementById('profileImageUpload');
+            if (!fileInput) return;
+            const file = fileInput.files[0];
             if (!file) {
                 showToast('Please select an image.', 'error');
                 return;
@@ -1045,7 +1082,10 @@
                 });
                 const items = await response.json();
                 displayMenuItems(items);
-                document.getElementById('totalMenuItems').textContent = items.length;
+                const totalMenuItems = document.getElementById('totalMenuItems');
+                if (totalMenuItems) {
+                    totalMenuItems.textContent = items.length;
+                }
             } catch (error) {
                 console.error('Error fetching menu items:', error);
                 showToast('Failed to load menu items.', 'error');
@@ -1054,6 +1094,7 @@
 
         function displayMenuItems(items) {
             const menuTableBody = document.getElementById('menuTableBody');
+            if (!menuTableBody) return;
             menuTableBody.innerHTML = items.map(item => `
                 <tr class="border-b">
                     <td class="py-2 px-2">
@@ -1073,12 +1114,12 @@
 
         async function addMenuItem() {
             const item = {
-                name: document.getElementById('itemName').value.trim(),
-                price: parseFloat(document.getElementById('itemPrice').value) || null,
-                category: document.getElementById('itemCategory').value.trim(),
-                imageUrl: document.getElementById('itemImage').value.trim(),
-                file: document.getElementById('itemImageUpload').files[0],
-                description: document.getElementById('itemDescription').value.trim()
+                name: document.getElementById('itemName')?.value.trim() || '',
+                price: parseFloat(document.getElementById('itemPrice')?.value) || null,
+                category: document.getElementById('itemCategory')?.value.trim() || '',
+                imageUrl: document.getElementById('itemImage')?.value.trim() || '',
+                file: document.getElementById('itemImageUpload')?.files[0] || null,
+                description: document.getElementById('itemDescription')?.value.trim() || ''
             };
 
             if (!item.name || !item.category || !item.price) {
@@ -1107,7 +1148,8 @@
                 if (response.ok) {
                     showToast('Menu item added successfully!', 'success');
                     ['itemName', 'itemPrice', 'itemCategory', 'itemImage', 'itemImageUpload', 'itemDescription'].forEach(id => {
-                        document.getElementById(id).value = '';
+                        const element = document.getElementById(id);
+                        if (element) element.value = '';
                     });
                     fetchMenuItems();
                 } else {
@@ -1126,12 +1168,18 @@
                 });
                 const item = await response.json();
                 if (response.ok) {
-                    document.getElementById('editItemId').value = item._id;
-                    document.getElementById('editItemName').value = item.name || '';
-                    document.getElementById('editItemPrice').value = item.price || '';
-                    document.getElementById('editItemCategory').value = item.category || '';
-                    document.getElementById('editItemImage').value = item.image || '';
-                    document.getElementById('editItemDescription').value = item.description || '';
+                    const editItemId = document.getElementById('editItemId');
+                    if (editItemId) editItemId.value = item._id || '';
+                    const editItemName = document.getElementById('editItemName');
+                    if (editItemName) editItemName.value = item.name || '';
+                    const editItemPrice = document.getElementById('editItemPrice');
+                    if (editItemPrice) editItemPrice.value = item.price || '';
+                    const editItemCategory = document.getElementById('editItemCategory');
+                    if (editItemCategory) editItemCategory.value = item.category || '';
+                    const editItemImage = document.getElementById('editItemImage');
+                    if (editItemImage) editItemImage.value = item.image || '';
+                    const editItemDescription = document.getElementById('editItemDescription');
+                    if (editItemDescription) editItemDescription.value = item.description || '';
                     showModal('editMenuModal');
                 } else {
                     showToast(item.error || 'Failed to load menu item.', 'error');
@@ -1144,13 +1192,13 @@
 
         async function updateMenuItem() {
             const item = {
-                id: document.getElementById('editItemId').value,
-                name: document.getElementById('editItemName').value.trim(),
-                price: parseFloat(document.getElementById('editItemPrice').value) || null,
-                category: document.getElementById('editItemCategory').value.trim(),
-                imageUrl: document.getElementById('editItemImage').value.trim(),
-                file: document.getElementById('editItemImageUpload').files[0],
-                description: document.getElementById('editItemDescription').value.trim()
+                id: document.getElementById('editItemId')?.value || '',
+                name: document.getElementById('editItemName')?.value.trim() || '',
+                price: parseFloat(document.getElementById('editItemPrice')?.value) || null,
+                category: document.getElementById('editItemCategory')?.value.trim() || '',
+                imageUrl: document.getElementById('editItemImage')?.value.trim() || '',
+                file: document.getElementById('editItemImageUpload')?.files[0] || null,
+                description: document.getElementById('editItemDescription')?.value.trim() || ''
             };
 
             if (!item.name || !item.category || !item.price) {
@@ -1217,8 +1265,10 @@
                 });
                 const orders = await response.json();
                 displayOrders(orders);
-                document.getElementById('totalOrders').textContent = orders.length;
-                document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'pending').length;
+                const totalOrders = document.getElementById('totalOrders');
+                if (totalOrders) totalOrders.textContent = orders.length;
+                const pendingOrders = document.getElementById('pendingOrders');
+                if (pendingOrders) pendingOrders.textContent = orders.filter(order => order.status === 'pending').length;
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 showToast('Failed to load orders.', 'error');
@@ -1226,21 +1276,23 @@
         }
 
         function displayOrders(orders) {
-            document.getElementById('orderTableBody').innerHTML = orders.map(order => `
+            const orderTableBody = document.getElementById('orderTableBody');
+            if (!orderTableBody) return;
+            orderTableBody.innerHTML = orders.map(order => `
                 <tr class="border-b">
-                    <td class="py-2 px-2">${truncateText(order._id || '10', 'N/A')}</td>
+                    <td class="py-2 px-2">${truncateText(order._id || 'N/A', 10)}</td>
                     <td class="py-2 px-2">${order.customerName || 'N/A'}</td>
-                    <td class="py-2 px-2 text-right">₹${order.total.toFixed(2)}</td>
-                    <td class="py-2 px-2 text-center">${order.status}</td>
-                    <td class="py-2 px-2 px-2 text-center">${order.paymentStatus || 'Pending'}</td>
+                    <td class="py-2 px-2 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
+                    <td class="py-2 px-2 text-center">${order.status || 'Pending'}</td>
+                    <td class="py-2 px-2 text-center">${order.paymentStatus || 'Pending'}</td>
                     <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
-                        <select onchange="updateOrderStatus('${order._id}', 'this.value)" class="input-field p-2 border rounded-md text-xs sm:text-sm">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-2 border rounded-md text-xs sm:text-sm">
                             <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                             <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
-                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-600 hover:bg-red-600 text-xs px-2 py-1">Refund</button>` : ''}>
+                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Refund</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -1254,7 +1306,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ status: status })
+                    body: JSON.stringify({ status })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1304,13 +1356,15 @@
         }
 
         function displayOffers(offers) {
-            document.getElementById('offerTableBody').innerHTML = offers.map(offer => `
+            const offerTableBody = document.getElementById('offerTableBody');
+            if (!offerTableBody) return;
+            offerTableBody.innerHTML = offers.map(offer => `
                 <tr class="border-b">
                     <td class="py-2 px-2">
                         ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
                     </td>
                     <td class="py-2 px-2">${offer.name || 'N/A'}</td>
-                    <td class="py-2 px-2 text-right">₹${offer.price.toFixed(2)}</td>
+                    <td class="py-2 px-2 text-right">₹${offer.price?.toFixed(2) || '0.00'}</td>
                     <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
                         <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Edit</button>
                         <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
@@ -1321,11 +1375,11 @@
 
         async function addOffer() {
             const offer = {
-                name: document.getElementById('offerName').value.trim(),
-                price: parseFloat(document.getElementById('offerPrice').value) || null,
-                imageUrl: document.getElementById('offerImage').value.trim(),
-                file: document.getElementById('offerImageUpload').files[0],
-                description: document.getElementById('offerDescription').value.trim()
+                name: document.getElementById('offerName')?.value.trim() || '',
+                price: parseFloat(document.getElementById('offerPrice')?.value) || null,
+                imageUrl: document.getElementById('offerImage')?.value.trim() || '',
+                file: document.getElementById('offerImageUpload')?.files[0] || null,
+                description: document.getElementById('offerDescription')?.value.trim() || ''
             };
 
             if (!offer.name || !offer.price) {
@@ -1353,7 +1407,8 @@
                 if (response.ok) {
                     showToast('Offer added successfully!', 'success');
                     ['offerName', 'offerPrice', 'offerImage', 'offerImageUpload', 'offerDescription'].forEach(id => {
-                        document.getElementById(id).value = '';
+                        const element = document.getElementById(id);
+                        if (element) element.value = '';
                     });
                     fetchOffers();
                 } else {
@@ -1372,11 +1427,16 @@
                 });
                 const offer = await response.json();
                 if (response.ok) {
-                    document.getElementById('editOfferId').value = offer._id;
-                    document.getElementById('editOfferName').value = offer.name || '';
-                    document.getElementById('editOfferPrice').value = offer.price || '';
-                    document.getElementById('editOfferImage').value = offer.image || '';
-                    document.getElementById('editOfferDescription').value = offer.description || '';
+                    const editOfferId = document.getElementById('editOfferId');
+                    if (editOfferId) editOfferId.value = offer._id || '';
+                    const editOfferName = document.getElementById('editOfferName');
+                    if (editOfferName) editOfferName.value = offer.name || '';
+                    const editOfferPrice = document.getElementById('editOfferPrice');
+                    if (editOfferPrice) editOfferPrice.value = offer.price || '';
+                    const editOfferImage = document.getElementById('editOfferImage');
+                    if (editOfferImage) editOfferImage.value = offer.image || '';
+                    const editOfferDescription = document.getElementById('editOfferDescription');
+                    if (editOfferDescription) editOfferDescription.value = offer.description || '';
                     showModal('editOfferModal');
                 } else {
                     showToast(offer.error || 'Failed to load offer.', 'error');
@@ -1389,12 +1449,12 @@
 
         async function updateOffer() {
             const offer = {
-                id: document.getElementById('editOfferId').value,
-                name: document.getElementById('editOfferName').value.trim(),
-                price: parseFloat(document.getElementById('editOfferPrice').value) || null,
-                imageUrl: document.getElementById('editOfferImage').value.trim(),
-                file: document.getElementById('editOfferImageUpload').files[0],
-                description: document.getElementById('editOfferDescription').value.trim()
+                id: document.getElementById('editOfferId')?.value || '',
+                name: document.getElementById('editOfferName')?.value.trim() || '',
+                price: parseFloat(document.getElementById('editOfferPrice')?.value) || null,
+                imageUrl: document.getElementById('editOfferImage')?.value.trim() || '',
+                file: document.getElementById('editOfferImageUpload')?.files[0] || null,
+                description: document.getElementById('editOfferDescription')?.value.trim() || ''
             };
 
             if (!offer.name || !offer.price) {
@@ -1467,7 +1527,9 @@
         }
 
         function displayCoupons(coupons) {
-            document.getElementById('couponTableBody').innerHTML = coupons.map(coupon => `
+            const couponTableBody = document.getElementById('couponTableBody');
+            if (!couponTableBody) return;
+            couponTableBody.innerHTML = coupons.map(coupon => `
                 <tr class="border-b">
                     <td class="py-2 px-2">
                         ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
@@ -1484,11 +1546,11 @@
 
         async function addCoupon() {
             const coupon = {
-                code: document.getElementById('couponCode').value.trim(),
-                discount: parseInt(document.getElementById('couponDiscount').value) || null,
-                imageUrl: document.getElementById('couponImage').value.trim(),
-                file: document.getElementById('couponImageUpload').files[0],
-                description: document.getElementById('couponDescription').value.trim()
+                code: document.getElementById('couponCode')?.value.trim() || '',
+                discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
+                imageUrl: document.getElementById('couponImage')?.value.trim() || '',
+                file: document.getElementById('couponImageUpload')?.files[0] || null,
+                description: document.getElementById('couponDescription')?.value.trim() || ''
             };
 
             if (!coupon.code || !coupon.discount) {
@@ -1519,9 +1581,10 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Coupon added successfully!', 'success');
+                                        showToast('Coupon added successfully!', 'success');
                     ['couponCode', 'couponDiscount', 'couponImage', 'couponImageUpload', 'couponDescription'].forEach(id => {
-                        document.getElementById(id).value = '';
+                        const element = document.getElementById(id);
+                        if (element) element.value = '';
                     });
                     fetchCoupons();
                 } else {
@@ -1540,11 +1603,16 @@
                 });
                 const coupon = await response.json();
                 if (response.ok) {
-                    document.getElementById('editCouponId').value = coupon._id;
-                    document.getElementById('editCouponCode').value = coupon.code || '';
-                    document.getElementById('editCouponDiscount').value = coupon.discount || '';
-                    document.getElementById('editCouponImage').value = coupon.image || '';
-                    document.getElementById('editCouponDescription').value = coupon.description || '';
+                    const editCouponId = document.getElementById('editCouponId');
+                    if (editCouponId) editCouponId.value = coupon._id || '';
+                    const editCouponCode = document.getElementById('editCouponCode');
+                    if (editCouponCode) editCouponCode.value = coupon.code || '';
+                    const editCouponDiscount = document.getElementById('editCouponDiscount');
+                    if (editCouponDiscount) editCouponDiscount.value = coupon.discount || '';
+                    const editCouponImage = document.getElementById('editCouponImage');
+                    if (editCouponImage) editCouponImage.value = coupon.image || '';
+                    const editCouponDescription = document.getElementById('editCouponDescription');
+                    if (editCouponDescription) editCouponDescription.value = coupon.description || '';
                     showModal('editCouponModal');
                 } else {
                     showToast(coupon.error || 'Failed to load coupon.', 'error');
@@ -1555,14 +1623,14 @@
             }
         }
 
-                async function updateCoupon() {
+        async function updateCoupon() {
             const coupon = {
-                id: document.getElementById('editCouponId').value,
-                code: document.getElementById('editCouponCode').value.trim(),
-                discount: parseInt(document.getElementById('editCouponDiscount').value) || null,
-                imageUrl: document.getElementById('editCouponImage').value.trim(),
-                file: document.getElementById('editCouponImageUpload').files[0],
-                description: document.getElementById('editCouponDescription').value.trim()
+                id: document.getElementById('editCouponId')?.value || '',
+                code: document.getElementById('editCouponCode')?.value.trim() || '',
+                discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
+                imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
+                file: document.getElementById('editCouponImageUpload')?.files[0] || null,
+                description: document.getElementById('editCouponDescription')?.value.trim() || ''
             };
 
             if (!coupon.code || !coupon.discount) {
@@ -1640,13 +1708,15 @@
         }
 
         function displayCustomers(customers) {
-            document.getElementById('customerTableBody').innerHTML = customers.map(customer => `
+            const customerTableBody = document.getElementById('customerTableBody');
+            if (!customerTableBody) return;
+            customerTableBody.innerHTML = customers.map(customer => `
                 <tr class="border-b">
                     <td class="py-2 px-2">${customer.name || 'N/A'}</td>
                     <td class="py-2 px-2">${customer.email || 'N/A'}</td>
                     <td class="py-2 px-2">${customer.phone || 'N/A'}</td>
-                    <td class="py-2 px-2">${customer.status || 'Active'}</td>
-                    <td class="py-2 px-2">
+                    <td class="py-2 px-2 text-center">${customer.status || 'Active'}</td>
+                    <td class="py-2 px-2 flex space-x-1">
                         <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">View</button>
                     </td>
                 </tr>
@@ -1660,34 +1730,44 @@
                 });
                 const customer = await response.json();
                 if (response.ok) {
-                    document.getElementById('customerName').textContent = customer.name || 'N/A';
-                    document.getElementById('customerEmail').textContent = customer.email || 'N/A';
-                    document.getElementById('customerPhone').textContent = customer.phone || 'N/A';
-                    document.getElementById('customerStatus').textContent = customer.status || 'Active';
+                    const customerName = document.getElementById('customerName');
+                    if (customerName) customerName.textContent = customer.name || 'N/A';
+                    const customerEmail = document.getElementById('customerEmail');
+                    if (customerEmail) customerEmail.textContent = customer.email || 'N/A';
+                    const customerPhone = document.getElementById('customerPhone');
+                    if (customerPhone) customerPhone.textContent = customer.phone || 'N/A';
+                    const customerStatus = document.getElementById('customerStatus');
+                    if (customerStatus) customerStatus.textContent = customer.status || 'Active';
                     const blockUnblockBtn = document.getElementById('blockUnblockBtn');
-                    blockUnblockBtn.textContent = customer.status === 'Blocked' ? 'Unblock' : 'Block';
-                    blockUnblockBtn.onclick = () => toggleCustomerStatus(customer._id, customer.status);
-                    const orderHistory = customer.orders || [];
-                    document.getElementById('customerOrderHistory').innerHTML = `
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr>
-                                    <th class="py-1 px-2">Order ID</th>
-                                    <th class="py-1 px-2">Total</th>
-                                    <th class="py-1 px-2">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${orderHistory.map(order => `
-                                    <tr class="border-b">
-                                        <td class="py-1 px-2">${truncateText(order._id, 10)}</td>
-                                        <td class="py-1 px-2 text-right">₹${order.total.toFixed(2)}</td>
-                                        <td class="py-1 px-2">${order.status}</td>
+                    if (blockUnblockBtn) {
+                        blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block User' : 'Unblock User';
+                        blockUnblockBtn.onclick = () => toggleCustomerStatus(customerId, customer.status);
+                    }
+                    const customerOrderHistory = document.getElementById('customerOrderHistory');
+                    if (customerOrderHistory) {
+                        customerOrderHistory.innerHTML = customer.orders?.length ? `
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
                                     </tr>
-                                `).join('') || '<tr><td colspan="3" class="py-1 px-2 text-center">No orders found</td></tr>'}
-                            </tbody>
-                        </table>
-                    `;
+                                </thead>
+                                <tbody>
+                                    ${customer.orders.map(order => `
+                                        <tr class="border-b">
+                                            <td class="py-2 px-2">${truncateText(order._id || 'N/A', 10)}</td>
+                                            <td class="py-2 px-2 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
+                                            <td class="py-2 px-2 text-center">${order.status || 'Pending'}</td>
+                                            <td class="py-2 px-2">${new Date(order.createdAt).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p class="text-center text-gray-500">No orders found.</p>';
+                    }
                     showModal('customerDetailsModal');
                 } else {
                     showToast(customer.error || 'Failed to load customer details.', 'error');
@@ -1699,9 +1779,9 @@
         }
 
         async function toggleCustomerStatus(customerId, currentStatus) {
-            const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
+            const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
             try {
-                const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
+                const response = await fetch(`${BASE_URL}/api/users/${customerId}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1738,46 +1818,71 @@
         }
 
         function displayContactMessages(messages) {
-            document.getElementById('contactTableBody').innerHTML = messages.map(message => `
+            const contactTableBody = document.getElementById('contactTableBody');
+            if (!contactTableBody) return;
+            contactTableBody.innerHTML = messages.map(message => `
                 <tr class="border-b">
                     <td class="py-2 px-2">${message.name || 'N/A'}</td>
                     <td class="py-2 px-2">${message.email || 'N/A'}</td>
                     <td class="py-2 px-2">${message.subject || 'N/A'}</td>
                     <td class="py-2 px-2">${truncateText(message.message || 'N/A', 20)}</td>
-                    <td class="py-2 px-2">${message.status || 'Pending'}</td>
+                    <td class="py-2 px-2 text-center">${message.status || 'Pending'}</td>
                     <td class="py-2 px-2 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
-                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">Reply</button>
+                        <button onclick="viewContactMessage('${message._id}')" class="auth-btn bg-blue-500 hover:bg-blue-600 text-xs px-2 py-1">View</button>
                         <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-500 hover:bg-red-600 text-xs px-2 py-1">Delete</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function replyToMessage(messageId) {
-            document.getElementById('contactMessageId').value = messageId;
-            document.getElementById('contactReplySubject').value = '';
-            document.getElementById('contactReplyMessage').value = '';
-            showModal('replyContactModal');
+        async function viewContactMessage(messageId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const message = await response.json();
+                if (response.ok) {
+                    const contactMessageId = document.getElementById('contactMessageId');
+                    if (contactMessageId) contactMessageId.value = message._id || '';
+                    const contactReplySubject = document.getElementById('contactReplySubject');
+                    if (contactReplySubject) contactReplySubject.value = `Re: ${message.subject || 'Your Message'}`;
+                    const contactReplyMessage = document.getElementById('contactReplyMessage');
+                    if (contactReplyMessage) {
+                        contactReplyMessage.value = `\n\n--- Original Message ---\nFrom: ${message.name || 'N/A'} (${message.email || 'N/A'})\nSubject: ${message.subject || 'N/A'}\nMessage: ${message.message || 'N/A'}`;
+                    }
+                    showModal('replyContactModal');
+                } else {
+                    showToast(message.error || 'Failed to load message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching contact message:', error);
+                showToast('Failed to load message.', 'error');
+            }
         }
 
         async function sendReply() {
-            const messageId = document.getElementById('contactMessageId').value;
-            const subject = document.getElementById('contactReplySubject').value.trim();
-            const message = document.getElementById('contactReplyMessage').value.trim();
+            const reply = {
+                messageId: document.getElementById('contactMessageId')?.value || '',
+                subject: document.getElementById('contactReplySubject')?.value.trim() || '',
+                message: document.getElementById('contactReplyMessage')?.value.trim() || ''
+            };
 
-            if (!subject || !message) {
+            if (!reply.subject || !reply.message) {
                 showToast('Subject and message are required.', 'error');
                 return;
             }
 
             try {
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
+                const response = await fetch(`${BASE_URL}/api/contact/${reply.messageId}/reply`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ subject, message })
+                    body: JSON.stringify({
+                        subject: reply.subject,
+                        message: reply.message
+                    })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1808,15 +1913,20 @@
                     showToast(data.error || 'Failed to delete message.', 'error');
                 }
             } catch (error) {
-                console.error('Error deleting message:', error);
+                console.error('Error deleting contact message:', error);
                 showToast('Failed to delete message.', 'error');
             }
         }
 
         // Restaurant Status
         async function toggleRestaurantStatus() {
-            const currentStatus = document.getElementById('restaurantStatus').textContent;
+            const statusToggleBtn = document.getElementById('statusToggleBtn');
+            const restaurantStatus = document.getElementById('restaurantStatus');
+            if (!statusToggleBtn || !restaurantStatus) return;
+
+            const currentStatus = restaurantStatus.textContent;
             const newStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
+
             try {
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
                     method: 'PUT',
@@ -1828,15 +1938,15 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    document.getElementById('restaurantStatus').textContent = newStatus;
-                    document.getElementById('statusToggleBtn').textContent = newStatus === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
-                    showToast(`Restaurant is now ${newStatus}!`, 'success');
+                    restaurantStatus.textContent = newStatus;
+                    statusToggleBtn.textContent = newStatus === 'Open' ? 'Close Restaurant' : 'Open Restaurant';
+                    showToast(`Restaurant is now ${newStatus.toLowerCase()}!`, 'success');
                 } else {
-                    showToast(data.error || 'Failed to update restaurant status.', 'error');
+                    showToast(data.error || `Failed to ${newStatus.toLowerCase()} restaurant.`, 'error');
                 }
             } catch (error) {
                 console.error('Error toggling restaurant status:', error);
-                showToast('Failed to update restaurant status.', 'error');
+                showToast(`Failed to ${newStatus.toLowerCase()} restaurant.`, 'error');
             }
         }
 
@@ -1847,20 +1957,40 @@
         }
 
         // Helper Functions
-        function truncateText(text, length) {
-            if (text.length <= length) return text;
-            return text.substring(0, length) + '...';
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
         }
 
-        // Mobile Menu Toggle
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            const navbarMenu = document.getElementById('navbarMenu');
-            navbarMenu.classList.toggle('active');
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            const menuToggle = document.getElementById('menuToggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => {
+                    const navbarMenu = document.getElementById('navbarMenu');
+                    if (navbarMenu) {
+                        navbarMenu.classList.toggle('active');
+                    }
+                    const dropdown = document.getElementById('profileDropdown');
+                    if (dropdown && dropdown.classList.contains('active')) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const profileContainer = document.querySelector('.profile-container');
+                if (profileContainer && !profileContainer.contains(e.target)) {
+                    const dropdown = document.getElementById('profileDropdown');
+                    if (dropdown) {
+                        dropdown.classList.remove('active');
+                    }
+                }
+            });
         });
 
-        // Initialize
-        checkAuth();
     </script>
 </body>
 </html>
-<xaiArtifact/>
