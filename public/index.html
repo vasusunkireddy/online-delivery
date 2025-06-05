@@ -16,6 +16,82 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            position: relative;
+            overflow: hidden;
+        }
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateX(100%);
+        }
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+        .slide-content {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            color: white;
+            max-width: 90%;
+            width: 600px;
+        }
+        .slide-content h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .slide-content p {
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+        .slide-content a {
+            background: #f59e0b;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .slide-content a:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        .slider-dots {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .dot.active {
+            background: #f59e0b;
         }
         .modal {
             display: none;
@@ -203,10 +279,36 @@
             .contact-form {
                 padding: 1.5rem;
             }
+            .slide-content {
+                padding: 1.5rem;
+            }
+            .slide-content h2 {
+                font-size: 1.5rem;
+            }
+            .slide-content p {
+                font-size: 1rem;
+            }
+            .slide-content a {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            .slider-dots {
+                bottom: 15px;
+            }
+            .dot {
+                width: 10px;
+                height: 10px;
+            }
         }
         @media (min-width: 641px) {
             .menu-card img, .offer-card img {
                 height: 200px;
+            }
+            .slide-content h2 {
+                font-size: 2.5rem;
+            }
+            .slide-content p {
+                font-size: 1.25rem;
             }
         }
     </style>
@@ -388,11 +490,34 @@
     <!-- Main Content -->
     <div id="mainContent">
         <!-- Hero Section -->
-        <section id="home" class="hero-bg h-screen flex items-center justify-center text-white">
-            <div class="text-center bg-black bg-opacity-50 p-8 rounded-lg sm:p-10">
-                <h2 class="text-3xl font-bold mb-4 sm:text-4xl md:text-5xl">Welcome to Delicute</h2>
-                <p class="text-base mb-6 sm:text-lg md:text-xl">Savor the taste of home, delivered fresh from our cloud kitchen!</p>
-                <a href="#menu" class="btn-primary text-sm sm:text-base">Explore Menu</a>
+        <section id="home" class="hero-bg">
+            <div class="slider-container">
+                <div class="slide" data-index="0">
+                    <div class="slide-content">
+                        <h2>Welcome to Delicute</h2>
+                        <p>Login to enjoy delicious food!</p>
+                        <a href="#" onclick="showModal('loginModal')">Login Now</a>
+                    </div>
+                </div>
+                <div class="slide" data-index="1">
+                    <div class="slide-content">
+                        <h2>Explore Our Menu</h2>
+                        <p>Discover a variety of delicious dishes crafted just for you.</p>
+                        <a href="#menu">Browse Menu</a>
+                    </div>
+                </div>
+                <div class="slide" data-index="2">
+                    <div class="slide-content">
+                        <h2>About Us</h2>
+                        <p>Learn more about Delicute’s passion for quality food.</p>
+                        <a href="#about">About Us</a>
+                    </div>
+                </div>
+                <div class="slider-dots">
+                    <div class="dot" onclick="goToSlide(0)"></div>
+                    <div class="dot" onclick="goToSlide(1)"></div>
+                    <div class="dot" onclick="goToSlide(2)"></div>
+                </div>
             </div>
         </section>
 
@@ -528,6 +653,8 @@
         let currentPage = 1;
         const itemsPerPage = 9;
         let categories = [];
+        let currentSlide = 0;
+        let slideInterval;
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -1027,6 +1154,45 @@
             displayFullMenuItems(filteredItems);
         }
 
+        // Slider Functionality
+        function updateSlider() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index === (currentSlide - 1 + slides.length) % slides.length) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % document.querySelectorAll('.slide').length;
+            updateSlider();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlider();
+            resetSlideInterval();
+        }
+
+        function startSlideInterval() {
+            slideInterval = setInterval(nextSlide, 3000);
+        }
+
+        function resetSlideInterval() {
+            clearInterval(slideInterval);
+            startSlideInterval();
+        }
+
         // Navbar Toggle
         document.getElementById('menuToggle').addEventListener('click', () => {
             const navbarMenu = document.getElementById('navbarMenu');
@@ -1046,6 +1212,10 @@
             }
             fetchMenuItems();
             fetchOfferItems();
+            // Initialize slider
+            document.querySelector('.slide[data-index="0"]').classList.add('active');
+            document.querySelector('.dot').classList.add('active');
+            startSlideInterval();
         };
     </script>
 </body>
