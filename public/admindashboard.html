@@ -207,7 +207,7 @@
             color: white;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             position: relative;
-            overflow: 0.3s ease;
+            overflow: hidden;
         }
         .home-bg::before {
             content: '';
@@ -296,6 +296,18 @@
         }
         .navbar-logo:hover {
             transform: scale(1.1);
+        }
+        .order-details {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .rating-stars {
+            color: #d97706;
+            font-size: 1rem;
         }
         @media (max-width: 768px) {
             .auth-container {
@@ -574,6 +586,41 @@
         </div>
     </div>
 
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('orderDetailsModal')">×</span>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Order Details</h2>
+            <div class="text-sm space-y-3">
+                <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+                <p><strong>Customer:</strong> <span id="orderCustomerName"></span></p>
+                <p><strong>Address:</strong> <span id="orderAddress"></span></p>
+                <p><strong>Total:</strong> <span id="orderTotal"></span></p>
+                <p><strong>Status:</strong> <span id="orderStatus"></span></p>
+                <p><strong>Payment:</strong> <span id="orderPaymentStatus"></span></p>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Items</h3>
+                    <div id="orderItems" class="order-details"></div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Review</h3>
+                    <div id="orderReview" class="contact-message"></div>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <select id="orderStatusSelect" class="input-field p-2 border rounded-md text-sm">
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <button id="updateOrderStatusBtn" class="auth-btn px-4 py-2">Update Status</button>
+                <button id="refundOrderBtn" class="auth-btn bg-red-600 hover:bg-red-700 px-4 py-2 hidden">Refund</button>
+                <button onclick="closeModal('orderDetailsModal')" class="auth-btn bg-gray-600 hover:bg-gray-700 px-4 py-2">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -730,6 +777,7 @@
                             <tr>
                                 <th>Order ID</th>
                                 <th>Customer</th>
+                                <th>Address</th>
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th>Payment</th>
@@ -1270,7 +1318,7 @@
                 const totalOrders = document.getElementById('totalOrders');
                 if (totalOrders) totalOrders.textContent = orders.length;
                 const pendingOrders = document.getElementById('pendingOrders');
-                if (pendingOrders) pendingOrders.textContent = orders.filter(order => order.status === 'pending').length;
+                if (pendingOrders) pendingOrders.textContent = orders.filter(order => order.status === 'Pending').length;
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 showToast('Failed to load orders.', 'error');
@@ -1284,20 +1332,78 @@
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-3 px-3">${order._id || 'N/A'}</td>
                     <td class="py-3 px-3">${order.customerName || 'N/A'}</td>
+                    <td class="py-3 px-3">${order.address || 'N/A'}</td>
                     <td class="py-3 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
                     <td class="py-3 px-3 text-center">${order.status || 'Pending'}</td>
                     <td class="py-3 px-3 text-center">${order.paymentStatus || 'Pending'}</td>
                     <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="input-field p-2 border rounded-md text-sm">
-                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                            <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                        ${order.paymentStatus === 'Paid' ? `<button onclick="refundOrder('${order._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Refund</button>` : ''}
+                        <button onclick="viewOrderDetails('${order._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        async function viewOrderDetails(orderId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const order = await response.json();
+                if (response.ok) {
+                    const orderIdElement = document.getElementById('orderId');
+                    if (orderIdElement) orderIdElement.textContent = order._id || 'N/A';
+                    const orderCustomerName = document.getElementById('orderCustomerName');
+                    if (orderCustomerName) orderCustomerName.textContent = order.customerName || 'N/A';
+                    const orderAddress = document.getElementById('orderAddress');
+                    if (orderAddress) orderAddress.textContent = order.address || 'N/A';
+                    const orderTotal = document.getElementById('orderTotal');
+                    if (orderTotal) orderTotal.textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
+                    const orderStatus = document.getElementById('orderStatus');
+                    if (orderStatus) orderStatus.textContent = order.status || 'Pending';
+                    const orderPaymentStatus = document.getElementById('orderPaymentStatus');
+                    if (orderPaymentStatus) orderPaymentStatus.textContent = order.paymentStatus || 'Pending';
+                    const orderStatusSelect = document.getElementById('orderStatusSelect');
+                    if (orderStatusSelect) orderStatusSelect.value = order.status || 'Pending';
+                    const updateOrderStatusBtn = document.getElementById('updateOrderStatusBtn');
+                    if (updateOrderStatusBtn) updateOrderStatusBtn.onclick = () => updateOrderStatus(orderId, orderStatusSelect.value);
+                    const refundOrderBtn = document.getElementById('refundOrderBtn');
+                    if (refundOrderBtn) {
+                        refundOrderBtn.style.display = order.paymentStatus === 'Paid' ? 'block' : 'none';
+                        refundOrderBtn.onclick = () => refundOrder(orderId);
+                    }
+
+                    const orderItems = document.getElementById('orderItems');
+                    if (orderItems) {
+                        orderItems.innerHTML = order.items?.map(item => `
+                            <div class="text-sm mb-2">
+                                <p><strong>Item:</strong> ${item.name || 'N/A'}</p>
+                                <p><strong>Quantity:</strong> ${item.quantity || 1}</p>
+                                <p><strong>Price:</strong> ₹${item.price?.toFixed(2) || '0.00'}</p>
+                            </div>
+                        `).join('') || 'No items';
+                    }
+
+                    const orderReview = document.getElementById('orderReview');
+                    if (orderReview) {
+                        if (order.review) {
+                            const stars = '★'.repeat(order.review.rating) + '☆'.repeat(5 - order.review.rating);
+                            orderReview.innerHTML = `
+                                <p><strong>Rating:</strong> <span class="rating-stars">${stars}</span> (${order.review.rating}/5)</p>
+                                <p><strong>Comment:</strong> ${order.review.comment || 'No comment'}</p>
+                            `;
+                        } else {
+                            orderReview.innerHTML = 'No review provided';
+                        }
+                    }
+
+                    showModal('orderDetailsModal');
+                } else {
+                    showToast(order.error || 'Failed to load order details.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+                showToast('Failed to load order details.', 'error');
+            }
         }
 
         async function updateOrderStatus(orderId, status) {
@@ -1313,6 +1419,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast(`Order status updated to ${status}!`, 'success');
+                    closeModal('orderDetailsModal');
                     fetchOrders();
                 } else {
                     showToast(data.error || 'Failed to update order status.', 'error');
@@ -1333,6 +1440,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Order refunded successfully!', 'success');
+                    closeModal('orderDetailsModal');
                     fetchOrders();
                 } else {
                     showToast(data.error || 'Failed to process refund.', 'error');
@@ -1467,7 +1575,7 @@
             const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
 
             try {
-                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
+                                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1514,7 +1622,7 @@
             }
         }
 
-        // Coupon Management
+        // Coupons Management
         async function fetchCoupons() {
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
@@ -1534,10 +1642,10 @@
             couponTableBody.innerHTML = coupons.map(coupon => `
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-3 px-3">
-                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code || 'Coupon'}" class="menu-img">` : 'No Image'}
+                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code}" class="menu-img">` : 'No Image'}
                     </td>
                     <td class="py-3 px-3">${coupon.code || 'N/A'}</td>
-                    <td class="py-3 px-3 text-right">${coupon.discount ? `${coupon.discount}%` : 'N/A'}</td>
+                    <td class="py-3 px-3 text-right">${coupon.discount || 0}%</td>
                     <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
                         <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
@@ -1548,7 +1656,7 @@
 
         async function addCoupon() {
             const coupon = {
-                code: document.getElementById('couponCode')?.value.trim() || '',
+                code: document.getElementById('couponCode')?.value.trim().toUpperCase() || '',
                 discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
                 imageUrl: document.getElementById('couponImage')?.value.trim() || '',
                 file: document.getElementById('couponImageUpload')?.files[0] || null,
@@ -1557,11 +1665,6 @@
 
             if (!coupon.code || !coupon.discount) {
                 showToast('Coupon code and discount are required.', 'error');
-                return;
-            }
-
-            if (coupon.discount < 1 || coupon.discount > 100) {
-                showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
@@ -1609,7 +1712,7 @@
                     if (editCouponId) editCouponId.value = coupon._id || '';
                     const editCouponCode = document.getElementById('editCouponCode');
                     if (editCouponCode) editCouponCode.value = coupon.code || '';
-                                        const editCouponDiscount = document.getElementById('editCouponDiscount');
+                    const editCouponDiscount = document.getElementById('editCouponDiscount');
                     if (editCouponDiscount) editCouponDiscount.value = coupon.discount || '';
                     const editCouponImage = document.getElementById('editCouponImage');
                     if (editCouponImage) editCouponImage.value = coupon.image || '';
@@ -1628,7 +1731,7 @@
         async function updateCoupon() {
             const coupon = {
                 id: document.getElementById('editCouponId')?.value || '',
-                code: document.getElementById('editCouponCode')?.value.trim() || '',
+                code: document.getElementById('editCouponCode')?.value.trim().toUpperCase() || '',
                 discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
                 imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
                 file: document.getElementById('editCouponImageUpload')?.files[0] || null,
@@ -1637,11 +1740,6 @@
 
             if (!coupon.code || !coupon.discount) {
                 showToast('Coupon code and discount are required.', 'error');
-                return;
-            }
-
-            if (coupon.discount < 1 || coupon.discount > 100) {
-                showToast('Discount must be between 1% and 100%.', 'error');
                 return;
             }
 
@@ -1717,8 +1815,8 @@
                     <td class="py-3 px-3">${customer.name || 'N/A'}</td>
                     <td class="py-3 px-3">${customer.email || 'N/A'}</td>
                     <td class="py-3 px-3">${customer.phone || 'N/A'}</td>
-                    <td class="py-3 px-3 text-center">${customer.status || 'Active'}</td>
-                    <td class="py-3 px-3">
+                    <td class="py-3 px-3 text-center">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
+                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
                     </td>
                 </tr>
@@ -1739,42 +1837,38 @@
                     const customerPhone = document.getElementById('customerPhone');
                     if (customerPhone) customerPhone.textContent = customer.phone || 'N/A';
                     const customerStatus = document.getElementById('customerStatus');
-                    if (customerStatus) customerStatus.textContent = customer.status || 'Active';
+                    if (customerStatus) customerStatus.textContent = customer.isBlocked ? 'Blocked' : 'Active';
                     const blockUnblockBtn = document.getElementById('blockUnblockBtn');
                     if (blockUnblockBtn) {
-                        blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
-                        blockUnblockBtn.onclick = () => blockUnblockCustomer(customerId, customer.status);
+                        blockUnblockBtn.textContent = customer.isBlocked ? 'Unblock' : 'Block';
+                        blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
+                        blockUnblockBtn.onclick = () => toggleCustomerBlock(customerId, customer.isBlocked);
                     }
 
-                    const orderHistoryResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                    });
-                    const orders = await orderHistoryResponse.json();
-                    const customerOrderHistory = document.getElementById('customerOrderHistory');
-                    if (customerOrderHistory) {
-                        customerOrderHistory.innerHTML = `
+                    const orderHistory = document.getElementById('customerOrderHistory');
+                    if (orderHistory) {
+                        orderHistory.innerHTML = customer.orders?.length ? `
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr>
                                         <th>Order ID</th>
                                         <th>Total</th>
                                         <th>Status</th>
-                                        <th>Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${orders.map(order => `
-                                        <tr class="border-b hover:bg-gray-50">
+                                    ${customer.orders.map(order => `
+                                        <tr class="border-b">
                                             <td class="py-2 px-3">${order._id || 'N/A'}</td>
                                             <td class="py-2 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
                                             <td class="py-2 px-3 text-center">${order.status || 'Pending'}</td>
-                                            <td class="py-2 px-3">${new Date(order.createdAt).toLocaleDateString()}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
-                        `;
+                        ` : 'No order history';
                     }
+
                     showModal('customerDetailsModal');
                 } else {
                     showToast(customer.error || 'Failed to load customer details.', 'error');
@@ -1785,28 +1879,27 @@
             }
         }
 
-        async function blockUnblockCustomer(customerId, currentStatus) {
-            const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
+        async function toggleCustomerBlock(customerId, isBlocked) {
             try {
-                const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
+                const response = await fetch(`${BASE_URL}/api/users/${customerId}/block`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ isBlocked: !isBlocked })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Customer ${newStatus.toLowerCase()} successfully!`, 'success');
+                    showToast(`Customer ${!isBlocked ? 'blocked' : 'unblocked'} successfully!`, 'success');
                     closeModal('customerDetailsModal');
                     fetchCustomers();
                 } else {
-                    showToast(data.error || `Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+                    showToast(data.error || 'Failed to update customer status.', 'error');
                 }
             } catch (error) {
-                console.error(`Error ${newStatus.toLowerCase()}ing customer:`, error);
-                showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+                console.error('Error toggling customer block:', error);
+                showToast('Failed to update customer status.', 'error');
             }
         }
 
@@ -1837,42 +1930,37 @@
                     </td>
                     <td class="py-3 px-3 text-center">${message.status || 'Pending'}</td>
                     <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <button onclick="replyContactMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Reply</button>
-                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
+                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Reply</button>
+                        <button onclick="markAsResolved('${message._id}')" class="auth-btn bg-green-600 hover:bg-green-700 text-xs px-3 py-1.5">Resolve</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function replyContactMessage(messageId) {
+        function replyToMessage(messageId) {
             const contactMessageId = document.getElementById('contactMessageId');
             if (contactMessageId) contactMessageId.value = messageId;
             showModal('replyContactModal');
         }
 
         async function sendReply() {
-            const message = {
-                id: document.getElementById('contactMessageId')?.value || '',
-                subject: document.getElementById('contactReplySubject')?.value.trim() || '',
-                reply: document.getElementById('contactReplyMessage')?.value.trim() || ''
-            };
+            const messageId = document.getElementById('contactMessageId')?.value || '';
+            const subject = document.getElementById('contactReplySubject')?.value.trim() || '';
+            const message = document.getElementById('contactReplyMessage')?.value.trim() || '';
 
-            if (!message.subject || !message.reply) {
-                showToast('Subject and reply message are required.', 'error');
+            if (!subject || !message) {
+                showToast('Subject and message are required.', 'error');
                 return;
             }
 
             try {
-                const response = await fetch(`${BASE_URL}/api/contact/${message.id}/reply`, {
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({
-                        subject: message.subject,
-                        reply: message.reply
-                    })
+                    body: JSON.stringify({ subject, message })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1888,23 +1976,22 @@
             }
         }
 
-        async function deleteContactMessage(messageId) {
-            if (!confirm('Are you sure you want to delete this message?')) return;
+        async function markAsResolved(messageId) {
             try {
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
-                    method: 'DELETE',
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/resolve`, {
+                    method: 'PUT',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Message deleted successfully!', 'success');
+                    showToast('Message marked as resolved!', 'success');
                     fetchContactMessages();
                 } else {
-                    showToast(data.error || 'Failed to delete message.', 'error');
+                    showToast(data.error || 'Failed to resolve message.', 'error');
                 }
             } catch (error) {
-                console.error('Error deleting contact message:', error);
-                showToast('Failed to delete message.', 'error');
+                console.error('Error resolving message:', error);
+                showToast('Failed to resolve message.', 'error');
             }
         }
 
@@ -1917,12 +2004,9 @@
                 const data = await response.json();
                 if (response.ok) {
                     const restaurantStatus = document.getElementById('restaurantStatus');
+                    if (restaurantStatus) restaurantStatus.textContent = data.isOpen ? 'Open' : 'Closed';
                     const statusToggleBtn = document.getElementById('statusToggleBtn');
-                    if (restaurantStatus && statusToggleBtn) {
-                        restaurantStatus.textContent = data.isOpen ? 'Open' : 'Closed';
-                        statusToggleBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
-                        localStorage.setItem('restaurantStatus', data.isOpen ? 'Open' : 'Closed');
-                    }
+                    if (statusToggleBtn) statusToggleBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
                 } else {
                     showToast(data.error || 'Failed to fetch restaurant status.', 'error');
                 }
@@ -1933,33 +2017,31 @@
         }
 
         async function toggleRestaurantStatus() {
-            const currentStatus = localStorage.getItem('restaurantStatus') === 'Open';
             try {
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify({ isOpen: !currentStatus })
+                    }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Restaurant ${!currentStatus ? 'opened' : 'closed'} successfully!`, 'success');
+                    showToast(`Restaurant ${data.isOpen ? 'opened' : 'closed'} successfully!`, 'success');
                     fetchRestaurantStatus();
                 } else {
-                    showToast(data.error || 'Failed to update restaurant status.', 'error');
+                    showToast(data.error || 'Failed to toggle restaurant status.', 'error');
                 }
             } catch (error) {
                 console.error('Error toggling restaurant status:', error);
-                showToast('Failed to update restaurant status.', 'error');
+                showToast('Failed to toggle restaurant status.', 'error');
             }
         }
 
+        // Logout
         function logout() {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminProfileImage');
-            localStorage.removeItem('restaurantStatus');
             window.location.href = 'admin.html';
         }
 
@@ -1967,13 +2049,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
             document.addEventListener('click', (e) => {
-                const dropdown = document.getElementById('profileDropdown');
-                if (dropdown && !e.target.closest('.profile-container')) {
-                    dropdown.classList.remove('active');
+                const profileDropdown = document.getElementById('profileDropdown');
+                const profileImage = document.getElementById('profileImage');
+                if (profileDropdown && profileImage && !profileImage.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.remove('active');
                 }
             });
         });
     </script>
 </body>
 </html>
-<xaiArtifact/>

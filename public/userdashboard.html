@@ -6,10 +6,16 @@
     <title>Delicute - User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=Ae0wS3yL2z3q4k5j6l7m8n9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5f&currency=INR"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: #f0f2f6;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0f2f6 0%, #e5e7eb 100%);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: #e5e7eb;
         }
         .modal {
             display: none;
@@ -18,7 +24,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -27,12 +33,15 @@
         .modal-content {
             background: white;
             padding: 24px;
-            border-radius: 12px;
+            border-radius: 16px;
             max-width: 90%;
-            width: 450px;
+            width: 500px;
             position: relative;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.3s ease-out;
+        }
+        body.dark-mode .modal-content {
+            background: #374151;
         }
         @keyframes slideIn {
             from { transform: translateY(-50px); opacity: 0; }
@@ -46,6 +55,9 @@
             cursor: pointer;
             color: #374151;
             transition: color 0.2s;
+        }
+        body.dark-mode .close-btn {
+            color: #e5e7eb;
         }
         .close-btn:hover {
             color: #f59e0b;
@@ -61,6 +73,7 @@
             display: none;
             min-width: 200px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-in;
         }
         .toast.success {
             background-color: #22c55e;
@@ -68,23 +81,29 @@
         .toast.error {
             background-color: #ef4444;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         .btn-primary {
-            background: #f59e0b;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
             color: white;
             padding: 12px 24px;
             border-radius: 9999px;
-            transition: background 0.3s, transform 0.2s;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
         }
         .btn-primary:hover {
-            background: #d97706;
+            background: linear-gradient(90deg, #d97706, #f59e0b);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .input-field {
             transition: border-color 0.3s, box-shadow 0.3s;
+            border-radius: 8px;
         }
         .input-field:focus {
             border-color: #f59e0b;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
             outline: none;
         }
         .navbar-menu {
@@ -98,10 +117,63 @@
         }
         .menu-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        body.dark-mode .menu-card {
+            background: #374151;
         }
         .menu-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        body.dark-mode .dropdown-content {
+            background: #374151;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-content a, .dropdown-content button {
+            color: #374151;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background 0.2s;
+        }
+        body.dark-mode .dropdown-content a, body.dark-mode .dropdown-content button {
+            color: #e5e7eb;
+        }
+        .dropdown-content a:hover, .dropdown-content button:hover {
+            background: #f3f4f6;
+        }
+        body.dark-mode .dropdown-content a:hover, body.dark-mode .dropdown-content button:hover {
+            background: #4b5563;
+        }
+        .rating-stars {
+            color: #f59e0b;
+        }
+        .welcome-message {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 24px;
         }
         @media (max-width: 640px) {
             .modal-content {
@@ -119,7 +191,13 @@
                 overflow: hidden;
             }
             .navbar-menu.active {
-                max-height: 300px;
+                max-height: 400px;
+            }
+            .dropdown-content {
+                width: 100%;
+            }
+            .menu-card {
+                margin-bottom: 16px;
             }
         }
     </style>
@@ -139,19 +217,30 @@
                         <p class="text-xs text-gray-500 sm:text-sm">Every bite tells a story</p>
                     </div>
                 </div>
-                <div class="flex items-center sm:hidden">
-                    <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="hidden sm:flex sm:items-center sm:space-x-4">
-                    <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-sm">Cart</a>
-                    <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-sm">Orders</a>
-                    <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
-                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm">Logout</button>
+                <div class="flex items-center space-x-4">
+                    <div class="dropdown">
+                        <button class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                            <img id="headerProfileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-10 w-10 rounded-full object-cover">
+                            <span class="hidden sm:inline text-sm font-medium">Menu</span>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="showSection('home')">Home</a>
+                            <a href="#" onclick="showSection('cart')">Cart</a>
+                            <a href="#" onclick="showSection('orders')">Orders</a>
+                            <a href="#" onclick="showSection('favorites')">Favorites</a>
+                            <a href="#" onclick="showSection('orderHistory')">Order History</a>
+                            <a href="#" onclick="showSection('profile')">Profile</a>
+                            <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+                            <button onclick="logout()">Logout</button>
+                        </div>
+                    </div>
+                    <div class="sm:hidden">
+                        <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div id="navbarMenu" class="navbar-menu sm:hidden">
@@ -159,7 +248,10 @@
                     <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
                     <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-sm">Cart</a>
                     <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-sm">Orders</a>
+                    <a href="#" onclick="showSection('favorites')" class="text-gray-600 hover:text-gray-900 text-sm">Favorites</a>
+                    <a href="#" onclick="showSection('orderHistory')" class="text-gray-600 hover:text-gray-900 text-sm">Order History</a>
                     <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
+                    <button onclick="toggleDarkMode()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Toggle Dark Mode</button>
                     <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Logout</button>
                 </div>
             </div>
@@ -194,17 +286,76 @@
         </div>
     </div>
 
+    <!-- Coupon Modal -->
+    <div id="couponModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('couponModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Apply Coupon</h2>
+            <div>
+                <label for="couponCode" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter Coupon Code</label>
+                <input type="text" id="couponCode" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter coupon code">
+            </div>
+            <div class="mt-6">
+                <button onclick="applyCoupon()" class="btn-primary w-full text-sm sm:text-base">Apply Coupon</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rate Item Modal -->
+    <div id="rateModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('rateModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Rate Item</h2>
+            <div>
+                <label for="rating" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Rating (1-5)</label>
+                <input type="number" id="rating" min="1" max="5" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter rating">
+                <label for="review" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Review (Optional)</label>
+                <textarea id="review" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Write your review"></textarea>
+            </div>
+            <div class="mt-6">
+                <button onclick="submitRating()" class="btn-primary w-full text-sm sm:text-base">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div id="orderConfirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('orderConfirmationModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Order Confirmed!</h2>
+            <div id="orderConfirmationDetails" class="text-sm sm:text-base text-gray-600"></div>
+            <div class="mt-6">
+                <button onclick="closeModal('orderConfirmationModal')" class="btn-primary w-full text-sm sm:text-base">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <!-- Home Section -->
         <section id="homeSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Welcome Back!</h2>
+            <div id="welcomeMessage" class="welcome-message text-lg sm:text-xl font-semibold"></div>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Explore Our Menu</h2>
+            <div class="flex flex-col sm:flex-row justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                <input type="text" id="searchInput" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items...">
+                <select id="categoryFilter" class="input-field w-full sm:w-1/4 p-3 border rounded-md text-sm sm:text-base">
+                    <option value="">All Categories</option>
+                    <option value="veg">Vegetarian</option>
+                    <option value="non-veg">Non-Vegetarian</option>
+                    <option value="dessert">Dessert</option>
+                    <option value="beverage">Beverage</option>
+                </select>
+            </div>
             <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
         </section>
 
         <!-- Cart Section -->
         <section id="cartSection" class="section">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Cart</h2>
+            <div class="flex justify-end mb-4">
+                <button onclick="showCouponModal()" class="btn-primary text-sm sm:text-base">Apply Coupon</button>
+            </div>
+            <div id="couponInfo" class="mb-4 text-sm sm:text-base text-gray-600"></div>
             <div id="cartItems" class="mb-6"></div>
             <div class="text-center">
                 <button onclick="showPaymentModal()" class="btn-primary text-sm sm:text-base">Proceed to Payment</button>
@@ -217,27 +368,43 @@
             <div id="orderItems"></div>
         </section>
 
+        <!-- Favorites Section -->
+        <section id="favoritesSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Favorites</h2>
+            <div id="favoriteItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+        </section>
+
+        <!-- Order History Section -->
+        <section id="orderHistorySection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Order History</h2>
+            <div id="orderHistoryItems"></div>
+        </section>
+
         <!-- Profile Section -->
         <section id="profileSection" class="section">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Profile</h2>
-            <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-center mb-4">
-                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-24 w-24 rounded-full object-cover">
+            <div class="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                <div class="flex justify-center mb-6">
+                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-32 w-32 rounded-full object-cover border-4 border-yellow-500 shadow-md">
                 </div>
                 <div>
                     <label for="profileName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
-                    <input type="text" id="profileName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                    <input type="text" id="profileName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter your name">
                 </div>
                 <div class="mt-4">
                     <label for="profileEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
-                    <input type="email" id="profileEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                    <input type="email" id="profileEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base bg-gray-100" readonly>
                 </div>
                 <div class="mt-4">
                     <label for="profilePhone" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Phone</label>
-                    <input type="tel" id="profilePhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                    <input type="tel" id="profilePhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base bg-gray-100" readonly>
+                </div>
+                <div class="mt-4">
+                    <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Upload Profile Image (Optional)</label>
+                    <input type="file" id="profileImageUpload" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" accept="image/*">
                 </div>
                 <div class="mt-6 text-center">
-                    <button onclick="enableEditProfile()" class="btn-primary text-sm sm:text-base">Edit Profile</button>
+                    <button onclick="saveProfile()" class="btn-primary text-sm sm:text-base">Save Profile</button>
                 </div>
             </div>
         </section>
@@ -246,7 +413,11 @@
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
         let currentOrderTotal = 0;
+        let appliedCoupon = null;
+        let currentRatingItemId = null;
+        let userName = '';
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -272,6 +443,14 @@
             if (sectionId === 'cart') loadCart();
             if (sectionId === 'orders') fetchOrders();
             if (sectionId === 'home') fetchMenuItems();
+            if (sectionId === 'favorites') loadFavorites();
+            if (sectionId === 'orderHistory') fetchOrderHistory();
+            document.getElementById('navbarMenu').classList.remove('active');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         }
 
         async function checkAuth() {
@@ -290,9 +469,12 @@
                 if (!response.ok) {
                     throw new Error('Invalid token or session expired.');
                 }
-                fetchUserDetails();
+                await fetchUserDetails();
                 showSection('home');
                 loadCart();
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                }
             } catch (error) {
                 console.error('Error checking auth:', error);
                 showToast('Session expired or invalid. Please log in again.', 'error');
@@ -312,11 +494,15 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    document.getElementById('profileName').value = data.name;
-                    document.getElementById('profileEmail').value = data.email;
+                    userName = data.name || 'Guest';
+                    document.getElementById('welcomeMessage').textContent = `Welcome, ${userName}!`;
+                    document.getElementById('profileName').value = data.name || '';
+                    document.getElementById('profileEmail').value = data.email || '';
                     document.getElementById('profilePhone').value = data.phone || '';
-                    document.getElementById('profileImage').src = data.profileImage || 'https://via.placeholder.com/100';
-                    localStorage.setItem('userProfileImage', data.profileImage || 'https://via.placeholder.com/100');
+                    const profileImage = data.profileImage || 'https://via.placeholder.com/100';
+                    document.getElementById('profileImage').src = profileImage;
+                    document.getElementById('headerProfileImage').src = profileImage;
+                    localStorage.setItem('userProfileImage', profileImage);
                 } else {
                     showToast(data.error || 'Failed to fetch profile.', 'error');
                 }
@@ -326,42 +512,30 @@
             }
         }
 
-        function enableEditProfile() {
-            const inputs = document.querySelectorAll('#profileSection input');
-            inputs.forEach(input => input.removeAttribute('readonly'));
-            const saveButton = document.createElement('button');
-            saveButton.textContent = 'Save Changes';
-            saveButton.className = 'btn-primary text-sm sm:text-base mt-4';
-            saveButton.onclick = saveProfile;
-            const editButton = document.querySelector('#profileSection button');
-            editButton.replaceWith(saveButton);
-        }
-
         async function saveProfile() {
             const token = localStorage.getItem('token');
             const name = document.getElementById('profileName').value;
-            const email = document.getElementById('profileEmail').value;
-            const phone = document.getElementById('profilePhone').value;
+            const fileInput = document.getElementById('profileImageUpload');
+            const formData = new FormData();
+            if (name) formData.append('name', name);
+            if (fileInput.files[0]) formData.append('profileImage', fileInput.files[0]);
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/update`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ name, email, phone })
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Profile updated successfully!', 'success');
-                    const inputs = document.querySelectorAll('#profileSection input');
-                    inputs.forEach(input => input.setAttribute('readonly', true));
-                    const saveButton = document.querySelector('#profileSection button');
-                    const editButton = document.createElement('button');
-                    editButton.textContent = 'Edit Profile';
-                    editButton.className = 'btn-primary text-sm sm:text-base';
-                    editButton.onclick = enableEditProfile;
-                    saveButton.replaceWith(editButton);
+                    userName = name || userName;
+                    document.getElementById('welcomeMessage').textContent = `Welcome, ${userName}!`;
+                    if (data.profileImage) {
+                        document.getElementById('profileImage').src = data.profileImage;
+                        document.getElementById('headerProfileImage').src = data.profileImage;
+                        localStorage.setItem('userProfileImage', data.profileImage);
+                    }
+                    document.getElementById('profileImageUpload').value = '';
                 } else {
                     showToast(data.error || 'Failed to update profile.', 'error');
                 }
@@ -375,19 +549,32 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`);
                 const menuItems = await response.json();
+                const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+                const category = document.getElementById('categoryFilter').value;
+                const filteredItems = menuItems.filter(item => 
+                    item.name.toLowerCase().includes(searchQuery) &&
+                    (!category || item.category === category)
+                );
                 const menuItemsDiv = document.getElementById('menuItems');
-                if (menuItems.length === 0) {
+                if (filteredItems.length === 0) {
                     menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items available.</p>';
                     return;
                 }
-                menuItemsDiv.innerHTML = menuItems.map(item => `
-                    <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                menuItemsDiv.innerHTML = filteredItems.map(item => `
+                    <div class="menu-card">
                         <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.name}" class="w-full object-cover h-48">
                         <div class="p-6">
                             <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
                             <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                             <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
-                            <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base rating-stars">${'★'.repeat(item.rating || 0)}${'☆'.repeat(5 - (item.rating || 0))}</p>
+                            <div class="flex justify-between mt-3">
+                                <button onclick='addToCart(${JSON.stringify(item)})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
+                                <button onclick='toggleFavorite(${JSON.stringify(item)})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">
+                                    ${favorites.some(fav => fav.id === item._id) ? '♥' : '♡'}
+                                </button>
+                            </div>
+                            <button onclick="showRateModal('${item._id}')" class="mt-3 text-sm sm:text-base text-gray-600 hover:text-gray-900">Rate Item</button>
                         </div>
                     </div>
                 `).join('');
@@ -409,6 +596,42 @@
             if (document.getElementById('cartSection').classList.contains('active')) loadCart();
         }
 
+        function toggleFavorite(item) {
+            const existingFav = favorites.find(fav => fav.id === item._id);
+            if (existingFav) {
+                favorites = favorites.filter(fav => fav.id !== item._id);
+                showToast(`${item.name} removed from favorites.`, 'success');
+            } else {
+                favorites.push({ id: item._id, name: item.name, price: item.price, image: item.image, category: item.category });
+                showToast(`${item.name} added to favorites!`, 'success');
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            if (document.getElementById('favoritesSection').classList.contains('active')) loadFavorites();
+            if (document.getElementById('homeSection').classList.contains('active')) fetchMenuItems();
+        }
+
+        function loadFavorites() {
+            const favoriteItemsDiv = document.getElementById('favoriteItems');
+            if (favorites.length === 0) {
+                favoriteItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No favorite items.</p>';
+                return;
+            }
+            favoriteItemsDiv.innerHTML = favorites.map(item => `
+                <div class="menu-card">
+                    <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.name}" class="w-full object-cover h-48">
+                    <div class="p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.category || 'No category'}</p>
+                        <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
+                        <div class="flex justify-between mt-3">
+                            <button onclick='addToCart(${JSON.stringify(item)})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
+                            <button onclick='toggleFavorite(${JSON.stringify(item)})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">♥</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function removeFromCart(index) {
             cart.splice(index, 1);
             localStorage.setItem('cart', JSON.stringify(cart));
@@ -425,10 +648,46 @@
             loadCart();
         }
 
+        function showCouponModal() {
+            showModal('couponModal');
+        }
+
+        async function applyCoupon() {
+            const couponCode = document.getElementById('couponCode').value;
+            if (!couponCode) {
+                showToast('Please enter a coupon code.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ couponCode })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    appliedCoupon = data;
+                    showToast(`Coupon ${couponCode} applied! ${data.discount}% off`, 'success');
+                    closeModal('couponModal');
+                    loadCart();
+                } else {
+                    showToast(data.error || 'Invalid coupon code.', 'error');
+                }
+            } catch (error) {
+                console.error('Error applying coupon:', error);
+                showToast('Failed to apply coupon.', 'error');
+            }
+        }
+
         function loadCart() {
             const cartItemsDiv = document.getElementById('cartItems');
+            const couponInfoDiv = document.getElementById('couponInfo');
             if (cart.length === 0) {
                 cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">Your cart is empty.</p>';
+                couponInfoDiv.innerHTML = '';
                 return;
             }
             let total = 0;
@@ -450,11 +709,26 @@
                     </div>
                 `;
             }).join('');
-            currentOrderTotal = total;
+            let discount = 0;
+            if (appliedCoupon) {
+                discount = (total * appliedCoupon.discount) / 100;
+                couponInfoDiv.innerHTML = `<p>Applied Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>`;
+            } else {
+                couponInfoDiv.innerHTML = '';
+            }
+            currentOrderTotal = total - discount;
             cartItemsDiv.innerHTML += `
+                <div class="flex justify-between py-3 text-sm sm:text-base">
+                    <span>Subtotal</span>
+                    <span>₹${total.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between py-3 text-sm sm:text-base">
+                    <span>Discount</span>
+                    <span>-₹${discount.toFixed(2)}</span>
+                </div>
                 <div class="flex justify-between py-3 font-bold text-sm sm:text-base">
                     <span>Total</span>
-                    <span>₹${total.toFixed(2)}</span>
+                    <span>₹${currentOrderTotal.toFixed(2)}</span>
                 </div>
             `;
         }
@@ -483,19 +757,30 @@
                         })),
                         total: currentOrderTotal,
                         paymentMethod,
-                        paymentDetails
+                        paymentDetails,
+                        coupon: appliedCoupon ? appliedCoupon.code : null
                     })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Order placed successfully!', 'success');
+                    document.getElementById('orderConfirmationDetails').innerHTML = `
+                        <p><strong>Order #${data._id}</strong></p>
+                        <p>Total: ₹${data.total.toFixed(2)}</p>
+                        <p>Payment Method: ${data.paymentMethod}</p>
+                        <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
+                        ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
+                    `;
+                    showModal('orderConfirmationModal');
                     cart = [];
+                    appliedCoupon = null;
                     localStorage.removeItem('cart');
                     closeModal('paymentModal');
                     closeModal('upiModal');
                     loadCart();
                     if (paymentMethod !== 'COD') {
                         fetchOrders();
+                        fetchOrderHistory();
                     }
                 } else {
                     showToast(data.error || 'Failed to place order.', 'error');
@@ -520,7 +805,8 @@
                             quantity: item.quantity
                         })),
                         total: currentOrderTotal,
-                        paymentMethod: 'PayPal'
+                        paymentMethod: 'PayPal',
+                        coupon: appliedCoupon ? appliedCoupon.code : null
                     })
                 });
                 const data = await response.json();
@@ -546,11 +832,21 @@
                         const verifyData = await verifyResponse.json();
                         if (verifyResponse.ok) {
                             showToast('Payment successful!', 'success');
+                            document.getElementById('orderConfirmationDetails').innerHTML = `
+                                <p><strong>Order #${data.orderId}</strong></p>
+                                <p>Total: ₹${currentOrderTotal.toFixed(2)}</p>
+                                <p>Payment Method: PayPal</p>
+                                <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
+                                ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
+                            `;
+                            showModal('orderConfirmationModal');
                             cart = [];
+                            appliedCoupon = null;
                             localStorage.removeItem('cart');
                             closeModal('paymentModal');
                             loadCart();
                             fetchOrders();
+                            fetchOrderHistory();
                         } else {
                             showToast(verifyData.error || 'Payment verification failed.', 'error');
                         }
@@ -624,6 +920,11 @@
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
+                        <div class="flex space-x-2 mt-3">
+                            <button onclick="trackOrder('${order._id}')" class="btn-primary text-sm sm:text-base">Track Order</button>
+                            <button onclick="reorder('${order._id}')" class="btn-primary text-sm sm:text-base">Reorder</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
@@ -632,21 +933,142 @@
             }
         }
 
+        async function fetchOrderHistory() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                const orderHistoryItemsDiv = document.getElementById('orderHistoryItems');
+                if (orders.length === 0) {
+                    orderHistoryItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No order history found.</p>';
+                    return;
+                }
+                orderHistoryItemsDiv.innerHTML = orders.map(order => `
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${order._id}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Items:</p>
+                        <ul class="list-disc pl-5 text-sm sm:text-base">
+                            ${order.items.map(item => `<li>${item.itemName} (Qty: ${item.quantity})</li>`).join('')}
+                        </ul>
+                        <div class="flex space-x-2 mt-3">
+                            <button onclick="trackOrder('${order._id}')" class="btn-primary text-sm sm:text-base">Track Order</button>
+                            <button onclick="reorder('${order._id}')" class="btn-primary text-sm sm:text-base">Reorder</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching order history:', error);
+                document.getElementById('orderHistoryItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load order history.</p>';
+            }
+        }
+
+        async function trackOrder(orderId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}/track`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(`Order #${orderId} status: ${data.status}`, 'success');
+                } else {
+                    showToast(data.error || 'Failed to track order.', 'error');
+                }
+            } catch (error) {
+                console.error('Error tracking order:', error);
+                showToast('Failed to track order.', 'error');
+            }
+        }
+
+        async function reorder(orderId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const order = await response.json();
+                if (response.ok) {
+                    cart = order.items.map(item => ({
+                        id: item.item,
+                        name: item.itemName,
+                        price: item.price,
+                        quantity: item.quantity,
+                        type: 'menu'
+                    }));
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    showToast('Order added to cart!', 'success');
+                    showSection('cart');
+                } else {
+                    showToast(order.error || 'Failed to reorder.', 'error');
+                }
+            } catch (error) {
+                console.error('Error reordering:', error);
+                showToast('Failed to reorder.', 'error');
+            }
+        }
+
+        function showRateModal(itemId) {
+            currentRatingItemId = itemId;
+            showModal('rateModal');
+        }
+
+        async function submitRating() {
+            const rating = document.getElementById('rating').value;
+            const review = document.getElementById('review').value;
+            if (!rating || rating < 1 || rating > 5) {
+                showToast('Please enter a valid rating (1-5).', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu/${currentRatingItemId}/rate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ rating, review })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Rating submitted successfully!', 'success');
+                    closeModal('rateModal');
+                    document.getElementById('rating').value = '';
+                    document.getElementById('review').value = '';
+                    fetchMenuItems();
+                } else {
+                    showToast(data.error || 'Failed to submit rating.', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showToast('Failed to submit rating.', 'error');
+            }
+        }
+
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('userProfileImage');
             localStorage.removeItem('cart');
+            localStorage.removeItem('favorites');
+            localStorage.removeItem('darkMode');
             showToast('Logged out successfully!', 'success');
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1000);
         }
 
-        // Navbar Toggle
+        // Event Listeners
         document.getElementById('menuToggle').addEventListener('click', () => {
             const navbarMenu = document.getElementById('navbarMenu');
             navbarMenu.classList.toggle('active');
         });
+
+        document.getElementById('searchInput').addEventListener('input', fetchMenuItems);
+        document.getElementById('categoryFilter').addEventListener('change', fetchMenuItems);
 
         // Initialize on page load
         window.onload = () => {
