@@ -5,139 +5,653 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=sans-serif" rel="stylesheet">
+    <script src="https://www.paypal.com/sdk/js?client-id=Ae0wS3yL2z3q4k5j6l7m8n9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5f&currency=INR"></script>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f6;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 90%;
+            width: 450px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #374151;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #f59e0b;
+        }
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            z-index: 2000;
+            display: none;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .toast.success {
+            background-color: #22c55e;
+        }
+        .toast.error {
+            background-color: #ef4444;
+        }
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        .input-field {
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-field:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            outline: none;
+        }
+        .navbar-menu {
+            transition: max-height 0.3s ease-in-out;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .menu-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        @media (max-width: 640px) {
+            .modal-content {
+                padding: 16px;
+                width: 95%;
+            }
+            .toast {
+                top: 12px;
+                right: 12px;
+                padding: 10px;
+                min-width: 160px;
+            }
+            .navbar-menu {
+                max-height: 0;
+                overflow: hidden;
+            }
+            .navbar-menu.active {
+                max-height: 300px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg fixed w-full z-20">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 w-auto">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-orange-600">Delicute</h1>
-                        <p class="text-xs sm:text-sm text-gray-600">Every bite tells a story</p>
+                        <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">DELICUTE</h1>
+                        <p class="text-xs text-gray-500 sm:text-sm">Every bite tells a story</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/" class="text-gray-700 hover:text-orange-600 text-sm sm:text-base">Home</a>
-                    <button onclick="handleLogout()" class="bg-orange-600 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full hover:bg-orange-700 text-sm sm:text-base">Logout</button>
+                <div class="flex items-center sm:hidden">
+                    <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="hidden sm:flex sm:items-center sm:space-x-4">
+                    <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-sm">Cart</a>
+                    <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-sm">Orders</a>
+                    <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm">Logout</button>
+                </div>
+            </div>
+            <div id="navbarMenu" class="navbar-menu sm:hidden">
+                <div class="flex flex-col space-y-2 px-4 pb-4">
+                    <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-sm">Cart</a>
+                    <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-sm">Orders</a>
+                    <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Logout</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Dashboard Content -->
-    <section class="pt-20 pb-12 sm:pb-16 bg-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-8">User Dashboard</h2>
-            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
-                <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Welcome Back!</h3>
-                <p class="text-gray-600 text-sm sm:text-base">Here you can view your order history, manage your profile, and track your orders.</p>
-                <div class="mt-6">
-                    <h4 class="text-base sm:text-lg font-semibold text-gray-800">Recent Orders</h4>
-                    <div id="orderList" class="mt-2"></div>
-                </div>
-                <div class="mt-6">
-                    <h4 class="text-base sm:text-lg font-semibold text-gray-800">Profile</h4>
-                    <p class="text-gray-600 text-sm sm:text-base mt-2">Manage your name, email, and delivery addresses in your profile settings.</p>
-                    <button class="bg-orange-600 text-white px-4 py-2 mt-2 rounded-full hover:bg-orange-700 transition text-sm sm:text-base" onclick="alert('Profile editing not implemented yet.')">Edit Profile</button>
-                </div>
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('paymentModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Select Payment Method</h2>
+            <div class="space-y-4">
+                <button onclick="initiatePayPalPayment()" class="btn-primary w-full text-sm sm:text-base">Pay with PayPal</button>
+                <button onclick="showUPIModal()" class="btn-primary w-full text-sm sm:text-base">Pay with UPI</button>
+                <button onclick="placeOrder('COD')" class="btn-primary w-full text-sm sm:text-base">Cash on Delivery</button>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 sm:py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-sm sm:text-base">© 2025 Delicute. All rights reserved.</p>
-                <div class="flex space-x-4 mt-4 md:mt-0">
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Facebook</a>
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Instagram</a>
-                    <a href="#" class="hover:text-orange-600 text-sm sm:text-base">Twitter</a>
-                </div>
+    <!-- UPI Payment Modal -->
+    <div id="upiModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('upiModal')">×</span>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">UPI Payment</h2>
+            <div>
+                <label for="upiId" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter UPI ID</label>
+                <input type="text" id="upiId" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="example@upi">
+            </div>
+            <div class="mt-6">
+                <button onclick="initiateUPIPayment()" class="btn-primary w-full text-sm sm:text-base">Pay Now</button>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <!-- Home Section -->
+        <section id="homeSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Welcome Back!</h2>
+            <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+        </section>
+
+        <!-- Cart Section -->
+        <section id="cartSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Cart</h2>
+            <div id="cartItems" class="mb-6"></div>
+            <div class="text-center">
+                <button onclick="showPaymentModal()" class="btn-primary text-sm sm:text-base">Proceed to Payment</button>
+            </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section id="ordersSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Orders</h2>
+            <div id="orderItems"></div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profileSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Profile</h2>
+            <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-center mb-4">
+                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-24 w-24 rounded-full object-cover">
+                </div>
+                <div>
+                    <label for="profileName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
+                    <input type="text" id="profileName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                </div>
+                <div class="mt-4">
+                    <label for="profileEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
+                    <input type="email" id="profileEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                </div>
+                <div class="mt-4">
+                    <label for="profilePhone" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Phone</label>
+                    <input type="tel" id="profilePhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" readonly>
+                </div>
+                <div class="mt-6 text-center">
+                    <button onclick="enableEditProfile()" class="btn-primary text-sm sm:text-base">Edit Profile</button>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <script>
-        // Get JWT token from URL or localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token') || localStorage.getItem('token');
-        if (!token) {
-            alert('Please log in.');
-            window.location.href = '/';
-        } else {
-            localStorage.setItem('token', token);
+        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let currentOrderTotal = 0;
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
         }
 
-        // Logout Handler
-        function handleLogout() {
-            localStorage.removeItem('token');
-            alert('Logged out!');
-            window.location.href = '/';
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
 
-        // Fetch and Display Orders
-        async function fetchOrders() {
-            const orderList = document.getElementById('orderList');
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(`${sectionId}Section`).classList.add('active');
+            if (sectionId === 'cart') loadCart();
+            if (sectionId === 'orders') fetchOrders();
+            if (sectionId === 'home') fetchMenuItems();
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to access the dashboard.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                return;
+            }
             try {
-                const response = await fetch('/api/orders', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await fetch(`${BASE_URL}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) {
-                    throw new Error(await response.json().message);
+                    throw new Error('Invalid token or session expired.');
                 }
-                const orders = await response.json();
-                if (orders.length === 0) {
-                    orderList.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No recent orders. <a href="/#menu" class="text-orange-600 hover:underline">Order now!</a></p>';
-                } else {
-                    orders.forEach(order => {
-                        const orderItem = document.createElement('div');
-                        orderItem.className = 'border-b py-2';
-                        orderItem.innerHTML = `
-                            <p class="text-sm sm:text-base">Order #${order.id} - ${order.total_amount} (${order.status})</p>
-                            <p class="text-sm text-gray-600">Placed on ${new Date(order.created_at).toLocaleDateString()}</p>
-                        `;
-                        orderList.appendChild(orderItem);
-                    });
-                }
+                fetchUserDetails();
+                showSection('home');
+                loadCart();
             } catch (error) {
-                orderList.innerHTML = '<p class="text-red-600 text-sm sm:text-base">Error fetching orders: ' + error.message + '</p>';
+                console.error('Error checking auth:', error);
+                showToast('Session expired or invalid. Please log in again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userProfileImage');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
             }
         }
 
-        // Check Authentication on Page Load
-        async function checkAuth() {
+        async function fetchUserDetails() {
+            const token = localStorage.getItem('token');
             try {
-                const response = await fetch('/api/orders', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await fetch(`${BASE_URL}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (response.status === 401 || response.status === 403) {
-                    alert('Please log in.');
-                    localStorage.removeItem('token');
-                    window.location.href = '/';
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('profileName').value = data.name;
+                    document.getElementById('profileEmail').value = data.email;
+                    document.getElementById('profilePhone').value = data.phone || '';
+                    document.getElementById('profileImage').src = data.profileImage || 'https://via.placeholder.com/100';
+                    localStorage.setItem('userProfileImage', data.profileImage || 'https://via.placeholder.com/100');
                 } else {
-                    fetchOrders();
+                    showToast(data.error || 'Failed to fetch profile.', 'error');
                 }
             } catch (error) {
-                alert('Error verifying authentication: ' + error.message);
-                window.location.href = '/';
+                console.error('Error fetching user details:', error);
+                showToast('Error fetching profile.', 'error');
             }
         }
 
-        // Initialize page
-        checkAuth();
+        function enableEditProfile() {
+            const inputs = document.querySelectorAll('#profileSection input');
+            inputs.forEach(input => input.removeAttribute('readonly'));
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save Changes';
+            saveButton.className = 'btn-primary text-sm sm:text-base mt-4';
+            saveButton.onclick = saveProfile;
+            const editButton = document.querySelector('#profileSection button');
+            editButton.replaceWith(saveButton);
+        }
+
+        async function saveProfile() {
+            const token = localStorage.getItem('token');
+            const name = document.getElementById('profileName').value;
+            const email = document.getElementById('profileEmail').value;
+            const phone = document.getElementById('profilePhone').value;
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/update`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, email, phone })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Profile updated successfully!', 'success');
+                    const inputs = document.querySelectorAll('#profileSection input');
+                    inputs.forEach(input => input.setAttribute('readonly', true));
+                    const saveButton = document.querySelector('#profileSection button');
+                    const editButton = document.createElement('button');
+                    editButton.textContent = 'Edit Profile';
+                    editButton.className = 'btn-primary text-sm sm:text-base';
+                    editButton.onclick = enableEditProfile;
+                    saveButton.replaceWith(editButton);
+                } else {
+                    showToast(data.error || 'Failed to update profile.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast('Error updating profile.', 'error');
+            }
+        }
+
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/menu`);
+                const menuItems = await response.json();
+                const menuItemsDiv = document.getElementById('menuItems');
+                if (menuItems.length === 0) {
+                    menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items available.</p>';
+                    return;
+                }
+                menuItemsDiv.innerHTML = menuItems.map(item => `
+                    <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                        <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.name}" class="w-full object-cover h-48">
+                        <div class="p-6">
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
+                            <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching menu items:', error);
+                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+            }
+        }
+
+        function addToCart(item) {
+            const existingItem = cart.find(cartItem => cartItem.id === item._id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id: item._id, name: item.name, price: item.price, quantity: 1, type: 'menu' });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showToast(`${item.name} added to cart!`, 'success');
+            if (document.getElementById('cartSection').classList.contains('active')) loadCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+            showToast('Item removed from cart.', 'success');
+        }
+
+        function updateQuantity(index, delta) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+
+        function loadCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">Your cart is empty.</p>';
+                return;
+            }
+            let total = 0;
+            cartItemsDiv.innerHTML = cart.map((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                return `
+                    <div class="flex justify-between py-3 border-b items-center text-sm sm:text-base">
+                        <div>
+                            <span class="font-medium">${item.name}</span>
+                            <p class="text-gray-500">Qty: ${item.quantity}</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="updateQuantity(${index}, -1)" class="text-gray-600 hover:text-gray-900">-</button>
+                            <span>₹${itemTotal.toFixed(2)}</span>
+                            <button onclick="updateQuantity(${index}, 1)" class="text-gray-600 hover:text-gray-900">+</button>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700">Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            currentOrderTotal = total;
+            cartItemsDiv.innerHTML += `
+                <div class="flex justify-between py-3 font-bold text-sm sm:text-base">
+                    <span>Total</span>
+                    <span>₹${total.toFixed(2)}</span>
+                </div>
+            `;
+        }
+
+        function showPaymentModal() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            showModal('paymentModal');
+        }
+
+        async function placeOrder(paymentMethod, paymentDetails = {}) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            item: item.id,
+                            quantity: item.quantity
+                        })),
+                        total: currentOrderTotal,
+                        paymentMethod,
+                        paymentDetails
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Order placed successfully!', 'success');
+                    cart = [];
+                    localStorage.removeItem('cart');
+                    closeModal('paymentModal');
+                    closeModal('upiModal');
+                    loadCart();
+                    if (paymentMethod !== 'COD') {
+                        fetchOrders();
+                    }
+                } else {
+                    showToast(data.error || 'Failed to place order.', 'error');
+                }
+            } catch (error) {
+                console.error('Order placement error:', error);
+                showToast('Failed to place order.', 'error');
+            }
+        }
+
+        async function initiatePayPalPayment() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            item: item.id,
+                            quantity: item.quantity
+                        })),
+                        total: currentOrderTotal,
+                        paymentMethod: 'PayPal'
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create PayPal order.');
+                }
+
+                paypal.Buttons({
+                    createOrder: function () {
+                        return data.orderId;
+                    },
+                    onApprove: async function (data, actions) {
+                        const verifyResponse = await fetch(`${BASE_URL}/api/payment/paypal-capture`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify({
+                                orderId: data.orderID
+                            })
+                        });
+                        const verifyData = await verifyResponse.json();
+                        if (verifyResponse.ok) {
+                            showToast('Payment successful!', 'success');
+                            cart = [];
+                            localStorage.removeItem('cart');
+                            closeModal('paymentModal');
+                            loadCart();
+                            fetchOrders();
+                        } else {
+                            showToast(verifyData.error || 'Payment verification failed.', 'error');
+                        }
+                    },
+                    onError: function (err) {
+                        console.error('PayPal error:', err);
+                        showToast('PayPal payment failed.', 'error');
+                    }
+                }).render('#paypal-button-container');
+
+                const paypalContainer = document.createElement('div');
+                paypalContainer.id = 'paypal-button-container';
+                document.querySelector('#paymentModal .modal-content').appendChild(paypalContainer);
+            } catch (error) {
+                console.error('PayPal order creation error:', error);
+                showToast('Failed to initiate PayPal payment.', 'error');
+            }
+        }
+
+        function showUPIModal() {
+            closeModal('paymentModal');
+            showModal('upiModal');
+        }
+
+        async function initiateUPIPayment() {
+            const upiId = document.getElementById('upiId').value;
+            if (!upiId) {
+                showToast('Please enter a valid UPI ID.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/payment/upi`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        upiId,
+                        amount: currentOrderTotal
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    await placeOrder('UPI', { upiId });
+                } else {
+                    showToast(data.error || 'UPI payment failed.', 'error');
+                }
+            } catch (error) {
+                console.error('UPI payment error:', error);
+                showToast('Failed to initiate UPI payment.', 'error');
+            }
+        }
+
+        async function fetchOrders() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                const orderItemsDiv = document.getElementById('orderItems');
+                if (orders.length === 0) {
+                    orderItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No orders found.</p>';
+                    return;
+                }
+                orderItemsDiv.innerHTML = orders.map(order => `
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${order._id}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                document.getElementById('orderItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load orders.</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userProfileImage');
+            localStorage.removeItem('cart');
+            showToast('Logged out successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+
+        // Navbar Toggle
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            const navbarMenu = document.getElementById('navbarMenu');
+            navbarMenu.classList.toggle('active');
+        });
+
+        // Initialize on page load
+        window.onload = () => {
+            checkAuth();
+        };
     </script>
 </body>
 </html>
