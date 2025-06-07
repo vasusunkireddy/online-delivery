@@ -97,6 +97,17 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
+        .btn-secondary {
+            background: linear-gradient(90deg, #6b7280, #4b5563);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(90deg, #4b5563, #6b7280);
+            transform: translateY(-2px);
+        }
         .input-field {
             transition: border-color 0.3s, box-shadow 0.3s;
             border-radius: 8px;
@@ -127,6 +138,36 @@
         .menu-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .coupon-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #f59e0b;
+        }
+        body.dark-mode .coupon-card {
+            background: #374151;
+            border-color: #d97706;
+        }
+        .coupon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .address-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark-mode .address-card {
+            background: #374151;
+        }
+        .address-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
         .dropdown {
             position: relative;
@@ -175,6 +216,39 @@
             text-align: center;
             margin-bottom: 24px;
         }
+        .profile-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 32px;
+            transform: perspective(1000px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark-mode .profile-card {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+        }
+        .profile-card:hover {
+            transform: perspective(1000px) translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+        }
+        .profile-image-container {
+            position: relative;
+            display: inline-block;
+        }
+        .profile-image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 158, 11, 0.2);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .profile-image-container:hover .profile-image-overlay {
+            opacity: 1;
+        }
         @media (max-width: 640px) {
             .modal-content {
                 padding: 16px;
@@ -196,8 +270,11 @@
             .dropdown-content {
                 width: 100%;
             }
-            .menu-card {
+            .menu-card, .coupon-card, .address-card {
                 margin-bottom: 16px;
+            }
+            .profile-card {
+                padding: 24px;
             }
         }
     </style>
@@ -221,7 +298,6 @@
                     <div class="dropdown">
                         <button class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                             <img id="headerProfileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-10 w-10 rounded-full object-cover">
-                            <span class="hidden sm:inline text-sm font-medium">Menu</span>
                         </button>
                         <div class="dropdown-content">
                             <a href="#" onclick="showSection('home')">Home</a>
@@ -230,6 +306,7 @@
                             <a href="#" onclick="showSection('favorites')">Favorites</a>
                             <a href="#" onclick="showSection('orderHistory')">Order History</a>
                             <a href="#" onclick="showSection('profile')">Profile</a>
+                            <a href="#" onclick="showSection('addresses')">Addresses</a>
                             <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
                             <button onclick="logout()">Logout</button>
                         </div>
@@ -251,6 +328,7 @@
                     <a href="#" onclick="showSection('favorites')" class="text-gray-600 hover:text-gray-900 text-sm">Favorites</a>
                     <a href="#" onclick="showSection('orderHistory')" class="text-gray-600 hover:text-gray-900 text-sm">Order History</a>
                     <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
+                    <a href="#" onclick="showSection('addresses')" class="text-gray-600 hover:text-gray-900 text-sm">Addresses</a>
                     <button onclick="toggleDarkMode()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Toggle Dark Mode</button>
                     <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Logout</button>
                 </div>
@@ -330,11 +408,39 @@
         </div>
     </div>
 
+    <!-- Add/Edit Address Modal -->
+    <div id="addressModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('addressModal')">×</span>
+            <h2 id="addressModalTitle" classjugation="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Add Address</h2>
+            <div>
+                <label for="addressFullName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Full Name</label>
+                <input type="text" id="addressFullName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter full name">
+                <label for="addressMobile" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Mobile Number</label>
+                <input type="tel" id="addressMobile" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter mobile number">
+                <label for="addressHouse" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">House Number</label>
+                <input type="text" id="addressHouse" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter house number">
+                <label for="addressStreet" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Street</label>
+                <input type="text" id="addressStreet" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter street">
+                <label for="addressLandmark" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Landmark</label>
+                <input type="text" id="addressLandmark" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter landmark (optional)">
+                <label for="addressPincode" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Pincode</label>
+                <input type="text" id="addressPincode" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter pincode">
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="saveAddress()" class="btn-primary w-full text-sm sm:text-base">Save Address</button>
+                <button onclick="closeModal('addressModal')" class="btn-secondary w-full text-sm sm:text-base">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <!-- Home Section -->
-        <section id="homeSection" class="section">
+        <section id="homeSection" class="section active">
             <div id="welcomeMessage" class="welcome-message text-lg sm:text-xl font-semibold"></div>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Available Coupons</h2>
+            <div id="couponItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Explore Our Menu</h2>
             <div class="flex flex-col sm:flex-row justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
                 <input type="text" id="searchInput" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items...">
@@ -352,8 +458,11 @@
         <!-- Cart Section -->
         <section id="cartSection" class="section">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Cart</h2>
-            <div class="flex justify-end mb-4">
+            <div class="flex flex-col sm:flex-row justify-between mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
                 <button onclick="showCouponModal()" class="btn-primary text-sm sm:text-base">Apply Coupon</button>
+                <select id="deliveryAddress" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" onchange="selectDeliveryAddress(this.value)">
+                    <option value="">Select Delivery Address</option>
+                </select>
             </div>
             <div id="couponInfo" class="mb-4 text-sm sm:text-base text-gray-600"></div>
             <div id="cartItems" class="mb-6"></div>
@@ -376,16 +485,20 @@
 
         <!-- Order History Section -->
         <section id="orderHistorySection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Order History</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 text-center sm:text-3xl">Order History</h2>
+                <button onclick="clearOrderHistory()" class="btn-primary text-sm sm:text-base">Clear History</button>
+            </div>
             <div id="orderHistoryItems"></div>
         </section>
 
         <!-- Profile Section -->
         <section id="profileSection" class="section">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Profile</h2>
-            <div class="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
-                <div class="flex justify-center mb-6">
-                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-32 w-32 rounded-full object-cover border-4 border-yellow-500 shadow-md">
+            <div class="max-w-lg mx-auto profile-card">
+                <div class="flex justify-center mb-6 profile-image-container">
+                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-40 w-40 rounded-full object-cover border-4 border-yellow-500 shadow-lg">
+                    <div class="profile-image-overlay"></div>
                 </div>
                 <div>
                     <label for="profileName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
@@ -400,7 +513,7 @@
                     <input type="tel" id="profilePhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base bg-gray-100" readonly>
                 </div>
                 <div class="mt-4">
-                    <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Upload Profile Image (Optional)</label>
+                    <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Upload Profile Image</label>
                     <input type="file" id="profileImageUpload" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" accept="image/*">
                 </div>
                 <div class="mt-6 text-center">
@@ -408,16 +521,28 @@
                 </div>
             </div>
         </section>
+
+        <!-- Addresses Section -->
+        <section id="addressesSection" class="section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Addresses</h2>
+            <div class="flex justify-end mb-4">
+                <button onclick="showAddAddressModal()" class="btn-primary text-sm sm:text-base">Add New Address</button>
+            </div>
+            <div id="addressList" class="max-w-3xl mx-auto"></div>
+        </section>
     </div>
 
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let addresses = [];
         let currentOrderTotal = 0;
         let appliedCoupon = null;
         let currentRatingItemId = null;
         let userName = '';
+        let selectedAddressId = null;
+        let editingAddressId = null;
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -442,9 +567,13 @@
             document.getElementById(`${sectionId}Section`).classList.add('active');
             if (sectionId === 'cart') loadCart();
             if (sectionId === 'orders') fetchOrders();
-            if (sectionId === 'home') fetchMenuItems();
+            if (sectionId === 'home') {
+                fetchMenuItems();
+                fetchCoupons();
+            }
             if (sectionId === 'favorites') loadFavorites();
             if (sectionId === 'orderHistory') fetchOrderHistory();
+            if (sectionId === 'addresses') fetchAddresses();
             document.getElementById('navbarMenu').classList.remove('active');
         }
 
@@ -545,6 +674,155 @@
             }
         }
 
+        async function fetchAddresses() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/addresses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    addresses = data;
+                    renderAddresses();
+                    updateDeliveryAddressDropdown();
+                } else {
+                    showToast(data.error || 'Failed to fetch addresses.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching addresses:', error);
+                showToast('Failed to fetch addresses.', 'error');
+            }
+        }
+
+        function renderAddresses() {
+            const addressListDiv = document.getElementById('addressList');
+            if (addresses.length === 0) {
+                addressListDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No addresses saved.</p>';
+                return;
+            }
+            addressListDiv.innerHTML = addresses.map(address => `
+                <div class="address-card">
+                    <p class="text-gray-800 font-medium text-sm sm:text-base">${address.fullName}</p>
+                    <p class="text-gray-600 text-sm sm:text-base">${address.houseNumber}, ${address.street}, ${address.landmark || ''}, ${address.pincode}</p>
+                    <p class="text-gray-600 text-sm sm:text-base">Mobile: ${address.mobile}</p>
+                    <div class="flex space-x-2 mt-3">
+                        <button onclick="showEditAddressModal('${address._id}')" class="btn-primary text-sm sm:text-base">Edit</button>
+                        <button onclick="deleteAddress('${address._id}')" class="btn-secondary text-sm sm:text-base">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateDeliveryAddressDropdown() {
+            const dropdown = document.getElementById('deliveryAddress');
+            dropdown.innerHTML = '<option value="">Select Delivery Address</option>';
+            addresses.forEach(address => {
+                const option = document.createElement('option');
+                option.value = address._id;
+                option.textContent = `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}`;
+                if (address._id === selectedAddressId) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        }
+
+        function showAddAddressModal() {
+            editingAddressId = null;
+            document.getElementById('addressModalTitle').textContent = 'Add Address';
+            document.getElementById('addressFullName').value = '';
+            document.getElementById('addressMobile').value = '';
+            document.getElementById('addressHouse').value = '';
+            document.getElementById('addressStreet').value = '';
+            document.getElementById('addressLandmark').value = '';
+            document.getElementById('addressPincode').value = '';
+            showModal('addressModal');
+        }
+
+        function showEditAddressModal(addressId) {
+            editingAddressId = addressId;
+            const address = addresses.find(addr => addr._id === addressId);
+            if (!address) return;
+            document.getElementById('addressModalTitle').textContent = 'Edit Address';
+            document.getElementById('addressFullName').value = address.fullName;
+            document.getElementById('addressMobile').value = address.mobile;
+            document.getElementById('addressHouse').value = address.houseNumber;
+            document.getElementById('addressStreet').value = address.street;
+            document.getElementById('addressLandmark').value = address.landmark || '';
+            document.getElementById('addressPincode').value = address.pincode;
+            showModal('addressModal');
+        }
+
+        async function saveAddress() {
+            const token = localStorage.getItem('token');
+            const fullName = document.getElementById('addressFullName').value;
+            const mobile = document.getElementById('addressMobile').value;
+            const houseNumber = document.getElementById('addressHouse').value;
+            const street = document.getElementById('addressStreet').value;
+            const landmark = document.getElementById('addressLandmark').value;
+            const pincode = document.getElementById('addressPincode').value;
+
+            if (!fullName || !mobile || !houseNumber || !street || !pincode) {
+                showToast('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            const addressData = { fullName, mobile, houseNumber, street, landmark, pincode };
+            const url = editingAddressId ? `${BASE_URL}/api/addresses/${editingAddressId}` : `${BASE_URL}/api/addresses`;
+            const method = editingAddressId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(addressData)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(editingAddressId ? 'Address updated successfully!' : 'Address added successfully!', 'success');
+                    closeModal('addressModal');
+                    fetchAddresses();
+                } else {
+                    showToast(data.error || 'Failed to save address.', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving address:', error);
+                showToast('Failed to save address.', 'error');
+            }
+        }
+
+        async function deleteAddress(addressId) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/addresses/${addressId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Address deleted successfully!', 'success');
+                    if (selectedAddressId === addressId) {
+                        selectedAddressId = null;
+                        updateDeliveryAddressDropdown();
+                    }
+                    fetchAddresses();
+                } else {
+                    showToast(data.error || 'Failed to delete address.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting address:', error);
+                showToast('Failed to delete address.', 'error');
+            }
+        }
+
+        function selectDeliveryAddress(addressId) {
+            selectedAddressId = addressId;
+            updateDeliveryAddressDropdown();
+        }
+
         async function fetchMenuItems() {
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`);
@@ -581,6 +859,58 @@
             } catch (error) {
                 console.error('Error fetching menu items:', error);
                 document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+            }
+        }
+
+        async function fetchCoupons() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const coupons = await response.json();
+                const couponItemsDiv = document.getElementById('couponItems');
+                if (coupons.length === 0) {
+                    couponItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No coupons available.</p>';
+                    return;
+                }
+                couponItemsDiv.innerHTML = coupons.map(coupon => `
+                    <div class="coupon-card">
+                        <img src="${coupon.image || 'https://via.placeholder.com/300'}" alt="${coupon.code}" class="w-full object-cover h-48">
+                        <div class="p-6">
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${coupon.code}</h3>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${coupon.description || 'No description available'}</p>
+                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">${coupon.discount}% Off</p>
+                            <button onclick="applyCouponDirectly('${coupon.code}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching coupons:', error);
+                document.getElementById('couponItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load coupons.</p>';
+            }
+        }
+
+        async function applyCouponDirectly(couponCode) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ couponCode })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    appliedCoupon = data;
+                    showToast(`Coupon ${couponCode} applied! ${data.discount}% off`, 'success');
+                    if (document.getElementById('cartSection').classList.contains('active')) loadCart();
+                } else {
+                    showToast(data.error || 'Invalid coupon code.', 'error');
+                }
+            } catch (error) {
+                console.error('Error applying coupon:', error);
+                showToast('Failed to apply coupon.', 'error');
             }
         }
 
@@ -738,6 +1068,10 @@
                 showToast('Your cart is empty.', 'error');
                 return;
             }
+            if (!selectedAddressId) {
+                showToast('Please select a delivery address.', 'error');
+                return;
+            }
             showModal('paymentModal');
         }
 
@@ -758,22 +1092,26 @@
                         total: currentOrderTotal,
                         paymentMethod,
                         paymentDetails,
-                        coupon: appliedCoupon ? appliedCoupon.code : null
+                        coupon: appliedCoupon ? appliedCoupon.code : null,
+                        deliveryAddress: selectedAddressId
                     })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Order placed successfully!', 'success');
+                    const address = addresses.find(addr => addr._id === selectedAddressId);
                     document.getElementById('orderConfirmationDetails').innerHTML = `
                         <p><strong>Order #${data._id}</strong></p>
                         <p>Total: ₹${data.total.toFixed(2)}</p>
                         <p>Payment Method: ${data.paymentMethod}</p>
+                        <p>Delivery Address: ${address ? `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}` : 'Not specified'}</p>
                         <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
                         ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
                     `;
                     showModal('orderConfirmationModal');
                     cart = [];
                     appliedCoupon = null;
+                    selectedAddressId = null;
                     localStorage.removeItem('cart');
                     closeModal('paymentModal');
                     closeModal('upiModal');
@@ -806,7 +1144,8 @@
                         })),
                         total: currentOrderTotal,
                         paymentMethod: 'PayPal',
-                        coupon: appliedCoupon ? appliedCoupon.code : null
+                        coupon: appliedCoupon ? appliedCoupon.code : null,
+                        deliveryAddress: selectedAddressId
                     })
                 });
                 const data = await response.json();
@@ -832,16 +1171,19 @@
                         const verifyData = await verifyResponse.json();
                         if (verifyResponse.ok) {
                             showToast('Payment successful!', 'success');
+                            const address = addresses.find(addr => addr._id === selectedAddressId);
                             document.getElementById('orderConfirmationDetails').innerHTML = `
                                 <p><strong>Order #${data.orderId}</strong></p>
                                 <p>Total: ₹${currentOrderTotal.toFixed(2)}</p>
                                 <p>Payment Method: PayPal</p>
+                                <p>Delivery Address: ${address ? `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}` : 'Not specified'}</p>
                                 <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
                                 ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
                             `;
                             showModal('orderConfirmationModal');
                             cart = [];
                             appliedCoupon = null;
+                            selectedAddressId = null;
                             localStorage.removeItem('cart');
                             closeModal('paymentModal');
                             loadCart();
@@ -886,7 +1228,8 @@
                     },
                     body: JSON.stringify({
                         upiId,
-                        amount: currentOrderTotal
+                        amount: currentOrderTotal,
+                        deliveryAddress: selectedAddressId
                     })
                 });
                 const data = await response.json();
@@ -920,6 +1263,7 @@
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${order.deliveryAddress.fullName}, ${order.deliveryAddress.houseNumber}, ${order.deliveryAddress.street}, ${order.deliveryAddress.pincode}</p>` : ''}
                         ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
                         <div class="flex space-x-2 mt-3">
                             <button onclick="trackOrder('${order._id}')" class="btn-primary text-sm sm:text-base">Track Order</button>
@@ -952,6 +1296,7 @@
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${order.deliveryAddress.fullName}, ${order.deliveryAddress.houseNumber}, ${order.deliveryAddress.street}, ${order.deliveryAddress.pincode}</p>` : ''}
                         ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Items:</p>
                         <ul class="list-disc pl-5 text-sm sm:text-base">
@@ -966,6 +1311,26 @@
             } catch (error) {
                 console.error('Error fetching order history:', error);
                 document.getElementById('orderHistoryItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load order history.</p>';
+            }
+        }
+
+        async function clearOrderHistory() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/history`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Order history cleared successfully!', 'success');
+                    document.getElementById('orderHistoryItems').innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No order history found.</p>';
+                } else {
+                    showToast(data.error || 'Failed to clear order history.', 'error');
+                }
+            } catch (error) {
+                console.error('Error clearing order history:', error);
+                showToast('Failed to clear order history.', 'error');
             }
         }
 

@@ -98,7 +98,7 @@ async function initializeDatabase() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('users', 'menu_items', 'offers', 'orders', 'restaurant_status', 'coupons', 'contact_messages')
+      AND table_name IN ('users', 'menu_items', 'offers', 'orders', 'restaurant_status', 'coupons', 'contact_messages', 'addresses')
     `);
     const existingTables = tableCheck.rows.map(row => row.table_name);
 
@@ -107,7 +107,7 @@ async function initializeDatabase() {
       await client.query(`
         CREATE TABLE users (
           id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
+          name VARCHAR(255),
           email VARCHAR(255) UNIQUE NOT NULL,
           phone VARCHAR(20),
           password VARCHAR(255),
@@ -130,6 +130,7 @@ async function initializeDatabase() {
           price INTEGER NOT NULL,
           description TEXT,
           image VARCHAR(255),
+          rating INTEGER DEFAULT 0,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
@@ -161,6 +162,9 @@ async function initializeDatabase() {
           payment_status VARCHAR(50) DEFAULT 'Pending',
           payment_method VARCHAR(50),
           payment_details JSONB,
+          coupon VARCHAR(50),
+          discount INTEGER DEFAULT 0,
+          delivery_address_id INTEGER,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
@@ -208,6 +212,23 @@ async function initializeDatabase() {
         );
       `);
       console.log('✅ Created contact_messages table');
+    }
+
+    if (!existingTables.includes('addresses')) {
+      await client.query(`
+        CREATE TABLE addresses (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          full_name VARCHAR(255) NOT NULL,
+          mobile VARCHAR(20) NOT NULL,
+          house_number VARCHAR(100) NOT NULL,
+          street VARCHAR(255) NOT NULL,
+          landmark VARCHAR(255),
+          pincode VARCHAR(10) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Created addresses table');
     }
 
     // Ensure at least one admin user exists
@@ -347,22 +368,39 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/auth/update', authenticateToken, async (req, res) => {
-  const { name, email, phone } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
-  }
+app.put('/api/auth/update', authenticateToken, upload.single('profileImage'), async (req, res) => {
+  const { name } = req.body;
+  const file = req.file;
   try {
-    const emailCheck = await pool.query('SELECT id FROM schrie WHERE email = $1 AND id != $2', [email, req.user.id]);
-    if (emailCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Email already in use' });
+    let profileImage = null;
+    if (file) {
+      profileImage = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
     }
-    const result = await pool.query(
-      'UPDATE users SET name = $1, email = $2, phone = $3 WHERE id = $4 RETURNING id, email, name, phone, profile_image, is_admin',
-      [name, email, phone || null, req.user.id]
-    );
+    const currentUser = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    if (!currentUser.rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const updateFields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (name && name !== currentUser.rows[0].name) {
+      updateFields.push(`name = $${paramIndex++}`);
+      values.push(name);
+    }
+    if (profileImage) {
+      updateFields.push(`profile_image = $${paramIndex++}`);
+      values.push(profileImage);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(req.user.id);
+    const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING id, email, name, phone, profile_image, is_admin`;
+    const result = await pool.query(query, values);
     const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'User not found' });
+
     res.json({
       _id: user.id,
       email: user.email,
@@ -387,6 +425,7 @@ app.get('/api/menu', async (req, res) => {
       price: item.price,
       description: item.description,
       image: item.image,
+      rating: item.rating,
       created_at: item.created_at
     }));
     res.json(items);
@@ -408,7 +447,8 @@ app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
       category: item.category,
       price: item.price,
       description: item.description,
-      image: item.image
+      image: item.image,
+      rating: item.rating
     });
   } catch (error) {
     console.error('Error fetching menu item:', error);
@@ -436,7 +476,8 @@ app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => 
       category: item.category,
       price: item.price,
       description: item.description,
-      image: item.image
+      image: item.image,
+      rating: item.rating
     });
   } catch (error) {
     console.error('Error adding menu item:', error);
@@ -466,7 +507,8 @@ app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) 
       category: item.category,
       price: item.price,
       description: item.description,
-      image: item.image
+      image: item.image,
+      rating: item.rating
     });
   } catch (error) {
     console.error('Error updating menu item:', error);
@@ -485,6 +527,23 @@ app.delete('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, re
   } catch (error) {
     console.error('Error deleting menu item:', error);
     res.status(500).json({ error: 'Failed to delete menu item' });
+  }
+});
+
+app.post('/api/menu/:id/rate', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { rating, review } = req.body;
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+  }
+  try {
+    const itemCheck = await pool.query('SELECT * FROM menu_items WHERE id = $1', [id]);
+    if (!itemCheck.rows[0]) return res.status(404).json({ error: 'Menu item not found' });
+    await pool.query('UPDATE menu_items SET rating = $1 WHERE id = $2', [rating, id]);
+    res.json({ message: 'Rating submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ error: 'Failed to submit rating' });
   }
 });
 
@@ -602,7 +661,7 @@ app.get('/api/coupons', async (req, res) => {
     }));
     res.json(coupons);
   } catch (error) {
-        console.error('Error fetching coupons:', error);
+    console.error('Error fetching coupons:', error);
     res.status(500).json({ error: 'Failed to fetch coupons' });
   }
 });
@@ -708,6 +767,30 @@ app.delete('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req,
   } catch (error) {
     console.error('Error deleting coupon:', error);
     res.status(500).json({ error: 'Failed to delete coupon' });
+  }
+});
+
+app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
+  const { couponCode } = req.body;
+  if (!couponCode) {
+    return res.status(400).json({ error: 'Coupon code is required' });
+  }
+  try {
+    const result = await pool.query('SELECT * FROM coupons WHERE code = $1', [couponCode]);
+    const coupon = result.rows[0];
+    if (!coupon) {
+      return res.status(404).json({ error: 'Invalid coupon code' });
+    }
+    res.json({
+      _id: coupon.id,
+      code: coupon.code,
+      discount: coupon.discount,
+      description: coupon.description,
+      image: coupon.image
+    });
+  } catch (error) {
+    console.error('Error validating coupon:', error);
+    res.status(500).json({ error: 'Failed to validate coupon' });
   }
 });
 
@@ -838,17 +921,28 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
   try {
     const isAdmin = req.user.isAdmin;
     let query;
+    let values = [];
     if (isAdmin) {
       query = `
-        SELECT orders.*, users.email, users.name as customer_name 
+        SELECT orders.*, users.email, users.name as customer_name, 
+               addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
         FROM orders 
         JOIN users ON orders.user_id = users.id 
+        LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
         ORDER BY orders.created_at DESC
       `;
     } else {
-      query = 'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC';
+      query = `
+        SELECT orders.*, 
+               addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
+        FROM orders 
+        LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
+        WHERE orders.user_id = $1 
+        ORDER BY orders.created_at DESC
+      `;
+      values = [req.user.id];
     }
-    const result = await pool.query(query, isAdmin ? [] : [req.user.id]);
+    const result = await pool.query(query, values);
     const orders = result.rows.map(order => ({
       _id: order.id,
       customerName: order.customer_name || undefined,
@@ -858,12 +952,109 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
       paymentStatus: order.payment_status,
       paymentMethod: order.payment_method,
       items: order.items,
+      coupon: order.coupon,
+      discount: order.discount,
+      deliveryAddress: order.full_name ? {
+        fullName: order.full_name,
+        houseNumber: order.house_number,
+        street: order.street,
+        landmark: order.landmark,
+        pincode: order.pincode
+      } : null,
       created_at: order.created_at
     }));
     res.json(orders);
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT orders.*, 
+             addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
+      FROM orders 
+      LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
+      WHERE orders.id = $1 AND orders.user_id = $2
+    `;
+    const result = await pool.query(query, [id, req.user.id]);
+    const order = result.rows[0];
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    res.json({
+      _id: order.id,
+      total: order.total,
+      status: order.status,
+      paymentStatus: order.payment_status,
+      paymentMethod: order.payment_method,
+      items: order.items,
+      coupon: order.coupon,
+      discount: order.discount,
+      deliveryAddress: order.full_name ? {
+        fullName: order.full_name,
+        houseNumber: order.house_number,
+        street: order.street,
+        landmark: order.landmark,
+        pincode: order.pincode
+      } : null,
+      created_at: order.created_at
+    });
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ error: 'Failed to fetch order' });
+  }
+});
+
+app.get('/api/orders/history', authenticateToken, async (req, res) => {
+  try {
+    const query = `
+      SELECT orders.*, 
+             addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
+      FROM orders 
+      LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
+      WHERE orders.user_id = $1 AND orders.status IN ('Delivered', 'Cancelled')
+      ORDER BY orders.created_at DESC
+    `;
+    const result = await pool.query(query, [req.user.id]);
+    const orders = result.rows.map(order => ({
+      _id: order.id,
+      total: order.total,
+      status: order.status,
+      paymentStatus: order.payment_status,
+      paymentMethod: order.payment_method,
+      items: order.items.map(item => ({
+        item: item.item,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      coupon: order.coupon,
+      discount: order.discount,
+      deliveryAddress: order.full_name ? {
+        fullName: order.full_name,
+        houseNumber: order.house_number,
+        street: order.street,
+        landmark: order.landmark,
+        pincode: order.pincode
+      } : null,
+      created_at: order.created_at
+    }));
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching order history:', error);
+    res.status(500).json({ error: 'Failed to fetch order history' });
+  }
+});
+
+app.delete('/api/orders/history', authenticateToken, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM orders WHERE user_id = $1 AND status IN ($2, $3)', [req.user.id, 'Delivered', 'Cancelled']);
+    res.json({ message: 'Order history cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing order history:', error);
+    res.status(500).json({ error: 'Failed to clear order history' });
   }
 });
 
@@ -904,8 +1095,21 @@ app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (
     }
     res.json({ message: 'Order refunded successfully' });
   } catch (error) {
-    console.error('Error processing refund:', error);
+    console.error('Error processing refundynyt:', error);
     res.status(500).json({ error: 'Failed to process refund' });
+  }
+});
+
+app.get('/api/orders/:id/track', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT id, status FROM orders WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+    const order = result.rows[0];
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    res.json({ status: order.status });
+  } catch (error) {
+    console.error('Error tracking order:', error);
+    res.status(500).json({ error: 'Failed to track order' });
   }
 });
 
@@ -921,8 +1125,8 @@ app.get('/api/users', authenticateToken, authenticateAdmin, async (req, res) => 
     }));
     res.json(customers);
   } catch (error) {
-    console.error('Error fetching customers:', error);
-    res.status(500).json({ error: 'Failed to fetch customers' });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
@@ -950,8 +1154,8 @@ app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res)
       orders
     });
   } catch (error) {
-    console.error('Error fetching customer:', error);
-    res.status(500).json({ error: 'Failed to fetch customer' });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
@@ -976,8 +1180,8 @@ app.put('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res)
       status: user.is_blocked ? 'Blocked' : 'Active'
     });
   } catch (error) {
-    console.error('Error updating customer status:', error);
-    res.status(500).json({ error: 'Failed to update customer status' });
+    console.error('Error updating user status:', error);
+    res.status(500).json({ error: 'Failed to update user status' });
   }
 });
 
@@ -1005,8 +1209,8 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
     );
     if (result.rows.length === 0) {
       await pool.query(
-        'INSERT INTO restaurant_status (id, status, updated_at) VALUES (1, $1, CURRENT_TIMESTAMP) RETURNING *',
-        [status]
+        'INSERT INTO restaurant_status (id, id, status) VALUES ($1, $2, $3, $4) VALUES (1, 2, $1, $4) RETURNING *',
+        [status, status]
       );
     }
     res.json({ status });
@@ -1016,378 +1220,487 @@ app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (r
   }
 });
 
-app.post('/api/auth/signup', async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-  try {
-    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Email already exists' });
+app.post('/api/addresses', authenticateToken, async (req, res) => {
+    const { fullName, mobile, houseNumber, street, landmark, pincode } = req.body;
+    if (!fullName || !mobile || !houseNumber || !street || !pincode) {
+        return res.status(400).json({ error: 'All fields except landmark are required' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
-      [name, email, phone, hashedPassword, false]
-    );
-    const user = result.rows[0];
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(201).json({ token });
-  } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ error: 'Failed to sign up' });
-  }
+    try {
+        const result = await pool.query(
+            'INSERT INTO addresses (user_id, full_name, mobile, house_number, street, landmark, pincode) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [req.user.id, fullName, mobile, houseNumber, street, landmark, pincode]
+        );
+        const address = result.rows[0];
+        res.status(201).json({
+            _id: address.id,
+            fullName: address.full_name,
+            mobile: address.mobile,
+            houseNumber: address.house_number,
+            street: address.street,
+            landmark: address.landmark,
+            pincode: address.pincode,
+            created_at: address.created_at
+        });
+    } catch (error) {
+        console.error('Error adding address:', error);
+        res.status(500).json({ error: 'Failed to add address' });
+    }
+});
+
+app.get('/api/addresses', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM addresses WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        const addresses = result.rows.map(address => ({
+            _id: address.id,
+            fullName: address.full_name,
+            mobile: address.mobile,
+            houseNumber: address.house_number,
+            street: address.street,
+            landmark: address.landmark,
+            pincode: address.pincode,
+            created_at: address.created_at
+        }));
+        res.json(addresses);
+    } catch (error) {
+        console.error('Error fetching addresses:', error);
+        res.status(500).json({ error: 'Failed to fetch addresses' });
+    }
+});
+
+app.put('/api/addresses/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { fullName, mobile, houseNumber, street, landmark, pincode } = req.body;
+    if (!fullName || !mobile || !houseNumber || !street || !pincode) {
+        return res.status(400).json({ error: 'All fields except landmark are required' });
+    }
+    try {
+        const result = await pool.query(
+            'UPDATE addresses SET full_name = $1, mobile = $2, house_number = $3, street = $4, landmark = $5, pincode = $6 WHERE id = $7 AND user_id = $8 RETURNING *',
+            [fullName, mobile, houseNumber, street, landmark, pincode, id, req.user.id]
+        );
+        const address = result.rows[0];
+        if (!address) return res.status(404).json({ error: 'Address not found' });
+        res.json({
+            _id: address.id,
+            fullName: address.full_name,
+            mobile: address.mobile,
+            houseNumber: address.house_number,
+            street: address.street,
+            landmark: address.landmark,
+            pincode: address.pincode,
+            created_at: address.created_at
+        });
+    } catch (error) {
+        console.error('Error updating address:', error);
+        res.status(500).json({ error: 'Failed to update address' });
+    }
+});
+
+app.delete('/api/addresses/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('DELETE FROM addresses WHERE id = $1 AND user_id = $2 RETURNING *', [id, req.user.id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Address not found' });
+        }
+        res.json({ message: 'Address deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting address:', error);
+        res.status(500).json({ error: 'Failed to delete address' });
+    }
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+    const { name, email, phone, password } = req.body;
+    if (!name || !email || !phone || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    try {
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await pool.query(
+            'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
+            [name, email, phone, hashedPassword, false]
+        );
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({ token });
+    } catch (error) {
+        console.error('Signup error:', error);
+        res.status(500).json({ error: 'Failed to sign up' });
+    }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
-    if (user.is_blocked) {
-      return res.status(403).json({ error: 'Account is blocked' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        if (user.is_blocked) {
+            return res.status(403).json({ error: 'Account is blocked' });
+        }
+        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Failed to log in' });
     }
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to log in' });
-  }
 });
 
 app.post('/api/auth/admin/signup', async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-  try {
-    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Email already exists' });
+    const { name, email, phone, password } = req.body;
+    if (!name || !email || !phone || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
-      [name, email, phone, hashedPassword, true]
-    );
-    const user = result.rows[0];
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(201).json({ token });
-  } catch (error) {
-    console.error('Admin signup error:', error);
-    res.status(500).json({ error: 'Failed to sign up admin' });
-  }
+    try {
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await pool.query(
+            'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
+            [name, email, phone, hashedPassword, true]
+        );
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({ token });
+    } catch (error) {
+        console.error('Admin signup error:', error);
+        res.status(500).json({ error: 'Failed to sign up admin' });
+    }
 });
 
 app.post('/api/auth/admin/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
-    const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: 'Invalid credentials or not an admin' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
-    if (user.is_blocked) {
-      return res.status(403).json({ error: 'Account is blocked' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
+        const user = result.rows[0];
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid credentials or not an admin' });
+        }
+        if (user.is_blocked) {
+            return res.status(403).json({ error: 'Account is blocked' });
+        }
+        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ error: 'Failed to log in admin' });
     }
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Admin login error:', error);
-    res.status(500).json({ error: 'Failed to log in admin' });
-  }
 });
 
 app.post('/api/auth/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
-    await transporter.sendMail({
-      from: `"Delicute" <${EMAIL_USER}>`,
-      to: email,
-      subject: 'Delicute - Password Reset OTP',
-      text: `Your OTP: ${otp}`,
-      html: `<p>Your OTP: <strong>${otp}</strong></p>`
-    });
-    res.json({ message: 'OTP sent to your email' });
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
+        await transporter.sendMail({
+            from: `"Delicute" <${EMAIL_USER}>`,
+            to: email,
+            subject: 'Delicute - Password Reset OTP',
+            text: `Your OTP: ${otp}`,
+            html: `<p>Your OTP: <strong>${otp}</strong></p>`
+        });
+        res.json({ message: 'OTP sent to your email' });
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        res.status(500).json({ error: 'Failed to send OTP' });
+    }
 });
 
 app.post('/api/auth/reset-password', async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2', [email, otp]);
-    const user = result.rows[0];
-    if (!user) return res.status(400).json({ error: 'Invalid OTP' });
-    if (newPassword) {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
-      res.json({ message: 'Password reset successfully' });
-    } else {
-      res.json({ message: 'OTP verified successfully' });
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2', [email, otp]);
+        const user = result.rows[0];
+        if (!user) return res.status(400).json({ error: 'Invalid OTP' });
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
+            res.json({ message: 'Password reset successfully' });
+        } else {
+            res.json({ message: 'OTP verified successfully' });
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
     }
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
-  }
 });
 
 app.post('/api/auth/admin/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'Admin not found' });
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
-    await transporter.sendMail({
-      from: `"Delicute" <${EMAIL_USER}>`,
-      to: email,
-      subject: 'Delicute - Admin Password Reset OTP',
-      text: `Your OTP: ${otp}`,
-      html: `<p>Your OTP: <strong>${otp}</strong></p>`
-    });
-    res.json({ message: 'OTP sent to your email' });
-  } catch (error) {
-    console.error('Error sending admin OTP:', error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
+        const user = result.rows[0];
+        if (!user) return res.status(404).json({ error: 'Admin not found' });
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
+        await transporter.sendMail({
+            from: `"Delicute" <${EMAIL_USER}>`,
+            to: email,
+            subject: 'Delicute - Admin Password Reset OTP',
+            text: `Your OTP: ${otp}`,
+            html: `<p>Your OTP: <strong>${otp}</strong></p>`
+        });
+        res.json({ message: 'OTP sent to your email' });
+    } catch (error) {
+        console.error('Error sending admin OTP:', error);
+        res.status(500).json({ error: 'Failed to send OTP' });
+    }
 });
 
 app.post('/api/auth/reset-password/admin', async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2 AND is_admin = $3', [email, otp, true]);
-    const user = result.rows[0];
-    if (!user) return res.status(400).json({ error: 'Invalid OTP or not an admin' });
-    if (newPassword) {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
-      res.json({ message: 'Password reset successfully' });
-    } else {
-      res.json({ message: 'OTP verified successfully' });
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2 AND is_admin = $3', [email, otp, true]);
+        const user = result.rows[0];
+        if (!user) return res.status(400).json({ error: 'Invalid OTP or not an admin' });
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
+            res.json({ message: 'Password reset successfully' });
+        } else {
+            res.json({ message: 'OTP verified successfully' });
+        }
+    } catch (error) {
+        console.error('Admin reset password error:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
     }
-  } catch (error) {
-    console.error('Admin reset password error:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
-  }
 });
 
 app.get('/api/auth/google', (req, res) => {
-  const url = oauth2Client.generateAuthUrl({
-    scope: ['profile', 'email'],
-    redirect_uri: `${CLIENT_URL}/api/auth/google/callback`
-  });
-  res.redirect(url);
+    const url = oauth2Client.generateAuthUrl({
+        scope: ['profile', 'email'],
+        redirect_uri: `${CLIENT_URL}/api/auth/google/callback`
+    });
+    res.redirect(url);
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
-  const { code, error } = req.query;
-  if (error) {
-    console.error('Google OAuth callback error:', error);
-    return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication failed')}`);
-  }
-  try {
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-    const { data } = await oauth2.userinfo.get();
-    const { email, name } = data;
-
-    let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    let user = result.rows[0];
-    if (!user) {
-      result = await pool.query(
-        'INSERT INTO users (name, email, is_admin) VALUES ($1, $2, $3) RETURNING id, email, is_admin',
-        [name || 'Google User', email, false]
-      );
-      user = result.rows[0];
+    const { code, error } = req.query;
+    if (error) {
+        console.error('Google OAuth callback error:', error);
+        return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication failed')}`);
     }
+    try {
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+        const { data } = await oauth2.userinfo.get();
+        const { email, name } = data;
 
-    if (user.is_blocked) {
-      return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
+        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        let user = result.rows[0];
+        if (!user) {
+            result = await pool.query(
+                'INSERT INTO users (name, email, is_admin) VALUES ($1, $2, $3) RETURNING id, email, is_admin',
+                [name || 'Google User', email, false]
+            );
+            user = result.rows[0];
+        }
+
+        if (user.is_blocked) {
+            return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
+        }
+
+        const token = jwt.sign(
+            { id: user.id, email: user.email, isAdmin: user.is_admin },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        res.redirect(`${CLIENT_URL}/?token=${encodeURIComponent(token)}`);
+    } catch (error) {
+        console.error('Google OAuth error:', error);
+        res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication error')}`);
     }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, isAdmin: user.is_admin },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-    res.redirect(`${CLIENT_URL}/?token=${encodeURIComponent(token)}`);
-  } catch (error) {
-    console.error('Google OAuth error:', error);
-    res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication error')}`);
-  }
 });
 
 app.post('/api/orders', authenticateToken, async (req, res) => {
-  const { items, total, paymentMethod, paymentDetails } = req.body;
-  const userId = req.user.id;
-  if (!items || !total || !paymentMethod) {
-    return res.status(400).json({ error: 'Items, total, and payment method are required' });
-  }
-  if (!['PayPal', 'UPI', 'COD'].includes(paymentMethod)) {
-    return res.status(400).json({ error: 'Invalid payment method' });
-  }
-  try {
-    const restaurantStatus = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
-    if (restaurantStatus.rows[0]?.status === 'Closed') {
-      return res.status(400).json({ error: 'Restaurant is currently closed' });
+    const { items, total, paymentMethod, paymentDetails, deliveryAddressId, couponCode } = req.body;
+    const userId = req.user.id;
+    if (!items || !total || !paymentMethod || !deliveryAddressId) {
+        return res.status(400).json({ error: 'Items, total, payment method, and delivery address are required' });
     }
-
-    const result = await pool.query(
-      'INSERT INTO orders (user_id, items, total, payment_method, payment_details) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      [userId, JSON.stringify(items), total, paymentMethod, JSON.stringify(paymentDetails || {})]
-    );
-    const orderId = result.rows[0].id;
-
-    if (paymentMethod === 'PayPal') {
-      const request = new paypal.orders.OrdersCreateRequest();
-      request.prefer("return=representation");
-      request.requestBody({
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: {
-            currency_code: 'INR',
-            value: total.toFixed(2)
-          }
-        }],
-        application_context: {
-          return_url: `${CLIENT_URL}/payment/success`,
-          cancel_url: `${CLIENT_URL}/payment/cancel`
+    if (!['PayPal', 'UPI', 'COD'].includes(paymentMethod)) {
+        return res.status(400).json({ error: 'Invalid payment method' });
+    }
+    try {
+        const restaurantStatus = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
+        if (restaurantStatus.rows[0]?.status === 'Closed') {
+            return res.status(400).json({ error: 'Restaurant is currently closed' });
         }
-      });
-      const order = await paypalClient.execute(request);
-      await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
-        JSON.stringify({ ...paymentDetails, paypalOrderId: order.result.id }),
-        orderId
-      ]);
-      res.json({ orderId: order.result.id });
-    } else if (paymentMethod === 'UPI') {
-      const options = {
-        amount: total * 100,
-        currency: 'INR',
-        receipt: `order_${orderId}`
-      };
-      const razorpayOrder = await razorpay.orders.create(options);
-      await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
-        JSON.stringify({ ...paymentDetails, razorpayOrderId: razorpayOrder.id }),
-        orderId
-      ]);
-      res.json({ orderId: razorpayOrder.id, amount: total * 100, currency: 'INR' });
-    } else if (paymentMethod === 'COD') {
-      await pool.query('UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3', ['Confirmed', 'Pending', orderId]);
-      res.json({ orderId: `cod_${orderId}`, message: 'Order placed successfully with COD' });
+
+        const addressCheck = await pool.query('SELECT * FROM addresses WHERE id = $1 AND user_id = $2', [deliveryAddressId, userId]);
+        if (!addressCheck.rows[0]) {
+            return res.status(400).json({ error: 'Invalid delivery address' });
+        }
+
+        let discount = 0;
+        let coupon = null;
+        if (couponCode) {
+            const couponResult = await pool.query('SELECT * FROM coupons WHERE code = $1', [couponCode]);
+            if (couponResult.rows[0]) {
+                coupon = couponResult.rows[0].code;
+                discount = Math.floor((total * couponResult.rows[0].discount) / 100);
+            } else {
+                return res.status(400).json({ error: 'Invalid coupon code' });
+            }
+        }
+
+        const finalTotal = total - discount;
+
+        const result = await pool.query(
+            'INSERT INTO orders (user_id, items, total, payment_method, payment_details, delivery_address_id, coupon, discount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+            [userId, JSON.stringify(items), finalTotal, paymentMethod, JSON.stringify(paymentDetails || {}), deliveryAddressId, coupon, discount]
+        );
+        const orderId = result.rows[0].id;
+
+        if (paymentMethod === 'PayPal') {
+            const request = new paypal.orders.OrdersCreateRequest();
+            request.prefer("return=representation");
+            request.requestBody({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    amount: {
+                        currency_code: 'INR',
+                        value: finalTotal.toFixed(2)
+                    }
+                }],
+                application_context: {
+                    return_url: `${CLIENT_URL}/payment/success`,
+                    cancel_url: `${CLIENT_URL}/payment/cancel`
+                }
+            });
+            const order = await paypalClient.execute(request);
+            await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
+                JSON.stringify({ ...paymentDetails, paypalOrderId: order.result.id }),
+                orderId
+            ]);
+            res.json({ orderId: order.result.id });
+        } else if (paymentMethod === 'UPI') {
+            const options = {
+                amount: finalTotal * 100,
+                currency: 'INR',
+                receipt: `order_${orderId}`
+            };
+            const razorpayOrder = await razorpay.orders.create(options);
+            await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
+                JSON.stringify({ ...paymentDetails, razorpayOrderId: razorpayOrder.id }),
+                orderId
+            ]);
+            res.json({ orderId: razorpayOrder.id, amount: finalTotal * 100, currency: 'INR' });
+        } else if (paymentMethod === 'COD') {
+            await pool.query('UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3', ['Confirmed', 'Pending', orderId]);
+            res.json({ orderId: `cod_${orderId}`, message: 'Order placed successfully with COD' });
+        }
+    } catch (error) {
+        console.error('Order creation error:', error);
+        res.status(500).json({ error: 'Failed to create order' });
     }
-  } catch (error) {
-    console.error('Order creation error:', error);
-    res.status(500).json({ error: 'Failed to create order' });
-  }
 });
 
 app.post('/api/payment/paypal-capture', authenticateToken, async (req, res) => {
-  const { orderId } = req.body;
-  if (!orderId) {
-    return res.status(400).json({ error: 'Order ID is required' });
-  }
-  try {
-    const request = new paypal.orders.OrdersCaptureRequest(orderId);
-    request.requestBody({});
-    const capture = await paypalClient.execute(request);
-    if (capture.result.status === 'COMPLETED') {
-      const result = await pool.query(
-        'UPDATE orders SET status = $1, payment_status = $2, payment_details = $3 WHERE payment_details->>\'paypalOrderId\' = $4 RETURNING id',
-        ['Confirmed', 'Paid', JSON.stringify({ paypalOrderId: orderId, captureId: capture.result.id }), orderId]
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Order not found' });
-      }
-      res.json({ message: 'Payment captured successfully' });
-    } else {
-      res.status(400).json({ error: 'Payment capture failed' });
+    const { orderId } = req.body;
+    if (!orderId) {
+        return res.status(400).json({ error: 'Order ID is required' });
     }
-  } catch (error) {
-    console.error('PayPal capture error:', error);
-    res.status(500).json({ error: 'Failed to capture payment' });
-  }
+    try {
+        const request = new paypal.orders.OrdersCaptureRequest(orderId);
+        request.requestBody({});
+        const capture = await paypalClient.execute(request);
+        if (capture.result.status === 'COMPLETED') {
+            const result = await pool.query(
+                'UPDATE orders SET status = $1, payment_status = $2, payment_details = $3 WHERE payment_details->>\'paypalOrderId\' = $4 RETURNING id',
+                ['Confirmed', 'Paid', JSON.stringify({ paypalOrderId: orderId, captureId: capture.result.id }), orderId]
+            );
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: 'Order not found' });
+            }
+            res.json({ message: 'Payment captured successfully' });
+        } else {
+            res.status(400).json({ error: 'Payment capture failed' });
+        }
+    } catch (error) {
+        console.error('PayPal capture error:', error);
+        res.status(500).json({ error: 'Failed to capture payment' });
+    }
 });
 
 app.post('/api/payment/upi', authenticateToken, async (req, res) => {
-  const { upiId, amount } = req.body;
-  if (!upiId || !amount) {
-    return res.status(400).json({ error: 'UPI ID and amount are required' });
-  }
-  try {
-    const options = {
-      amount: amount * 100,
-      currency: 'INR',
-      receipt: `upi_${Date.now()}`
-    };
-    const razorpayOrder = await razorpay.orders.create(options);
-    res.json({ orderId: razorpayOrder.id, amount: amount * 100, currency: 'INR' });
-  } catch (error) {
-    console.error('UPI payment error:', error);
-    res.status(500).json({ error: 'Failed to initiate UPI payment' });
-  }
+    const { upiId, amount } = req.body;
+    if (!upiId || !amount) {
+        return res.status(400).json({ error: 'UPI ID and amount are required' });
+    }
+    try {
+        const options = {
+            amount: amount * 100,
+            currency: 'INR',
+            receipt: `upi_${Date.now()}`
+        };
+        const razorpayOrder = await razorpay.orders.create(options);
+        res.json({ orderId: razorpayOrder.id, amount: amount * 100, currency: 'INR' });
+    } catch (error) {
+        console.error('UPI payment error:', error);
+        res.status(500).json({ error: 'Failed to initiate UPI payment' });
+    }
 });
 
 app.post('/api/payment/verify', async (req, res) => {
-  const { orderId, paymentId, signature } = req.body;
-  try {
-    const generatedSignature = crypto
-      .createHmac('sha256', RAZORPAY_KEY_SECRET)
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
-    if (generatedSignature === signature) {
-      const orderNum = orderId.split('_')[1];
-      await pool.query(
-        'UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3',
-        ['Confirmed', 'Paid', orderNum]
-      );
-      res.json({ message: 'Payment verified successfully' });
-    } else {
-      res.status(400).json({ error: 'Payment verification failed' });
+    const { orderId, paymentId, signature } = req.body;
+    try {
+        const generatedSignature = crypto
+            .createHmac('sha256', RAZORPAY_KEY_SECRET)
+            .update(`${orderId}|${paymentId}`)
+            .digest('hex');
+        if (generatedSignature === signature) {
+            const orderNum = orderId.split('_')[1];
+            await pool.query(
+                'UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3',
+                ['Confirmed', 'Paid', orderNum]
+            );
+            res.json({ message: 'Payment verified successfully' });
+        } else {
+            res.status(400).json({ error: 'Payment verification failed' });
+        }
+    } catch (error) {
+        console.error('Payment verification error:', error);
+        res.status(500).json({ error: 'Failed to verify payment' });
     }
-  } catch (error) {
-    console.error('Payment verification error:', error);
-    res.status(500).json({ error: 'Failed to verify payment' });
-  }
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unexpected error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 async function startServer() {
-  try {
-    await initializeDatabase();
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
+    try {
+        await initializeDatabase();
+        app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
 }
 
 startServer();
