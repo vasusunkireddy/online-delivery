@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=Ae0wS3yL2z3q4k5j6l7m8n9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5f&currency=INR"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f0f2f6 0%, #e5e7eb 100%);
             transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
         }
         body.dark-mode {
             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
@@ -91,11 +91,19 @@
             padding: 12px 24px;
             border-radius: 9999px;
             transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .btn-primary:hover {
             background: linear-gradient(90deg, #d97706, #f59e0b);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
         }
         .btn-secondary {
             background: linear-gradient(90deg, #6b7280, #4b5563);
@@ -111,6 +119,7 @@
         .input-field {
             transition: border-color 0.3s, box-shadow 0.3s;
             border-radius: 8px;
+            border: 1px solid #d1d5db;
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -119,6 +128,11 @@
         }
         .navbar-menu {
             transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .navbar-menu.active {
+            max-height: 400px;
         }
         .section {
             display: none;
@@ -126,33 +140,44 @@
         .section.active {
             display: block;
         }
-        .menu-card {
+        .menu-card, .coupon-card, .cart-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             background: white;
             border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        body.dark-mode .menu-card {
+        body.dark-mode .menu-card, body.dark-mode .coupon-card, body.dark-mode .cart-card {
             background: #374151;
         }
-        .menu-card:hover {
+        .menu-card:hover, .coupon-card:hover, .cart-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
+        .menu-card img, .coupon-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            object-position: center;
+        }
+        .cart-card img {
+            height: 80px;
+            width: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
         .coupon-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
             border: 2px solid #f59e0b;
         }
         body.dark-mode .coupon-card {
-            background: #374151;
             border-color: #d97706;
         }
-        .coupon-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        .special-coupon {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #d97706;
+        }
+        body.dark-mode .special-coupon {
+            background: linear-gradient(135deg, #4b5563, #6b7280);
         }
         .address-card {
             background: white;
@@ -249,6 +274,64 @@
         .profile-image-container:hover .profile-image-overlay {
             opacity: 1;
         }
+        .cart-container {
+            background: linear-gradient(135deg, #ffffff, #f9fafb);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        body.dark-mode .cart-container {
+            background: linear-gradient(135deg, #374151, #4b5563);
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            background: white;
+            transition: transform 0.3s ease;
+        }
+        body.dark-mode .cart-item {
+            background: #4b5563;
+        }
+        .cart-item:hover {
+            transform: translateY(-3px);
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f3f4f6;
+            border-radius: 9999px;
+            padding: 4px 8px;
+        }
+        body.dark-mode .quantity-controls {
+            background: #6b7280;
+        }
+        .quantity-btn {
+            background: none;
+            color: #f59e0b;
+            font-size: 18px;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+        .quantity-btn:hover {
+            color: #d97706;
+        }
+        .cart-summary {
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        body.dark-mode .cart-summary {
+            background: #4b5563;
+        }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
         @media (max-width: 640px) {
             .modal-content {
                 padding: 16px;
@@ -270,8 +353,28 @@
             .dropdown-content {
                 width: 100%;
             }
-            .menu-card, .coupon-card, .address-card {
-                margin-bottom: 16px;
+            .menu-card img, .coupon-card img {
+                height: 150px;
+            }
+            .cart-card img {
+                height: 60px;
+                width: 60px;
+            }
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .cart-item img {
+                width: 100%;
+                height: 120px;
+            }
+            .quantity-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            .cart-summary {
+                padding: 12px;
             }
             .profile-card {
                 padding: 24px;
@@ -342,24 +445,15 @@
             <span class="close-btn" onclick="closeModal('paymentModal')">×</span>
             <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Select Payment Method</h2>
             <div class="space-y-4">
-                <button onclick="initiatePayPalPayment()" class="btn-primary w-full text-sm sm:text-base">Pay with PayPal</button>
-                <button onclick="showUPIModal()" class="btn-primary w-full text-sm sm:text-base">Pay with UPI</button>
-                <button onclick="placeOrder('COD')" class="btn-primary w-full text-sm sm:text-base">Cash on Delivery</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- UPI Payment Modal -->
-    <div id="upiModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('upiModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">UPI Payment</h2>
-            <div>
-                <label for="upiId" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter UPI ID</label>
-                <input type="text" id="upiId" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="example@upi">
-            </div>
-            <div class="mt-6">
-                <button onclick="initiateUPIPayment()" class="btn-primary w-full text-sm sm:text-base">Pay Now</button>
+                <button onclick="initiatePayment('phonepe')" class="btn-primary w-full text-sm sm:text-base">
+                    <img src="https://i.postimg.cc/15Z7fkyj/phonepe.jpg" alt="PhonePe" class="h-6">
+                    Pay with PhonePe
+                </button>
+                <button onclick="initiatePayment('gpay')" class="btn-primary w-full text-sm sm:text-base">
+                    <img src="https://i.postimg.cc/GhkNKcMR/gpay.webp" alt="Google Pay" class="h-6">
+                    Pay with Google Pay
+                </button>
+                <button onclick="initiatePayment('cod')" class="btn-primary w-full text-sm sm:text-base">Cash on Delivery</button>
             </div>
         </div>
     </div>
@@ -412,7 +506,7 @@
     <div id="addressModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('addressModal')">×</span>
-            <h2 id="addressModalTitle" classjugation="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Add Address</h2>
+            <h2 id="addressModalTitle" class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Add Address</h2>
             <div>
                 <label for="addressFullName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Full Name</label>
                 <input type="text" id="addressFullName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter full name">
@@ -428,7 +522,7 @@
                 <input type="text" id="addressPincode" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter pincode">
             </div>
             <div class="mt-6 flex space-x-4">
-                <button onclick="saveAddress()" class="btn-primary w-full text-sm sm:text-base">Save Address</button>
+                <button id="saveAddressBtn" onclick="saveAddress()" class="btn-primary w-full text-sm sm:text-base">Save Address</button>
                 <button onclick="closeModal('addressModal')" class="btn-secondary w-full text-sm sm:text-base">Cancel</button>
             </div>
         </div>
@@ -439,6 +533,8 @@
         <!-- Home Section -->
         <section id="homeSection" class="section active">
             <div id="welcomeMessage" class="welcome-message text-lg sm:text-xl font-semibold"></div>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Special Offers</h2>
+            <div id="specialCouponItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Available Coupons</h2>
             <div id="couponItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Explore Our Menu</h2>
@@ -458,16 +554,19 @@
         <!-- Cart Section -->
         <section id="cartSection" class="section">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Cart</h2>
-            <div class="flex flex-col sm:flex-row justify-between mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
-                <button onclick="showCouponModal()" class="btn-primary text-sm sm:text-base">Apply Coupon</button>
-                <select id="deliveryAddress" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" onchange="selectDeliveryAddress(this.value)">
-                    <option value="">Select Delivery Address</option>
-                </select>
-            </div>
-            <div id="couponInfo" class="mb-4 text-sm sm:text-base text-gray-600"></div>
-            <div id="cartItems" class="mb-6"></div>
-            <div class="text-center">
-                <button onclick="showPaymentModal()" class="btn-primary text-sm sm:text-base">Proceed to Payment</button>
+            <div class="cart-container">
+                <div class="flex flex-col sm:flex-row justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button onclick="showCouponModal()" class="btn-primary text-sm sm:text-base">Apply Coupon</button>
+                    <select id="deliveryAddress" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" onchange="selectDeliveryAddress(this.value)">
+                        <option value="">Select Delivery Address</option>
+                    </select>
+                </div>
+                <div id="couponInfo" class="mb-4 text-sm sm:text-base text-gray-600"></div>
+                <div id="cartItems" class="mb-6"></div>
+                <div id="cartSummary" class="cart-summary"></div>
+                <div class="text-center mt-6">
+                    <button id="proceedToPayment" onclick="showPaymentModal()" class="btn-primary text-sm sm:text-base">Proceed to Payment</button>
+                </div>
             </div>
         </section>
 
@@ -517,7 +616,7 @@
                     <input type="file" id="profileImageUpload" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" accept="image/*">
                 </div>
                 <div class="mt-6 text-center">
-                    <button onclick="saveProfile()" class="btn-primary text-sm sm:text-base">Save Profile</button>
+                    <button id="saveProfileBtn" onclick="saveProfile()" class="btn-primary text-sm sm:text-base">Save Profile</button>
                 </div>
             </div>
         </section>
@@ -534,6 +633,7 @@
 
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+        const DEFAULT_IMAGE = 'https://via.placeholder.com/300';
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
         let addresses = [];
@@ -541,12 +641,28 @@
         let appliedCoupon = null;
         let currentRatingItemId = null;
         let userName = '';
-        let selectedAddressId = null;
+        let selectedAddressId = localStorage.getItem('selectedAddressId') || null;
         let editingAddressId = null;
+        let isLoading = false;
+
+        function sanitizeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function setLoading(elementId, state) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.disabled = state;
+                element.classList.toggle('loading', state);
+            }
+            isLoading = state;
+        }
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.textContent = sanitizeHTML(message);
             toast.className = `toast ${type}`;
             toast.style.display = 'block';
             setTimeout(() => {
@@ -564,16 +680,16 @@
 
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-            document.getElementById(`${sectionId}Section`).classList.add('active');
-            if (sectionId === 'cart') loadCart();
-            if (sectionId === 'orders') fetchOrders();
-            if (sectionId === 'home') {
-                fetchMenuItems();
-                fetchCoupons();
+            const section = document.getElementById(`${sectionId}Section`);
+            if (section) section.classList.add('active');
+            switch (sectionId) {
+                case 'cart': loadCart(); break;
+                case 'orders': fetchOrders(); break;
+                case 'home': fetchMenuItems(); fetchCoupons(); fetchSpecialCoupons(); break;
+                case 'favorites': loadFavorites(); break;
+                case 'orderHistory': fetchOrderHistory(); break;
+                case 'addresses': fetchAddresses(); break;
             }
-            if (sectionId === 'favorites') loadFavorites();
-            if (sectionId === 'orderHistory') fetchOrderHistory();
-            if (sectionId === 'addresses') fetchAddresses();
             document.getElementById('navbarMenu').classList.remove('active');
         }
 
@@ -586,49 +702,45 @@
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please log in to access the dashboard.', 'error');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-                return;
+                setTimeout(() => window.location.href = 'index.html', 1000);
+                return false;
             }
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) {
-                    throw new Error('Invalid token or session expired.');
-                }
-                await fetchUserDetails();
+                if (!response.ok) throw new Error('Invalid token');
+                await Promise.all([fetchUserDetails(), fetchAddresses()]);
                 showSection('home');
                 loadCart();
                 if (localStorage.getItem('darkMode') === 'true') {
                     document.body.classList.add('dark-mode');
                 }
+                return true;
             } catch (error) {
-                console.error('Error checking auth:', error);
-                showToast('Session expired or invalid. Please log in again.', 'error');
-                localStorage.removeItem('token');
-                localStorage.removeItem('userProfileImage');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
+                console.error('Auth error:', error);
+                showToast('Session expired. Please log in again.', 'error');
+                localStorage.clear();
+                setTimeout(() => window.location.href = 'index.html', 1000);
+                return false;
             }
         }
 
         async function fetchUserDetails() {
             const token = localStorage.getItem('token');
+            setLoading('saveProfileBtn', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    userName = data.name || 'Guest';
+                    userName = sanitizeHTML(data.name || 'Guest');
                     document.getElementById('welcomeMessage').textContent = `Welcome, ${userName}!`;
                     document.getElementById('profileName').value = data.name || '';
                     document.getElementById('profileEmail').value = data.email || '';
                     document.getElementById('profilePhone').value = data.phone || '';
-                    const profileImage = data.profileImage || 'https://via.placeholder.com/100';
+                    const profileImage = data.profileImage || DEFAULT_IMAGE;
                     document.getElementById('profileImage').src = profileImage;
                     document.getElementById('headerProfileImage').src = profileImage;
                     localStorage.setItem('userProfileImage', profileImage);
@@ -636,18 +748,33 @@
                     showToast(data.error || 'Failed to fetch profile.', 'error');
                 }
             } catch (error) {
-                console.error('Error fetching user details:', error);
+                console.error('Fetch user error:', error);
                 showToast('Error fetching profile.', 'error');
+            } finally {
+                setLoading('saveProfileBtn', false);
             }
         }
 
         async function saveProfile() {
+            if (isLoading) return;
             const token = localStorage.getItem('token');
-            const name = document.getElementById('profileName').value;
+            const name = document.getElementById('profileName').value.trim();
             const fileInput = document.getElementById('profileImageUpload');
+            if (!name) {
+                showToast('Please enter a name.', 'error');
+                return;
+            }
+            setLoading('saveProfileBtn', true);
             const formData = new FormData();
-            if (name) formData.append('name', name);
-            if (fileInput.files[0]) formData.append('profileImage', fileInput.files[0]);
+            formData.append('name', sanitizeHTML(name));
+            if (fileInput.files[0]) {
+                if (fileInput.files[0].size > 5 * 1024 * 1024) {
+                    showToast('Image size should be less than 5MB.', 'error');
+                    setLoading('saveProfileBtn', false);
+                    return;
+                }
+                formData.append('profileImage', fileInput.files[0]);
+            }
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/update`, {
                     method: 'PUT',
@@ -657,7 +784,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Profile updated successfully!', 'success');
-                    userName = name || userName;
+                    userName = sanitizeHTML(name);
                     document.getElementById('welcomeMessage').textContent = `Welcome, ${userName}!`;
                     if (data.profileImage) {
                         document.getElementById('profileImage').src = data.profileImage;
@@ -669,8 +796,10 @@
                     showToast(data.error || 'Failed to update profile.', 'error');
                 }
             } catch (error) {
-                console.error('Error updating profile:', error);
+                console.error('Update profile error:', error);
                 showToast('Error updating profile.', 'error');
+            } finally {
+                setLoading('saveProfileBtn', false);
             }
         }
 
@@ -682,29 +811,43 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    addresses = data;
+                    addresses = data || [];
                     renderAddresses();
                     updateDeliveryAddressDropdown();
+                    if (selectedAddressId && !addresses.find(addr => addr._id === selectedAddressId)) {
+                        selectedAddressId = null;
+                        localStorage.removeItem('selectedAddressId');
+                    }
+                    if (addresses.length > 0 && !selectedAddressId) {
+                        selectDeliveryAddress(addresses[0]._id);
+                    }
                 } else {
                     showToast(data.error || 'Failed to fetch addresses.', 'error');
+                    addresses = [];
+                    renderAddresses();
+                    updateDeliveryAddressDropdown();
                 }
             } catch (error) {
-                console.error('Error fetching addresses:', error);
+                console.error('Fetch addresses error:', error);
                 showToast('Failed to fetch addresses.', 'error');
+                addresses = [];
+                renderAddresses();
+                updateDeliveryAddressDropdown();
             }
         }
 
         function renderAddresses() {
             const addressListDiv = document.getElementById('addressList');
+            if (!addressListDiv) return;
             if (addresses.length === 0) {
-                addressListDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No addresses saved.</p>';
+                addressListDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No addresses saved. Please add an address.</p>';
                 return;
             }
             addressListDiv.innerHTML = addresses.map(address => `
                 <div class="address-card">
-                    <p class="text-gray-800 font-medium text-sm sm:text-base">${address.fullName}</p>
-                    <p class="text-gray-600 text-sm sm:text-base">${address.houseNumber}, ${address.street}, ${address.landmark || ''}, ${address.pincode}</p>
-                    <p class="text-gray-600 text-sm sm:text-base">Mobile: ${address.mobile}</p>
+                    <p class="text-gray-800 font-medium text-sm sm:text-base">${sanitizeHTML(address.fullName || 'Unknown')}</p>
+                    <p class="text-gray-600 text-sm sm:text-base">${sanitizeHTML(address.houseNumber || '')}, ${sanitizeHTML(address.street || '')}${address.landmark ? `, ${sanitizeHTML(address.landmark)}` : ''}, ${sanitizeHTML(address.pincode || '')}</p>
+                    <p class="text-gray-600 text-sm sm:text-base">Mobile: ${sanitizeHTML(address.mobile || 'N/A')}</p>
                     <div class="flex space-x-2 mt-3">
                         <button onclick="showEditAddressModal('${address._id}')" class="btn-primary text-sm sm:text-base">Edit</button>
                         <button onclick="deleteAddress('${address._id}')" class="btn-secondary text-sm sm:text-base">Delete</button>
@@ -715,11 +858,12 @@
 
         function updateDeliveryAddressDropdown() {
             const dropdown = document.getElementById('deliveryAddress');
+            if (!dropdown) return;
             dropdown.innerHTML = '<option value="">Select Delivery Address</option>';
             addresses.forEach(address => {
                 const option = document.createElement('option');
                 option.value = address._id;
-                option.textContent = `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}`;
+                option.textContent = `${sanitizeHTML(address.fullName || 'Unknown')}, ${sanitizeHTML(address.houseNumber || '')}, ${sanitizeHTML(address.street || '')}, ${sanitizeHTML(address.pincode || '')}`;
                 if (address._id === selectedAddressId) {
                     option.selected = true;
                 }
@@ -742,34 +886,49 @@
         function showEditAddressModal(addressId) {
             editingAddressId = addressId;
             const address = addresses.find(addr => addr._id === addressId);
-            if (!address) return;
+            if (!address) {
+                showToast('Address not found.', 'error');
+                return;
+            }
             document.getElementById('addressModalTitle').textContent = 'Edit Address';
-            document.getElementById('addressFullName').value = address.fullName;
-            document.getElementById('addressMobile').value = address.mobile;
-            document.getElementById('addressHouse').value = address.houseNumber;
-            document.getElementById('addressStreet').value = address.street;
+            document.getElementById('addressFullName').value = address.fullName || '';
+            document.getElementById('addressMobile').value = address.mobile || '';
+            document.getElementById('addressHouse').value = address.houseNumber || '';
+            document.getElementById('addressStreet').value = address.street || '';
             document.getElementById('addressLandmark').value = address.landmark || '';
-            document.getElementById('addressPincode').value = address.pincode;
+            document.getElementById('addressPincode').value = address.pincode || '';
             showModal('addressModal');
         }
 
         async function saveAddress() {
+            if (isLoading) return;
             const token = localStorage.getItem('token');
-            const fullName = document.getElementById('addressFullName').value;
-            const mobile = document.getElementById('addressMobile').value;
-            const houseNumber = document.getElementById('addressHouse').value;
-            const street = document.getElementById('addressStreet').value;
-            const landmark = document.getElementById('addressLandmark').value;
-            const pincode = document.getElementById('addressPincode').value;
+            const fullName = document.getElementById('addressFullName').value.trim();
+            const mobile = document.getElementById('addressMobile').value.trim();
+            const houseNumber = document.getElementById('addressHouse').value.trim();
+            const street = document.getElementById('addressStreet').value.trim();
+            const landmark = document.getElementById('addressLandmark').value.trim();
+            const pincode = document.getElementById('addressPincode').value.trim();
 
             if (!fullName || !mobile || !houseNumber || !street || !pincode) {
                 showToast('Please fill in all required fields.', 'error');
                 return;
             }
 
+            if (!/^\d{10}$/.test(mobile)) {
+                showToast('Please enter a valid 10-digit mobile number.', 'error');
+                return;
+            }
+
+            if (!/^\d{6}$/.test(pincode)) {
+                showToast('Please enter a valid 6-digit pincode.', 'error');
+                return;
+            }
+
             const addressData = { fullName, mobile, houseNumber, street, landmark, pincode };
             const url = editingAddressId ? `${BASE_URL}/api/addresses/${editingAddressId}` : `${BASE_URL}/api/addresses`;
             const method = editingAddressId ? 'PUT' : 'POST';
+            setLoading('saveAddressBtn', true);
 
             try {
                 const response = await fetch(url, {
@@ -784,18 +943,25 @@
                 if (response.ok) {
                     showToast(editingAddressId ? 'Address updated successfully!' : 'Address added successfully!', 'success');
                     closeModal('addressModal');
-                    fetchAddresses();
+                    await fetchAddresses();
+                    if (!selectedAddressId && addresses.length > 0) {
+                        selectDeliveryAddress(addresses[0]._id);
+                    }
                 } else {
                     showToast(data.error || 'Failed to save address.', 'error');
                 }
             } catch (error) {
-                console.error('Error saving address:', error);
+                console.error('Save address error:', error);
                 showToast('Failed to save address.', 'error');
+            } finally {
+                setLoading('saveAddressBtn', false);
             }
         }
 
         async function deleteAddress(addressId) {
+            if (isLoading) return;
             const token = localStorage.getItem('token');
+            setLoading('addressList', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/addresses/${addressId}`, {
                     method: 'DELETE',
@@ -806,49 +972,55 @@
                     showToast('Address deleted successfully!', 'success');
                     if (selectedAddressId === addressId) {
                         selectedAddressId = null;
-                        updateDeliveryAddressDropdown();
+                        localStorage.removeItem('selectedAddressId');
                     }
-                    fetchAddresses();
+                    await fetchAddresses();
                 } else {
                     showToast(data.error || 'Failed to delete address.', 'error');
                 }
             } catch (error) {
-                console.error('Error deleting address:', error);
+                console.error('Delete address error:', error);
                 showToast('Failed to delete address.', 'error');
+            } finally {
+                setLoading('addressList', false);
             }
         }
 
         function selectDeliveryAddress(addressId) {
-            selectedAddressId = addressId;
+            selectedAddressId = addressId || null;
+            localStorage.setItem('selectedAddressId', selectedAddressId);
             updateDeliveryAddressDropdown();
+            loadCart();
         }
 
         async function fetchMenuItems() {
+            setLoading('menuItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`);
                 const menuItems = await response.json();
-                const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-                const category = document.getElementById('categoryFilter').value;
-                const filteredItems = menuItems.filter(item => 
+                const searchQuery = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+                const category = document.getElementById('categoryFilter')?.value || '';
+                const filteredItems = menuItems.filter(item =>
                     item.name.toLowerCase().includes(searchQuery) &&
                     (!category || item.category === category)
                 );
                 const menuItemsDiv = document.getElementById('menuItems');
+                if (!menuItemsDiv) return;
                 if (filteredItems.length === 0) {
                     menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items available.</p>';
                     return;
                 }
                 menuItemsDiv.innerHTML = filteredItems.map(item => `
                     <div class="menu-card">
-                        <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.name}" class="w-full object-cover h-48">
+                        <img src="${sanitizeHTML(item.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover h-48">
                         <div class="p-6">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(item.description || 'No description available')}</p>
                             <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
                             <p class="text-gray-600 text-sm mt-2 sm:text-base rating-stars">${'★'.repeat(item.rating || 0)}${'☆'.repeat(5 - (item.rating || 0))}</p>
                             <div class="flex justify-between mt-3">
-                                <button onclick='addToCart(${JSON.stringify(item)})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
-                                <button onclick='toggleFavorite(${JSON.stringify(item)})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">
+                                <button onclick='addToCart(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image })})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
+                                <button onclick='toggleFavorite(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">
                                     ${favorites.some(fav => fav.id === item._id) ? '♥' : '♡'}
                                 </button>
                             </div>
@@ -857,40 +1029,82 @@
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error fetching menu items:', error);
+                console.error('Fetch menu error:', error);
                 document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+            } finally {
+                setLoading('menuItems', false);
             }
         }
 
         async function fetchCoupons() {
+            setLoading('couponItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const coupons = await response.json();
                 const couponItemsDiv = document.getElementById('couponItems');
+                if (!couponItemsDiv) return;
                 if (coupons.length === 0) {
                     couponItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No coupons available.</p>';
                     return;
                 }
-                couponItemsDiv.innerHTML = coupons.map(coupon => `
+                couponItemsDiv.innerHTML = coupons.filter(coupon => !coupon.isSpecial).map(coupon => `
                     <div class="coupon-card">
-                        <img src="${coupon.image || 'https://via.placeholder.com/300'}" alt="${coupon.code}" class="w-full object-cover h-48">
+                        <img src="${sanitizeHTML(coupon.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(coupon.code)}" class="w-full object-cover h-48">
                         <div class="p-6">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${coupon.code}</h3>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${coupon.description || 'No description available'}</p>
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(coupon.code)}</h3>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(coupon.description || 'No description available')}</p>
                             <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">${coupon.discount}% Off</p>
-                            <button onclick="applyCouponDirectly('${coupon.code}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
+                            <button onclick="applyCouponDirectly('${sanitizeHTML(coupon.code)}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error fetching coupons:', error);
+                console.error('Fetch coupons error:', error);
                 document.getElementById('couponItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load coupons.</p>';
+            } finally {
+                setLoading('couponItems', false);
+            }
+        }
+
+        async function fetchSpecialCoupons() {
+            setLoading('specialCouponItems', true);
+            try {
+                const response = await fetch(`${BASE_URL}/api/coupons`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const coupons = await response.json();
+                const specialCouponItemsDiv = document.getElementById('specialCouponItems');
+                if (!specialCouponItemsDiv) return;
+                const specialCoupons = coupons.filter(coupon => coupon.isSpecial);
+                if (specialCoupons.length === 0) {
+                    specialCouponItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No special offers available.</p>';
+                    return;
+                }
+                specialCouponItemsDiv.innerHTML = specialCoupons.map(coupon => `
+                    <div class="coupon-card special-coupon">
+                        <img src="${sanitizeHTML(coupon.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(coupon.code)}" class="w-full object-cover h-48">
+                        <div class="p-6">
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(coupon.code)}</h3>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(coupon.description || 'No description available')}</p>
+                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">${coupon.discount}% Off</p>
+                            <p class="text-gray-600 text-sm mt-2 sm:text-base">Special Offer by Admin</p>
+                            <button onclick="applyCouponDirectly('${sanitizeHTML(coupon.code)}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Fetch special coupons error:', error);
+                document.getElementById('specialCouponItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load special coupons.</p>';
+            } finally {
+                setLoading('specialCouponItems', false);
             }
         }
 
         async function applyCouponDirectly(couponCode) {
+            if (isLoading) return;
+            setLoading('couponItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
                     method: 'POST',
@@ -903,37 +1117,60 @@
                 const data = await response.json();
                 if (response.ok) {
                     appliedCoupon = data;
-                    showToast(`Coupon ${couponCode} applied! ${data.discount}% off`, 'success');
-                    if (document.getElementById('cartSection').classList.contains('active')) loadCart();
+                    showToast(`Coupon ${sanitizeHTML(couponCode)} applied! ${data.discount}% off`, 'success');
+                    loadCart();
                 } else {
                     showToast(data.error || 'Invalid coupon code.', 'error');
                 }
             } catch (error) {
-                console.error('Error applying coupon:', error);
+                console.error('Apply coupon error:', error);
                 showToast('Failed to apply coupon.', 'error');
+            } finally {
+                setLoading('couponItems', false);
             }
         }
 
         function addToCart(item) {
+            if (!item._id || !item.name || !item.price) {
+                showToast('Invalid item data.', 'error');
+                return;
+            }
             const existingItem = cart.find(cartItem => cartItem.id === item._id);
             if (existingItem) {
                 existingItem.quantity += 1;
             } else {
-                cart.push({ id: item._id, name: item.name, price: item.price, quantity: 1, type: 'menu' });
+                cart.push({
+                    id: item._id,
+                    name: sanitizeHTML(item.name),
+                    price: parseFloat(item.price),
+                    quantity: 1,
+                    image: item.image || DEFAULT_IMAGE,
+                    type: 'menu'
+                });
             }
             localStorage.setItem('cart', JSON.stringify(cart));
-            showToast(`${item.name} added to cart!`, 'success');
+            showToast(`${sanitizeHTML(item.name)} added to cart!`, 'success');
             if (document.getElementById('cartSection').classList.contains('active')) loadCart();
         }
 
         function toggleFavorite(item) {
+            if (!item._id || !item.name || !item.price) {
+                showToast('Invalid item data.', 'error');
+                return;
+            }
             const existingFav = favorites.find(fav => fav.id === item._id);
             if (existingFav) {
                 favorites = favorites.filter(fav => fav.id !== item._id);
-                showToast(`${item.name} removed from favorites.`, 'success');
+                showToast(`${sanitizeHTML(item.name)} removed from favorites.`, 'success');
             } else {
-                favorites.push({ id: item._id, name: item.name, price: item.price, image: item.image, category: item.category });
-                showToast(`${item.name} added to favorites!`, 'success');
+                favorites.push({
+                    id: item._id,
+                    name: sanitizeHTML(item.name),
+                    price: parseFloat(item.price),
+                    image: item.image || DEFAULT_IMAGE,
+                    category: item.category || 'Unknown'
+                });
+                showToast(`${sanitizeHTML(item.name)} added to favorites!`, 'success');
             }
             localStorage.setItem('favorites', JSON.stringify(favorites));
             if (document.getElementById('favoritesSection').classList.contains('active')) loadFavorites();
@@ -942,20 +1179,21 @@
 
         function loadFavorites() {
             const favoriteItemsDiv = document.getElementById('favoriteItems');
+            if (!favoriteItemsDiv) return;
             if (favorites.length === 0) {
                 favoriteItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No favorite items.</p>';
                 return;
             }
             favoriteItemsDiv.innerHTML = favorites.map(item => `
                 <div class="menu-card">
-                    <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.name}" class="w-full object-cover h-48">
+                    <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover h-48">
                     <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.category || 'No category'}</p>
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(item.category)}</p>
                         <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
                         <div class="flex justify-between mt-3">
-                            <button onclick='addToCart(${JSON.stringify(item)})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
-                            <button onclick='toggleFavorite(${JSON.stringify(item)})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">♥</button>
+                            <button onclick='addToCart(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image })})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
+                            <button onclick='toggleFavorite(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">♥</button>
                         </div>
                     </div>
                 </div>
@@ -963,31 +1201,44 @@
         }
 
         function removeFromCart(index) {
+            if (index < 0 || index >= cart.length) {
+                showToast('Invalid cart item.', 'error');
+                return;
+            }
+            const itemName = cart[index].name;
             cart.splice(index, 1);
             localStorage.setItem('cart', JSON.stringify(cart));
             loadCart();
-            showToast('Item removed from cart.', 'success');
+            showToast(`${sanitizeHTML(itemName)} removed from cart.`, 'success');
         }
 
         function updateQuantity(index, delta) {
+            if (index < 0 || index >= cart.length) {
+                showToast('Invalid cart item.', 'error');
+                return;
+            }
             cart[index].quantity += delta;
             if (cart[index].quantity <= 0) {
-                cart.splice(index, 1);
+                removeFromCart(index);
+            } else {
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCart();
             }
-            localStorage.setItem('cart', JSON.stringify(cart));
-            loadCart();
         }
 
         function showCouponModal() {
+            document.getElementById('couponCode').value = '';
             showModal('couponModal');
         }
 
         async function applyCoupon() {
-            const couponCode = document.getElementById('couponCode').value;
+            if (isLoading) return;
+            const couponCode = document.getElementById('couponCode').value.trim();
             if (!couponCode) {
                 showToast('Please enter a coupon code.', 'error');
                 return;
             }
+            setLoading('couponModal', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
                     method: 'POST',
@@ -1000,67 +1251,90 @@
                 const data = await response.json();
                 if (response.ok) {
                     appliedCoupon = data;
-                    showToast(`Coupon ${couponCode} applied! ${data.discount}% off`, 'success');
+                    showToast(`Coupon ${sanitizeHTML(couponCode)} applied! ${data.discount}% off`, 'success');
                     closeModal('couponModal');
                     loadCart();
                 } else {
                     showToast(data.error || 'Invalid coupon code.', 'error');
                 }
             } catch (error) {
-                console.error('Error applying coupon:', error);
+                console.error('Apply coupon error:', error);
                 showToast('Failed to apply coupon.', 'error');
+            } finally {
+                setLoading('couponModal', false);
             }
         }
 
         function loadCart() {
             const cartItemsDiv = document.getElementById('cartItems');
+            const cartSummaryDiv = document.getElementById('cartSummary');
             const couponInfoDiv = document.getElementById('couponInfo');
+            if (!cartItemsDiv || !cartSummaryDiv || !couponInfoDiv) return;
+
+            // Validate cart items
+            cart = cart.filter(item => item.id && item.name && item.price && item.quantity);
+            localStorage.setItem('cart', JSON.stringify(cart));
+
             if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">Your cart is empty.</p>';
+                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-center text-sm sm:text-base">Your cart is empty. Add some delicious items!</p>';
+                cartSummaryDiv.innerHTML = '';
                 couponInfoDiv.innerHTML = '';
+                document.getElementById('deliveryAddress').value = selectedAddressId || '';
+                currentOrderTotal = 0;
                 return;
             }
-            let total = 0;
+
+            let subtotal = 0;
             cartItemsDiv.innerHTML = cart.map((item, index) => {
                 const itemTotal = item.price * item.quantity;
-                total += itemTotal;
+                subtotal += itemTotal;
                 return `
-                    <div class="flex justify-between py-3 border-b items-center text-sm sm:text-base">
-                        <div>
-                            <span class="font-medium">${item.name}</span>
-                            <p class="text-gray-500">Qty: ${item.quantity}</p>
+                    <div class="cart-item cart-card">
+                        <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="cart-card-img">
+                        <div class="flex-1 ml-4">
+                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
+                            <p class="text-gray-600 text-sm sm:text-base">₹${item.price.toFixed(2)} x ${item.quantity}</p>
+                            <p class="text-yellow-600 font-bold text-sm sm:text-base">₹${itemTotal.toFixed(2)}</p>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="updateQuantity(${index}, -1)" class="text-gray-600 hover:text-gray-900">-</button>
-                            <span>₹${itemTotal.toFixed(2)}</span>
-                            <button onclick="updateQuantity(${index}, 1)" class="text-gray-600 hover:text-gray-900">+</button>
-                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700">Remove</button>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                            <span class="text-sm sm:text-base">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
                         </div>
+                        <button onclick="removeFromCart(${index})" class="ml-4 text-red-500 hover:text-red-700 text-sm sm:text-base">Remove</button>
                     </div>
                 `;
             }).join('');
+
             let discount = 0;
             if (appliedCoupon) {
-                discount = (total * appliedCoupon.discount) / 100;
-                couponInfoDiv.innerHTML = `<p>Applied Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>`;
+                discount = (subtotal * appliedCoupon.discount) / 100;
+                couponInfoDiv.innerHTML = `<p class="text-green-600 text-sm sm:text-base">Coupon Applied: ${sanitizeHTML(appliedCoupon.code)} (${appliedCoupon.discount}% off)</p>`;
             } else {
-                couponInfoDiv.innerHTML = '';
+                couponInfoDiv.innerHTML = '<button onclick="showCouponModal()" class="text-blue-500 hover:text-blue-700 text-sm sm:text-base">Apply a coupon</button>';
             }
-            currentOrderTotal = total - discount;
-            cartItemsDiv.innerHTML += `
-                <div class="flex justify-between py-3 text-sm sm:text-base">
+
+            currentOrderTotal = subtotal - discount;
+            const selectedAddress = addresses.find(addr => addr._id === selectedAddressId);
+            cartSummaryDiv.innerHTML = `
+                <div class="flex justify-between text-sm sm:text-base mb-2">
                     <span>Subtotal</span>
-                    <span>₹${total.toFixed(2)}</span>
+                    <span>₹${subtotal.toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between py-3 text-sm sm:text-base">
+                <div class="flex justify-between text-sm sm:text-base mb-2">
                     <span>Discount</span>
                     <span>-₹${discount.toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between py-3 font-bold text-sm sm:text-base">
+                <div class="flex justify-between font-bold text-sm sm:text-base mb-2">
                     <span>Total</span>
                     <span>₹${currentOrderTotal.toFixed(2)}</span>
                 </div>
+                <div class="text-sm sm:text-base">
+                    <span class="font-medium">Delivery Address:</span>
+                    <span>${selectedAddress ? `${sanitizeHTML(selectedAddress.fullName || 'Unknown')}, ${sanitizeHTML(selectedAddress.houseNumber || '')}, ${sanitizeHTML(selectedAddress.street || '')}, ${sanitizeHTML(selectedAddress.pincode || '')}` : 'Please select an address'}</span>
+                </div>
             `;
+            document.getElementById('deliveryAddress').value = selectedAddressId || '';
         }
 
         function showPaymentModal() {
@@ -1075,8 +1349,60 @@
             showModal('paymentModal');
         }
 
+        async function initiatePayment(method) {
+            if (isLoading) return;
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                closeModal('paymentModal');
+                return;
+            }
+            if (!selectedAddressId) {
+                showToast('Please select a delivery address.', 'error');
+                closeModal('paymentModal');
+                return;
+            }
+            setLoading('paymentModal', true);
+            const paymentMethod = method === 'cod' ? 'COD' : method.toUpperCase();
+            try {
+                if (method === 'phonepe' || method === 'gpay') {
+                    const response = await fetch(`${BASE_URL}/api/payment/${method}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                            amount: currentOrderTotal,
+                            deliveryAddress: selectedAddressId
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        showToast(`Redirecting to ${method === 'phonepe' ? 'PhonePe' : 'Google Pay'}...`, 'success');
+                        await placeOrder(paymentMethod, { transactionId: data.transactionId || 'SIMULATED' });
+                    } else {
+                        showToast(data.error || `Failed to initiate ${method} payment.`, 'error');
+                    }
+                } else if (method === 'cod') {
+                    await placeOrder('COD', {});
+                }
+            } catch (error) {
+                console.error(`Initiate payment error:`, error);
+                showToast(`Failed to initiate ${method} payment.`, 'error');
+            } finally {
+                setLoading('paymentModal', false);
+            }
+        }
+
         async function placeOrder(paymentMethod, paymentDetails = {}) {
+            if (isLoading) return;
             const token = localStorage.getItem('token');
+            const selectedAddress = addresses.find(addr => addr._id === selectedAddressId);
+            if (!selectedAddress) {
+                showToast('Invalid delivery address.', 'error');
+                return;
+            }
+            setLoading('proceedToPayment', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders`, {
                     method: 'POST',
@@ -1087,7 +1413,9 @@
                     body: JSON.stringify({
                         items: cart.map(item => ({
                             item: item.id,
-                            quantity: item.quantity
+                            quantity: item.quantity,
+                            itemName: sanitizeHTML(item.name),
+                            price: item.price
                         })),
                         total: currentOrderTotal,
                         paymentMethod,
@@ -1099,172 +1427,55 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Order placed successfully!', 'success');
-                    const address = addresses.find(addr => addr._id === selectedAddressId);
                     document.getElementById('orderConfirmationDetails').innerHTML = `
-                        <p><strong>Order #${data._id}</strong></p>
+                        <p><strong>Order #${sanitizeHTML(data._id)}</strong></p>
                         <p>Total: ₹${data.total.toFixed(2)}</p>
-                        <p>Payment Method: ${data.paymentMethod}</p>
-                        <p>Delivery Address: ${address ? `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}` : 'Not specified'}</p>
-                        <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
-                        ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
+                        <p>Payment Method: ${sanitizeHTML(data.paymentMethod)}</p>
+                        <p>Delivery Address: ${sanitizeHTML(selectedAddress.fullName || 'Unknown')}, ${sanitizeHTML(selectedAddress.houseNumber || '')}, ${sanitizeHTML(selectedAddress.street || '')}, ${sanitizeHTML(selectedAddress.pincode || '')}</p>
+                        <p>Items: ${cart.map(item => `${sanitizeHTML(item.name)} (Qty: ${item.quantity})`).join(', ')}</p>
+                        ${appliedCoupon ? `<p>Coupon: ${sanitizeHTML(appliedCoupon.code)} (${appliedCoupon.discount}% off)</p>` : ''}
                     `;
                     showModal('orderConfirmationModal');
                     cart = [];
                     appliedCoupon = null;
-                    selectedAddressId = null;
-                    localStorage.removeItem('cart');
+                    localStorage.setItem('cart', JSON.stringify(cart));
                     closeModal('paymentModal');
-                    closeModal('upiModal');
                     loadCart();
-                    if (paymentMethod !== 'COD') {
-                        fetchOrders();
-                        fetchOrderHistory();
-                    }
+                    fetchOrders();
+                    fetchOrderHistory();
                 } else {
                     showToast(data.error || 'Failed to place order.', 'error');
                 }
             } catch (error) {
-                console.error('Order placement error:', error);
+                console.error('Place order error:', error);
                 showToast('Failed to place order.', 'error');
-            }
-        }
-
-        async function initiatePayPalPayment() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/orders`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        items: cart.map(item => ({
-                            item: item.id,
-                            quantity: item.quantity
-                        })),
-                        total: currentOrderTotal,
-                        paymentMethod: 'PayPal',
-                        coupon: appliedCoupon ? appliedCoupon.code : null,
-                        deliveryAddress: selectedAddressId
-                    })
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to create PayPal order.');
-                }
-
-                paypal.Buttons({
-                    createOrder: function () {
-                        return data.orderId;
-                    },
-                    onApprove: async function (data, actions) {
-                        const verifyResponse = await fetch(`${BASE_URL}/api/payment/paypal-capture`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
-                            },
-                            body: JSON.stringify({
-                                orderId: data.orderID
-                            })
-                        });
-                        const verifyData = await verifyResponse.json();
-                        if (verifyResponse.ok) {
-                            showToast('Payment successful!', 'success');
-                            const address = addresses.find(addr => addr._id === selectedAddressId);
-                            document.getElementById('orderConfirmationDetails').innerHTML = `
-                                <p><strong>Order #${data.orderId}</strong></p>
-                                <p>Total: ₹${currentOrderTotal.toFixed(2)}</p>
-                                <p>Payment Method: PayPal</p>
-                                <p>Delivery Address: ${address ? `${address.fullName}, ${address.houseNumber}, ${address.street}, ${address.pincode}` : 'Not specified'}</p>
-                                <p>Items: ${cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')}</p>
-                                ${appliedCoupon ? `<p>Coupon: ${appliedCoupon.code} (${appliedCoupon.discount}% off)</p>` : ''}
-                            `;
-                            showModal('orderConfirmationModal');
-                            cart = [];
-                            appliedCoupon = null;
-                            selectedAddressId = null;
-                            localStorage.removeItem('cart');
-                            closeModal('paymentModal');
-                            loadCart();
-                            fetchOrders();
-                            fetchOrderHistory();
-                        } else {
-                            showToast(verifyData.error || 'Payment verification failed.', 'error');
-                        }
-                    },
-                    onError: function (err) {
-                        console.error('PayPal error:', err);
-                        showToast('PayPal payment failed.', 'error');
-                    }
-                }).render('#paypal-button-container');
-
-                const paypalContainer = document.createElement('div');
-                paypalContainer.id = 'paypal-button-container';
-                document.querySelector('#paymentModal .modal-content').appendChild(paypalContainer);
-            } catch (error) {
-                console.error('PayPal order creation error:', error);
-                showToast('Failed to initiate PayPal payment.', 'error');
-            }
-        }
-
-        function showUPIModal() {
-            closeModal('paymentModal');
-            showModal('upiModal');
-        }
-
-        async function initiateUPIPayment() {
-            const upiId = document.getElementById('upiId').value;
-            if (!upiId) {
-                showToast('Please enter a valid UPI ID.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/payment/upi`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        upiId,
-                        amount: currentOrderTotal,
-                        deliveryAddress: selectedAddressId
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    await placeOrder('UPI', { upiId });
-                } else {
-                    showToast(data.error || 'UPI payment failed.', 'error');
-                }
-            } catch (error) {
-                console.error('UPI payment error:', error);
-                showToast('Failed to initiate UPI payment.', 'error');
+            } finally {
+                setLoading('proceedToPayment', false);
             }
         }
 
         async function fetchOrders() {
-            const token = localStorage.getItem('token');
+            setLoading('orderItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const orders = await response.json();
                 const orderItemsDiv = document.getElementById('orderItems');
+                if (!orderItemsDiv) return;
                 if (orders.length === 0) {
                     orderItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No orders found.</p>';
                     return;
                 }
                 orderItemsDiv.innerHTML = orders.map(order => `
                     <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${order._id}</h3>
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${sanitizeHTML(order._id)}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${sanitizeHTML(order.status)}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${sanitizeHTML(order.paymentMethod)}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
-                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${order.deliveryAddress.fullName}, ${order.deliveryAddress.houseNumber}, ${order.deliveryAddress.street}, ${order.deliveryAddress.pincode}</p>` : ''}
-                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
+                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${sanitizeHTML(order.deliveryAddress.fullName || 'Unknown')}, ${sanitizeHTML(order.deliveryAddress.houseNumber || '')}, ${sanitizeHTML(order.deliveryAddress.street || '')}, ${sanitizeHTML(order.deliveryAddress.pincode || '')}</p>` : '<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: Not specified</p>'}
+                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${sanitizeHTML(order.coupon)} (${order.discount}% off)</p>` : ''}
                         <div class="flex space-x-2 mt-3">
                             <button onclick="trackOrder('${order._id}')" class="btn-primary text-sm sm:text-base">Track Order</button>
                             <button onclick="reorder('${order._id}')" class="btn-primary text-sm sm:text-base">Reorder</button>
@@ -1272,35 +1483,38 @@
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error fetching orders:', error);
+                console.error('Fetch orders error:', error);
                 document.getElementById('orderItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load orders.</p>';
+            } finally {
+                setLoading('orderItems', false);
             }
         }
 
         async function fetchOrderHistory() {
-            const token = localStorage.getItem('token');
+            setLoading('orderHistoryItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/history`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const orders = await response.json();
                 const orderHistoryItemsDiv = document.getElementById('orderHistoryItems');
+                if (!orderHistoryItemsDiv) return;
                 if (orders.length === 0) {
                     orderHistoryItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No order history found.</p>';
                     return;
                 }
                 orderHistoryItemsDiv.innerHTML = orders.map(order => `
                     <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${order._id}</h3>
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${sanitizeHTML(order._id)}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${order.status}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${order.paymentMethod}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${sanitizeHTML(order.status)}</p>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${sanitizeHTML(order.paymentMethod)}</p>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
-                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${order.deliveryAddress.fullName}, ${order.deliveryAddress.houseNumber}, ${order.deliveryAddress.street}, ${order.deliveryAddress.pincode}</p>` : ''}
-                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${order.coupon} (${order.discount}% off)</p>` : ''}
+                        ${order.deliveryAddress ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${sanitizeHTML(order.deliveryAddress.fullName || 'Unknown')}, ${sanitizeHTML(order.deliveryAddress.houseNumber || '')}, ${sanitizeHTML(order.deliveryAddress.street || '')}, ${sanitizeHTML(order.deliveryAddress.pincode || '')}</p>` : '<p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: Not specified</p>'}
+                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${sanitizeHTML(order.coupon)} (${order.discount}% off)</p>` : ''}
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">Items:</p>
                         <ul class="list-disc pl-5 text-sm sm:text-base">
-                            ${order.items.map(item => `<li>${item.itemName} (Qty: ${item.quantity})</li>`).join('')}
+                            ${order.items.map(item => `<li>${sanitizeHTML(item.itemName)} (Qty: ${item.quantity})</li>`).join('')}
                         </ul>
                         <div class="flex space-x-2 mt-3">
                             <button onclick="trackOrder('${order._id}')" class="btn-primary text-sm sm:text-base">Track Order</button>
@@ -1309,13 +1523,17 @@
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error fetching order history:', error);
+                console.error('Fetch order history error:', error);
                 document.getElementById('orderHistoryItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load order history.</p>';
+            } finally {
+                setLoading('orderHistoryItems', false);
             }
         }
 
         async function clearOrderHistory() {
+            if (isLoading) return;
             const token = localStorage.getItem('token');
+            setLoading('orderHistoryItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/history`, {
                     method: 'DELETE',
@@ -1324,34 +1542,42 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Order history cleared successfully!', 'success');
-                    document.getElementById('orderHistoryItems').innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No order history found.</p>';
+                    fetchOrderHistory();
                 } else {
                     showToast(data.error || 'Failed to clear order history.', 'error');
                 }
             } catch (error) {
-                console.error('Error clearing order history:', error);
+                console.error('Clear order history error:', error);
                 showToast('Failed to clear order history.', 'error');
+            } finally {
+                setLoading('orderHistoryItems', false);
             }
         }
 
         async function trackOrder(orderId) {
+            if (isLoading) return;
+            setLoading('orderItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}/track`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Order #${orderId} status: ${data.status}`, 'success');
+                    showToast(`Order #${sanitizeHTML(orderId)} status: ${sanitizeHTML(data.status)}`, 'success');
                 } else {
                     showToast(data.error || 'Failed to track order.', 'error');
                 }
             } catch (error) {
-                console.error('Error tracking order:', error);
+                console.error('Track order error:', error);
                 showToast('Failed to track order.', 'error');
+            } finally {
+                setLoading('orderItems', false);
             }
         }
 
         async function reorder(orderId) {
+            if (isLoading) return;
+            setLoading('orderItems', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -1360,85 +1586,127 @@
                 if (response.ok) {
                     cart = order.items.map(item => ({
                         id: item.item,
-                        name: item.itemName,
+                        name: sanitizeHTML(item.itemName),
                         price: item.price,
                         quantity: item.quantity,
+                        image: item.image || DEFAULT_IMAGE,
                         type: 'menu'
                     }));
                     localStorage.setItem('cart', JSON.stringify(cart));
+                    appliedCoupon = order.coupon ? { code: order.coupon, discount: order.discount } : null;
+                    selectDeliveryAddress(order.deliveryAddress?._id || null);
                     showToast('Order added to cart!', 'success');
                     showSection('cart');
                 } else {
                     showToast(order.error || 'Failed to reorder.', 'error');
                 }
             } catch (error) {
-                console.error('Error reordering:', error);
+                console.error('Reorder error:', error);
                 showToast('Failed to reorder.', 'error');
+            } finally {
+                setLoading('orderItems', false);
             }
         }
 
         function showRateModal(itemId) {
             currentRatingItemId = itemId;
+            document.getElementById('rating').value = '';
+            document.getElementById('review').value = '';
             showModal('rateModal');
         }
 
         async function submitRating() {
-            const rating = document.getElementById('rating').value;
-            const review = document.getElementById('review').value;
-            if (!rating || rating < 1 || rating > 5) {
+            if (isLoading) return;
+            const token = localStorage.getItem('token');
+            const rating = parseInt(document.getElementById('rating').value);
+            const review = document.getElementById('review').value.trim();
+            if (!currentRatingItemId || isNaN(rating) || rating < 1 || rating > 5) {
                 showToast('Please enter a valid rating (1-5).', 'error');
                 return;
             }
+            setLoading('rateModal', true);
             try {
                 const response = await fetch(`${BASE_URL}/api/menu/${currentRatingItemId}/rate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ rating, review })
+                    body: JSON.stringify({ rating, review: sanitizeHTML(review) })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Rating submitted successfully!', 'success');
                     closeModal('rateModal');
-                    document.getElementById('rating').value = '';
-                    document.getElementById('review').value = '';
-                    fetchMenuItems();
+                    if (document.getElementById('homeSection').classList.contains('active')) {
+                        fetchMenuItems();
+                    }
                 } else {
                     showToast(data.error || 'Failed to submit rating.', 'error');
                 }
             } catch (error) {
-                console.error('Error submitting rating:', error);
+                console.error('Submit rating error:', error);
                 showToast('Failed to submit rating.', 'error');
+            } finally {
+                setLoading('rateModal', false);
             }
         }
 
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userProfileImage');
-            localStorage.removeItem('cart');
-            localStorage.removeItem('favorites');
-            localStorage.removeItem('darkMode');
+            localStorage.clear();
             showToast('Logged out successfully!', 'success');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1000);
+            setTimeout(() => window.location.href = 'index.html', 1000);
         }
 
         // Event Listeners
-        document.getElementById('menuToggle').addEventListener('click', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!await checkAuth()) return;
+
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchInput.dataset.timeout);
+                    searchInput.dataset.timeout = setTimeout(fetchMenuItems, 300);
+                });
+            }
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', fetchMenuItems);
+            }
+
+            const menuToggle = document.getElementById('menuToggle');
             const navbarMenu = document.getElementById('navbarMenu');
-            navbarMenu.classList.toggle('active');
+            if (menuToggle && navbarMenu) {
+                menuToggle.addEventListener('click', () => {
+                    navbarMenu.classList.toggle('active');
+                });
+            }
+
+            // Prevent form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', (e) => e.preventDefault());
+            });
+
+            // Close modals on outside click
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal(modal.id);
+                });
+            });
         });
 
-        document.getElementById('searchInput').addEventListener('input', fetchMenuItems);
-        document.getElementById('categoryFilter').addEventListener('change', fetchMenuItems);
-
-        // Initialize on page load
-        window.onload = () => {
-            checkAuth();
-        };
+        // Cleanup event listeners on page unload
+        window.addEventListener('unload', () => {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.removeEventListener('click', null);
+            });
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const menuToggle = document.getElementById('menuToggle');
+            if (searchInput) searchInput.removeEventListener('input', null);
+            if (categoryFilter) categoryFilter.removeEventListener('change', null);
+            if (menuToggle) menuToggle.removeEventListener('click', null);
+        });
     </script>
 </body>
 </html>

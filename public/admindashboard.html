@@ -442,7 +442,7 @@
                 </div>
                 <div>
                     <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
-                    <select id="editItemCategory" class="input-field">
+                    <select id="EditarItemCategory" class="input-field">
                         <option value="">Select Category</option>
                         <option value="Veg Pizza">Veg Pizza</option>
                         <option value="Non-Veg Pizza">Non-Veg Pizza</option>
@@ -552,6 +552,7 @@
                 <p><strong>Name:</strong> <span id="customerName"></span></p>
                 <p><strong>Email:</strong> <span id="customerEmail"></span></p>
                 <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                <p><strong>Address:</strong> <span id="customerAddress"></span></p>
                 <p><strong>Status:</strong> <span id="customerStatus"></span></p>
             </div>
             <div class="mt-4">
@@ -594,7 +595,10 @@
             <div class="text-sm space-y-3">
                 <p><strong>Order ID:</strong> <span id="orderId"></span></p>
                 <p><strong>Customer:</strong> <span id="orderCustomerName"></span></p>
+                <p><strong>Email:</strong> <span id="orderCustomerEmail"></span></p>
+                <p><strong>Phone:</strong> <span id="orderCustomerPhone"></span></p>
                 <p><strong>Address:</strong> <span id="orderAddress"></span></p>
+                <p><strong>Order Date:</strong> <span id="orderDate"></span></p>
                 <p><strong>Total:</strong> <span id="orderTotal"></span></p>
                 <p><strong>Status:</strong> <span id="orderStatus"></span></p>
                 <p><strong>Payment:</strong> <span id="orderPaymentStatus"></span></p>
@@ -616,6 +620,7 @@
                 </select>
                 <button id="updateOrderStatusBtn" class="auth-btn px-4 py-2">Update Status</button>
                 <button id="refundOrderBtn" class="auth-btn bg-red-600 hover:bg-red-700 px-4 py-2 hidden">Refund</button>
+                <button id="deleteOrderBtn" class="auth-btn bg-red-600 hover:bg-red-700 px-4 py-2 hidden">Delete</button>
                 <button onclick="closeModal('orderDetailsModal')" class="auth-btn bg-gray-600 hover:bg-gray-700 px-4 py-2">Close</button>
             </div>
         </div>
@@ -777,6 +782,8 @@
                             <tr>
                                 <th>Order ID</th>
                                 <th>Customer</th>
+                                <th>Email</th>
+                                <th>Phone</th>
                                 <th>Address</th>
                                 <th>Total</th>
                                 <th>Status</th>
@@ -855,7 +862,6 @@
                     </div>
                     <div>
                         <label for="couponImage" class="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
-                        <input type="text" id="couponImage" class="input-field" placeholder="Image URL">
                     </div>
                     <div>
                         <label for="couponImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
@@ -900,6 +906,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Phone</th>
+                                <th>Address</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -1098,6 +1105,7 @@
         async function checkAuth() {
             const token = localStorage.getItem('adminToken');
             if (!token) {
+                console.warn('No admin token found, redirecting to admin.html');
                 window.location.href = 'admin.html';
                 return;
             }
@@ -1105,22 +1113,28 @@
                 const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) {
-                    localStorage.removeItem('adminToken');
-                    localStorage.removeItem('adminProfileImage');
-                    window.location.href = 'admin.html';
-                } else {
+                const data = await response.json();
+                if (response.ok) {
                     fetchAdminDetails();
                     showSection('home');
                     fetchOrders();
                     fetchMenuItems();
                     fetchRestaurantStatus();
+                } else {
+                    console.error('Authentication failed:', data.error || 'Invalid response');
+                    showToast(data.error || 'Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminProfileImage');
+                    window.location.href = 'admin.html';
                 }
             } catch (error) {
-                console.error('Error checking auth:', error);
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminProfileImage');
-                window.location.href = 'admin.html';
+                console.error('Error during authentication check:', error.message);
+                showToast('Unable to verify session. Please try again later.', 'error');
+                if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminProfileImage');
+                    window.location.href = 'admin.html';
+                }
             }
         }
 
@@ -1332,12 +1346,15 @@
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-3 px-3">${order._id || 'N/A'}</td>
                     <td class="py-3 px-3">${order.customerName || 'N/A'}</td>
+                    <td class="py-3 px-3">${order.customerEmail || 'N/A'}</td>
+                    <td class="py-3 px-3">${order.customerPhone || 'N/A'}</td>
                     <td class="py-3 px-3">${order.address || 'N/A'}</td>
                     <td class="py-3 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
                     <td class="py-3 px-3 text-center">${order.status || 'Pending'}</td>
                     <td class="py-3 px-3 text-center">${order.paymentStatus || 'Pending'}</td>
                     <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button onclick="viewOrderDetails('${order._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
+                        ${order.status === 'Delivered' ? `<button onclick="deleteOrder('${order._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -1354,8 +1371,14 @@
                     if (orderIdElement) orderIdElement.textContent = order._id || 'N/A';
                     const orderCustomerName = document.getElementById('orderCustomerName');
                     if (orderCustomerName) orderCustomerName.textContent = order.customerName || 'N/A';
+                    const orderCustomerEmail = document.getElementById('orderCustomerEmail');
+                    if (orderCustomerEmail) orderCustomerEmail.textContent = order.customerEmail || 'N/A';
+                    const orderCustomerPhone = document.getElementById('orderCustomerPhone');
+                    if (orderCustomerPhone) orderCustomerPhone.textContent = order.customerPhone || 'N/A';
                     const orderAddress = document.getElementById('orderAddress');
                     if (orderAddress) orderAddress.textContent = order.address || 'N/A';
+                    const orderDate = document.getElementById('orderDate');
+                    if (orderDate) orderDate.textContent = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
                     const orderTotal = document.getElementById('orderTotal');
                     if (orderTotal) orderTotal.textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
                     const orderStatus = document.getElementById('orderStatus');
@@ -1365,22 +1388,44 @@
                     const orderStatusSelect = document.getElementById('orderStatusSelect');
                     if (orderStatusSelect) orderStatusSelect.value = order.status || 'Pending';
                     const updateOrderStatusBtn = document.getElementById('updateOrderStatusBtn');
-                    if (updateOrderStatusBtn) updateOrderStatusBtn.onclick = () => updateOrderStatus(orderId, orderStatusSelect.value);
+                    if (updateOrderStatusBtn) updateOrderStatusBtn.onclick = () => updateOrderStatus(orderId, orderStatusSelect.value, order.customerEmail);
                     const refundOrderBtn = document.getElementById('refundOrderBtn');
                     if (refundOrderBtn) {
                         refundOrderBtn.style.display = order.paymentStatus === 'Paid' ? 'block' : 'none';
                         refundOrderBtn.onclick = () => refundOrder(orderId);
                     }
+                    const deleteOrderBtn = document.getElementById('deleteOrderBtn');
+                    if (deleteOrderBtn) {
+                        deleteOrderBtn.style.display = order.status === 'Delivered' ? 'block' : 'none';
+                        deleteOrderBtn.onclick = () => deleteOrder(orderId);
+                    }
 
                     const orderItems = document.getElementById('orderItems');
                     if (orderItems) {
-                        orderItems.innerHTML = order.items?.map(item => `
-                            <div class="text-sm mb-2">
-                                <p><strong>Item:</strong> ${item.name || 'N/A'}</p>
-                                <p><strong>Quantity:</strong> ${item.quantity || 1}</p>
-                                <p><strong>Price:</strong> ₹${item.price?.toFixed(2) || '0.00'}</p>
-                            </div>
-                        `).join('') || 'No items';
+                        orderItems.innerHTML = order.items?.length ? `
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th class="py-2 px-3">Item</th>
+                                        <th class="py-2 px-3">Category</th>
+                                        <th class="py-2 px-3">Quantity</th>
+                                        <th class="py-2 px-3 text-right">Price</th>
+                                        <th class="py-2 px-3 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${order.items.map(item => `
+                                        <tr class="border-b">
+                                            <td class="py-2 px-3">${item.name || 'N/A'}</td>
+                                            <td class="py-2 px-3">${item.category || 'N/A'}</td>
+                                            <td class="py-2 px-3">${item.quantity || 1}</td>
+                                            <td class="py-2 px-3 text-right">₹${item.price?.toFixed(2) || '0.00'}</td>
+                                            <td class="py-2 px-3 text-right">₹${(item.price * item.quantity)?.toFixed(2) || '0.00'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : 'No items';
                     }
 
                     const orderReview = document.getElementById('orderReview');
@@ -1388,8 +1433,9 @@
                         if (order.review) {
                             const stars = '★'.repeat(order.review.rating) + '☆'.repeat(5 - order.review.rating);
                             orderReview.innerHTML = `
-                                <p><strong>Rating:</strong> <span class="rating-stars">${stars}</span> (${order.review.rating}/5)</p>
+                                <p class="mb-2"><strong>Rating:</strong> <span class="rating-stars">${stars}</span> (${order.review.rating}/5)</p>
                                 <p><strong>Comment:</strong> ${order.review.comment || 'No comment'}</p>
+                                <p class="mt-2"><strong>Reviewed At:</strong> ${order.review.createdAt ? new Date(order.review.createdAt).toLocaleString() : 'N/A'}</p>
                             `;
                         } else {
                             orderReview.innerHTML = 'No review provided';
@@ -1406,7 +1452,27 @@
             }
         }
 
-        async function updateOrderStatus(orderId, status) {
+        async function sendOrderEmail(orderId, status, customerEmail) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}/notify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({ status, customerEmail })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to send email notification.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending email notification:', error);
+                showToast('Failed to send email notification.', 'error');
+            }
+        }
+
+        async function updateOrderStatus(orderId, status, customerEmail) {
             try {
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
                     method: 'PUT',
@@ -1419,6 +1485,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     showToast(`Order status updated to ${status}!`, 'success');
+                    await sendOrderEmail(orderId, status, customerEmail);
                     closeModal('orderDetailsModal');
                     fetchOrders();
                 } else {
@@ -1451,6 +1518,27 @@
             }
         }
 
+        async function deleteOrder(orderId) {
+            if (!confirm('Are you sure you want to delete this delivered order?')) return;
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Order deleted successfully!', 'success');
+                    closeModal('orderDetailsModal');
+                    fetchOrders();
+                } else {
+                    showToast(data.error || 'Failed to delete order.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                showToast('Failed to delete order.', 'error');
+            }
+        }
+
         // Special Offers
         async function fetchOffers() {
             try {
@@ -1475,7 +1563,7 @@
                     </td>
                     <td class="py-3 px-3">${offer.name || 'N/A'}</td>
                     <td class="py-3 px-3 text-right">₹${offer.price?.toFixed(2) || '0.00'}</td>
-                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <td class="py-3 px-3 flex space-x-2">
                         <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
                         <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
                     </td>
@@ -1530,9 +1618,9 @@
             }
         }
 
-        async function editOffer(id) {
+        async function editOffer(offerId) {
             try {
-                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/offers/${offerId}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const offer = await response.json();
@@ -1575,7 +1663,7 @@
             const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
 
             try {
-                                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
+                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1602,10 +1690,10 @@
             }
         }
 
-        async function deleteOffer(id) {
+        async function deleteOffer(offerId) {
             if (!confirm('Are you sure you want to delete this offer?')) return;
             try {
-                const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/offers/${offerId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
@@ -1622,7 +1710,7 @@
             }
         }
 
-        // Coupons Management
+        // Coupon Management
         async function fetchCoupons() {
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
@@ -1646,7 +1734,7 @@
                     </td>
                     <td class="py-3 px-3">${coupon.code || 'N/A'}</td>
                     <td class="py-3 px-3 text-right">${coupon.discount || 0}%</td>
-                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <td class="py-3 px-3 flex space-x-2">
                         <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
                         <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
                     </td>
@@ -1656,7 +1744,7 @@
 
         async function addCoupon() {
             const coupon = {
-                code: document.getElementById('couponCode')?.value.trim().toUpperCase() || '',
+                code: document.getElementById('couponCode')?.value.trim() || '',
                 discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
                 imageUrl: document.getElementById('couponImage')?.value.trim() || '',
                 file: document.getElementById('couponImageUpload')?.files[0] || null,
@@ -1701,9 +1789,9 @@
             }
         }
 
-        async function editCoupon(id) {
+        async function editCoupon(couponId) {
             try {
-                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const coupon = await response.json();
@@ -1731,7 +1819,7 @@
         async function updateCoupon() {
             const coupon = {
                 id: document.getElementById('editCouponId')?.value || '',
-                code: document.getElementById('editCouponCode')?.value.trim().toUpperCase() || '',
+                code: document.getElementById('editCouponCode')?.value.trim() || '',
                 discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
                 imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
                 file: document.getElementById('editCouponImageUpload')?.files[0] || null,
@@ -1773,10 +1861,10 @@
             }
         }
 
-        async function deleteCoupon(id) {
+        async function deleteCoupon(couponId) {
             if (!confirm('Are you sure you want to delete this coupon?')) return;
             try {
-                const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
+                const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
@@ -1815,8 +1903,9 @@
                     <td class="py-3 px-3">${customer.name || 'N/A'}</td>
                     <td class="py-3 px-3">${customer.email || 'N/A'}</td>
                     <td class="py-3 px-3">${customer.phone || 'N/A'}</td>
-                    <td class="py-3 px-3 text-center">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
-                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <td class="py-3 px-3">${customer.address || 'N/A'}</td>
+                    <td class="py-3 px-3 text-center">${customer.status || 'Active'}</td>
+                    <td class="py-3 px-3 flex space-x-2">
                         <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
                     </td>
                 </tr>
@@ -1836,37 +1925,45 @@
                     if (customerEmail) customerEmail.textContent = customer.email || 'N/A';
                     const customerPhone = document.getElementById('customerPhone');
                     if (customerPhone) customerPhone.textContent = customer.phone || 'N/A';
+                    const customerAddress = document.getElementById('customerAddress');
+                    if (customerAddress) customerAddress.textContent = customer.address || 'N/A';
                     const customerStatus = document.getElementById('customerStatus');
-                    if (customerStatus) customerStatus.textContent = customer.isBlocked ? 'Blocked' : 'Active';
+                    if (customerStatus) customerStatus.textContent = customer.status || 'Active';
                     const blockUnblockBtn = document.getElementById('blockUnblockBtn');
                     if (blockUnblockBtn) {
-                        blockUnblockBtn.textContent = customer.isBlocked ? 'Unblock' : 'Block';
-                        blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
-                        blockUnblockBtn.onclick = () => toggleCustomerBlock(customerId, customer.isBlocked);
+                        blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
+                        blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+                        blockUnblockBtn.onclick = () => toggleCustomerStatus(customerId, customer.status);
                     }
 
-                    const orderHistory = document.getElementById('customerOrderHistory');
-                    if (orderHistory) {
-                        orderHistory.innerHTML = customer.orders?.length ? `
+                    const orderResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    });
+                    const orders = await orderResponse.json();
+                    const customerOrderHistory = document.getElementById('customerOrderHistory');
+                    if (customerOrderHistory) {
+                        customerOrderHistory.innerHTML = orders.length ? `
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr>
-                                        <th>Order ID</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
+                                        <th class="py-2 px-3">Order ID</th>
+                                        <th class="py-2 px-3">Date</th>
+                                        <th class="py-2 px-3">Total</th>
+                                        <th class="py-2 px-3">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${customer.orders.map(order => `
+                                    ${orders.map(order => `
                                         <tr class="border-b">
                                             <td class="py-2 px-3">${order._id || 'N/A'}</td>
+                                            <td class="py-2 px-3">${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</td>
                                             <td class="py-2 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                                            <td class="py-2 px-3 text-center">${order.status || 'Pending'}</td>
+                                            <td class="py-2 px-3">${order.status || 'Pending'}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
-                        ` : 'No order history';
+                        ` : 'No orders found';
                     }
 
                     showModal('customerDetailsModal');
@@ -1879,27 +1976,28 @@
             }
         }
 
-        async function toggleCustomerBlock(customerId, isBlocked) {
+        async function toggleCustomerStatus(customerId, currentStatus) {
+            const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
             try {
-                const response = await fetch(`${BASE_URL}/api/users/${customerId}/block`, {
+                const response = await fetch(`${BASE_URL}/api/users/${customerId}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
-                    body: JSON.stringify({ isBlocked: !isBlocked })
+                    body: JSON.stringify({ status: newStatus })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Customer ${!isBlocked ? 'blocked' : 'unblocked'} successfully!`, 'success');
+                    showToast(`Customer ${newStatus.toLowerCase()} successfully!`, 'success');
                     closeModal('customerDetailsModal');
                     fetchCustomers();
                 } else {
-                    showToast(data.error || 'Failed to update customer status.', 'error');
+                    showToast(data.error || `Failed to ${newStatus.toLowerCase()} customer.`, 'error');
                 }
             } catch (error) {
-                console.error('Error toggling customer block:', error);
-                showToast('Failed to update customer status.', 'error');
+                console.error(`Error ${newStatus.toLowerCase()} customer:`, error);
+                showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
             }
         }
 
@@ -1925,22 +2023,37 @@
                     <td class="py-3 px-3">${message.name || 'N/A'}</td>
                     <td class="py-3 px-3">${message.email || 'N/A'}</td>
                     <td class="py-3 px-3">${message.subject || 'N/A'}</td>
-                    <td class="py-3 px-3">
-                        <div class="contact-message">${message.message || 'N/A'}</div>
-                    </td>
+                    <td class="py-3 px-3">${message.message?.substring(0, 50) || 'N/A'}${message.message?.length > 50 ? '...' : ''}</td>
                     <td class="py-3 px-3 text-center">${message.status || 'Pending'}</td>
-                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Reply</button>
-                        <button onclick="markAsResolved('${message._id}')" class="auth-btn bg-green-600 hover:bg-green-700 text-xs px-3 py-1.5">Resolve</button>
+                    <td class="py-3 px-3 flex space-x-2">
+                        <button onclick="viewContactMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
+                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function replyToMessage(messageId) {
-            const contactMessageId = document.getElementById('contactMessageId');
-            if (contactMessageId) contactMessageId.value = messageId;
-            showModal('replyContactModal');
+        async function viewContactMessage(messageId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
+                const message = await response.json();
+                if (response.ok) {
+                    const contactMessageId = document.getElementById('contactMessageId');
+                    if (contactMessageId) contactMessageId.value = message._id || '';
+                    const contactReplySubject = document.getElementById('contactReplySubject');
+                    if (contactReplySubject) contactReplySubject.value = `Re: ${message.subject || 'Your Message'}`;
+                    const contactReplyMessage = document.getElementById('contactReplyMessage');
+                    if (contactReplyMessage) contactReplyMessage.value = `\n\n--- Original Message ---\n${message.message || 'N/A'}`;
+                    showModal('replyContactModal');
+                } else {
+                    showToast(message.error || 'Failed to load message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching contact message:', error);
+                showToast('Failed to load message.', 'error');
+            }
         }
 
         async function sendReply() {
@@ -1976,22 +2089,23 @@
             }
         }
 
-        async function markAsResolved(messageId) {
+        async function deleteContactMessage(messageId) {
+            if (!confirm('Are you sure you want to delete this message?')) return;
             try {
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/resolve`, {
-                    method: 'PUT',
+                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
+                    method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Message marked as resolved!', 'success');
+                    showToast('Message deleted successfully!', 'success');
                     fetchContactMessages();
                 } else {
-                    showToast(data.error || 'Failed to resolve message.', 'error');
+                    showToast(data.error || 'Failed to delete message.', 'error');
                 }
             } catch (error) {
-                console.error('Error resolving message:', error);
-                showToast('Failed to resolve message.', 'error');
+                console.error('Error deleting contact message:', error);
+                showToast('Failed to delete message.', 'error');
             }
         }
 
@@ -2006,7 +2120,10 @@
                     const restaurantStatus = document.getElementById('restaurantStatus');
                     if (restaurantStatus) restaurantStatus.textContent = data.isOpen ? 'Open' : 'Closed';
                     const statusToggleBtn = document.getElementById('statusToggleBtn');
-                    if (statusToggleBtn) statusToggleBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+                    if (statusToggleBtn) {
+                        statusToggleBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+                        statusToggleBtn.className = `auth-btn px-4 py-2 mt-3 ${data.isOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+                    }
                 } else {
                     showToast(data.error || 'Failed to fetch restaurant status.', 'error');
                 }
@@ -2027,14 +2144,14 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Restaurant ${data.isOpen ? 'opened' : 'closed'} successfully!`, 'success');
+                    showToast(`Restaurant is now ${data.isOpen ? 'open' : 'closed'}!`, 'success');
                     fetchRestaurantStatus();
                 } else {
-                    showToast(data.error || 'Failed to toggle restaurant status.', 'error');
+                    showToast(data.error || 'Failed to update restaurant status.', 'error');
                 }
             } catch (error) {
                 console.error('Error toggling restaurant status:', error);
-                showToast('Failed to toggle restaurant status.', 'error');
+                showToast('Failed to update restaurant status.', 'error');
             }
         }
 
@@ -2048,11 +2165,12 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
+            // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
-                const profileDropdown = document.getElementById('profileDropdown');
-                const profileImage = document.getElementById('profileImage');
-                if (profileDropdown && profileImage && !profileImage.contains(e.target) && !profileDropdown.contains(e.target)) {
-                    profileDropdown.classList.remove('active');
+                const profileContainer = document.querySelector('.profile-container');
+                const dropdown = document.getElementById('profileDropdown');
+                if (profileContainer && dropdown && !profileContainer.contains(e.target)) {
+                    dropdown.classList.remove('active');
                 }
             });
         });

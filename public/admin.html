@@ -273,12 +273,22 @@
                 });
                 const text = await response.text();
                 console.log('Admin login response:', text);
-                const data = JSON.parse(text);
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse response:', text);
+                    showToast('Invalid server response.', 'error');
+                    return;
+                }
                 if (response.ok) {
+                    console.log('Token received:', data.token);
                     localStorage.setItem('adminToken', data.token);
+                    console.log('Stored Token:', localStorage.getItem('adminToken'));
                     showToast('Admin login successful!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/admindashboard.html';
+                        console.log('Redirecting to /admindashboard.html');
+                        window.location.assign('/admindashboard.html');
                     }, 1000);
                 } else {
                     showToast(data.error || 'Admin login failed.', 'error');
@@ -308,13 +318,22 @@
                 });
                 const text = await response.text();
                 console.log('Admin signup response:', text);
-                const data = JSON.parse(text);
-
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse response:', text);
+                    showToast('Invalid server response.', 'error');
+                    return;
+                }
                 if (response.ok) {
+                    console.log('Token received:', data.token);
                     localStorage.setItem('adminToken', data.token);
+                    console.log('Stored Token:', localStorage.getItem('adminToken'));
                     showToast('Admin signup successful! You are now logged in.', 'success');
                     setTimeout(() => {
-                        window.location.href = '/admindashboard.html';
+                        console.log('Redirecting to /admindashboard.html');
+                        window.location.assign('/admindashboard.html');
                     }, 1000);
                 } else {
                     showToast(data.error || 'Admin signup failed.', 'error');
@@ -339,7 +358,14 @@
                 });
                 const text = await response.text();
                 console.log('Send OTP response:', text);
-                const data = JSON.parse(text);
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse response:', text);
+                    showToast('Invalid server response.', 'error');
+                    return;
+                }
                 if (response.ok) {
                     showToast(data.message, 'success');
                     document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
@@ -368,7 +394,14 @@
                 });
                 const text = await response.text();
                 console.log('Verify OTP response:', text);
-                const data = JSON.parse(text);
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse response:', text);
+                    showToast('Invalid server response.', 'error');
+                    return;
+                }
                 if (response.ok) {
                     showToast('OTP verified successfully!', 'success');
                     document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
@@ -403,7 +436,14 @@
                 });
                 const text = await response.text();
                 console.log('Reset password response:', text);
-                const data = JSON.parse(text);
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse response:', text);
+                    showToast('Invalid server response.', 'error');
+                    return;
+                }
                 if (response.ok) {
                     showToast(data.message, 'success');
                     setTimeout(() => {
@@ -420,10 +460,14 @@
 
         window.onload = () => {
             const adminToken = localStorage.getItem('adminToken');
-            if (adminToken) {
-                window.location.href = '/admindashboard.html';
+            console.log('Checking token on load:', adminToken);
+            // Only redirect if not already on dashboard
+            if (adminToken && window.location.pathname !== '/admindashboard.html') {
+                console.log('Token found, redirecting to dashboard');
+                window.location.assign('/admindashboard.html');
+            } else {
+                showLogin();
             }
-            showLogin(); // Ensure login form is shown by default
         };
     </script>
 </body>
