@@ -1,54 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
-const Razorpay = require('razorpay');
-const paypal = require('@paypal/checkout-server-sdk');
 const path = require('path');
-const crypto = require('crypto');
 const multer = require('multer');
+const fs = require('fs');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: ['https://delicute.onrender.com', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json());
-
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-
-// File Upload Setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-const upload = multer({ storage });
-
-// Environment Variables Validation
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET',
-  'EMAIL_USER',
-  'EMAIL_PASS',
-  'RAZORPAY_KEY_ID',
-  'RAZORPAY_KEY_SECRET',
-  'PAYPAL_CLIENT_ID',
-  'PAYPAL_CLIENT_SECRET'
-];
+// Environment Variables
+const requiredEnvVars = ['DB_NAME', 'DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_PORT', 'JWT_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
     console.error(`Missing environment variable: ${envVar}`);
@@ -57,1650 +23,1348 @@ for (const envVar of requiredEnvVars) {
 }
 
 const {
-  DATABASE_URL,
+  DB_NAME,
+  DB_HOST,
+  DB_USER,
+  DB_PASSWORD,
+  DB_PORT,
   JWT_SECRET,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   EMAIL_USER,
   EMAIL_PASS,
-  RAZORPAY_KEY_ID,
-  RAZORPAY_KEY_SECRET,
-  PAYPAL_CLIENT_ID,
-  PAYPAL_CLIENT_SECRET,
   PORT = 3000,
   CLIENT_URL = 'http://localhost:3000',
-  NODE_ENV = 'development'
+  BASE_URL = process.env.NODE_ENV === 'production' ? 'https://delicute.onrender.com' : 'http://localhost:3000',
+  PHONEPE_MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID,
+  PHONEPE_SALT_KEY = process.env.PHONEPE_SALT_KEY,
+  PHONEPE_SALT_INDEX = process.env.PHONEPE_SALT_INDEX,
+  GOOGLE_PAY_MERCHANT_ID = process.env.GOOGLE_PAY_MERCHANT_ID
 } = process.env;
 
-// Database Connection
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 5000,
-  max: 10
+// Middleware
+app.use(cors({
+  origin: ['https://delicute.onrender.com', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-VERIFY']
+}));
+app.use(express.json());
+
+// Serve static files
+const publicPath = path.join(__dirname, 'public');
+const uploadDir = path.join(publicPath, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadDir, {
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'public, max-age=31557600');
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
+app.use(express.static(publicPath));
+
+// File Upload Setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
+});
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files allowed'), false);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-// PayPal Client Setup
-const paypalEnvironment = NODE_ENV === 'production'
-  ? new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET)
-  : new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET);
-const paypalClient = new paypal.core.PayPalHttpClient(paypalEnvironment);
+// Database Connection
+const pool = mysql.createPool({
+  host: DB_HOST,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  port: DB_PORT,
+  connectionLimit: 10
+});
 
 // Initialize Database
 async function initializeDatabase() {
   try {
-    console.log('Attempting to connect to PostgreSQL...');
-    const client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL database');
-
-    // Check if tables exist
-    const tableCheck = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('users', 'menu_items', 'offers', 'orders', 'restaurant_status', 'coupons', 'contact_messages', 'addresses')
+    const connection = await pool.getConnection();
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        phone VARCHAR(20),
+        password VARCHAR(255),
+        is_admin BOOLEAN DEFAULT FALSE,
+        is_blocked BOOLEAN DEFAULT FALSE,
+        reset_otp VARCHAR(6),
+        profile_image VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
     `);
-    const existingTables = tableCheck.rows.map(row => row.table_name);
-
-    // Create tables only if they don't exist
-    if (!existingTables.includes('users')) {
-      await client.query(`
-        CREATE TABLE users (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255),
-          email VARCHAR(255) UNIQUE NOT NULL,
-          phone VARCHAR(20),
-          password VARCHAR(255),
-          is_admin BOOLEAN DEFAULT FALSE,
-          is_blocked BOOLEAN DEFAULT FALSE,
-          profile_image VARCHAR(255),
-          reset_otp VARCHAR(6),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created users table');
-    }
-
-    if (!existingTables.includes('menu_items')) {
-      await client.query(`
-        CREATE TABLE menu_items (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          category VARCHAR(100) NOT NULL,
-          price INTEGER NOT NULL,
-          description TEXT,
-          image VARCHAR(255),
-          rating INTEGER DEFAULT 0,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created menu_items table');
-    }
-
-    if (!existingTables.includes('offers')) {
-      await client.query(`
-        CREATE TABLE offers (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          description TEXT,
-          price INTEGER NOT NULL,
-          image VARCHAR(255),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created offers table');
-    }
-
-    if (!existingTables.includes('orders')) {
-      await client.query(`
-        CREATE TABLE orders (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id),
-          items JSONB NOT NULL,
-          total INTEGER NOT NULL,
-          status VARCHAR(50) DEFAULT 'Pending',
-          payment_status VARCHAR(50) DEFAULT 'Pending',
-          payment_method VARCHAR(50),
-          payment_details JSONB,
-          coupon VARCHAR(50),
-          discount INTEGER DEFAULT 0,
-          delivery_address_id INTEGER,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created orders table');
-    }
-
-    if (!existingTables.includes('restaurant_status')) {
-      await client.query(`
-        CREATE TABLE restaurant_status (
-          id SERIAL PRIMARY KEY,
-          status VARCHAR(50) DEFAULT 'Closed',
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        INSERT INTO restaurant_status (status) 
-        VALUES ('Closed') 
-        ON CONFLICT DO NOTHING;
-      `);
-      console.log('✅ Created restaurant_status table and initialized status');
-    }
-
-    if (!existingTables.includes('coupons')) {
-      await client.query(`
-        CREATE TABLE coupons (
-          id SERIAL PRIMARY KEY,
-          code VARCHAR(50) UNIQUE NOT NULL,
-          discount INTEGER NOT NULL,
-          description TEXT,
-          image VARCHAR(255),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created coupons table');
-    }
-
-    if (!existingTables.includes('contact_messages')) {
-      await client.query(`
-        CREATE TABLE contact_messages (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          subject VARCHAR(255) NOT NULL,
-          message TEXT NOT NULL,
-          status VARCHAR(50) DEFAULT 'Pending',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created contact_messages table');
-    }
-
-    if (!existingTables.includes('addresses')) {
-      await client.query(`
-        CREATE TABLE addresses (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id),
-          full_name VARCHAR(255) NOT NULL,
-          mobile VARCHAR(20) NOT NULL,
-          house_number VARCHAR(100) NOT NULL,
-          street VARCHAR(255) NOT NULL,
-          landmark VARCHAR(255),
-          pincode VARCHAR(10) NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ Created addresses table');
-    }
-
-    // Ensure at least one admin user exists
-    const adminCheck = await client.query('SELECT * FROM users WHERE is_admin = TRUE LIMIT 1');
-    if (adminCheck.rows.length === 0) {
-      const defaultAdminEmail = 'admin@delicute.com';
-      const defaultAdminPassword = await bcrypt.hash('Admin123!', 10);
-      await client.query(
-        `INSERT INTO users (name, email, phone, password, is_admin) 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT (email) DO NOTHING`,
-        ['Default Admin', defaultAdminEmail, '1234567890', defaultAdminPassword, true]
-      );
-      console.log('✅ Created default admin user');
-    }
-
-    console.log('✅ Database initialization completed');
-    const tables = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-    console.log('📋 Public tables:', tables.rows.map(row => row.table_name));
-
-    client.release();
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS menu_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        description TEXT,
+        image VARCHAR(255),
+        rating INT DEFAULT 0,
+        rating_count INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS offers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        image VARCHAR(255),
+        is_special BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount INT NOT NULL,
+        description TEXT,
+        image VARCHAR(255),
+        is_special BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS contact_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        address_id INT,
+        items JSON NOT NULL,
+        total DECIMAL(10,2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Pending',
+        payment_status VARCHAR(50) DEFAULT 'Pending',
+        payment_method VARCHAR(50),
+        coupon VARCHAR(50),
+        discount DECIMAL(10,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS addresses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        address_line1 VARCHAR(255) NOT NULL,
+        address_line2 VARCHAR(255),
+        city VARCHAR(100) NOT NULL,
+        state VARCHAR(100) NOT NULL,
+        zip_code VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS ratings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        menu_item_id INT,
+        rating INT NOT NULL,
+        review TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (menu_item_id) REFERENCES menu_items(id)
+      )
+    `);
+    console.log('✅ Database initialized');
+    connection.release();
   } catch (error) {
-    console.error('❌ Database initialization failed:', error);
+    console.error('❌ Database initialization failed:', error.stack);
     throw error;
   }
 }
 
-// Email Transporter Setup
+// Email Transporter
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
   secure: false,
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS
-  }
+  auth: { user: EMAIL_USER, pass: EMAIL_PASS }
 });
 
-// Google OAuth Setup
-const oauth2Client = new google.auth.OAuth2(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  `${CLIENT_URL}/api/auth/google/callback`
-);
+// Google OAuth
+const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, `${BASE_URL}/api/auth/google/callback`);
 
-// Razorpay Setup
-const razorpay = new Razorpay({
-  key_id: RAZORPAY_KEY_ID,
-  key_secret: RAZORPAY_KEY_SECRET
-});
-
-// Middleware to Verify JWT
+// JWT Middleware
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) {
-    console.warn('No token provided for request:', req.url);
-    return res.status(401).json({ error: 'Access denied, no token provided' });
-  }
-
-  if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
-    console.error('Malformed token received:', token);
-    return res.status(403).json({ error: 'Invalid token format' });
-  }
-
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (error) {
-    console.error('Token verification error:', error.message, error.stack);
-    res.status(403).json({ error: 'Invalid or expired token' });
+    console.error('Invalid token:', error.message);
+    res.status(403).json({ error: 'Invalid token' });
   }
 }
 
-// Middleware to Check Admin Privileges
-async function authenticateAdmin(req, res, next) {
-  try {
-    const result = await pool.query('SELECT is_admin, is_blocked FROM users WHERE id = $1', [req.user.id]);
-    const user = result.rows[0];
-    if (!user || !user.is_admin) {
-      console.warn('Admin access denied for user:', req.user.id);
-      return res.status(403).json({ error: 'Admin access required' });
+function requireAdmin(req, res, next) {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Admin access required' });
+  next();
+}
+
+// Helper Functions
+function getImageUrl(imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') return null;
+  return imagePath.startsWith('http') ? imagePath : `${BASE_URL}${imagePath}`;
+}
+
+function validateInput(data, requiredFields) {
+  for (const field of requiredFields) {
+    if (!data[field] || (typeof data[field] === 'string' && !data[field].trim())) {
+      return { valid: false, error: `${field} is required` };
     }
-    if (user.is_blocked) {
-      console.warn('Blocked admin user attempted access:', req.user.id);
-      return res.status(403).json({ error: 'Account is blocked' });
-    }
-    next();
-  } catch (error) {
-    console.error('Admin authentication error:', error);
-    res.status(500).json({ error: 'Invalid token or user not found' });
   }
+  return { valid: true };
 }
 
 // Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(publicPath, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(publicPath, 'admin.html')));
 
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-app.get('/admindashboard.html', authenticateToken, authenticateAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-app.get('/userdashboard.html', authenticateToken, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'));
-});
-
-app.post('/api/files/upload', authenticateToken, authenticateAdmin, upload.single('file'), (req, res) => {
+// File Upload Endpoint
+app.post('/api/files/upload', authenticateToken, upload.single('file'), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    console.error('File upload failed: No file or invalid type');
+    return res.status(400).json({ error: 'No file uploaded or invalid file type' });
   }
-  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const fileUrl = getImageUrl(`/uploads/${req.file.filename}`);
+  console.log(`File uploaded: ${fileUrl}`);
   res.json({ fileUrl });
 });
 
+// Auth Routes
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, email, name, phone, profile_image, is_admin FROM users WHERE id = $1', [req.user.id]);
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const [result] = await pool.query('SELECT id, email, name, phone, is_admin, profile_image FROM users WHERE id = ?', [req.user.id]);
+    if (!result[0]) return res.status(404).json({ error: 'User not found' });
     res.json({
-      _id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      profileImage: user.profile_image,
-      isAdmin: user.is_admin
+      _id: result[0].id,
+      email: result[0].email,
+      name: result[0].name,
+      phone: result[0].phone,
+      isAdmin: result[0].is_admin,
+      profileImage: getImageUrl(result[0].profile_image)
     });
   } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(500).json({ error: 'Failed to fetch user details' });
+    console.error('Error fetching user:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
 app.put('/api/auth/update', authenticateToken, upload.single('profileImage'), async (req, res) => {
   const { name } = req.body;
-  const file = req.file;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
   try {
-    let profileImage = null;
-    if (file) {
-      profileImage = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
-    }
-    const currentUser = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-    if (!currentUser.rows[0]) return res.status(404).json({ error: 'User not found' });
-
-    const updateFields = [];
-    const values = [];
-    let paramIndex = 1;
-
-    if (name && name !== currentUser.rows[0].name) {
-      updateFields.push(`name = $${paramIndex++}`);
-      values.push(name);
-    }
-    if (profileImage) {
-      updateFields.push(`profile_image = $${paramIndex++}`);
-      values.push(profileImage);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
-    }
-
-    values.push(req.user.id);
-    const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING id, email, name, phone, profile_image, is_admin`;
-    const result = await pool.query(query, values);
-    const user = result.rows[0];
-
+    let imageUrl = req.body.profileImage;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    await pool.query('UPDATE users SET name = ?, profile_image = ? WHERE id = ?', [name, imageUrl, req.user.id]);
     res.json({
-      _id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      profileImage: user.profile_image,
-      isAdmin: user.is_admin
+      message: 'Profile updated',
+      name,
+      profileImage: imageUrl
     });
   } catch (error) {
-    console.error('Error updating user profile:', error);
-    res.status(500).json({ error: 'Failed to update user profile' });
+    console.error('Error updating profile:', error.stack);
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
+app.get('/api/auth/admin/me', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT id, email, name, phone, is_admin, profile_image FROM users WHERE id = ?', [req.user.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Admin not found' });
+    res.json({
+      _id: result[0].id,
+      email: result[0].email,
+      name: result[0].name,
+      phone: result[0].phone,
+      isAdmin: result[0].is_admin,
+      profileImage: getImageUrl(result[0].profile_image)
+    });
+  } catch (error) {
+    console.error('Error fetching admin:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch admin' });
+  }
+});
+
+// Menu Routes
 app.get('/api/menu', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM menu_items ORDER BY created_at DESC');
-    const items = result.rows.map(item => ({
+    const [result] = await pool.query('SELECT * FROM menu_items ORDER BY created_at DESC');
+    res.json(result.map(item => ({
       _id: item.id,
       name: item.name,
       category: item.category,
-      price: item.price,
+      price: parseFloat(item.price),
       description: item.description,
-      image: item.image,
+      image: getImageUrl(item.image),
       rating: item.rating,
       created_at: item.created_at
-    }));
-    res.json(items);
+    })));
   } catch (error) {
-    console.error('Error fetching menu items:', error);
-    res.status(500).json({ error: 'Failed to fetch menu items' });
+    console.error('Error fetching menu:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch menu' });
   }
 });
 
-app.get('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.get('/api/menu/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM menu_items WHERE id = $1', [id]);
-    const item = result.rows[0];
-    if (!item) return res.status(404).json({ error: 'Menu item not found' });
+    const [result] = await pool.query('SELECT * FROM menu_items WHERE id = ?', [req.params.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Menu item not found' });
     res.json({
-      _id: item.id,
-      name: item.name,
-      category: item.category,
-      price: item.price,
-      description: item.description,
-      image: item.image,
-      rating: item.rating
+      _id: result[0].id,
+      name: result[0].name,
+      category: result[0].category,
+      price: parseFloat(result[0].price),
+      description: result[0].description,
+      image: getImageUrl(result[0].image),
+      rating: result[0].rating
     });
   } catch (error) {
-    console.error('Error fetching menu item:', error);
+    console.error('Error fetching menu item:', error.stack);
     res.status(500).json({ error: 'Failed to fetch menu item' });
   }
 });
 
-app.post('/api/menu', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { name, category, price, image, description } = req.body;
-  if (!name || !category || !price) {
-    return res.status(400).json({ error: 'Name, category, and price are required' });
-  }
-  if (typeof price !== 'number' || price <= 0) {
-    return res.status(400).json({ error: 'Price must be a positive number' });
-  }
+app.post('/api/menu', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { name, category, price, description, image } = req.body;
+  const validation = validateInput({ name, category, price }, ['name', 'category', 'price']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const result = await pool.query(
-      'INSERT INTO menu_items (name, category, price, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, category, price, image, description]
-    );
-    const item = result.rows[0];
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    const [result] = await pool.query('INSERT INTO menu_items (name, category, price, description, image) VALUES (?, ?, ?, ?, ?)', [name, category, parseFloat(price), description, imageUrl]);
+    const [newItem] = await pool.query('SELECT * FROM menu_items WHERE id = ?', [result.insertId]);
     res.status(201).json({
-      _id: item.id,
-      name: item.name,
-      category: item.category,
-      price: item.price,
-      description: item.description,
-      image: item.image,
-      rating: item.rating
+      _id: newItem[0].id,
+      name: newItem[0].name,
+      category: newItem[0].category,
+      price: parseFloat(newItem[0].price),
+      description: newItem[0].description,
+      image: getImageUrl(newItem[0].image)
     });
   } catch (error) {
-    console.error('Error adding menu item:', error);
+    console.error('Error adding menu item:', error.stack);
     res.status(500).json({ error: 'Failed to add menu item' });
   }
 });
 
-app.put('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { name, category, price, image, description } = req.body;
-  if (!name || !category || !price) {
-    return res.status(400).json({ error: 'Name, category, and price are required' });
-  }
-  if (typeof price !== 'number' || price <= 0) {
-    return res.status(400).json({ error: 'Price must be a positive number' });
-  }
+app.put('/api/menu/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { name, category, price, description, image } = req.body;
+  const validation = validateInput({ name, category, price }, ['name', 'category', 'price']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const result = await pool.query(
-      'UPDATE menu_items SET name = $1, category = $2, price = $3, image = $4, description = $5 WHERE id = $6 RETURNING *',
-      [name, category, price, image, description, id]
-    );
-    const item = result.rows[0];
-    if (!item) return res.status(404).json({ error: 'Menu item not found' });
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    await pool.query('UPDATE menu_items SET name = ?, category = ?, price = ?, description = ?, image = ? WHERE id = ?', [name, category, parseFloat(price), description, imageUrl, req.params.id]);
+    const [updatedItem] = await pool.query('SELECT * FROM menu_items WHERE id = ?', [req.params.id]);
+    if (!updatedItem[0]) return res.status(404).json({ error: 'Menu item not found' });
     res.json({
-      _id: item.id,
-      name: item.name,
-      category: item.category,
-      price: item.price,
-      description: item.description,
-      image: item.image,
-      rating: item.rating
+      _id: updatedItem[0].id,
+      name: updatedItem[0].name,
+      category: updatedItem[0].category,
+      price: parseFloat(updatedItem[0].price),
+      description: updatedItem[0].description,
+      image: getImageUrl(updatedItem[0].image)
     });
   } catch (error) {
-    console.error('Error updating menu item:', error);
+    console.error('Error updating menu item:', error.stack);
     res.status(500).json({ error: 'Failed to update menu item' });
   }
 });
 
-app.delete('/api/menu/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.delete('/api/menu/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM menu_items WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Menu item not found' });
-    }
-    res.json({ message: 'Menu item deleted successfully' });
+    const [result] = await pool.query('DELETE FROM menu_items WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Menu item not found' });
+    res.json({ message: 'Menu item deleted' });
   } catch (error) {
-    console.error('Error deleting menu item:', error);
+    console.error('Error deleting menu item:', error.stack);
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
 });
 
 app.post('/api/menu/:id/rate', authenticateToken, async (req, res) => {
-  const { id } = req.params;
   const { rating, review } = req.body;
-  if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-  }
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Valid rating (1-5) required' });
   try {
-    const itemCheck = await pool.query('SELECT * FROM menu_items WHERE id = $1', [id]);
-    if (!itemCheck.rows[0]) return res.status(404).json({ error: 'Menu item not found' });
-    await pool.query('UPDATE menu_items SET rating = $1 WHERE id = $2', [rating, id]);
-    res.json({ message: 'Rating submitted successfully' });
+    const [item] = await pool.query('SELECT id FROM menu_items WHERE id = ?', [req.params.id]);
+    if (!item[0]) return res.status(404).json({ error: 'Menu item not found' });
+    await pool.query('INSERT INTO ratings (user_id, menu_item_id, rating, review) VALUES (?, ?, ?, ?)', [req.user.id, req.params.id, rating, review || null]);
+    const [ratings] = await pool.query('SELECT AVG(rating) as avg_rating, COUNT(*) as count FROM ratings WHERE menu_item_id = ?', [req.params.id]);
+    const avgRating = Math.round(ratings[0].avg_rating);
+    await pool.query('UPDATE menu_items SET rating = ?, rating_count = ? WHERE id = ?', [avgRating, ratings[0].count, req.params.id]);
+    res.json({ message: 'Rating submitted' });
   } catch (error) {
-    console.error('Error submitting rating:', error);
+    console.error('Error submitting rating:', error.stack);
     res.status(500).json({ error: 'Failed to submit rating' });
   }
 });
 
+// Offer Routes
 app.get('/api/offers', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM offers ORDER BY created_at DESC');
-    const offers = result.rows.map(offer => ({
+    const [result] = await pool.query('SELECT * FROM offers WHERE is_special = ? ORDER BY created_at DESC', [true]);
+    res.json(result.map(offer => ({
       _id: offer.id,
       name: offer.name,
-      price: offer.price,
+      price: parseFloat(offer.price),
       description: offer.description,
-      image: offer.image,
+      image: getImageUrl(offer.image),
+      isSpecial: offer.is_special,
       created_at: offer.created_at
-    }));
-    res.json(offers);
+    })));
   } catch (error) {
-    console.error('Error fetching offers:', error);
+    console.error('Error fetching offers:', error.stack);
     res.status(500).json({ error: 'Failed to fetch offers' });
   }
 });
 
-app.get('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.get('/api/offers/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM offers WHERE id = $1', [id]);
-    const offer = result.rows[0];
-    if (!offer) return res.status(404).json({ error: 'Offer not found' });
+    const [result] = await pool.query('SELECT * FROM offers WHERE id = ?', [req.params.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Offer not found' });
     res.json({
-      _id: offer.id,
-      name: offer.name,
-      price: offer.price,
-      description: offer.description,
-      image: offer.image
+      _id: result[0].id,
+      name: result[0].name,
+      price: parseFloat(result[0].price),
+      description: result[0].description,
+      image: getImageUrl(result[0].image),
+      isSpecial: result[0].is_special
     });
   } catch (error) {
-    console.error('Error fetching offer:', error);
+    console.error('Error fetching offer:', error.stack);
     res.status(500).json({ error: 'Failed to fetch offer' });
   }
 });
 
-app.post('/api/offers', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { name, price, image, description } = req.body;
-  if (!name || !price) {
-    return res.status(400).json({ error: 'Name and price required' });
-  }
+app.post('/api/offers', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { name, price, description, image, isSpecial } = req.body;
+  const validation = validateInput({ name, price }, ['name', 'price']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const result = await pool.query(
-      'INSERT INTO offers (name, price, image, description) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, price, image, description]
-    );
-    const offer = result.rows[0];
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    const [result] = await pool.query('INSERT INTO offers (name, price, description, image, is_special) VALUES (?, ?, ?, ?, ?)', [name, parseFloat(price), description, imageUrl, isSpecial === 'true']);
+    const [newOffer] = await pool.query('SELECT * FROM offers WHERE id = ?', [result.insertId]);
     res.status(201).json({
-      _id: offer.id,
-      name: offer.name,
-      price: offer.price,
-      description: offer.description,
-      image: offer.image
+      _id: newOffer[0].id,
+      name: newOffer[0].name,
+      price: parseFloat(newOffer[0].price),
+      description: newOffer[0].description,
+      image: getImageUrl(newOffer[0].image),
+      isSpecial: newOffer[0].is_special
     });
   } catch (error) {
-    console.error('Error adding offer:', error);
+    console.error('Error adding offer:', error.stack);
     res.status(500).json({ error: 'Failed to add offer' });
   }
 });
 
-app.put('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { name, price, image, description } = req.body;
-  if (!name || !price) {
-    return res.status(400).json({ error: 'Name and price required' });
-  }
+app.put('/api/offers/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { name, price, description, image, isSpecial } = req.body;
+  const validation = validateInput({ name, price }, ['name', 'price']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const result = await pool.query(
-      'UPDATE offers SET name = $1, price = $2, image = $3, description = $4 WHERE id = $5 RETURNING *',
-      [name, price, image, description, id]
-    );
-    const offer = result.rows[0];
-    if (!offer) return res.status(404).json({ error: 'Offer not found' });
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    await pool.query('UPDATE offers SET name = ?, price = ?, description = ?, image = ?, is_special = ? WHERE id = ?', [name, parseFloat(price), description, imageUrl, isSpecial === 'true', req.params.id]);
+    const [updatedOffer] = await pool.query('SELECT * FROM offers WHERE id = ?', [req.params.id]);
+    if (!updatedOffer[0]) return res.status(404).json({ error: 'Offer not found' });
     res.json({
-      _id: offer.id,
-      name: offer.name,
-      price: offer.price,
-      description: offer.description,
-      image: offer.image
+      _id: updatedOffer[0].id,
+      name: updatedOffer[0].name,
+      price: parseFloat(updatedOffer[0].price),
+      description: updatedOffer[0].description,
+      image: getImageUrl(updatedOffer[0].image),
+      isSpecial: updatedOffer[0].is_special
     });
   } catch (error) {
-    console.error('Error updating offer:', error);
+    console.error('Error updating offer:', error.stack);
     res.status(500).json({ error: 'Failed to update offer' });
   }
 });
 
-app.delete('/api/offers/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.delete('/api/offers/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM offers WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Offer not found' });
-    }
-    res.json({ message: 'Offer deleted successfully' });
+    const [result] = await pool.query('DELETE FROM offers WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Offer not found' });
+    res.json({ message: 'Offer deleted' });
   } catch (error) {
-    console.error('Error deleting offer:', error);
+    console.error('Error deleting offer:', error.stack);
     res.status(500).json({ error: 'Failed to delete offer' });
   }
 });
 
+// Coupon Routes
 app.get('/api/coupons', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
-    const coupons = result.rows.map(coupon => ({
+    const [result] = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
+    res.json(result.map(coupon => ({
       _id: coupon.id,
       code: coupon.code,
       discount: coupon.discount,
       description: coupon.description,
-      image: coupon.image,
+      image: getImageUrl(coupon.image),
+      isSpecial: coupon.is_special,
       created_at: coupon.created_at
-    }));
-    res.json(coupons);
+    })));
   } catch (error) {
-    console.error('Error fetching coupons:', error);
+    console.error('Error fetching coupons:', error.stack);
     res.status(500).json({ error: 'Failed to fetch coupons' });
   }
 });
 
-app.get('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.get('/api/coupons/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM coupons WHERE id = $1', [id]);
-    const coupon = result.rows[0];
-    if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
+    const [result] = await pool.query('SELECT * FROM coupons WHERE id = ?', [req.params.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Coupon not found' });
     res.json({
-      _id: coupon.id,
-      code: coupon.code,
-      discount: coupon.discount,
-      description: coupon.description,
-      image: coupon.image
+      _id: result[0].id,
+      code: result[0].code,
+      discount: result[0].discount,
+      description: result[0].description,
+      image: getImageUrl(result[0].image),
+      isSpecial: result[0].is_special
     });
   } catch (error) {
-    console.error('Error fetching coupon:', error);
+    console.error('Error fetching coupon:', error.stack);
     res.status(500).json({ error: 'Failed to fetch coupon' });
   }
 });
 
-app.post('/api/coupons', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { code, discount, image, description } = req.body;
-  if (!code || !discount) {
-    return res.status(400).json({ error: 'Code and discount are required' });
-  }
-  if (typeof discount !== 'number' || discount < 1 || discount > 100) {
-    return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
-  }
+app.post('/api/coupons', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { code, discount, description, image, isSpecial } = req.body;
+  const validation = validateInput({ code, discount }, ['code', 'discount']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const codeCheck = await pool.query('SELECT * FROM coupons WHERE code = $1', [code]);
-    if (codeCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Coupon code already exists' });
-    }
-    const result = await pool.query(
-      'INSERT INTO coupons (code, discount, image, description) VALUES ($1, $2, $3, $4) RETURNING *',
-      [code, discount, image, description]
-    );
-    const coupon = result.rows[0];
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    const [result] = await pool.query('INSERT INTO coupons (code, discount, description, image, is_special) VALUES (?, ?, ?, ?, ?)', [code, parseInt(discount), description, imageUrl, isSpecial === 'true']);
+    const [newCoupon] = await pool.query('SELECT * FROM coupons WHERE id = ?', [result.insertId]);
     res.status(201).json({
-      _id: coupon.id,
-      code: coupon.code,
-      discount: coupon.discount,
-      description: coupon.description,
-      image: coupon.image,
-      created_at: coupon.created_at
+      _id: newCoupon[0].id,
+      code: newCoupon[0].code,
+      discount: newCoupon[0].discount,
+      description: newCoupon[0].description,
+      image: getImageUrl(newCoupon[0].image),
+      isSpecial: newCoupon[0].is_special
     });
   } catch (error) {
-    console.error('Error adding coupon:', error);
-    if (error.code === '23505') {
-      return res.status(400).json({ error: 'Coupon code already exists' });
-    }
+    console.error('Error adding coupon:', error.stack);
     res.status(500).json({ error: 'Failed to add coupon' });
   }
 });
 
-app.put('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { code, discount, image, description } = req.body;
-  if (!code || !discount) {
-    return res.status(400).json({ error: 'Code and discount are required' });
-  }
-  if (typeof discount !== 'number' || discount < 1 || discount > 100) {
-    return res.status(400).json({ error: 'Discount must be a number between 1 and 100' });
-  }
+app.put('/api/coupons/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  const { code, discount, description, image, isSpecial } = req.body;
+  const validation = validateInput({ code, discount }, ['code', 'discount']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const codeCheck = await pool.query('SELECT * FROM coupons WHERE code = $1 AND id != $2', [code, id]);
-    if (codeCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Coupon code already exists' });
-    }
-    const result = await pool.query(
-      'UPDATE coupons SET code = $1, discount = $2, image = $3, description = $4 WHERE id = $5 RETURNING *',
-      [code, discount, image, description, id]
-    );
-    const coupon = result.rows[0];
-    if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
+    let imageUrl = image;
+    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    imageUrl = getImageUrl(imageUrl);
+    await pool.query('UPDATE coupons SET code = ?, discount = ?, description = ?, image = ?, is_special = ? WHERE id = ?', [code, parseInt(discount), description, imageUrl, isSpecial === 'true', req.params.id]);
+    const [updatedCoupon] = await pool.query('SELECT * FROM coupons WHERE id = ?', [req.params.id]);
+    if (!updatedCoupon[0]) return res.status(404).json({ error: 'Coupon not found' });
     res.json({
-      _id: coupon.id,
-      code: coupon.code,
-      discount: coupon.discount,
-      description: coupon.description,
-      image: coupon.image
+      _id: updatedCoupon[0].id,
+      code: updatedCoupon[0].code,
+      discount: updatedCoupon[0].discount,
+      description: updatedCoupon[0].description,
+      image: getImageUrl(updatedCoupon[0].image),
+      isSpecial: updatedCoupon[0].is_special
     });
   } catch (error) {
-    console.error('Error updating coupon:', error);
-    if (error.code === '23505') {
-      return res.status(400).json({ error: 'Coupon code already exists' });
-    }
+    console.error('Error updating coupon:', error.stack);
     res.status(500).json({ error: 'Failed to update coupon' });
   }
 });
 
-app.delete('/api/coupons/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.delete('/api/coupons/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM coupons WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Coupon not found' });
-    }
-    res.json({ message: 'Coupon deleted successfully' });
+    const [result] = await pool.query('DELETE FROM coupons WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Coupon not found' });
+    res.json({ message: 'Coupon deleted' });
   } catch (error) {
-    console.error('Error deleting coupon:', error);
+    console.error('Error deleting coupon:', error.stack);
     res.status(500).json({ error: 'Failed to delete coupon' });
   }
 });
 
 app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
   const { couponCode } = req.body;
-  if (!couponCode) {
-    return res.status(400).json({ error: 'Coupon code is required' });
-  }
+  if (!couponCode) return res.status(400).json({ error: 'Coupon code required' });
   try {
-    const result = await pool.query('SELECT * FROM coupons WHERE code = $1', [couponCode]);
-    const coupon = result.rows[0];
-    if (!coupon) {
-      return res.status(404).json({ error: 'Invalid coupon code' });
-    }
+    const [result] = await pool.query('SELECT * FROM coupons WHERE code = ?', [couponCode]);
+    if (!result[0]) return res.status(404).json({ error: 'Invalid coupon' });
     res.json({
-      _id: coupon.id,
-      code: coupon.code,
-      discount: coupon.discount,
-      description: coupon.description,
-      image: coupon.image
+      _id: result[0].id,
+      code: result[0].code,
+      discount: result[0].discount,
+      description: result[0].description,
+      image: getImageUrl(result[0].image),
+      isSpecial: result[0].is_special
     });
   } catch (error) {
-    console.error('Error validating coupon:', error);
+    console.error('Error validating coupon:', error.stack);
     res.status(500).json({ error: 'Failed to validate coupon' });
   }
 });
 
-app.get('/api/contact', authenticateToken, authenticateAdmin, async (req, res) => {
+// Contact Routes
+app.post('/api/contact', authenticateToken, async (req, res) => {
+  const { subject, message } = req.body;
+  if (!subject || !message) return res.status(400).json({ error: 'Subject and message required' });
   try {
-    const result = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
-    const messages = result.rows.map(message => ({
-      _id: message.id,
-      name: message.name,
-      email: message.email,
-      subject: message.subject,
-      message: message.message,
-      status: message.status,
-      created_at: message.created_at
-    }));
-    res.json(messages);
+    const [user] = await pool.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
+    if (!user[0]) return res.status(404).json({ error: 'User not found' });
+    const [result] = await pool.query('INSERT INTO contact_messages (user_id, name, email, subject, message) VALUES (?, ?, ?, ?, ?)', [req.user.id, user[0].name, user[0].email, subject, message]);
+    const [newMessage] = await pool.query('SELECT * FROM contact_messages WHERE id = ?', [result.insertId]);
+    await transporter.sendMail({
+      from: `"Delicute" <${EMAIL_USER}>`,
+      to: user[0].email,
+      subject: 'Delicute - Message Received',
+      text: `Thank you for your message: ${message}`,
+      html: `<p>Thank you for your message: <strong>${message}</strong></p>`
+    });
+    res.status(201).json({
+      _id: newMessage[0].id,
+      userId: newMessage[0].user_id,
+      name: newMessage[0].name,
+      email: newMessage[0].email,
+      subject: newMessage[0].subject,
+      message: newMessage[0].message,
+      status: newMessage[0].status,
+      created_at: newMessage[0].created_at
+    });
   } catch (error) {
-    console.error('Error fetching contact messages:', error);
-    res.status(500).json({ error: 'Failed to fetch contact messages' });
+    console.error('Error adding message:', error.stack);
+    res.status(500).json({ error: 'Failed to add message' });
   }
 });
 
-app.get('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.get('/api/contact', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM contact_messages WHERE id = $1', [id]);
-    const message = result.rows[0];
-    if (!message) return res.status(404).json({ error: 'Message not found' });
+    const [result] = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    res.json(result.map(msg => ({
+      _id: msg.id,
+      userId: msg.user_id,
+      name: msg.name,
+      email: msg.email,
+      subject: msg.subject,
+      message: msg.message,
+      status: msg.status,
+      created_at: msg.created_at
+    })));
+  } catch (error) {
+    console.error('Error fetching messages:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+app.get('/api/contact/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT * FROM contact_messages WHERE id = ?', [req.params.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Message not found' });
     res.json({
-      _id: message.id,
-      name: message.name,
-      email: message.email,
-      subject: message.subject,
-      message: message.message,
-      status: message.status,
-      created_at: message.created_at
+      _id: result[0].id,
+      userId: result[0].user_id,
+      name: result[0].name,
+      email: result[0].email,
+      subject: result[0].subject,
+      message: result[0].message,
+      status: result[0].status,
+      created_at: result[0].created_at
     });
   } catch (error) {
-    console.error('Error fetching contact message:', error);
+    console.error('Error fetching message:', error.stack);
     res.status(500).json({ error: 'Failed to fetch message' });
   }
 });
 
-app.post('/api/contact', async (req, res) => {
-  const { name, email, subject, message } = req.body;
-  if (!name || !email || !subject || !message) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
+app.post('/api/contact/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
+  const { reply } = req.body;
+  if (!reply) return res.status(400).json({ error: 'Reply required' });
   try {
-    const result = await pool.query(
-      'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, email, subject, message]
-    );
-    const newMessage = result.rows[0];
-    res.status(201).json({
-      _id: newMessage.id,
-      name: newMessage.name,
-      email: newMessage.email,
-      subject: newMessage.subject,
-      message: newMessage.message,
-      status: newMessage.status,
-      created_at: newMessage.created_at
-    });
-  } catch (error) {
-    console.error('Error adding contact message:', error);
-    res.status(500).json({ error: 'Failed to add contact message' });
-  }
-});
-
-app.post('/api/contact/:id/reply', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { subject, message: replyMessage } = req.body;
-
-  if (!subject || !replyMessage) {
-    return res.status(400).json({ error: 'Subject and reply message are required' });
-  }
-
-  try {
-    const messageResult = await pool.query('SELECT name, email, subject AS original_subject FROM contact_messages WHERE id = $1', [id]);
-    const contactMessage = messageResult.rows[0];
-    if (!contactMessage) {
-      return res.status(404).json({ error: 'Contact message not found' });
-    }
-
+    const [message] = await pool.query('SELECT email FROM contact_messages WHERE id = ?', [req.params.id]);
+    if (!message[0]) return res.status(404).json({ error: 'Message not found' });
     await transporter.sendMail({
-      from: `"Delicute" <${EMAIL_USER}>`,
-      to: contactMessage.email,
-      subject: `Re: ${contactMessage.original_subject}`,
-      text: replyMessage,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-          <h2 style="color: #f59e0b; font-size: 24px;">Delicute</h2>
-          <p style="font-size: 16px;">Dear ${contactMessage.name},</p>
-          <p style="font-size: 16px; line-height: 1.6;">Thank you for reaching out to us. Below is our response to your inquiry:</p>
-          <p style="font-size: 16px; line-height: 1.6; background-color: #f9f9f9; padding: 15px; border-radius: 4px;">${replyMessage}</p>
-          <p style="font-size: 16px;">If you have any further questions, feel free to contact us.</p>
-          <p style="font-size: 16px;">Best regards,<br>Delicute Team</p>
-          <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-          <p style="font-size: 14px; color: #666;">Original Message:<br>${contactMessage.original_subject}</p>
-        </div>
-      `
+      from: `"Delicute reply" <${EMAIL_USER}>`,
+      to: message[0].email,
+      subject: 'Delicute - Response to Your Message',
+      text: reply,
+      html: `<p>${reply}</p>`
     });
-
-    await pool.query('UPDATE contact_messages SET status = $1 WHERE id = $2', ['Replied', id]);
-
-    res.json({ message: 'Reply sent successfully' });
+    await pool.query('UPDATE contact_messages SET status = ? WHERE id = ?', ['Replied', req.params.id]);
+    res.json({ message: 'Reply sent' });
   } catch (error) {
-    console.error('Error sending reply:', error);
+    console.error('Error sending reply:', error.stack);
     res.status(500).json({ error: 'Failed to send reply' });
   }
 });
 
-app.delete('/api/contact/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.delete('/api/contact/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM contact_messages WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-    res.json({ message: 'Message deleted successfully' });
+    const [result] = await pool.query('DELETE FROM contact_messages WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json({ message: 'Message deleted' });
   } catch (error) {
-    console.error('Error deleting contact message:', error);
+    console.error('Error deleting message:', error.stack);
     res.status(500).json({ error: 'Failed to delete message' });
   }
 });
 
-app.get('/api/orders', authenticateToken, async (req, res) => {
+// Address Routes
+app.get('/api/addresses', authenticateToken, async (req, res) => {
   try {
-    const isAdmin = req.user.isAdmin;
-    let query;
-    let values = [];
-    if (isAdmin) {
-      query = `
-        SELECT orders.*, users.email, users.name as customer_name, 
-               addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
-        FROM orders 
-        JOIN users ON orders.user_id = users.id 
-        LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
-        ORDER BY orders.created_at DESC
-      `;
-    } else {
-      query = `
-        SELECT orders.*, 
-               addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
-        FROM orders 
-        LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
-        WHERE orders.user_id = $1 
-        ORDER BY orders.created_at DESC
-      `;
-      values = [req.user.id];
-    }
-    const result = await pool.query(query, values);
-    const orders = result.rows.map(order => ({
-      _id: order.id,
-      customerName: order.customer_name || undefined,
-      email: order.email || undefined,
-      total: order.total,
-      status: order.status,
-      paymentStatus: order.payment_status,
-      paymentMethod: order.payment_method,
-      items: order.items,
-      coupon: order.coupon,
-      discount: order.discount,
-      deliveryAddress: order.full_name ? {
-        fullName: order.full_name,
-        houseNumber: order.house_number,
-        street: order.street,
-        landmark: order.landmark,
-        pincode: order.pincode
-      } : null,
-      created_at: order.created_at
-    }));
-    res.json(orders);
+    const [result] = await pool.query('SELECT * FROM addresses WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+    res.json(result.map(address => ({
+      id: address.id,
+      addressLine1: address.address_line1,
+      addressLine2: address.address_line2,
+      city: address.city,
+      state: address.state,
+      zipCode: address.zip_code,
+      created_at: address.created_at
+    })));
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    console.error('Error fetching addresses:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch addresses' });
   }
 });
 
-app.get('/api/orders/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
+app.post('/api/addresses', authenticateToken, async (req, res) => {
+  const { addressLine1, addressLine2, city, state, zipCode } = req.body;
+  const validation = validateInput({ addressLine1, city, state, zipCode }, ['addressLine1', 'city', 'state', 'zipCode']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
   try {
-    const query = `
-      SELECT orders.*, 
-             addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
-      FROM orders 
-      LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
-      WHERE orders.id = $1 AND orders.user_id = $2
-    `;
-    const result = await pool.query(query, [id, req.user.id]);
-    const order = result.rows[0];
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const [result] = await pool.query('INSERT INTO addresses (user_id, address_line1, address_line2, city, state, zip_code) VALUES (?, ?, ?, ?, ?, ?)', [req.user.id, addressLine1, addressLine2 || null, city, state, zipCode]);
+    const [newAddress] = await pool.query('SELECT * FROM addresses WHERE id = ?', [result.insertId]);
+    res.status(201).json({
+      id: newAddress[0].id,
+      addressLine1: newAddress[0].address_line1,
+      addressLine2: newAddress[0].address_line2,
+      city: newAddress[0].city,
+      state: newAddress[0].state,
+      zipCode: newAddress[0].zip_code,
+      created_at: newAddress[0].created_at
+    });
+  } catch (error) {
+    console.error('Error adding address:', error.stack);
+    res.status(500).json({ error: 'Failed to add address' });
+  }
+});
+
+app.put('/api/addresses/:id', authenticateToken, async (req, res) => {
+  const { addressLine1, addressLine2, city, state, zipCode } = req.body;
+  const validation = validateInput({ addressLine1, city, state, zipCode }, ['addressLine1', 'city', 'state', 'zipCode']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [result] = await pool.query('UPDATE addresses SET address_line1 = ?, address_line2 = ?, city = ?, state = ?, zip_code = ? WHERE id = ? AND user_id = ?', [addressLine1, addressLine2 || null, city, state, zipCode, req.params.id, req.user.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Address not found or unauthorized' });
+    const [updatedAddress] = await pool.query('SELECT * FROM addresses WHERE id = ?', [req.params.id]);
     res.json({
+      id: updatedAddress[0].id,
+      addressLine1: updatedAddress[0].address_line1,
+      addressLine2: updatedAddress[0].address_line2,
+      city: updatedAddress[0].city,
+      state: updatedAddress[0].state,
+      zipCode: updatedAddress[0].zip_code,
+      created_at: updatedAddress[0].created_at
+    });
+  } catch (error) {
+    console.error('Error updating address:', error.stack);
+    res.status(500).json({ error: 'Failed to update address' });
+  }
+});
+
+app.delete('/api/addresses/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM addresses WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Address not found or unauthorized' });
+    res.json({ message: 'Address deleted' });
+  } catch (error) {
+    console.error('Error deleting address:', error.stack);
+    res.status(500).json({ error: 'Failed to delete address' });
+  }
+});
+
+// Order Routes
+app.post('/api/orders', authenticateToken, async (req, res) => {
+  const { items, addressId, coupon, paymentMethod } = req.body;
+  const validation = validateInput({ items, addressId, paymentMethod }, ['items', 'addressId', 'paymentMethod']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  if (!['cod', 'phonepe', 'gpay'].includes(paymentMethod)) return res.status(400).json({ error: 'Invalid payment method' });
+  try {
+    const [address] = await pool.query('SELECT * FROM addresses WHERE id = ? AND user_id = ?', [addressId, req.user.id]);
+    if (!address[0]) return res.status(404).json({ error: 'Address not found' });
+    let discount = 0;
+    let couponCode = null;
+    if (coupon) {
+      const [couponResult] = await pool.query('SELECT * FROM coupons WHERE code = ?', [coupon]);
+      if (!couponResult[0]) return res.status(400).json({ error: 'Invalid coupon' });
+      couponCode = couponResult[0].code;
+      const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      discount = (subtotal * couponResult[0].discount) / 100;
+    }
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0) - discount;
+    const [result] = await pool.query(
+      'INSERT INTO orders (user_id, address_id, items, total, payment_method, coupon, discount) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, addressId, JSON.stringify(items), total, paymentMethod, couponCode, discount]
+    );
+    const [newOrder] = await pool.query('SELECT * FROM orders WHERE id = ?', [result.insertId]);
+    const orderResponse = {
+      _id: newOrder[0].id,
+      userId: newOrder[0].user_id,
+      addressId: newOrder[0].address_id,
+      address: {
+        addressLine1: address[0].address_line1,
+        addressLine2: address[0].address_line2,
+        city: address[0].city,
+        state: address[0].state,
+        zipCode: address[0].zip_code
+      },
+      items: JSON.parse(newOrder[0].items),
+      total: parseFloat(newOrder[0].total),
+      status: newOrder[0].status,
+      paymentStatus: newOrder[0].payment_status,
+      paymentMethod: newOrder[0].payment_method,
+      coupon: newOrder[0].coupon,
+      discount: parseFloat(newOrder[0].discount),
+      created_at: newOrder[0].created_at
+    };
+    if (paymentMethod === 'cod') {
+      await pool.query('UPDATE orders SET status = ?, payment_status = ? WHERE id = ?', ['Confirmed', 'Pending', result.insertId]);
+      orderResponse.status = 'Confirmed';
+      orderResponse.paymentStatus = 'Pending';
+      res.json(orderResponse);
+    } else {
+      res.json(orderResponse);
+    }
+  } catch (error) {
+    console.error('Error creating order:', error.stack);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+app.get('/api/orders/active', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT * FROM orders WHERE user_id = ? AND status NOT IN (?, ?) ORDER BY created_at DESC', [req.user.id, 'Delivered', 'Cancelled']);
+    res.json(result.map(order => ({
       _id: order.id,
-      total: order.total,
+      addressId: order.address_id,
+      items: JSON.parse(order.items),
+      total: parseFloat(order.total),
       status: order.status,
       paymentStatus: order.payment_status,
       paymentMethod: order.payment_method,
-      items: order.items,
       coupon: order.coupon,
-      discount: order.discount,
-      deliveryAddress: order.full_name ? {
-        fullName: order.full_name,
-        houseNumber: order.house_number,
-        street: order.street,
-        landmark: order.landmark,
-        pincode: order.pincode
-      } : null,
+      discount: parseFloat(order.discount),
       created_at: order.created_at
-    });
+    })));
   } catch (error) {
-    console.error('Error fetching order:', error);
-    res.status(500).json({ error: 'Failed to fetch order' });
+    console.error('Error fetching active orders:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch active orders' });
   }
 });
 
 app.get('/api/orders/history', authenticateToken, async (req, res) => {
   try {
-    const query = `
-      SELECT orders.*, 
-             addresses.full_name, addresses.house_number, addresses.street, addresses.landmark, addresses.pincode
-      FROM orders 
-      LEFT JOIN addresses ON orders.delivery_address_id = addresses.id
-      WHERE orders.user_id = $1 AND orders.status IN ('Delivered', 'Cancelled')
-      ORDER BY orders.created_at DESC
-    `;
-    const result = await pool.query(query, [req.user.id]);
-    const orders = result.rows.map(order => ({
+    const [result] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+    res.json(result.map(order => ({
       _id: order.id,
-      total: order.total,
+      addressId: order.address_id,
+      items: JSON.parse(order.items),
+      total: parseFloat(order.total),
       status: order.status,
       paymentStatus: order.payment_status,
       paymentMethod: order.payment_method,
-      items: order.items.map(item => ({
-        item: item.item,
-        itemName: item.itemName,
-        quantity: item.quantity,
-        price: item.price
-      })),
       coupon: order.coupon,
-      discount: order.discount,
-      deliveryAddress: order.full_name ? {
-        fullName: order.full_name,
-        houseNumber: order.house_number,
-        street: order.street,
-        landmark: order.landmark,
-        pincode: order.pincode
-      } : null,
+      discount: parseFloat(order.discount),
       created_at: order.created_at
-    }));
-    res.json(orders);
+    })));
   } catch (error) {
-    console.error('Error fetching order history:', error);
+    console.error('Error fetching order history:', error.stack);
     res.status(500).json({ error: 'Failed to fetch order history' });
   }
 });
 
 app.delete('/api/orders/history', authenticateToken, async (req, res) => {
   try {
-    await pool.query('DELETE FROM orders WHERE user_id = $1 AND status IN ($2, $3)', [req.user.id, 'Delivered', 'Cancelled']);
-    res.json({ message: 'Order history cleared successfully' });
+    await pool.query('DELETE FROM orders WHERE user_id = ?', [req.user.id]);
+    res.json({ message: 'Order history cleared' });
   } catch (error) {
-    console.error('Error clearing order history:', error);
+    console.error('Error clearing order history:', error.stack);
     res.status(500).json({ error: 'Failed to clear order history' });
   }
 });
 
-app.put('/api/orders/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  if (!['Pending', 'Confirmed', 'Delivered', 'Cancelled'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
-  }
+app.post('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
+  const { reason } = req.body;
+  if (!reason) return res.status(400).json({ error: 'Reason required' });
   try {
-    const result = await pool.query(
-      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    const order = result.rows[0];
-    res.json({
+    const [order] = await pool.query('SELECT * FROM orders WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (!order[0]) return res.status(404).json({ error: 'Order not found or unauthorized' });
+    if (order[0].status !== 'Pending') return res.status(400).json({ error: 'Cannot cancel non-pending order' });
+    await pool.query('UPDATE orders SET status = ? WHERE id = ?', ['Cancelled', req.params.id]);
+    await transporter.sendMail({
+      from: `"Delicute" <${EMAIL_USER}>`,
+      to: req.user.email,
+      subject: 'Delicute - Order Cancellation',
+      text: `Your order #${req.params.id} has been cancelled. Reason: ${reason}`,
+      html: `<p>Your order #${req.params.id} has been cancelled. Reason: <strong>${reason}</strong></p>`
+    });
+    res.json({ message: 'Order cancelled' });
+  } catch (error) {
+    console.error('Error cancelling order:', error.stack);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
+app.get('/api/orders', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+    res.json(result.map(order => ({
       _id: order.id,
-      status: order.status
+      userId: order.user_id,
+      addressId: order.address_id,
+      items: JSON.parse(order.items),
+      total: parseFloat(order.total),
+      status: order.status,
+      paymentStatus: order.payment_status,
+      paymentMethod: order.payment_method,
+      coupon: order.coupon,
+      discount: parseFloat(order.discount),
+      created_at: order.created_at
+    })));
+  } catch (error) {
+    console.error('Error fetching orders:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+app.get('/api/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+    if (!result[0]) return res.status(404).json({ error: 'Order not found' });
+    res.json({
+      _id: result[0].id,
+      userId: result[0].user_id,
+      addressId: result[0].address_id,
+      items: JSON.parse(result[0].items),
+      total: parseFloat(result[0].total),
+      status: result[0].status,
+      paymentStatus: result[0].payment_status,
+      paymentMethod: result[0].payment_method,
+      coupon: result[0].coupon,
+      discount: parseFloat(result[0].discount),
+      created_at: result[0].created_at
     });
   } catch (error) {
-    console.error('Error updating order status:', error);
-    res.status(500).json({ error: 'Failed to update order status' });
+    console.error('Error fetching order:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch order' });
   }
 });
 
-app.post('/api/orders/:id/refund', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.put('/api/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const { status } = req.body;
+  if (!status) return res.status(400).json({ error: 'Status required' });
   try {
-    const result = await pool.query(
-      'UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3 RETURNING *',
-      ['Cancelled', 'Refunded', id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    res.json({ message: 'Order refunded successfully' });
-  } catch (error) {
-    console.error('Error processing refundynyt:', error);
-    res.status(500).json({ error: 'Failed to process refund' });
-  }
-});
-
-app.get('/api/orders/:id/track', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('SELECT id, status FROM orders WHERE id = $1 AND user_id = $2', [id, req.user.id]);
-    const order = result.rows[0];
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    res.json({ status: order.status });
-  } catch (error) {
-    console.error('Error tracking order:', error);
-    res.status(500).json({ error: 'Failed to track order' });
-  }
-});
-
-app.get('/api/users', authenticateToken, authenticateAdmin, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT id, name, email, phone, is_blocked FROM users WHERE is_admin = FALSE ORDER BY created_at DESC');
-    const customers = result.rows.map(user => ({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      status: user.is_blocked ? 'Blocked' : 'Active'
-    }));
-    res.json(customers);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-});
-
-app.get('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const userResult = await pool.query('SELECT id, name, email, phone, is_blocked FROM users WHERE id = $1 AND is_admin = FALSE', [id]);
-    const user = userResult.rows[0];
-    if (!user) return res.status(404).json({ error: 'Customer not found' });
-
-    const ordersResult = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [id]);
-    const orders = ordersResult.rows.map(order => ({
-      _id: order.id,
-      total: order.total,
-      status: order.status,
-      createdAt: order.created_at
-    }));
-
+    await pool.query('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
+    const [updatedOrder] = await pool.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+    if (!updatedOrder[0]) return res.status(404).json({ error: 'Order not found' });
     res.json({
+      _id: updatedOrder[0].id,
+      userId: updatedOrder[0].user_id,
+      addressId: updatedOrder[0].address_id,
+      items: JSON.parse(updatedOrder[0].items),
+      total: parseFloat(updatedOrder[0].total),
+      status: updatedOrder[0].status,
+      paymentStatus: updatedOrder[0].payment_status,
+      paymentMethod: updatedOrder[0].payment_method,
+      coupon: updatedOrder[0].coupon,
+      discount: parseFloat(updatedOrder[0].discount)
+    });
+  } catch (error) {
+    console.error('Error updating order:', error.stack);
+    res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+
+app.delete('/api/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM orders WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json({ message: 'Order deleted' });
+  } catch (error) {
+    console.error('Error deleting order:', error.stack);
+    res.status(500).json({ error: 'Failed to delete order' });
+  }
+});
+
+// Payment Routes
+app.post('/api/payment/phonepe', authenticateToken, async (req, res) => {
+  const { data } = req.body;
+  if (!data) return res.status(400).json({ error: 'Payment data required' });
+  try {
+    const decodedData = JSON.parse(Buffer.from(data, 'base64').toString('utf8'));
+    const { merchantTransactionId, amount, redirectUrl, orderId } = decodedData;
+    const payload = {
+      merchantId: PHONEPE_MERCHANT_ID,
+      merchantTransactionId,
+      amount,
+      redirectUrl,
+      callbackUrl: `${BASE_URL}/api/payment/callback`,
+      orderId
+    };
+    const payloadString = JSON.stringify(payload);
+    const payloadBase64 = Buffer.from(payloadString).toString('base64');
+    const checksum = crypto.createHash('sha256').update(payloadBase64 + '/pg/v1/pay' + PHONEPE_SALT_KEY).digest('hex') + '###' + PHONEPE_SALT_INDEX;
+    if (checksum !== req.headers['x-verify']) return res.status(400).json({ error: 'Invalid checksum' });
+    const paymentUrl = `https://api.phonepe.com/pg/v1/pay?data=${encodeURIComponent(payloadBase64)}&checksum=${encodeURIComponent(checksum)}`;
+    res.json({ redirectUrl: paymentUrl });
+  } catch (error) {
+    console.error('Error initiating PhonePe payment:', error.stack);
+    res.status(500).json({ error: 'Failed to initiate payment' });
+  }
+});
+
+app.post('/api/payment/googlepay', authenticateToken, async (req, res) => {
+  const { token, orderId } = req.body;
+  if (!token || !orderId) return res.status(400).json({ error: 'Token and orderId required' });
+  try {
+    const [order] = await pool.query('SELECT * FROM orders WHERE id = ? AND user_id = ?', [orderId, req.user.id]);
+    if (!order[0]) return res.status(404).json({ error: 'Order not found' });
+    await pool.query('UPDATE orders SET status = ?, payment_status = ? WHERE id = ?', ['Confirmed', 'Completed', orderId]);
+    res.json({ message: 'Google Pay payment successful' });
+  } catch (error) {
+    console.error('Error processing Google Pay payment:', error.stack);
+    res.status(500).json({ error: 'Failed to process payment' });
+  }
+});
+
+app.post('/api/payment/callback', async (req, res) => {
+  try {
+    const { transactionId, status } = req.body;
+    const [order] = await pool.query('SELECT * FROM orders WHERE id = ?', [transactionId]);
+    if (!order[0]) return res.status(404).json({ error: 'Order not found' });
+    const paymentStatus = status === 'SUCCESS' ? 'Completed' : 'Failed';
+    await pool.query('UPDATE orders SET payment_status = ? WHERE id = ?', [paymentStatus, transactionId]);
+    res.json({ message: 'Payment callback processed' });
+  } catch (error) {
+    console.error('Error processing payment callback:', error.stack);
+    res.status(500).json({ error: 'Failed to process callback' });
+  }
+});
+
+// User Routes
+app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT id, name, email, phone, is_blocked, profile_image FROM users WHERE is_admin = ?', [false]);
+    res.json(result.map(user => ({
       _id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
       status: user.is_blocked ? 'Blocked' : 'Active',
-      orders
+      profileImage: getImageUrl(user.profile_image)
+    })));
+  } catch (error) {
+    console.error('Error fetching users:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.get('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [userResult] = await pool.query('SELECT id, name, email, phone, is_blocked, profile_image FROM users WHERE id = ? AND is_admin = ?', [req.params.id, false]);
+    if (!userResult[0]) return res.status(404).json({ error: 'User not found' });
+    const [orderResult] = await pool.query('SELECT id, total, status, created_at FROM orders WHERE user_id = ?', [req.params.id]);
+    res.json({
+      id: userResult[0].id,
+      userName: userResult[0].name,
+      email: userResult[0].email,
+      phone: userResult[0].phone,
+      status: userResult[0].is_blocked ? 'Blocked' : 'Active',
+      profileImage: getImageUrl(userResult[0].profile_image),
+      orders: orderResult.map(order => ({
+        orderid: order.id,
+        total: parseFloat(order.total),
+        status: order.status,
+        createdAt: order.created_at
+      }))
     });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('Error fetching user:', error.stack);
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
-app.put('/api/users/:id', authenticateToken, authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+app.put('/api/users/:id/status', authenticateToken, requireAdmin, async (req, res) => {
   const { status } = req.body;
-  const isBlocked = status === 'Blocked';
+  if (!status || !['Active', 'Blocked'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
   try {
-    const result = await pool.query(
-      'UPDATE users SET is_blocked = $1 WHERE id = $2 AND is_admin = FALSE RETURNING id, name, email, phone, is_blocked',
-      [isBlocked, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
-    const user = result.rows[0];
-    res.json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      status: user.is_blocked ? 'Blocked' : 'Active'
-    });
+    const isBlocked = status === 'Blocked';
+    await pool.query('UPDATE users SET is_blocked = ? WHERE id = ?', [isBlocked, req.params.id]);
+    res.json({ message: `User ${status.toLowerCase()} successfully` });
   } catch (error) {
-    console.error('Error updating user status:', error);
+    console.error('Error updating user status:', error.stack);
     res.status(500).json({ error: 'Failed to update user status' });
   }
 });
 
+// Restaurant Status Routes
 app.get('/api/restaurant/status', async (req, res) => {
   try {
-    const result = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
-    const status = result.rows[0]?.status || 'Closed';
-    res.json({ status });
+    res.json({ isOpen: true });
   } catch (error) {
-    console.error('Error fetching restaurant status:', error);
+    console.error('Error fetching restaurant status:', error.stack);
     res.status(500).json({ error: 'Failed to fetch restaurant status' });
   }
 });
 
-app.put('/api/restaurant/status', authenticateToken, authenticateAdmin, async (req, res) => {
-  let { status } = req.body;
-  status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-  if (!['Open', 'Closed'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
-  }
+app.put('/api/restaurant/status/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await pool.query(
-      'UPDATE restaurant_status SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1 RETURNING *',
-      [status]
-    );
-    if (result.rows.length === 0) {
-      await pool.query(
-        'INSERT INTO restaurant_status (id, id, status) VALUES ($1, $2, $3, $4) VALUES (1, 2, $1, $4) RETURNING *',
-        [status, status]
-      );
-    }
-    res.json({ status });
+    const currentStatus = true;
+    const newStatus = !currentStatus;
+    res.json({ isOpen: newStatus });
   } catch (error) {
-    console.error('Error updating restaurant status:', error);
-    res.status(500).json({ error: 'Failed to update restaurant status' });
+    console.error('Error toggling restaurant status:', error.stack);
+    res.status(500).json({ error: 'Failed to toggle restaurant status' });
   }
 });
 
-app.post('/api/addresses', authenticateToken, async (req, res) => {
-    const { fullName, mobile, houseNumber, street, landmark, pincode } = req.body;
-    if (!fullName || !mobile || !houseNumber || !street || !pincode) {
-        return res.status(400).json({ error: 'All fields except landmark are required' });
-    }
-    try {
-        const result = await pool.query(
-            'INSERT INTO addresses (user_id, full_name, mobile, house_number, street, landmark, pincode) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [req.user.id, fullName, mobile, houseNumber, street, landmark, pincode]
-        );
-        const address = result.rows[0];
-        res.status(201).json({
-            _id: address.id,
-            fullName: address.full_name,
-            mobile: address.mobile,
-            houseNumber: address.house_number,
-            street: address.street,
-            landmark: address.landmark,
-            pincode: address.pincode,
-            created_at: address.created_at
-        });
-    } catch (error) {
-        console.error('Error adding address:', error);
-        res.status(500).json({ error: 'Failed to add address' });
-    }
-});
-
-app.get('/api/addresses', authenticateToken, async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM addresses WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
-        const addresses = result.rows.map(address => ({
-            _id: address.id,
-            fullName: address.full_name,
-            mobile: address.mobile,
-            houseNumber: address.house_number,
-            street: address.street,
-            landmark: address.landmark,
-            pincode: address.pincode,
-            created_at: address.created_at
-        }));
-        res.json(addresses);
-    } catch (error) {
-        console.error('Error fetching addresses:', error);
-        res.status(500).json({ error: 'Failed to fetch addresses' });
-    }
-});
-
-app.put('/api/addresses/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    const { fullName, mobile, houseNumber, street, landmark, pincode } = req.body;
-    if (!fullName || !mobile || !houseNumber || !street || !pincode) {
-        return res.status(400).json({ error: 'All fields except landmark are required' });
-    }
-    try {
-        const result = await pool.query(
-            'UPDATE addresses SET full_name = $1, mobile = $2, house_number = $3, street = $4, landmark = $5, pincode = $6 WHERE id = $7 AND user_id = $8 RETURNING *',
-            [fullName, mobile, houseNumber, street, landmark, pincode, id, req.user.id]
-        );
-        const address = result.rows[0];
-        if (!address) return res.status(404).json({ error: 'Address not found' });
-        res.json({
-            _id: address.id,
-            fullName: address.full_name,
-            mobile: address.mobile,
-            houseNumber: address.house_number,
-            street: address.street,
-            landmark: address.landmark,
-            pincode: address.pincode,
-            created_at: address.created_at
-        });
-    } catch (error) {
-        console.error('Error updating address:', error);
-        res.status(500).json({ error: 'Failed to update address' });
-    }
-});
-
-app.delete('/api/addresses/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query('DELETE FROM addresses WHERE id = $1 AND user_id = $2 RETURNING *', [id, req.user.id]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Address not found' });
-        }
-        res.json({ message: 'Address deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting address:', error);
-        res.status(500).json({ error: 'Failed to delete address' });
-    }
-});
-
+// Auth Routes
 app.post('/api/auth/signup', async (req, res) => {
-    const { name, email, phone, password } = req.body;
-    if (!name || !email || !phone || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-    try {
-        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userCheck.rows.length > 0) {
-            return res.status(400).json({ error: 'Email already exists' });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
-            [name, email, phone, hashedPassword, false]
-        );
-        const user = result.rows[0];
-        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-        res.status(201).json({ token });
-    } catch (error) {
-        console.error('Signup error:', error);
-        res.status(500).json({ error: 'Failed to sign up' });
-    }
+  const { name, email, phone, password } = req.body;
+  const validation = validateInput({ name, email, phone, password }, ['name', 'email', 'phone', 'password']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [userCheck] = await pool.query('SELECT email FROM users WHERE email = ?', [email]);
+    if (userCheck[0]) return res.status(400).json({ error: 'Email exists' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result] = await pool.query('INSERT INTO users (name, email, phone, password, is_admin) VALUES (?, ?, ?, ?, ?)', [name, email, phone, hashedPassword, false]);
+    const token = jwt.sign({ id: result.insertId, email, isAdmin: false }, JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json({ token });
+  } catch (error) {
+    console.error('Error signing up:', error.stack);
+    res.status(500).json({ error: 'Failed to sign up' });
+  }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-    }
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        if (user.is_blocked) {
-            return res.status(403).json({ error: 'Account is blocked' });
-        }
-        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Failed to log in' });
-    }
+  const { email, password } = req.body;
+  const validation = validateInput({ email, password }, ['email', 'password']);
+  if (!validation.valid) return res.status(400).json({ error: 'Email or password required' });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = result[0];
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
+    if (user.is_blocked) return res.status(403).json({ error: 'Account blocked' });
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    console.error('Error logging in:', error.stack);
+    res.status(500).json({ error: 'Failed to log in' });
+  }
 });
 
 app.post('/api/auth/admin/signup', async (req, res) => {
-    const { name, email, phone, password } = req.body;
-    if (!name || !email || !phone || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-    try {
-        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userCheck.rows.length > 0) {
-            return res.status(400).json({ error: 'Email already exists' });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            'INSERT INTO users (name, email, phone, password, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, is_admin',
-            [name, email, phone, hashedPassword, true]
-        );
-        const user = result.rows[0];
-        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-        res.status(201).json({ token });
-    } catch (error) {
-        console.error('Admin signup error:', error);
-        res.status(500).json({ error: 'Failed to sign up admin' });
-    }
+  const { name, email, phone, password } = req.body;
+  const validation = validateInput({ name, email, phone, password }, ['name', 'email', 'phone', 'password']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [userCheck] = await pool.query('SELECT email FROM users WHERE email = ?', [email]);
+    if (userCheck[0]) return res.status(400).json({ error: 'Email exists' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result] = await pool.query('INSERT INTO users (name, email, phone, password, is_admin) VALUES (?, ?, ?, ?, ?)', [name, email, phone, hashedPassword, true]);
+    const token = jwt.sign({ id: result.insertId, email, isAdmin: true }, JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json({ token });
+  } catch (error) {
+    console.error('Error signing up admin:', error.stack);
+    res.status(500).json({ error: 'Failed to sign up admin' });
+  }
 });
 
 app.post('/api/auth/admin/login', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-    }
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
-        const user = result.rows[0];
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Invalid credentials or not an admin' });
-        }
-        if (user.is_blocked) {
-            return res.status(403).json({ error: 'Account is blocked' });
-        }
-        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
-    } catch (error) {
-        console.error('Admin login error:', error);
-        res.status(500).json({ error: 'Failed to log in admin' });
-    }
+  const { email, password } = req.body;
+  const validation = validateInput({ email, password }, ['email', 'password']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ? AND is_admin = ?', [email, true]);
+    const user = result[0];
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
+    if (user.is_blocked) return res.status(403).json({ error: 'Account blocked' });
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    console.error('Error logging in admin:', error.stack);
+    res.status(500).json({ error: 'Failed to log in admin' });
+  }
 });
 
 app.post('/api/auth/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email is required' });
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
-        if (!user) return res.status(404).json({ error: 'User not found' });
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
-        await transporter.sendMail({
-            from: `"Delicute" <${EMAIL_USER}>`,
-            to: email,
-            subject: 'Delicute - Password Reset OTP',
-            text: `Your OTP: ${otp}`,
-            html: `<p>Your OTP: <strong>${otp}</strong></p>`
-        });
-        res.json({ message: 'OTP sent to your email' });
-    } catch (error) {
-        console.error('Error sending OTP:', error);
-        res.status(500).json({ error: 'Failed to send OTP' });
-    }
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (!result[0]) return res.status(404).json({ error: 'User not found' });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await pool.query('UPDATE users SET reset_otp = ? WHERE email = ?', [otp, email]);
+    await transporter.sendMail({
+      from: `"Delicute" <${EMAIL_USER}>`,
+      to: email,
+      subject: 'Delicute - Password Reset OTP',
+      text: `Your OTP: ${otp}`,
+      html: `<p>Your OTP: <strong>${otp}</strong></p>`
+    });
+    res.json({ message: 'OTP sent' });
+  } catch (error) {
+    console.error('Error sending OTP:', error.stack);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
 });
 
 app.post('/api/auth/reset-password', async (req, res) => {
-    const { email, otp, newPassword } = req.body;
-    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2', [email, otp]);
-        const user = result.rows[0];
-        if (!user) return res.status(400).json({ error: 'Invalid OTP' });
-        if (newPassword) {
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
-            res.json({ message: 'Password reset successfully' });
-        } else {
-            res.json({ message: 'OTP verified successfully' });
-        }
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({ error: 'Failed to reset password' });
-    }
+  const { email, otp, newPassword } = req.body;
+  const validation = validateInput({ email, otp, newPassword }, ['email', 'otp', 'newPassword']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ? AND reset_otp = ?', [email, otp]);
+    if (!result[0]) return res.status(400).json({ error: 'Invalid OTP' });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = ?, reset_otp = NULL WHERE id = ?', [hashedPassword, result[0].id]);
+    res.json({ message: 'Password reset' });
+  } catch (error) {
+    console.error('Error resetting password:', error.stack);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 app.post('/api/auth/admin/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email is required' });
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND is_admin = $2', [email, true]);
-        const user = result.rows[0];
-        if (!user) return res.status(404).json({ error: 'Admin not found' });
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        await pool.query('UPDATE users SET reset_otp = $1 WHERE email = $2', [otp, email]);
-        await transporter.sendMail({
-            from: `"Delicute" <${EMAIL_USER}>`,
-            to: email,
-            subject: 'Delicute - Admin Password Reset OTP',
-            text: `Your OTP: ${otp}`,
-            html: `<p>Your OTP: <strong>${otp}</strong></p>`
-        });
-        res.json({ message: 'OTP sent to your email' });
-    } catch (error) {
-        console.error('Error sending admin OTP:', error);
-        res.status(500).json({ error: 'Failed to send OTP' });
-    }
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ? AND is_admin = ?', [email, true]);
+    if (!result[0]) return res.status(404).json({ error: 'Admin not found' });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await pool.query('UPDATE users SET reset_otp = ? WHERE id = ?', [otp, result[0].id]);
+    await transporter.sendMail({
+      from: `"Delicute" <${EMAIL_USER}>`,
+      to: email,
+      subject: 'Delicute - Admin Password Reset OTP',
+      text: `Your OTP: ${otp}`,
+      html: `<p>Your OTP: <strong>${otp}</strong></p>`
+    });
+    res.json({ message: 'OTP sent' });
+  } catch (error) {
+    console.error('Error sending OTP:', error.stack);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
 });
 
-app.post('/api/auth/reset-password/admin', async (req, res) => {
-    const { email, otp, newPassword } = req.body;
-    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1 AND reset_otp = $2 AND is_admin = $3', [email, otp, true]);
-        const user = result.rows[0];
-        if (!user) return res.status(400).json({ error: 'Invalid OTP or not an admin' });
-        if (newPassword) {
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await pool.query('UPDATE users SET password = $1, reset_otp = NULL WHERE email = $2', [hashedPassword, email]);
-            res.json({ message: 'Password reset successfully' });
-        } else {
-            res.json({ message: 'OTP verified successfully' });
-        }
-    } catch (error) {
-        console.error('Admin reset password error:', error);
-        res.status(500).json({ error: 'Failed to reset password' });
-    }
+app.post('/api/auth/admin/reset-password', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  const validation = validateInput({ email, otp, newPassword }, ['email', 'otp', 'newPassword']);
+  if (!validation.valid) return res.status(400).json({ error: validation.error });
+  try {
+    const [result] = await pool.query('SELECT * FROM users WHERE email = ? AND reset_otp = ? AND is_admin = ?', [email, otp, true]);
+    if (!result[0]) return res.status(400).json({ error: 'Invalid OTP' });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = ?, reset_otp = NULL WHERE id = ?', [hashedPassword, result[0].id]);
+    res.json({ message: 'Password reset' });
+  } catch (error) {
+    console.error('Error resetting admin password:', error.stack);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 app.get('/api/auth/google', (req, res) => {
-    const url = oauth2Client.generateAuthUrl({
-        scope: ['profile', 'email'],
-        redirect_uri: `${CLIENT_URL}/api/auth/google/callback`
-    });
-    res.redirect(url);
+  const authUrl = oauth2Client.generateAuthUrl({
+    scope: ['profile', 'email'],
+    redirect_uri: `${BASE_URL}/api/auth/google/callback`
+  });
+  res.redirect(302, authUrl);
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
-    const { code, error } = req.query;
-    if (error) {
-        console.error('Google OAuth callback error:', error);
-        return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication failed')}`);
+  const { code, error } = req.query;
+  if (error) return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google auth failed')}`);
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data } = await oauth2.userinfo.get();
+    const { email, name } = data;
+    let [result] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    let user = result[0];
+    if (!user) {
+      const [insertResult] = await pool.query('INSERT INTO users (name, email, is_admin) VALUES (?, ?, ?)', [name || 'Google User', email, false]);
+      [result] = await pool.query('SELECT * FROM users WHERE id = ?', [insertResult.insertId]);
+      user = result[0];
     }
-    try {
-        const { tokens } = await oauth2Client.getToken(code);
-        oauth2Client.setCredentials(tokens);
-        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-        const { data } = await oauth2.userinfo.get();
-        const { email, name } = data;
-
-        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        let user = result.rows[0];
-        if (!user) {
-            result = await pool.query(
-                'INSERT INTO users (name, email, is_admin) VALUES ($1, $2, $3) RETURNING id, email, is_admin',
-                [name || 'Google User', email, false]
-            );
-            user = result.rows[0];
-        }
-
-        if (user.is_blocked) {
-            return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account is blocked')}`);
-        }
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email, isAdmin: user.is_admin },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-        res.redirect(`${CLIENT_URL}/?token=${encodeURIComponent(token)}`);
-    } catch (error) {
-        console.error('Google OAuth error:', error);
-        res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google authentication error')}`);
-    }
+    if (user.is_blocked) return res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Account blocked')}`);
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '1h' });
+    res.redirect(`${CLIENT_URL}/dashboard?token=${encodeURIComponent(token)}`);
+  } catch (error) {
+    console.error('Error in Google auth:', error.stack);
+    res.redirect(`${CLIENT_URL}/?error=${encodeURIComponent('Google auth failed')}`);
+  }
 });
 
-app.post('/api/orders', authenticateToken, async (req, res) => {
-    const { items, total, paymentMethod, paymentDetails, deliveryAddressId, couponCode } = req.body;
-    const userId = req.user.id;
-    if (!items || !total || !paymentMethod || !deliveryAddressId) {
-        return res.status(400).json({ error: 'Items, total, payment method, and delivery address are required' });
-    }
-    if (!['PayPal', 'UPI', 'COD'].includes(paymentMethod)) {
-        return res.status(400).json({ error: 'Invalid payment method' });
-    }
-    try {
-        const restaurantStatus = await pool.query('SELECT status FROM restaurant_status LIMIT 1');
-        if (restaurantStatus.rows[0]?.status === 'Closed') {
-            return res.status(400).json({ error: 'Restaurant is currently closed' });
-        }
-
-        const addressCheck = await pool.query('SELECT * FROM addresses WHERE id = $1 AND user_id = $2', [deliveryAddressId, userId]);
-        if (!addressCheck.rows[0]) {
-            return res.status(400).json({ error: 'Invalid delivery address' });
-        }
-
-        let discount = 0;
-        let coupon = null;
-        if (couponCode) {
-            const couponResult = await pool.query('SELECT * FROM coupons WHERE code = $1', [couponCode]);
-            if (couponResult.rows[0]) {
-                coupon = couponResult.rows[0].code;
-                discount = Math.floor((total * couponResult.rows[0].discount) / 100);
-            } else {
-                return res.status(400).json({ error: 'Invalid coupon code' });
-            }
-        }
-
-        const finalTotal = total - discount;
-
-        const result = await pool.query(
-            'INSERT INTO orders (user_id, items, total, payment_method, payment_details, delivery_address_id, coupon, discount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-            [userId, JSON.stringify(items), finalTotal, paymentMethod, JSON.stringify(paymentDetails || {}), deliveryAddressId, coupon, discount]
-        );
-        const orderId = result.rows[0].id;
-
-        if (paymentMethod === 'PayPal') {
-            const request = new paypal.orders.OrdersCreateRequest();
-            request.prefer("return=representation");
-            request.requestBody({
-                intent: 'CAPTURE',
-                purchase_units: [{
-                    amount: {
-                        currency_code: 'INR',
-                        value: finalTotal.toFixed(2)
-                    }
-                }],
-                application_context: {
-                    return_url: `${CLIENT_URL}/payment/success`,
-                    cancel_url: `${CLIENT_URL}/payment/cancel`
-                }
-            });
-            const order = await paypalClient.execute(request);
-            await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
-                JSON.stringify({ ...paymentDetails, paypalOrderId: order.result.id }),
-                orderId
-            ]);
-            res.json({ orderId: order.result.id });
-        } else if (paymentMethod === 'UPI') {
-            const options = {
-                amount: finalTotal * 100,
-                currency: 'INR',
-                receipt: `order_${orderId}`
-            };
-            const razorpayOrder = await razorpay.orders.create(options);
-            await pool.query('UPDATE orders SET payment_details = $1 WHERE id = $2', [
-                JSON.stringify({ ...paymentDetails, razorpayOrderId: razorpayOrder.id }),
-                orderId
-            ]);
-            res.json({ orderId: razorpayOrder.id, amount: finalTotal * 100, currency: 'INR' });
-        } else if (paymentMethod === 'COD') {
-            await pool.query('UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3', ['Confirmed', 'Pending', orderId]);
-            res.json({ orderId: `cod_${orderId}`, message: 'Order placed successfully with COD' });
-        }
-    } catch (error) {
-        console.error('Order creation error:', error);
-        res.status(500).json({ error: 'Failed to create order' });
-    }
-});
-
-app.post('/api/payment/paypal-capture', authenticateToken, async (req, res) => {
-    const { orderId } = req.body;
-    if (!orderId) {
-        return res.status(400).json({ error: 'Order ID is required' });
-    }
-    try {
-        const request = new paypal.orders.OrdersCaptureRequest(orderId);
-        request.requestBody({});
-        const capture = await paypalClient.execute(request);
-        if (capture.result.status === 'COMPLETED') {
-            const result = await pool.query(
-                'UPDATE orders SET status = $1, payment_status = $2, payment_details = $3 WHERE payment_details->>\'paypalOrderId\' = $4 RETURNING id',
-                ['Confirmed', 'Paid', JSON.stringify({ paypalOrderId: orderId, captureId: capture.result.id }), orderId]
-            );
-            if (result.rows.length === 0) {
-                return res.status(404).json({ error: 'Order not found' });
-            }
-            res.json({ message: 'Payment captured successfully' });
-        } else {
-            res.status(400).json({ error: 'Payment capture failed' });
-        }
-    } catch (error) {
-        console.error('PayPal capture error:', error);
-        res.status(500).json({ error: 'Failed to capture payment' });
-    }
-});
-
-app.post('/api/payment/upi', authenticateToken, async (req, res) => {
-    const { upiId, amount } = req.body;
-    if (!upiId || !amount) {
-        return res.status(400).json({ error: 'UPI ID and amount are required' });
-    }
-    try {
-        const options = {
-            amount: amount * 100,
-            currency: 'INR',
-            receipt: `upi_${Date.now()}`
-        };
-        const razorpayOrder = await razorpay.orders.create(options);
-        res.json({ orderId: razorpayOrder.id, amount: amount * 100, currency: 'INR' });
-    } catch (error) {
-        console.error('UPI payment error:', error);
-        res.status(500).json({ error: 'Failed to initiate UPI payment' });
-    }
-});
-
-app.post('/api/payment/verify', async (req, res) => {
-    const { orderId, paymentId, signature } = req.body;
-    try {
-        const generatedSignature = crypto
-            .createHmac('sha256', RAZORPAY_KEY_SECRET)
-            .update(`${orderId}|${paymentId}`)
-            .digest('hex');
-        if (generatedSignature === signature) {
-            const orderNum = orderId.split('_')[1];
-            await pool.query(
-                'UPDATE orders SET status = $1, payment_status = $2 WHERE id = $3',
-                ['Confirmed', 'Paid', orderNum]
-            );
-            res.json({ message: 'Payment verified successfully' });
-        } else {
-            res.status(400).json({ error: 'Payment verification failed' });
-        }
-    } catch (error) {
-        console.error('Payment verification error:', error);
-        res.status(500).json({ error: 'Failed to verify payment' });
-    }
-});
-
+// Error Handler
 app.use((err, req, res, next) => {
-    console.error('Unexpected error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  console.error('Error:', err.stack);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
+// Start Server
 async function startServer() {
-    try {
-        await initializeDatabase();
-        app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-    } catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-    }
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+  } catch (error) {
+    console.error('Failed to start server:', error.stack);
+    process.exit(1);
+  }
 }
 
 startServer();
