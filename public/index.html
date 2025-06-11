@@ -10,6 +10,7 @@
         body {
             font-family: 'Arial', sans-serif;
             background: #f0f2f6;
+            margin: 0;
         }
         .hero-bg {
             background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
@@ -47,7 +48,7 @@
         }
         .slide-content {
             text-align: center;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             padding: 2rem 3rem;
             border-radius: 12px;
             color: white;
@@ -55,12 +56,12 @@
             width: 600px;
         }
         .slide-content h2 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 1rem;
         }
         .slide-content p {
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             margin-bottom: 1.5rem;
         }
         .slide-content a {
@@ -100,7 +101,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -172,10 +173,10 @@
         .toast.error {
             background-color: #ef4444;
         }
-        .menu-card, .offer-card {
-            transition: transform 1.0s ease, box-shadow 1.0s ease;
+        .menu-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .menu-card:hover, .offer-card:hover {
+        .menu-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
@@ -241,6 +242,19 @@
         .contact-form textarea {
             resize: vertical;
         }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
         @media (max-width: 640px) {
             .modal-content {
                 padding: 16px;
@@ -255,10 +269,10 @@
                 padding: 10px;
                 min-width: 160px;
             }
-            .menu-card img, .offer-card img {
+            .menu-card img {
                 height: 150px;
             }
-            .menu-card, .offer-card {
+            .menu-card {
                 padding: 12px;
             }
             .btn-primary {
@@ -299,9 +313,13 @@
                 width: 10px;
                 height: 10px;
             }
+            .cart-item img {
+                width: 60px;
+                height: 60px;
+            }
         }
         @media (min-width: 641px) {
-            .menu-card img, .offer-card img {
+            .menu-card img {
                 height: 200px;
             }
             .slide-content h2 {
@@ -338,7 +356,6 @@
                 <div class="hidden sm:flex sm:items-center sm:space-x-4">
                     <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
                     <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#offers" class="text-gray-600 hover:text-gray-900 text-sm">Offers</a>
                     <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
                     <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
                     <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm">Login</button>
@@ -349,7 +366,6 @@
                 <div class="flex flex-col space-y-2 px-4 pb-4">
                     <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
                     <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#offers" class="text-gray-600 hover:text-gray-900 text-sm">Offers</a>
                     <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
                     <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
                     <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Login</button>
@@ -478,8 +494,9 @@
             <span class="close-btn" onclick="closeModal('cartModal')">×</span>
             <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Your Cart</h2>
             <div id="cartItems" class="mb-6"></div>
-            <div class="text-center">
+            <div class="text-center space-y-4">
                 <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
+                <button onclick="sendToAdminDashboard()" class="btn-primary text-sm sm:text-base">Send to Admin</button>
             </div>
             <div class="mt-4 text-center">
                 <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
@@ -530,14 +547,6 @@
                     We specialize in a variety of cuisines, ensuring every bite is a delightful experience. 
                     Order online and enjoy restaurant-quality food delivered straight to your door!
                 </p>
-            </div>
-        </section>
-
-        <!-- Special Offers Section -->
-        <section id="offers" class="py-16 bg-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Special Offers</h2>
-                <div id="offerItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
             </div>
         </section>
 
@@ -648,7 +657,6 @@
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
         let menuItemsData = [];
-        let offerItemsData = [];
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let currentPage = 1;
         const itemsPerPage = 9;
@@ -844,19 +852,17 @@
             window.location.href = `${BASE_URL}/api/auth/google`;
         }
 
-        function addToCart(item, type = 'menu') {
-            let price;
-            if (type === 'menu') {
-                if (item.price) {
-                    price = item.price;
-                } else {
-                    showToast('No price available for this item.', 'error');
-                    return;
-                }
-            } else {
-                price = item.price;
+        function addToCart(item) {
+            if (!item.price) {
+                showToast('No price available for this item.', 'error');
+                return;
             }
-            cart.push({ id: item._id, name: item.name, price, type });
+            cart.push({
+                id: item._id,
+                name: item.name,
+                price: item.price,
+                image: item.image || 'https://via.placeholder.com/150'
+            });
             localStorage.setItem('cart', JSON.stringify(cart));
             showToast(`${item.name} added to cart!`, 'success');
         }
@@ -889,14 +895,13 @@
             cartItemsDiv.innerHTML = cart.map((item, index) => {
                 total += item.price;
                 return `
-                    <div class="flex justify-between py-3 border-b items-center text-sm sm:text-base">
-                        <div>
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="flex-1">
                             <span class="font-medium">${item.name}</span>
+                            <p class="text-gray-600 text-sm">₹${item.price}</p>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <span>₹${item.price}</span>
-                            <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
-                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
                     </div>
                 `;
             }).join('');
@@ -906,6 +911,39 @@
                     <span>₹${total}</span>
                 </div>
             `;
+        }
+
+        async function sendToAdminDashboard() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to send cart to admin.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/cart/send-to-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ items: cart })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Cart sent to admin dashboard!', 'success');
+                    window.location.href = '/admindashboard.html';
+                } else {
+                    showToast(data.error || 'Failed to send cart to admin.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending cart to admin:', error);
+                showToast('Failed to send cart to admin.', 'error');
+            }
         }
 
         async function placeOrder() {
@@ -1001,22 +1039,11 @@
                 categories = [...new Set(menuItemsData.map(item => item.category))];
                 populateCategoryFilters();
                 displayMenuItems(menuItemsData.slice(0, 6));
-                displayFullMenuItems(menuItemsData); // Initialize full menu
+                displayFullMenuItems(menuItemsData);
             } catch (error) {
                 console.error('Error fetching menu items:', error);
                 document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
                 document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
-            }
-        }
-
-        async function fetchOfferItems() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers`);
-                offerItemsData = await response.json();
-                displayOfferItems(offerItemsData);
-            } catch (error) {
-                console.error('Error fetching offer items:', error);
-                document.getElementById('offerItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load offers.</p>';
             }
         }
 
@@ -1042,26 +1069,7 @@
                         <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                         <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function displayOfferItems(items) {
-            const offerItemsDiv = document.getElementById('offerItems');
-            if (items.length === 0) {
-                offerItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No offers available.</p>';
-                return;
-            }
-            offerItemsDiv.innerHTML = items.map(item => `
-                <div class="offer-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
-                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)}, "offer")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
                     </div>
                 </div>
             `).join('');
@@ -1083,7 +1091,7 @@
                         <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
                         <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
                         <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)}, "menu")' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
                     </div>
                 </div>
             `).join('');
@@ -1215,8 +1223,6 @@
                 window.location.href = '/userdashboard.html';
             }
             fetchMenuItems();
-            fetchOfferItems();
-            // Initialize slider
             document.querySelector('.slide[data-index="0"]').classList.add('active');
             document.querySelector('.dot').classList.add('active');
             startSlideInterval();

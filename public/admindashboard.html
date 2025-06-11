@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -13,9 +14,9 @@
             background-size: cover;
             color: #1f2937;
             margin: 0;
-            position: relative;
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
         body::before {
             content: '';
@@ -24,56 +25,56 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
             z-index: -1;
         }
         .auth-container {
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            padding: 2rem;
-            max-width: 1440px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 2.5rem;
+            max-width: 1500px;
             width: 95%;
-            margin: 2rem auto;
+            margin: 3rem auto;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .auth-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
         .input-field {
             transition: all 0.3s ease;
-            border: 2px solid #d1d5db;
-            border-radius: 8px;
-            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
             background: #f9fafb;
             width: 100%;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: #1f2937;
         }
         .input-field:focus {
-            border-color: #d97706;
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
             outline: none;
             background: white;
         }
         .auth-btn {
-            background: linear-gradient(90deg, #d97706, #f59e0b);
+            background: linear-gradient(90deg, #f59e0b, #d97706);
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 0.75rem 1.5rem;
             font-weight: 600;
             color: white;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         .auth-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
-            background: linear-gradient(90deg, #f59e0b, #d97706);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+            background: linear-gradient(90deg, #d97706, #f59e0b);
         }
         .auth-btn::after {
             content: '';
@@ -88,19 +89,25 @@
             transition: width 0.4s ease, height 0.4s ease;
         }
         .auth-btn:hover::after {
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
+        }
+        .auth-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .toast {
             position: fixed;
-            top: 24px;
-            right: 24px;
+            top: 20px;
+            right: 20px;
             padding: 1rem 1.5rem;
-            border-radius: 8px;
+            border-radius: 10px;
             color: white;
             z-index: 1000;
             display: none;
-            min-width: 200px;
+            min-width: 250px;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
             animation: slideIn 0.3s ease;
         }
@@ -115,9 +122,9 @@
             to { transform: translateX(0); opacity: 1; }
         }
         .table-container {
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
-            border-radius: 8px;
+            border-radius: 12px;
             background: white;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
         }
@@ -127,17 +134,17 @@
             border-spacing: 0;
         }
         .table-container th, .table-container td {
-            padding: 0.75rem;
+            padding: 1rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
         .table-container th {
-            background: #f3f4f6;
+            background: #f9fafb;
             position: sticky;
             top: 0;
             z-index: 10;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             color: #374151;
         }
@@ -145,27 +152,29 @@
             position: relative;
         }
         .profile-img {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             cursor: pointer;
-            border: 3px solid #d97706;
+            border: 3px solid #f59e0b;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .profile-img:hover {
-            transform: scale(1.15);
-            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.2);
+            transform: scale(1.2);
+            box-shadow: 0  نمایند
+
+0 0 5px rgba(245, 158, 11, 0.2);
         }
         .dropdown-menu {
             display: none;
             position: absolute;
-            top: 48px;
+            top: 60px;
             right: 0;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            min-width: 180px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-width: 200px;
             z-index: 100;
             overflow: hidden;
         }
@@ -178,32 +187,32 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .dropdown-item {
-            padding: 0.75rem 1rem;
+            padding: 0.75rem 1.5rem;
             color: #1f2937;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         .dropdown-item:hover {
-            background: #d97706;
+            background: #f59e0b;
             color: white;
         }
         .stat-card {
             background: white;
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.5rem;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
         }
         .home-bg {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-            border-radius: 16px;
-            padding: 2rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
             color: white;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             position: relative;
@@ -218,7 +227,7 @@
             height: 100%;
             background: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center;
             background-size: cover;
-            opacity: 0.15;
+            opacity: 0.1;
             z-index: 0;
         }
         .home-bg > * {
@@ -232,7 +241,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -244,70 +253,87 @@
         }
         .modal-content {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
+            padding: 2rem;
+            border-radius: 16px;
             max-width: 95%;
-            width: 500px;
+            width: 550px;
             position: relative;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             animation: modalPop 0.3s ease;
         }
         @keyframes modalPop {
-            from { transform: scale(0.85); opacity: 0; }
+            from { transform: scale(0.9); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
         .close-btn {
             position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 1.25rem;
+            top: 16px;
+            right: 16px;
+            font-size: 1.5rem;
             cursor: pointer;
             color: #374151;
             transition: color 0.2s ease;
         }
         .close-btn:hover {
-            color: #d97706;
+            color: #f59e0b;
         }
         .menu-img {
-            width: 48px;
-            height: 48px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid #d97706;
+            border-radius: 10px;
+            border: 2px solid #f59e0b;
             transition: transform 0.3s ease;
         }
         .menu-img:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
         .contact-message {
             background: #f3f4f6;
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 1rem;
             word-break: break-word;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
         .navbar {
             background: linear-gradient(90deg, #ffffff, #f9fafb);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
         .navbar-logo {
             transition: transform 0.3s ease;
         }
         .navbar-logo:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
         .order-details {
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
-            margin-top: 0.5rem;
-            padding: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
             background: #f9fafb;
-            border-radius: 8px;
+            border-radius: 10px;
         }
         .rating-stars {
-            color: #d97706;
-            font-size: 1rem;
+            color: #f59e0b;
+            font-size: 1.1rem;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f59e0b;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         @media (max-width: 768px) {
             .auth-container {
@@ -318,75 +344,75 @@
                 overflow-x: auto;
             }
             .table-container table {
-                min-width: 700px;
+                min-width: 800px;
             }
             .stat-card {
-                padding: 0.75rem;
-            }
-            .stat-card h3 {
-                font-size: 0.875rem;
-            }
-            .stat-card p {
-                font-size: 1.25rem;
-            }
-            .modal-content {
-                width: 95%;
                 padding: 1rem;
             }
+            .stat-card h3 {
+                font-size: 0.9rem;
+            }
+            .stat-card p {
+                font-size: 1.5rem;
+            }
+            .modal-content {
+                width: 90%;
+                padding: 1.5rem;
+            }
             .dropdown-menu {
-                min-width: 160px;
-                right: 12px;
+                min-width: 180px;
+                right: 10px;
                 top: 56px;
             }
             .dropdown-item {
-                font-size: 0.875rem;
-                padding: 0.75rem;
+                font-size: 0.85rem;
+                padding: 0.75rem 1rem;
             }
             .auth-btn {
                 padding: 0.75rem 1rem;
-                font-size: 0.875rem;
+                font-size: 0.85rem;
             }
             .input-field {
                 padding: 0.75rem;
-                font-size: 0.875rem;
+                font-size: 0.85rem;
             }
             .menu-img {
-                width: 40px;
-                height: 40px;
+                width: 48px;
+                height: 48px;
             }
             .profile-img {
-                width: 36px;
-                height: 36px;
+                width: 40px;
+                height: 40px;
             }
         }
         @media (min-width: 769px) {
             .auth-container {
-                padding: 2.5rem;
-                margin: 2.5rem auto;
+                padding: 3rem;
+                margin: 3rem auto;
             }
             .table-container th, .table-container td {
-                padding: 1rem;
-                font-size: 0.875rem;
+                padding: 1.25rem;
+                font-size: 0.9rem;
             }
             .menu-img {
+                width: 64px;
+                height: 64px;
+            }
+            .profile-img {
                 width: 56px;
                 height: 56px;
             }
-            .profile-img {
-                width: 48px;
-                height: 48px;
-            }
             .modal-content {
-                padding: 2rem;
-                width: 550px;
+                padding: 2.5rem;
+                width: 600px;
             }
             .auth-btn {
                 padding: 0.75rem 2rem;
-                font-size: 0.875rem;
+                font-size: 0.9rem;
             }
             .input-field {
-                padding: 0.75rem;
-                font-size: 0.875rem;
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -399,28 +425,29 @@
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('profileModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Admin Profile</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Profile</h2>
             <div class="flex justify-center mb-6">
-                <img id="modalProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-amber-600 object-cover shadow-md">
+                <img id="modalProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-24 h-24 rounded-full border-4 border-amber-600 object-cover shadow-lg">
             </div>
             <div>
-                <label for="profileName" class="block text-sm text-gray-700 font-medium mb-2">Name</label>
+                <label for="profileName" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
                 <input type="text" id="profileName" class="input-field" readonly>
             </div>
             <div class="mt-4">
-                <label for="profileEmail" class="block text-sm text-gray-700 font-medium mb-2">Email</label>
+                <label for="profileEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <input type="email" id="profileEmail" class="input-field" readonly>
             </div>
             <div class="mt-4">
-                <label for="profilePhone" class="block text-sm text-gray-700 font-medium mb-2">Phone Number</label>
+                <label for="profilePhone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input type="tel" id="profilePhone" class="input-field" readonly>
             </div>
             <div class="mt-4">
-                <label for="profileImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Profile Image</label>
+                <label for="profileImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Profile Image</label>
                 <input type="file" id="profileImageUpload" class="input-field" accept="image/*">
             </div>
-            <div class="mt-6">
+            <div class="mt-6 flex justify-center">
                 <button onclick="updateProfileImage()" class="auth-btn w-full">Update Profile Image</button>
+                <div id="profileLoader" class="loader"></div>
             </div>
         </div>
     </div>
@@ -429,20 +456,20 @@
     <div id="editMenuModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editMenuModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Edit Menu Item</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Edit Menu Item</h2>
             <input type="hidden" id="editItemId">
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label for="editItemName" class="block text-sm text-gray-700 font-medium mb-2">Item Name</label>
+                    <label for="editItemName" class="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
                     <input type="text" id="editItemName" class="input-field" placeholder="Item Name">
                 </div>
                 <div>
-                    <label for="editItemPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹)</label>
+                    <label for="editItemPrice" class="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
                     <input type="number" id="editItemPrice" class="input-field" placeholder="Price" step="0.01" min="0">
                 </div>
                 <div>
-                    <label for="editItemCategory" class="block text-sm text-gray-700 font-medium mb-2">Category</label>
-                    <select id="EditarItemCategory" class="input-field">
+                    <label for="editItemCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="editItemCategory" class="input-field">
                         <option value="">Select Category</option>
                         <option value="Veg Pizza">Veg Pizza</option>
                         <option value="Non-Veg Pizza">Non-Veg Pizza</option>
@@ -457,54 +484,21 @@
                     </select>
                 </div>
                 <div>
-                    <label for="editItemImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                    <label for="editItemImage" class="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
                     <input type="text" id="editItemImage" class="input-field" placeholder="Image URL">
                 </div>
                 <div>
-                    <label for="editItemImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                    <label for="editItemImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
                     <input type="file" id="editItemImageUpload" class="input-field" accept="image/*">
                 </div>
                 <div>
-                    <label for="editItemDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
+                    <label for="editItemDescription" class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
                     <textarea id="editItemDescription" class="input-field" rows="4" placeholder="Item Description"></textarea>
                 </div>
             </div>
-            <div class="mt-6">
+            <div class="mt-6 flex justify-center">
                 <button onclick="updateMenuItem()" class="auth-btn w-full">Update Item</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Offer Modal -->
-    <div id="editOfferModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('editOfferModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Edit Special Offer</h2>
-            <input type="hidden" id="editOfferId">
-            <div class="grid grid-cols-1 gap-4">
-                <div>
-                    <label for="editOfferName" class="block text-sm text-gray-700 font-medium mb-2">Offer Name</label>
-                    <input type="text" id="editOfferName" class="input-field" placeholder="Offer Name">
-                </div>
-                <div>
-                    <label for="editOfferPrice" class="block text-sm text-gray-700 font-medium mb-2">Price (₹)</label>
-                    <input type="number" id="editOfferPrice" class="input-field" placeholder="Price" step="0.01" min="0">
-                </div>
-                <div>
-                    <label for="editOfferImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
-                    <input type="text" id="editOfferImage" class="input-field" placeholder="Image URL">
-                </div>
-                <div>
-                    <label for="editOfferImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
-                    <input type="file" id="editOfferImageUpload" class="input-field" accept="image/*">
-                </div>
-                <div>
-                    <label for="editOfferDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
-                    <textarea id="editOfferDescription" class="input-field" rows="4" placeholder="Offer Description"></textarea>
-                </div>
-            </div>
-            <div class="mt-6">
-                <button onclick="updateOffer()" class="auth-btn w-full">Update Offer</button>
+                <div id="menuLoader" class="loader"></div>
             </div>
         </div>
     </div>
@@ -513,32 +507,33 @@
     <div id="editCouponModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editCouponModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Edit Coupon</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Edit Coupon</h2>
             <input type="hidden" id="editCouponId">
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label for="editCouponCode" class="block text-sm text-gray-700 font-medium mb-2">Coupon Code</label>
+                    <label for="editCouponCode" class="block text-sm font-medium text-gray-700 mb-2">Coupon Code</label>
                     <input type="text" id="editCouponCode" class="input-field" placeholder="e.g., DELICUTE10">
                 </div>
                 <div>
-                    <label for="editCouponDiscount" class="block text-sm text-gray-700 font-medium mb-2">Discount (%)</label>
+                    <label for="editCouponDiscount" class="block text-sm font-medium text-gray-700 mb-2">Discount (%)</label>
                     <input type="number" id="editCouponDiscount" class="input-field" placeholder="Discount Percentage" min="1" max="100" step="1">
                 </div>
                 <div>
-                    <label for="editCouponImage" class="block text-sm text-gray-700 font-medium mb-2">Image URL (Optional)</label>
+                    <label for="editCouponImage" class="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
                     <input type="text" id="editCouponImage" class="input-field" placeholder="Image URL">
                 </div>
                 <div>
-                    <label for="editCouponImageUpload" class="block text-sm text-gray-700 font-medium mb-2">Upload Image (Optional)</label>
+                    <label for="editCouponImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
                     <input type="file" id="editCouponImageUpload" class="input-field" accept="image/*">
                 </div>
                 <div>
-                    <label for="editCouponDescription" class="block text-sm text-gray-700 font-medium mb-2">Description (Optional)</label>
+                    <label for="editCouponDescription" class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
                     <textarea id="editCouponDescription" class="input-field" rows="4" placeholder="Coupon Description"></textarea>
                 </div>
             </div>
-            <div class="mt-6">
+            <div class="mt-6 flex justify-center">
                 <button onclick="updateCoupon()" class="auth-btn w-full">Update Coupon</button>
+                <div id="couponLoader" class="loader"></div>
             </div>
         </div>
     </div>
@@ -547,21 +542,22 @@
     <div id="customerDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('customerDetailsModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Customer Details</h2>
-            <div class="text-sm space-y-3">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Customer Details</h2>
+            <div class="text-sm space-y-4">
                 <p><strong>Name:</strong> <span id="customerName"></span></p>
                 <p><strong>Email:</strong> <span id="customerEmail"></span></p>
                 <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
                 <p><strong>Address:</strong> <span id="customerAddress"></span></p>
                 <p><strong>Status:</strong> <span id="customerStatus"></span></p>
             </div>
-            <div class="mt-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-3">Order History</h3>
+            <div class="mt-6">
+                <h3 class="text-base font-semibold text-gray-700 mb-3">Order History</h3>
                 <div id="customerOrderHistory" class="table-container"></div>
             </div>
             <div class="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <button id="blockUnblockBtn" class="auth-btn px-4 py-2"></button>
                 <button onclick="closeModal('customerDetailsModal')" class="auth-btn bg-gray-600 hover:bg-gray-700 px-4 py-2">Close</button>
+                <div id="customerLoader" class="loader"></div>
             </div>
         </div>
     </div>
@@ -570,19 +566,20 @@
     <div id="replyContactModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('replyContactModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Reply to Message</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reply to Message</h2>
             <input type="hidden" id="contactMessageId">
             <div>
-                <label for="contactReplySubject" class="block text-sm text-gray-700 font-medium mb-2">Subject</label>
+                <label for="contactReplySubject" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                 <input type="text" id="contactReplySubject" class="input-field" placeholder="Reply Subject">
             </div>
             <div class="mt-4">
-                <label for="contactReplyMessage" class="block text-sm text-gray-700 font-medium mb-2">Reply Message</label>
+                <label for="contactReplyMessage" class="block text-sm font-medium text-gray-700 mb-2">Reply Message</label>
                 <textarea id="contactReplyMessage" class="input-field" rows="5" placeholder="Your reply..."></textarea>
             </div>
             <div class="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <button onclick="sendReply()" class="auth-btn w-full">Send Reply</button>
                 <button onclick="closeModal('replyContactModal')" class="auth-btn bg-gray-600 hover:bg-gray-700 w-full">Cancel</button>
+                <div id="replyLoader" class="loader"></div>
             </div>
         </div>
     </div>
@@ -591,8 +588,8 @@
     <div id="orderDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('orderDetailsModal')">×</span>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">Order Details</h2>
-            <div class="text-sm space-y-3">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Order Details</h2>
+            <div class="text-sm space-y-4">
                 <p><strong>Order ID:</strong> <span id="orderId"></span></p>
                 <p><strong>Customer:</strong> <span id="orderCustomerName"></span></p>
                 <p><strong>Email:</strong> <span id="orderCustomerEmail"></span></p>
@@ -602,12 +599,13 @@
                 <p><strong>Total:</strong> <span id="orderTotal"></span></p>
                 <p><strong>Status:</strong> <span id="orderStatus"></span></p>
                 <p><strong>Payment:</strong> <span id="orderPaymentStatus"></span></p>
+                <p><strong>Payment Method:</strong> <span id="orderPaymentMethod"></span></p>
                 <div>
-                    <h3 class="text-sm font-medium text-gray-700 mb-3">Items</h3>
+                    <h3 class="text-base font-semibold text-gray-700 mb-3">Items</h3>
                     <div id="orderItems" class="order-details"></div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-medium text-gray-700 mb-3">Review</h3>
+                    <h3 class="text-base font-semibold text-gray-700 mb-3">Review</h3>
                     <div id="orderReview" class="contact-message"></div>
                 </div>
             </div>
@@ -622,23 +620,24 @@
                 <button id="refundOrderBtn" class="auth-btn bg-red-600 hover:bg-red-700 px-4 py-2 hidden">Refund</button>
                 <button id="deleteOrderBtn" class="auth-btn bg-red-600 hover:bg-red-700 px-4 py-2 hidden">Delete</button>
                 <button onclick="closeModal('orderDetailsModal')" class="auth-btn bg-gray-600 hover:bg-gray-700 px-4 py-2">Close</button>
+                <div id="orderLoader" class="loader"></div>
             </div>
         </div>
     </div>
 
     <!-- Navbar -->
-    <nav class="navbar sticky top-0 z-50">
+    <nav class="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-20">
                 <div class="flex items-center space-x-4">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10 sm:h-12 navbar-logo">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12 navbar-logo">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-800">DELICUTE</h1>
+                        <h1 class="text-2xl font-extrabold text-gray-800">DELICUTE</h1>
                         <p class="text-sm text-gray-500">Admin Panel</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="welcomeMessage" class="text-sm text-gray-600 font-medium hidden sm:block"></span>
+                    <span id="welcomeMessage" class="text-sm font-semibold text-gray-600 hidden sm:block"></span>
                     <div class="profile-container">
                         <img id="profileImage" src="https://via.placeholder.com/40" alt="Profile" class="profile-img" onclick="toggleDropdown()" aria-label="Profile menu">
                         <div id="profileDropdown" class="dropdown-menu">
@@ -646,7 +645,6 @@
                             <div class="dropdown-item" onclick="showSection('profile')">Profile</div>
                             <div class="dropdown-item" onclick="showSection('menu')">Menu</div>
                             <div class="dropdown-item" onclick="showSection('orders')">Orders</div>
-                            <div class="dropdown-item" onclick="showSection('offers')">Special Offers</div>
                             <div class="dropdown-item" onclick="showSection('coupons')">Coupons</div>
                             <div class="dropdown-item" onclick="showSection('customers')">Customers</div>
                             <div class="dropdown-item" onclick="showSection('contact')">Contact Messages</div>
@@ -661,54 +659,55 @@
     <!-- Main Dashboard -->
     <div class="auth-container">
         <!-- Home Section -->
-        <section id="homeSection" class="home-bg mb-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6">Welcome to Delicute Admin Panel</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section id="homeSection" class="home-bg mb-10">
+            <h2 class="text-3xl font-extrabold text-center mb-8">Welcome to Delicute Admin Panel</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="stat-card">
-                    <h3 class="text-sm font-medium text-gray-600">Total Orders</h3>
-                    <p id="totalOrders" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-2">0</p>
+                    <h3 class="text-base font-semibold text-gray-600">Total Orders</h3>
+                    <p id="totalOrders" class="text-3xl font-bold text-amber-600 mt-3">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-medium text-gray-600">Menu Items</h3>
-                    <p id="totalMenuItems" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-2">0</p>
+                    <h3 class="text-base font-semibold text-gray-600">Menu Items</h3>
+                    <p id="totalMenuItems" class="text-3xl font-bold text-amber-600 mt-3">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-medium text-gray-600">Pending Orders</h3>
-                    <p id="pendingOrders" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-2">0</p>
+                    <h3 class="text-base font-semibold text-gray-600">Pending Orders</h3>
+                    <p id="pendingOrders" class="text-3xl font-bold text-amber-600 mt-3">0</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="text-sm font-medium text-gray-600">Restaurant Status</h3>
-                    <p id="restaurantStatus" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-2">Closed</p>
-                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-4 py-2 mt-3">Open Restaurant</button>
+                    <h3 class="text-base font-semibold text-gray-600">Restaurant Status</h3>
+                    <p id="restaurantStatus" class="text-3xl font-bold text-amber-600 mt-3">Closed</p>
+                    <button onclick="toggleRestaurantStatus()" id="statusToggleBtn" class="auth-btn px-6 py-3 mt-4">Open Restaurant</button>
+                    <div id="statusLoader" class="loader"></div>
                 </div>
             </div>
         </section>
 
         <!-- Profile Section -->
-        <section id="profileSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Admin Profile</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
+        <section id="profileSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Profile</h3>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-center mb-6">
-                    <img id="displayProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-16 h-16 sm:w-24 sm:h-24 rounded-lg border-3 border-amber-600 object-cover shadow-md">
+                    <img id="displayProfileImage" src="https://via.placeholder.com/80" alt="Profile" class="w-24 h-24 rounded-xl border-4 border-amber-600 object-cover shadow-lg">
                 </div>
-                <div class="text-sm space-y-3">
+                <div class="text-sm space-y-4">
                     <p><strong>Name:</strong> <span id="displayProfileName"></span></p>
                     <p><strong>Email:</strong> <span id="displayProfileEmail"></span></p>
                     <p><strong>Phone:</strong> <span id="displayProfilePhone"></span></p>
                 </div>
                 <div class="mt-6 flex justify-center">
-                    <button onclick="showModal('profileModal')" class="auth-btn px-6 py-3">Edit Profile Image</button>
+                    <button onclick="showModal('profileModal')" class="auth-btn px-8 py-3">Edit Profile Image</button>
                 </div>
             </div>
         </section>
 
         <!-- Menu Management Section -->
-        <section id="menuSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Manage Menu</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section id="menuSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Manage Menu</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Add Menu Item Form -->
-                <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md lg:col-span-1">
-                    <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-6">Add New Menu Item</h4>
+                <div class="bg-white p-8 rounded-xl shadow-lg lg:col-span-1">
+                    <h4 class="text-xl font-semibold text-gray-600 mb-6">Add New Menu Item</h4>
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label for="itemName" class="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
@@ -747,11 +746,12 @@
                             <textarea id="itemDescription" class="input-field" rows="4" placeholder="Description"></textarea>
                         </div>
                         <button onclick="addMenuItem()" class="auth-btn mt-4">Add Item</button>
+                        <div id="addMenuLoader" class="loader"></div>
                     </div>
                 </div>
                 <!-- Menu Items Table -->
-                <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md lg:col-span-2">
-                    <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-4">Menu Items</h4>
+                <div class="bg-white p-8 rounded-xl shadow-lg lg:col-span-2">
+                    <h4 class="text-xl font-semibold text-gray-600 mb-4">Menu Items</h4>
                     <div class="table-container">
                         <table>
                             <thead>
@@ -772,10 +772,10 @@
         </section>
 
         <!-- Order Management Section -->
-        <section id="ordersSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Order Management</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-4">Orders</h4>
+        <section id="ordersSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Order Management</h3>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h4 class="text-xl font-semibold text-gray-600 mb-4">Orders</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -788,6 +788,7 @@
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th>Payment</th>
+                                <th>Payment Method</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -797,61 +798,12 @@
             </div>
         </section>
 
-        <!-- Special Offers Section -->
-        <section id="offersSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Manage Special Offers</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-6">Add New Offer</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="offerName" class="block text-sm font-medium text-gray-700 mb-2">Offer Name</label>
-                        <input type="text" id="offerName" class="input-field" placeholder="Offer Name">
-                    </div>
-                    <div>
-                        <label for="offerPrice" class="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
-                        <input type="number" id="offerPrice" class="input-field" placeholder="Price" step="0.01" min="0">
-                    </div>
-                    <div>
-                        <label for="offerImage" class="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
-                        <input type="text" id="offerImage" class="input-field" placeholder="Image URL">
-                    </div>
-                    <div>
-                        <label for="offerImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
-                        <input type="file" id="offerImageUpload" class="input-field" accept="image/*">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label for="offerDescription" class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                        <textarea id="offerDescription" class="input-field" rows="4" placeholder="Description"></textarea>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button onclick="addOffer()" class="auth-btn w-full">Add Offer</button>
-                </div>
-            </div>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-4">Special Offers</h4>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="offerTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
         <!-- Coupons Management Section -->
-        <section id="couponsSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Manage Coupons</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md mb-6">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-6">Add New Coupon</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <section id="couponsSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Manage Coupons</h3>
+            <div class="bg-white p-8 rounded-xl shadow-lg mb-8">
+                <h4 class="text-xl font-semibold text-gray-600 mb-6">Add New Coupon</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="couponCode" class="block text-sm font-medium text-gray-700 mb-2">Coupon Code</label>
                         <input type="text" id="couponCode" class="input-field" placeholder="e.g., DELICUTE10">
@@ -862,6 +814,7 @@
                     </div>
                     <div>
                         <label for="couponImage" class="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
+                        <input type="text" id="couponImage" class="input-field" placeholder="Image URL">
                     </div>
                     <div>
                         <label for="couponImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
@@ -872,12 +825,13 @@
                         <textarea id="couponDescription" class="input-field" rows="4" placeholder="Description"></textarea>
                     </div>
                 </div>
-                <div class="mt-4">
+                <div class="mt-6 flex justify-center">
                     <button onclick="addCoupon()" class="auth-btn w-full">Add Coupon</button>
+                    <div id="addCouponLoader" class="loader"></div>
                 </div>
             </div>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600">Coupons</h4>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h4 class="text-xl font-semibold text-gray-600 mb-4">Coupons</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -894,34 +848,11 @@
             </div>
         </section>
 
-        <!-- Customer Management Section -->
-        <section id="customersSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Manage Customers</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-4">Customers</h4>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Address</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customerTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
         <!-- Contact Messages Section -->
-        <section id="contactSection" class="hidden mb-8">
-            <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6">Manage Contact Messages</h3>
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
-                <h4 class="text-lg sm:text-xl font-medium text-gray-600 mb-4">Messages</h4>
+        <section id="contactSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Manage Contact Messages</h3>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h4 class="text-xl font-semibold text-gray-600 mb-4">Messages</h4>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -939,21 +870,56 @@
                 </div>
             </div>
         </section>
+
+        <!-- Customer Management Section -->
+        <section id="customersSection" class="hidden mb-10">
+            <h3 class="text-3xl font-extrabold text-gray-800 mb-8">Manage Customers</h3>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h4 class="text-xl font-semibold text-gray-600 mb-4">Customers</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+        const TOKEN_KEY = 'adminToken';
+        const PROFILE_IMAGE_KEY = 'adminProfileImage';
 
         // Utility Functions
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             if (!toast) return;
-            toast.textContent = message;
+            toast.textContent = DOMPurify.sanitize(message);
             toast.className = `toast ${type}`;
             toast.style.display = 'flex';
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 3000);
+        }
+
+        function showLoader(loaderId) {
+            const loader = document.getElementById(loaderId);
+            if (loader) loader.style.display = 'block';
+        }
+
+        function hideLoader(loaderId) {
+            const loader = document.getElementById(loaderId);
+            if (loader) loader.style.display = 'none';
         }
 
         function toggleDropdown() {
@@ -973,11 +939,10 @@
             const actions = {
                 menu: fetchMenuItems,
                 orders: fetchOrders,
-                offers: fetchOffers,
                 coupons: fetchCoupons,
                 customers: fetchCustomers,
                 contact: fetchContactMessages,
-                profile: fetchAdminDetails
+                profile: fetchProfileDetails
             };
             if (actions[section]) {
                 actions[section]();
@@ -1003,19 +968,39 @@
             document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
         }
 
-        async function uploadImage(file) {
+        function validateInput(value, type) {
+            if (!value) return false;
+            switch (type) {
+                case 'text': return value.trim().length > 0;
+                case 'number': return !isNaN(value) && value > 0;
+                case 'couponCode': return /^[A-Z0-9]{5,15}$/.test(value.trim());
+                case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+                default: return true;
+            }
+        }
+
+        async function uploadImage(file, loaderId) {
             if (!file) return null;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showToast('Please upload a valid image (JPEG, PNG, GIF, WebP).', 'error');
+                return null;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image size must be less than 5MB.', 'error');
+                return null;
+            }
             const formData = new FormData();
             formData.append('file', file);
             try {
+                showLoader(loaderId);
                 const response = await fetch(`${BASE_URL}/api/files/upload`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
                     body: formData
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    localStorage.setItem('adminProfileImage', data.fileUrl);
                     return data.fileUrl;
                 }
                 showToast(data.error || 'Failed to upload image.', 'error');
@@ -1024,48 +1009,54 @@
                 console.error('Error uploading image:', error);
                 showToast('Failed to upload image.', 'error');
                 return null;
+            } finally {
+                hideLoader(loaderId);
             }
         }
 
         // Authentication and Profile
-        async function fetchAdminDetails() {
+        async function fetchProfileDetails() {
             try {
+                showLoader('profileLoader');
                 const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
                     const welcomeMessage = document.getElementById('welcomeMessage');
                     if (welcomeMessage) {
-                        welcomeMessage.textContent = `Welcome, ${data.name || 'Admin'}`;
+                        welcomeMessage.textContent = `Welcome, ${DOMPurify.sanitize(data.name || 'User')}`;
                     }
                     const profileName = document.getElementById('profileName');
-                    if (profileName) profileName.value = data.name || '';
+                    if (profileName) profileName.value = DOMPurify.sanitize(data.name || '');
                     const profileEmail = document.getElementById('profileEmail');
-                    if (profileEmail) profileEmail.value = data.email || '';
+                    if (profileEmail) profileEmail.value = DOMPurify.sanitize(data.email || '');
                     const profilePhone = document.getElementById('profilePhone');
-                    if (profilePhone) profilePhone.value = data.phone || '';
+                    if (profilePhone) profilePhone.value = DOMPurify.sanitize(data.phone || '');
                     const displayProfileName = document.getElementById('displayProfileName');
-                    if (displayProfileName) displayProfileName.textContent = data.name || '';
+                    if (displayProfileName) displayProfileName.textContent = DOMPurify.sanitize(data.name || '');
                     const displayProfileEmail = document.getElementById('displayProfileEmail');
-                    if (displayProfileEmail) displayProfileEmail.textContent = data.email || '';
+                    if (displayProfileEmail) displayProfileEmail.textContent = DOMPurify.sanitize(data.email || '');
                     const displayProfilePhone = document.getElementById('displayProfilePhone');
-                    if (displayProfilePhone) displayProfilePhone.textContent = data.phone || '';
-                    const savedProfileImage = localStorage.getItem('adminProfileImage') || data.profileImage;
+                    if (displayProfilePhone) displayProfilePhone.textContent = DOMPurify.sanitize(data.phone || '');
+                    const savedProfileImage = localStorage.getItem(PROFILE_IMAGE_KEY) || data.profileImage;
                     if (savedProfileImage) {
                         const profileImage = document.getElementById('profileImage');
-                        if (profileImage) profileImage.src = savedProfileImage;
+                        if (profileImage) profileImage.src = DOMPurify.sanitize(savedProfileImage);
                         const modalProfileImage = document.getElementById('modalProfileImage');
-                        if (modalProfileImage) modalProfileImage.src = savedProfileImage;
+                        if (modalProfileImage) modalProfileImage.src = DOMPurify.sanitize(savedProfileImage);
                         const displayProfileImage = document.getElementById('displayProfileImage');
-                        if (displayProfileImage) displayProfileImage.src = savedProfileImage;
+                        if (displayProfileImage) displayProfileImage.src = DOMPurify.sanitize(savedProfileImage);
                     }
                 } else {
-                    showToast(data.error || 'Failed to fetch admin details.', 'error');
+                    showToast(data.error || 'Failed to fetch profile details.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
-                console.error('Error fetching admin details:', error);
-                showToast('Failed to fetch admin details.', 'error');
+                console.error('Error fetching profile details:', error);
+                showToast('Failed to fetch profile details.', 'error');
+            } finally {
+                hideLoader('profileLoader');
             }
         }
 
@@ -1077,35 +1068,39 @@
                 showToast('Please select an image.', 'error');
                 return;
             }
-            const imageUrl = await uploadImage(file);
+            const imageUrl = await uploadImage(file, 'profileLoader');
             if (!imageUrl) return;
             try {
+                showLoader('profileLoader');
                 const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({ profileImage: imageUrl })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Profile image updated successfully!', 'success');
-                    fetchAdminDetails();
+                    localStorage.setItem(PROFILE_IMAGE_KEY, imageUrl);
+                    fetchProfileDetails();
                     closeModal('profileModal');
                 } else {
                     showToast(data.error || 'Failed to update profile image.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error updating profile image:', error);
                 showToast('Failed to update profile image.', 'error');
+            } finally {
+                hideLoader('profileLoader');
             }
         }
 
         async function checkAuth() {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem(TOKEN_KEY);
             if (!token) {
-                console.warn('No admin token found, redirecting to admin.html');
                 window.location.href = 'admin.html';
                 return;
             }
@@ -1115,25 +1110,22 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    fetchAdminDetails();
+                    fetchProfileDetails();
                     showSection('home');
-                    fetchOrders();
-                    fetchMenuItems();
-                    fetchRestaurantStatus();
+                    Promise.all([fetchOrders(), fetchMenuItems(), fetchRestaurantStatus()])
+                        .catch(error => {
+                            console.error('Error fetching initial data:', error);
+                            showToast('Failed to load initial data.', 'error');
+                        });
                 } else {
-                    console.error('Authentication failed:', data.error || 'Invalid response');
                     showToast(data.error || 'Session expired. Please log in again.', 'error');
-                    localStorage.removeItem('adminToken');
-                    localStorage.removeItem('adminProfileImage');
-                    window.location.href = 'admin.html';
+                    logout();
                 }
             } catch (error) {
-                console.error('Error during authentication check:', error.message);
+                console.error('Error during authentication check:', error);
                 showToast('Unable to verify session. Please try again later.', 'error');
                 if (error.message.includes('Unauthorized') || error.message.includes('401')) {
-                    localStorage.removeItem('adminToken');
-                    localStorage.removeItem('adminProfileImage');
-                    window.location.href = 'admin.html';
+                    logout();
                 }
             }
         }
@@ -1141,18 +1133,23 @@
         // Menu Management
         async function fetchMenuItems() {
             try {
+                showLoader('menuLoader');
                 const response = await fetch(`${BASE_URL}/api/menu`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const items = await response.json();
-                displayMenuItems(items);
-                const totalMenuItems = document.getElementById('totalMenuItems');
-                if (totalMenuItems) {
-                    totalMenuItems.textContent = items.length;
+                if (response.ok) {
+                    displayMenuItems(items);
+                    document.getElementById('totalMenuItems').textContent = items.length;
+                } else {
+                    showToast(items.error || 'Failed to fetch menu items.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching menu items:', error);
                 showToast('Failed to load menu items.', 'error');
+            } finally {
+                hideLoader('menuLoader');
             }
         }
 
@@ -1160,17 +1157,17 @@
             const menuTableBody = document.getElementById('menuTableBody');
             if (!menuTableBody) return;
             menuTableBody.innerHTML = items.map(item => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">
+                        ${item.image ? `<img src="${DOMPurify.sanitize(item.image)}" alt="${DOMPurify.sanitize(item.name)}" class="menu-img">` : 'No Image'}
                     </td>
-                    <td class="py-3 px-3">${item.name || 'N/A'}</td>
-                    <td class="py-3 px-3">${item.category || 'N/A'}</td>
-                    <td class="py-3 px-3 text-right">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</td>
-                    <td class="py-3 px-3">${item.description || 'N/A'}</td>
-                    <td class="py-3 px-3 flex space-x-2">
-                        <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                        <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(item.name || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(item.category || 'N/A')}</td>
+                    <td class="py-4 px-4 text-right">₹${item.price ? item.price.toFixed(2) : '0.00'}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(item.description || 'N/A')}</td>
+                    <td class="py-4 px-4 flex space-x-3">
+                        <button onclick="editMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
+                        <button onclick="deleteMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -1186,19 +1183,23 @@
                 description: document.getElementById('itemDescription')?.value.trim() || ''
             };
 
-            if (!item.name || !item.category || !item.price) {
+            if (!validateInput(item.name, 'text') || !validateInput(item.category, 'text') || !validateInput(item.price, 'number')) {
                 showToast('Item name, category, and price are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
+            const button = document.querySelector('#menuSection .auth-btn');
+            if (button) button.disabled = true;
+            showLoader('addMenuLoader');
+
+            const uploadedImageUrl = item.file ? await uploadImage(item.file, 'addMenuLoader') : item.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({
                         name: item.name,
@@ -1218,39 +1219,41 @@
                     fetchMenuItems();
                 } else {
                     showToast(data.error || 'Failed to add menu item.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error adding menu item:', error);
                 showToast('Failed to add menu item.', 'error');
+            } finally {
+                if (button) button.disabled = false;
+                hideLoader('addMenuLoader');
             }
         }
 
         async function editMenuItem(itemId) {
             try {
+                showLoader('menuLoader');
                 const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const item = await response.json();
                 if (response.ok) {
-                    const editItemId = document.getElementById('editItemId');
-                    if (editItemId) editItemId.value = item._id || '';
-                    const editItemName = document.getElementById('editItemName');
-                    if (editItemName) editItemName.value = item.name || '';
-                    const editItemPrice = document.getElementById('editItemPrice');
-                    if (editItemPrice) editItemPrice.value = item.price || '';
-                    const editItemCategory = document.getElementById('editItemCategory');
-                    if (editItemCategory) editItemCategory.value = item.category || '';
-                    const editItemImage = document.getElementById('editItemImage');
-                    if (editItemImage) editItemImage.value = item.image || '';
-                    const editItemDescription = document.getElementById('editItemDescription');
-                    if (editItemDescription) editItemDescription.value = item.description || '';
+                    document.getElementById('editItemId').value = DOMPurify.sanitize(item._id || '');
+                    document.getElementById('editItemName').value = DOMPurify.sanitize(item.name || '');
+                    document.getElementById('editItemPrice').value = item.price || '';
+                    document.getElementById('editItemCategory').value = DOMPurify.sanitize(item.category || '');
+                    document.getElementById('editItemImage').value = DOMPurify.sanitize(item.image || '');
+                    document.getElementById('editItemDescription').value = DOMPurify.sanitize(item.description || '');
                     showModal('editMenuModal');
                 } else {
                     showToast(item.error || 'Failed to load menu item.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching menu item:', error);
                 showToast('Failed to load menu item.', 'error');
+            } finally {
+                hideLoader('menuLoader');
             }
         }
 
@@ -1265,19 +1268,23 @@
                 description: document.getElementById('editItemDescription')?.value.trim() || ''
             };
 
-            if (!item.name || !item.category || !item.price) {
+            if (!validateInput(item.name, 'text') || !validateInput(item.category, 'text') || !validateInput(item.price, 'number')) {
                 showToast('Item name, category, and price are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
+            const button = document.querySelector('#editMenuModal .auth-btn');
+            if (button) button.disabled = true;
+            showLoader('menuLoader');
+
+            const uploadedImageUrl = item.file ? await uploadImage(item.file, 'menuLoader') : item.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/menu/${item.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({
                         name: item.name,
@@ -1294,19 +1301,24 @@
                     fetchMenuItems();
                 } else {
                     showToast(data.error || 'Failed to update menu item.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error updating menu item:', error);
                 showToast('Failed to update menu item.', 'error');
+            } finally {
+                if (button) button.disabled = false;
+                hideLoader('menuLoader');
             }
         }
 
         async function deleteMenuItem(itemId) {
             if (!confirm('Are you sure you want to delete this menu item?')) return;
             try {
+                showLoader('menuLoader');
                 const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1314,28 +1326,37 @@
                     fetchMenuItems();
                 } else {
                     showToast(data.error || 'Failed to delete menu item.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error deleting menu item:', error);
                 showToast('Failed to delete menu item.', 'error');
+            } finally {
+                hideLoader('menuLoader');
             }
         }
 
         // Order Management
         async function fetchOrders() {
             try {
+                showLoader('orderLoader');
                 const response = await fetch(`${BASE_URL}/api/orders`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const orders = await response.json();
-                displayOrders(orders);
-                const totalOrders = document.getElementById('totalOrders');
-                if (totalOrders) totalOrders.textContent = orders.length;
-                const pendingOrders = document.getElementById('pendingOrders');
-                if (pendingOrders) pendingOrders.textContent = orders.filter(order => order.status === 'Pending').length;
+                if (response.ok) {
+                    displayOrders(orders);
+                    document.getElementById('totalOrders').textContent = orders.length;
+                    document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
+                } else {
+                    showToast(orders.error || 'Failed to fetch orders.', 'error');
+                    if (response.status === 401) logout();
+                }
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 showToast('Failed to load orders.', 'error');
+            } finally {
+                hideLoader('orderLoader');
             }
         }
 
@@ -1343,18 +1364,21 @@
             const orderTableBody = document.getElementById('orderTableBody');
             if (!orderTableBody) return;
             orderTableBody.innerHTML = orders.map(order => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">${order._id || 'N/A'}</td>
-                    <td class="py-3 px-3">${order.customerName || 'N/A'}</td>
-                    <td class="py-3 px-3">${order.customerEmail || 'N/A'}</td>
-                    <td class="py-3 px-3">${order.customerPhone || 'N/A'}</td>
-                    <td class="py-3 px-3">${order.address || 'N/A'}</td>
-                    <td class="py-3 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                    <td class="py-3 px-3 text-center">${order.status || 'Pending'}</td>
-                    <td class="py-3 px-3 text-center">${order.paymentStatus || 'Pending'}</td>
-                    <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <button onclick="viewOrderDetails('${order._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
-                        ${order.status === 'Delivered' ? `<button onclick="deleteOrder('${order._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>` : ''}
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerName || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerEmail || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerPhone || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(order.address || 'N/A')}</td>
+                    <td class="py-4 px-4 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
+                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
+                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentStatus || 'N/A')}</td>
+                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentMethod || 'N/A')}</td>
+                    <td class="py-4 px-4 flex space-x-3">
+                        <button onclick="viewOrderDetails('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
+                        ${['Delivered', 'Cancelled'].includes(order.status) ? `
+                            <button onclick="deleteOrder('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
+                        ` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -1362,168 +1386,125 @@
 
         async function viewOrderDetails(orderId) {
             try {
+                showLoader('orderLoader');
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const order = await response.json();
                 if (response.ok) {
-                    const orderIdElement = document.getElementById('orderId');
-                    if (orderIdElement) orderIdElement.textContent = order._id || 'N/A';
-                    const orderCustomerName = document.getElementById('orderCustomerName');
-                    if (orderCustomerName) orderCustomerName.textContent = order.customerName || 'N/A';
-                    const orderCustomerEmail = document.getElementById('orderCustomerEmail');
-                    if (orderCustomerEmail) orderCustomerEmail.textContent = order.customerEmail || 'N/A';
-                    const orderCustomerPhone = document.getElementById('orderCustomerPhone');
-                    if (orderCustomerPhone) orderCustomerPhone.textContent = order.customerPhone || 'N/A';
-                    const orderAddress = document.getElementById('orderAddress');
-                    if (orderAddress) orderAddress.textContent = order.address || 'N/A';
-                    const orderDate = document.getElementById('orderDate');
-                    if (orderDate) orderDate.textContent = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
-                    const orderTotal = document.getElementById('orderTotal');
-                    if (orderTotal) orderTotal.textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
-                    const orderStatus = document.getElementById('orderStatus');
-                    if (orderStatus) orderStatus.textContent = order.status || 'Pending';
-                    const orderPaymentStatus = document.getElementById('orderPaymentStatus');
-                    if (orderPaymentStatus) orderPaymentStatus.textContent = order.paymentStatus || 'Pending';
+                    document.getElementById('orderId').textContent = DOMPurify.sanitize(order._id || 'N/A');
+                    document.getElementById('orderCustomerName').textContent = DOMPurify.sanitize(order.customerName || 'N/A');
+                    document.getElementById('orderCustomerEmail').textContent = DOMPurify.sanitize(order.customerEmail || 'N/A');
+                    document.getElementById('orderCustomerPhone').textContent = DOMPurify.sanitize(order.customerPhone || 'N/A');
+                    document.getElementById('orderAddress').textContent = DOMPurify.sanitize(order.address || 'N/A');
+                    document.getElementById('orderDate').textContent = DOMPurify.sanitize(new Date(order.createdAt).toLocaleString() || 'N/A');
+                    document.getElementById('orderTotal').textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
+                    document.getElementById('orderStatus').textContent = DOMPurify.sanitize(order.status || 'N/A');
+                    document.getElementById('orderPaymentStatus').textContent = DOMPurify.sanitize(order.paymentStatus || 'N/A');
+                    document.getElementById('orderPaymentMethod').textContent = DOMPurify.sanitize(order.paymentMethod || 'N/A');
+                    document.getElementById('orderItems').innerHTML = order.items?.map(item => `
+                        <div class="text-sm mb-3">
+                            ${DOMPurify.sanitize(item.name || 'N/A')} - ₹${item.price?.toFixed(2) || '0.00'} x ${item.quantity || 0}
+                        </div>
+                    `).join('') || 'No items';
+                    document.getElementById('orderReview').innerHTML = order.review ? `
+                        <div class="flex items-center space-x-3">
+                            <span class="rating-stars">${'★'.repeat(order.review.rating)}${'☆'.repeat(5 - order.review.rating)}</span>
+                            <span>${DOMPurify.sanitize(order.review.comment || 'No comment')}</span>
+                        </div>
+                    ` : 'No review';
                     const orderStatusSelect = document.getElementById('orderStatusSelect');
                     if (orderStatusSelect) orderStatusSelect.value = order.status || 'Pending';
-                    const updateOrderStatusBtn = document.getElementById('updateOrderStatusBtn');
-                    if (updateOrderStatusBtn) updateOrderStatusBtn.onclick = () => updateOrderStatus(orderId, orderStatusSelect.value, order.customerEmail);
-                    const refundOrderBtn = document.getElementById('refundOrderBtn');
-                    if (refundOrderBtn) {
-                        refundOrderBtn.style.display = order.paymentStatus === 'Paid' ? 'block' : 'none';
-                        refundOrderBtn.onclick = () => refundOrder(orderId);
-                    }
-                    const deleteOrderBtn = document.getElementById('deleteOrderBtn');
-                    if (deleteOrderBtn) {
-                        deleteOrderBtn.style.display = order.status === 'Delivered' ? 'block' : 'none';
-                        deleteOrderBtn.onclick = () => deleteOrder(orderId);
-                    }
-
-                    const orderItems = document.getElementById('orderItems');
-                    if (orderItems) {
-                        orderItems.innerHTML = order.items?.length ? `
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr>
-                                        <th class="py-2 px-3">Item</th>
-                                        <th class="py-2 px-3">Category</th>
-                                        <th class="py-2 px-3">Quantity</th>
-                                        <th class="py-2 px-3 text-right">Price</th>
-                                        <th class="py-2 px-3 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${order.items.map(item => `
-                                        <tr class="border-b">
-                                            <td class="py-2 px-3">${item.name || 'N/A'}</td>
-                                            <td class="py-2 px-3">${item.category || 'N/A'}</td>
-                                            <td class="py-2 px-3">${item.quantity || 1}</td>
-                                            <td class="py-2 px-3 text-right">₹${item.price?.toFixed(2) || '0.00'}</td>
-                                            <td class="py-2 px-3 text-right">₹${(item.price * item.quantity)?.toFixed(2) || '0.00'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : 'No items';
-                    }
-
-                    const orderReview = document.getElementById('orderReview');
-                    if (orderReview) {
-                        if (order.review) {
-                            const stars = '★'.repeat(order.review.rating) + '☆'.repeat(5 - order.review.rating);
-                            orderReview.innerHTML = `
-                                <p class="mb-2"><strong>Rating:</strong> <span class="rating-stars">${stars}</span> (${order.review.rating}/5)</p>
-                                <p><strong>Comment:</strong> ${order.review.comment || 'No comment'}</p>
-                                <p class="mt-2"><strong>Reviewed At:</strong> ${order.review.createdAt ? new Date(order.review.createdAt).toLocaleString() : 'N/A'}</p>
-                            `;
-                        } else {
-                            orderReview.innerHTML = 'No review provided';
-                        }
-                    }
-
+                    const refundBtn = document.getElementById('refundOrderBtn');
+                    if (refundBtn) refundBtn.classList.toggle('hidden', order.status !== 'Cancelled' || order.paymentStatus !== 'Paid' || !['PhonePe', 'GPay'].includes(order.paymentMethod));
+                    const deleteBtn = document.getElementById('deleteOrderBtn');
+                    if (deleteBtn) deleteBtn.classList.toggle('hidden', !['Delivered', 'Cancelled'].includes(order.status));
+                    const updateBtn = document.getElementById('updateOrderStatusBtn');
+                    if (updateBtn) updateBtn.onclick = () => updateOrderStatus(order._id);
+                    if (refundBtn) refundBtn.onclick = () => refundOrder(order._id, order.paymentMethod);
+                    if (deleteBtn) deleteBtn.onclick = () => deleteOrder(order._id);
                     showModal('orderDetailsModal');
                 } else {
                     showToast(order.error || 'Failed to load order details.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching order details:', error);
                 showToast('Failed to load order details.', 'error');
+            } finally {
+                hideLoader('orderLoader');
             }
         }
 
-        async function sendOrderEmail(orderId, status, customerEmail) {
-            try {
-                const response = await fetch(`${BASE_URL}/api/orders/${orderId}/notify`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify({ status, customerEmail })
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                    showToast(data.error || 'Failed to send email notification.', 'error');
-                }
-            } catch (error) {
-                console.error('Error sending email notification:', error);
-                showToast('Failed to send email notification.', 'error');
+        async function updateOrderStatus(orderId) {
+            const status = document.getElementById('orderStatusSelect')?.value;
+            if (!status) {
+                showToast('Please select a status.', 'error');
+                return;
             }
-        }
-
-        async function updateOrderStatus(orderId, status, customerEmail) {
             try {
+                showLoader('orderLoader');
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({ status })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Order status updated to ${status}!`, 'success');
-                    await sendOrderEmail(orderId, status, customerEmail);
+                    showToast('Order status updated successfully!', 'success');
                     closeModal('orderDetailsModal');
                     fetchOrders();
                 } else {
                     showToast(data.error || 'Failed to update order status.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error updating order status:', error);
                 showToast('Failed to update order status.', 'error');
+            } finally {
+                hideLoader('orderLoader');
             }
         }
 
-        async function refundOrder(orderId) {
-            if (!confirm('Are you sure you want to refund this order?')) return;
+        async function refundOrder(orderId, paymentMethod) {
+            if (!confirm(`Are you sure you want to refund this order via ${paymentMethod}?`)) return;
             try {
+                showLoader('orderLoader');
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                    },
+                    body: JSON.stringify({ paymentMethod })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Order refunded successfully!', 'success');
+                    showToast('Refund processed successfully!', 'success');
                     closeModal('orderDetailsModal');
                     fetchOrders();
                 } else {
                     showToast(data.error || 'Failed to process refund.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error processing refund:', error);
                 showToast('Failed to process refund.', 'error');
+            } finally {
+                hideLoader('orderLoader');
             }
         }
 
         async function deleteOrder(orderId) {
-            if (!confirm('Are you sure you want to delete this delivered order?')) return;
+            if (!confirm('Are you sure you want to delete this order?')) return;
             try {
+                showLoader('orderLoader');
                 const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1532,195 +1513,35 @@
                     fetchOrders();
                 } else {
                     showToast(data.error || 'Failed to delete order.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error deleting order:', error);
                 showToast('Failed to delete order.', 'error');
-            }
-        }
-
-        // Special Offers
-        async function fetchOffers() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                });
-                const offers = await response.json();
-                displayOffers(offers);
-            } catch (error) {
-                console.error('Error fetching offers:', error);
-                showToast('Failed to load offers.', 'error');
-            }
-        }
-
-        function displayOffers(offers) {
-            const offerTableBody = document.getElementById('offerTableBody');
-            if (!offerTableBody) return;
-            offerTableBody.innerHTML = offers.map(offer => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        ${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}
-                    </td>
-                    <td class="py-3 px-3">${offer.name || 'N/A'}</td>
-                    <td class="py-3 px-3 text-right">₹${offer.price?.toFixed(2) || '0.00'}</td>
-                    <td class="py-3 px-3 flex space-x-2">
-                        <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                        <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function addOffer() {
-            const offer = {
-                name: document.getElementById('offerName')?.value.trim() || '',
-                price: parseFloat(document.getElementById('offerPrice')?.value) || null,
-                imageUrl: document.getElementById('offerImage')?.value.trim() || '',
-                file: document.getElementById('offerImageUpload')?.files[0] || null,
-                description: document.getElementById('offerDescription')?.value.trim() || ''
-            };
-
-            if (!offer.name || !offer.price) {
-                showToast('Offer name and price are required.', 'error');
-                return;
-            }
-
-            const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify({
-                        name: offer.name,
-                        price: offer.price,
-                        image: uploadedImageUrl,
-                        description: offer.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Offer added successfully!', 'success');
-                    ['offerName', 'offerPrice', 'offerImage', 'offerImageUpload', 'offerDescription'].forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) element.value = '';
-                    });
-                    fetchOffers();
-                } else {
-                    showToast(data.error || 'Failed to add offer.', 'error');
-                }
-            } catch (error) {
-                console.error('Error adding offer:', error);
-                showToast('Failed to add offer.', 'error');
-            }
-        }
-
-        async function editOffer(offerId) {
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers/${offerId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                });
-                const offer = await response.json();
-                if (response.ok) {
-                    const editOfferId = document.getElementById('editOfferId');
-                    if (editOfferId) editOfferId.value = offer._id || '';
-                    const editOfferName = document.getElementById('editOfferName');
-                    if (editOfferName) editOfferName.value = offer.name || '';
-                    const editOfferPrice = document.getElementById('editOfferPrice');
-                    if (editOfferPrice) editOfferPrice.value = offer.price || '';
-                    const editOfferImage = document.getElementById('editOfferImage');
-                    if (editOfferImage) editOfferImage.value = offer.image || '';
-                    const editOfferDescription = document.getElementById('editOfferDescription');
-                    if (editOfferDescription) editOfferDescription.value = offer.description || '';
-                    showModal('editOfferModal');
-                } else {
-                    showToast(offer.error || 'Failed to load offer.', 'error');
-                }
-            } catch (error) {
-                console.error('Error fetching offer:', error);
-                showToast('Failed to load offer.', 'error');
-            }
-        }
-
-        async function updateOffer() {
-            const offer = {
-                id: document.getElementById('editOfferId')?.value || '',
-                name: document.getElementById('editOfferName')?.value.trim() || '',
-                price: parseFloat(document.getElementById('editOfferPrice')?.value) || null,
-                imageUrl: document.getElementById('editOfferImage')?.value.trim() || '',
-                file: document.getElementById('editOfferImageUpload')?.files[0] || null,
-                description: document.getElementById('editOfferDescription')?.value.trim() || ''
-            };
-
-            if (!offer.name || !offer.price) {
-                showToast('Offer name and price are required.', 'error');
-                return;
-            }
-
-            const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    },
-                    body: JSON.stringify({
-                        name: offer.name,
-                        price: offer.price,
-                        image: uploadedImageUrl,
-                        description: offer.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Offer updated successfully!', 'success');
-                    closeModal('editOfferModal');
-                    fetchOffers();
-                } else {
-                    showToast(data.error || 'Failed to update offer.', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating offer:', error);
-                showToast('Failed to update offer.', 'error');
-            }
-        }
-
-        async function deleteOffer(offerId) {
-            if (!confirm('Are you sure you want to delete this offer?')) return;
-            try {
-                const response = await fetch(`${BASE_URL}/api/offers/${offerId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Offer deleted successfully!', 'success');
-                    fetchOffers();
-                } else {
-                    showToast(data.error || 'Failed to delete offer.', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting offer:', error);
-                showToast('Failed to delete offer.', 'error');
+            } finally {
+                hideLoader('orderLoader');
             }
         }
 
         // Coupon Management
         async function fetchCoupons() {
             try {
+                showLoader('couponLoader');
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const coupons = await response.json();
-                displayCoupons(coupons);
+                if (response.ok) {
+                    displayCoupons(coupons);
+                } else {
+                    showToast(coupons.error || 'Failed to fetch coupons.', 'error');
+                    if (response.status === 401) logout();
+                }
             } catch (error) {
                 console.error('Error fetching coupons:', error);
                 showToast('Failed to load coupons.', 'error');
+            } finally {
+                hideLoader('couponLoader');
             }
         }
 
@@ -1728,15 +1549,15 @@
             const couponTableBody = document.getElementById('couponTableBody');
             if (!couponTableBody) return;
             couponTableBody.innerHTML = coupons.map(coupon => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        ${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code}" class="menu-img">` : 'No Image'}
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">
+                        ${coupon.image ? `<img src="${DOMPurify.sanitize(coupon.image)}" alt="${DOMPurify.sanitize(coupon.code)}" class="menu-img">` : 'No Image'}
                     </td>
-                    <td class="py-3 px-3">${coupon.code || 'N/A'}</td>
-                    <td class="py-3 px-3 text-right">${coupon.discount || 0}%</td>
-                    <td class="py-3 px-3 flex space-x-2">
-                        <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                        <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(coupon.code || 'N/A')}</td>
+                    <td class="py-4 px-4 text-right">${coupon.discount || 0}%</td>
+                    <td class="py-4 px-4 flex space-x-3">
+                        <button onclick="editCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
+                        <button onclick="deleteCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -1751,19 +1572,22 @@
                 description: document.getElementById('couponDescription')?.value.trim() || ''
             };
 
-            if (!coupon.code || !coupon.discount) {
+            if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
                 showToast('Coupon code and discount are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
+            const button = document.querySelector('#couponsSection .auth-btn');
+            if (button) button.disabled = true;
+            showLoader('addCouponLoader');
+            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'addCouponLoader') : coupon.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({
                         code: coupon.code,
@@ -1782,37 +1606,40 @@
                     fetchCoupons();
                 } else {
                     showToast(data.error || 'Failed to add coupon.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error adding coupon:', error);
                 showToast('Failed to add coupon.', 'error');
+            } finally {
+                if (button) button.disabled = false;
+                hideLoader('addCouponLoader');
             }
         }
 
         async function editCoupon(couponId) {
             try {
+                showLoader('couponLoader');
                 const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const coupon = await response.json();
                 if (response.ok) {
-                    const editCouponId = document.getElementById('editCouponId');
-                    if (editCouponId) editCouponId.value = coupon._id || '';
-                    const editCouponCode = document.getElementById('editCouponCode');
-                    if (editCouponCode) editCouponCode.value = coupon.code || '';
-                    const editCouponDiscount = document.getElementById('editCouponDiscount');
-                    if (editCouponDiscount) editCouponDiscount.value = coupon.discount || '';
-                    const editCouponImage = document.getElementById('editCouponImage');
-                    if (editCouponImage) editCouponImage.value = coupon.image || '';
-                    const editCouponDescription = document.getElementById('editCouponDescription');
-                    if (editCouponDescription) editCouponDescription.value = coupon.description || '';
+                    document.getElementById('editCouponId').value = DOMPurify.sanitize(coupon._id || '');
+                    document.getElementById('editCouponCode').value = DOMPurify.sanitize(coupon.code || '');
+                    document.getElementById('editCouponDiscount').value = coupon.discount || '';
+                    document.getElementById('editCouponImage').value = DOMPurify.sanitize(coupon.image || '');
+                    document.getElementById('editCouponDescription').value = DOMPurify.sanitize(coupon.description || '');
                     showModal('editCouponModal');
                 } else {
                     showToast(coupon.error || 'Failed to load coupon.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching coupon:', error);
                 showToast('Failed to load coupon.', 'error');
+            } finally {
+                hideLoader('couponLoader');
             }
         }
 
@@ -1826,19 +1653,23 @@
                 description: document.getElementById('editCouponDescription')?.value.trim() || ''
             };
 
-            if (!coupon.code || !coupon.discount) {
+            if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
                 showToast('Coupon code and discount are required.', 'error');
                 return;
             }
 
-            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
+            const button = document.querySelector('#editCouponModal .auth-btn');
+            if (button) button.disabled = true;
+            showLoader('couponLoader');
+
+            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'couponLoader') : coupon.imageUrl || null;
 
             try {
                 const response = await fetch(`${BASE_URL}/api/coupons/${coupon.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({
                         code: coupon.code,
@@ -1854,19 +1685,24 @@
                     fetchCoupons();
                 } else {
                     showToast(data.error || 'Failed to update coupon.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error updating coupon:', error);
                 showToast('Failed to update coupon.', 'error');
+            } finally {
+                if (button) button.disabled = false;
+                hideLoader('couponLoader');
             }
         }
 
         async function deleteCoupon(couponId) {
             if (!confirm('Are you sure you want to delete this coupon?')) return;
             try {
+                showLoader('couponLoader');
                 const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1874,24 +1710,35 @@
                     fetchCoupons();
                 } else {
                     showToast(data.error || 'Failed to delete coupon.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error deleting coupon:', error);
                 showToast('Failed to delete coupon.', 'error');
+            } finally {
+                hideLoader('couponLoader');
             }
         }
 
         // Customer Management
         async function fetchCustomers() {
             try {
+                showLoader('customerLoader');
                 const response = await fetch(`${BASE_URL}/api/users`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const customers = await response.json();
-                displayCustomers(customers);
+                if (response.ok) {
+                    displayCustomers(customers);
+                } else {
+                    showToast(customers.error || 'Failed to fetch customers.', 'error');
+                    if (response.status === 401) logout();
+                }
             } catch (error) {
                 console.error('Error fetching customers:', error);
                 showToast('Failed to load customers.', 'error');
+            } finally {
+                hideLoader('customerLoader');
             }
         }
 
@@ -1899,14 +1746,14 @@
             const customerTableBody = document.getElementById('customerTableBody');
             if (!customerTableBody) return;
             customerTableBody.innerHTML = customers.map(customer => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">${customer.name || 'N/A'}</td>
-                    <td class="py-3 px-3">${customer.email || 'N/A'}</td>
-                    <td class="py-3 px-3">${customer.phone || 'N/A'}</td>
-                    <td class="py-3 px-3">${customer.address || 'N/A'}</td>
-                    <td class="py-3 px-3 text-center">${customer.status || 'Active'}</td>
-                    <td class="py-3 px-3 flex space-x-2">
-                        <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.name || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.email || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.phone || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.address || 'N/A')}</td>
+                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(customer.status || 'Active')}</td>
+                    <td class="py-4 px-4 flex space-x-3">
+                        <button onclick="viewCustomerDetails('${DOMPurify.sanitize(customer._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
                     </td>
                 </tr>
             `).join('');
@@ -1914,76 +1761,75 @@
 
         async function viewCustomerDetails(customerId) {
             try {
+                showLoader('customerLoader');
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const customer = await response.json();
                 if (response.ok) {
-                    const customerName = document.getElementById('customerName');
-                    if (customerName) customerName.textContent = customer.name || 'N/A';
-                    const customerEmail = document.getElementById('customerEmail');
-                    if (customerEmail) customerEmail.textContent = customer.email || 'N/A';
-                    const customerPhone = document.getElementById('customerPhone');
-                    if (customerPhone) customerPhone.textContent = customer.phone || 'N/A';
-                    const customerAddress = document.getElementById('customerAddress');
-                    if (customerAddress) customerAddress.textContent = customer.address || 'N/A';
-                    const customerStatus = document.getElementById('customerStatus');
-                    if (customerStatus) customerStatus.textContent = customer.status || 'Active';
+                    document.getElementById('customerName').textContent = DOMPurify.sanitize(customer.name || 'N/A');
+                    document.getElementById('customerEmail').textContent = DOMPurify.sanitize(customer.email || 'N/A');
+                    document.getElementById('customerPhone').textContent = DOMPurify.sanitize(customer.phone || 'N/A');
+                    document.getElementById('customerAddress').textContent = DOMPurify.sanitize(customer.address || 'N/A');
+                    document.getElementById('customerStatus').textContent = DOMPurify.sanitize(customer.status || 'Active');
                     const blockUnblockBtn = document.getElementById('blockUnblockBtn');
                     if (blockUnblockBtn) {
                         blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
-                        blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
-                        blockUnblockBtn.onclick = () => toggleCustomerStatus(customerId, customer.status);
+                        blockUnblockBtn.className = `auth-btn ${customer.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} px-4 py-2`;
+                        blockUnblockBtn.onclick = () => toggleCustomerStatus(customer._id, customer.status);
                     }
-
-                    const orderResponse = await fetch(`${BASE_URL}/api/orders/customer/${customerId}`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    const ordersResponse = await fetch(`${BASE_URL}/api/orders/user/${customerId}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                     });
-                    const orders = await orderResponse.json();
-                    const customerOrderHistory = document.getElementById('customerOrderHistory');
-                    if (customerOrderHistory) {
-                        customerOrderHistory.innerHTML = orders.length ? `
+                    const orders = await ordersResponse.json();
+                    if (ordersResponse.ok) {
+                        document.getElementById('customerOrderHistory').innerHTML = orders.length > 0 ? `
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr>
-                                        <th class="py-2 px-3">Order ID</th>
-                                        <th class="py-2 px-3">Date</th>
-                                        <th class="py-2 px-3">Total</th>
-                                        <th class="py-2 px-3">Status</th>
+                                        <th class="py-2 px-4">Order ID</th>
+                                        <th class="py-2 px-4">Date</th>
+                                        <th class="py-2 px-4">Total</th>
+                                        <th class="py-2 px-4">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${orders.map(order => `
                                         <tr class="border-b">
-                                            <td class="py-2 px-3">${order._id || 'N/A'}</td>
-                                            <td class="py-2 px-3">${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</td>
-                                            <td class="py-2 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                                            <td class="py-2 px-3">${order.status || 'Pending'}</td>
+                                            <td class="py-2 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
+                                            <td class="py-2 px-4">${DOMPurify.sanitize(new Date(order.createdAt).toLocaleDateString() || 'N/A')}</td>
+                                            <td class="py-2 px-4 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
+                                            <td class="py-2 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
-                        ` : 'No orders found';
+                        ` : 'No orders found.';
+                    } else {
+                        document.getElementById('customerOrderHistory').innerHTML = 'Failed to load order history.';
                     }
-
                     showModal('customerDetailsModal');
                 } else {
                     showToast(customer.error || 'Failed to load customer details.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching customer details:', error);
                 showToast('Failed to load customer details.', 'error');
+            } finally {
+                hideLoader('customerLoader');
             }
         }
 
         async function toggleCustomerStatus(customerId, currentStatus) {
             const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
             try {
+                showLoader('customerLoader');
                 const response = await fetch(`${BASE_URL}/api/users/${customerId}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
                     body: JSON.stringify({ status: newStatus })
                 });
@@ -1994,24 +1840,35 @@
                     fetchCustomers();
                 } else {
                     showToast(data.error || `Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
-                console.error(`Error ${newStatus.toLowerCase()} customer:`, error);
+                console.error(`Error toggling customer status:`, error);
                 showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+            } finally {
+                hideLoader('customerLoader');
             }
         }
 
         // Contact Messages
         async function fetchContactMessages() {
             try {
+                showLoader('replyLoader');
                 const response = await fetch(`${BASE_URL}/api/contact`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const messages = await response.json();
-                displayContactMessages(messages);
+                if (response.ok) {
+                    displayContactMessages(messages);
+                } else {
+                    showToast(messages.error || 'Failed to fetch contact messages.', 'error');
+                    if (response.status === 401) logout();
+                }
             } catch (error) {
                 console.error('Error fetching contact messages:', error);
                 showToast('Failed to load contact messages.', 'error');
+            } finally {
+                hideLoader('replyLoader');
             }
         }
 
@@ -2019,61 +1876,54 @@
             const contactTableBody = document.getElementById('contactTableBody');
             if (!contactTableBody) return;
             contactTableBody.innerHTML = messages.map(message => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-3">${message.name || 'N/A'}</td>
-                    <td class="py-3 px-3">${message.email || 'N/A'}</td>
-                    <td class="py-3 px-3">${message.subject || 'N/A'}</td>
-                    <td class="py-3 px-3">${message.message?.substring(0, 50) || 'N/A'}${message.message?.length > 50 ? '...' : ''}</td>
-                    <td class="py-3 px-3 text-center">${message.status || 'Pending'}</td>
-                    <td class="py-3 px-3 flex space-x-2">
-                        <button onclick="viewContactMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
-                        <button onclick="deleteContactMessage('${message._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">${DOMPurify.sanitize(message.name || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(message.email || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(message.subject || 'N/A')}</td>
+                    <td class="py-4 px-4">${DOMPurify.sanitize(message.message.substring(0, 50) || 'N/A')}${message.message.length > 50 ? '...' : ''}</td>
+                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(message.status || 'Pending')}</td>
+                    <td class="py-4 px-4 flex space-x-3">
+                        <button onclick="replyContactMessage('${DOMPurify.sanitize(message._id)}', '${DOMPurify.sanitize(message.subject)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Reply</button>
+                        <button onclick="deleteContactMessage('${DOMPurify.sanitize(message._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        async function viewContactMessage(messageId) {
-            try {
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-                });
-                const message = await response.json();
-                if (response.ok) {
-                    const contactMessageId = document.getElementById('contactMessageId');
-                    if (contactMessageId) contactMessageId.value = message._id || '';
-                    const contactReplySubject = document.getElementById('contactReplySubject');
-                    if (contactReplySubject) contactReplySubject.value = `Re: ${message.subject || 'Your Message'}`;
-                    const contactReplyMessage = document.getElementById('contactReplyMessage');
-                    if (contactReplyMessage) contactReplyMessage.value = `\n\n--- Original Message ---\n${message.message || 'N/A'}`;
-                    showModal('replyContactModal');
-                } else {
-                    showToast(message.error || 'Failed to load message.', 'error');
-                }
-            } catch (error) {
-                console.error('Error fetching contact message:', error);
-                showToast('Failed to load message.', 'error');
-            }
+        function replyContactMessage(messageId, subject) {
+            document.getElementById('contactMessageId').value = DOMPurify.sanitize(messageId);
+            document.getElementById('contactReplySubject').value = DOMPurify.sanitize(`Re: ${subject}`);
+            document.getElementById('contactReplyMessage').value = '';
+            showModal('replyContactModal');
         }
 
         async function sendReply() {
-            const messageId = document.getElementById('contactMessageId')?.value || '';
-            const subject = document.getElementById('contactReplySubject')?.value.trim() || '';
-            const message = document.getElementById('contactReplyMessage')?.value.trim() || '';
+            const reply = {
+                messageId: document.getElementById('contactMessageId')?.value || '',
+                subject: document.getElementById('contactReplySubject')?.value.trim() || '',
+                message: document.getElementById('contactReplyMessage')?.value.trim() || ''
+            };
 
-            if (!subject || !message) {
+            if (!validateInput(reply.subject, 'text') || !validateInput(reply.message, 'text')) {
                 showToast('Subject and message are required.', 'error');
                 return;
             }
 
+            const button = document.querySelector('#replyContactModal .auth-btn');
+            if (button) button.disabled = true;
+            showLoader('replyLoader');
+
             try {
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
+                const response = await fetch(`${BASE_URL}/api/contact/${reply.messageId}/reply`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     },
-                    body: JSON.stringify({ subject, message })
+                    body: JSON.stringify({
+                        subject: reply.subject,
+                        message: reply.message
+                    })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -2082,19 +1932,24 @@
                     fetchContactMessages();
                 } else {
                     showToast(data.error || 'Failed to send reply.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error sending reply:', error);
                 showToast('Failed to send reply.', 'error');
+            } finally {
+                if (button) button.disabled = false;
+                hideLoader('replyLoader');
             }
         }
 
         async function deleteContactMessage(messageId) {
             if (!confirm('Are you sure you want to delete this message?')) return;
             try {
+                showLoader('replyLoader');
                 const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -2102,10 +1957,13 @@
                     fetchContactMessages();
                 } else {
                     showToast(data.error || 'Failed to delete message.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error deleting contact message:', error);
                 showToast('Failed to delete message.', 'error');
+            } finally {
+                hideLoader('replyLoader');
             }
         }
 
@@ -2113,63 +1971,67 @@
         async function fetchRestaurantStatus() {
             try {
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    const restaurantStatus = document.getElementById('restaurantStatus');
-                    if (restaurantStatus) restaurantStatus.textContent = data.isOpen ? 'Open' : 'Closed';
-                    const statusToggleBtn = document.getElementById('statusToggleBtn');
-                    if (statusToggleBtn) {
-                        statusToggleBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
-                        statusToggleBtn.className = `auth-btn px-4 py-2 mt-3 ${data.isOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+                    const statusText = document.getElementById('restaurantStatus');
+                    const statusBtn = document.getElementById('statusToggleBtn');
+                    if (statusText) statusText.textContent = data.isOpen ? 'Open' : 'Closed';
+                    if (statusBtn) {
+                        statusBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+                        statusBtn.className = `auth-btn px-6 py-3 mt-4 ${data.isOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
                     }
                 } else {
                     showToast(data.error || 'Failed to fetch restaurant status.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error fetching restaurant status:', error);
-                showToast('Failed to fetch restaurant status.', 'error');
+                showToast('Failed to load restaurant status.', 'error');
             }
         }
 
         async function toggleRestaurantStatus() {
             try {
+                showLoader('statusLoader');
                 const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
                     }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(`Restaurant is now ${data.isOpen ? 'open' : 'closed'}!`, 'success');
+                    showToast(`Restaurant ${data.isOpen ? 'opened' : 'closed'} successfully!`, 'success');
                     fetchRestaurantStatus();
                 } else {
                     showToast(data.error || 'Failed to update restaurant status.', 'error');
+                    if (response.status === 401) logout();
                 }
             } catch (error) {
                 console.error('Error toggling restaurant status:', error);
                 showToast('Failed to update restaurant status.', 'error');
+            } finally {
+                hideLoader('statusLoader');
             }
         }
 
         // Logout
         function logout() {
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminProfileImage');
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(PROFILE_IMAGE_KEY);
             window.location.href = 'admin.html';
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
-            // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
-                const profileContainer = document.querySelector('.profile-container');
                 const dropdown = document.getElementById('profileDropdown');
-                if (profileContainer && dropdown && !profileContainer.contains(e.target)) {
+                const profileImg = document.getElementById('profileImage');
+                if (dropdown && profileImg && !dropdown.contains(e.target) && !profileImg.contains(e.target)) {
                     dropdown.classList.remove('active');
                 }
             });
@@ -2177,4 +2039,3 @@
     </script>
 </body>
 </html>
-

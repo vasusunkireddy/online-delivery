@@ -228,18 +228,10 @@
             toast.className = `toast ${type}`;
             toast.textContent = message;
             toastContainer.appendChild(toast);
-
-            // Show toast
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 100);
-
-            // Auto-remove toast after 3 seconds
+            setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => {
                 toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
@@ -271,31 +263,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const text = await response.text();
-                console.log('Admin login response:', text);
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Failed to parse response:', text);
-                    showToast('Invalid server response.', 'error');
-                    return;
-                }
+                const data = await response.json();
                 if (response.ok) {
-                    console.log('Token received:', data.token);
                     localStorage.setItem('adminToken', data.token);
-                    console.log('Stored Token:', localStorage.getItem('adminToken'));
                     showToast('Admin login successful!', 'success');
-                    setTimeout(() => {
-                        console.log('Redirecting to /admindashboard.html');
-                        window.location.assign('/admindashboard.html');
-                    }, 1000);
+                    setTimeout(() => window.location.assign('/admindashboard.html'), 1000);
                 } else {
                     showToast(data.error || 'Admin login failed.', 'error');
                 }
             } catch (error) {
-                console.error('Admin login error:', error);
-                showToast('Failed to log in. Please check your connection and try again.', 'error');
+                showToast('Failed to log in. Please try again.', 'error');
             }
         }
 
@@ -304,43 +281,26 @@
             const email = document.getElementById('signupEmail').value;
             const phone = document.getElementById('signupPhone').value;
             const password = document.getElementById('signupPassword').value;
-
             if (!name || !email || !phone || !password) {
                 showToast('Please fill in all fields.', 'error');
                 return;
             }
-
             try {
                 const response = await fetch(`${BASE_URL}/api/auth/admin/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, phone, password })
                 });
-                const text = await response.text();
-                console.log('Admin signup response:', text);
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Failed to parse response:', text);
-                    showToast('Invalid server response.', 'error');
-                    return;
-                }
+                const data = await response.json();
                 if (response.ok) {
-                    console.log('Token received:', data.token);
                     localStorage.setItem('adminToken', data.token);
-                    console.log('Stored Token:', localStorage.getItem('adminToken'));
-                    showToast('Admin signup successful! You are now logged in.', 'success');
-                    setTimeout(() => {
-                        console.log('Redirecting to /admindashboard.html');
-                        window.location.assign('/admindashboard.html');
-                    }, 1000);
+                    showToast('Admin signup successful!', 'success');
+                    setTimeout(() => window.location.assign('/admindashboard.html'), 1000);
                 } else {
                     showToast(data.error || 'Admin signup failed.', 'error');
                 }
             } catch (error) {
-                console.error('Admin signup error:', error);
-                showToast('Failed to sign up. Please check your connection and try again.', 'error');
+                showToast('Failed to sign up. Please try again.', 'error');
             }
         }
 
@@ -356,16 +316,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-                const text = await response.text();
-                console.log('Send OTP response:', text);
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Failed to parse response:', text);
-                    showToast('Invalid server response.', 'error');
-                    return;
-                }
+                const data = await response.json();
                 if (response.ok) {
                     showToast(data.message, 'success');
                     document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
@@ -374,8 +325,7 @@
                     showToast(data.error || 'Failed to send OTP.', 'error');
                 }
             } catch (error) {
-                console.error('Error sending OTP:', error);
-                showToast('Failed to send OTP. Please check your connection and try again.', 'error');
+                showToast('Failed to send OTP. Please try again.', 'error');
             }
         }
 
@@ -392,16 +342,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp, newPassword: null })
                 });
-                const text = await response.text();
-                console.log('Verify OTP response:', text);
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Failed to parse response:', text);
-                    showToast('Invalid server response.', 'error');
-                    return;
-                }
+                const data = await response.json();
                 if (response.ok) {
                     showToast('OTP verified successfully!', 'success');
                     document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
@@ -410,7 +351,6 @@
                     showToast(data.error || 'Invalid OTP.', 'error');
                 }
             } catch (error) {
-                console.error('Error verifying OTP:', error);
                 showToast('Failed to verify OTP. Please try again.', 'error');
             }
         }
@@ -434,36 +374,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp, newPassword })
                 });
-                const text = await response.text();
-                console.log('Reset password response:', text);
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Failed to parse response:', text);
-                    showToast('Invalid server response.', 'error');
-                    return;
-                }
+                const data = await response.json();
                 if (response.ok) {
                     showToast(data.message, 'success');
-                    setTimeout(() => {
-                        showLogin();
-                    }, 1000);
+                    setTimeout(() => showLogin(), 1000);
                 } else {
                     showToast(data.error || 'Failed to reset password.', 'error');
                 }
             } catch (error) {
-                console.error('Error resetting password:', error);
                 showToast('Failed to reset password. Please try again.', 'error');
             }
         }
 
         window.onload = () => {
             const adminToken = localStorage.getItem('adminToken');
-            console.log('Checking token on load:', adminToken);
-            // Only redirect if not already on dashboard
-            if (adminToken && window.location.pathname !== '/admindashboard.html') {
-                console.log('Token found, redirecting to dashboard');
+            // Only redirect to dashboard if not on /admin.html
+            if (adminToken && window.location.pathname !== '/admin.html' && window.location.pathname !== '/admin') {
                 window.location.assign('/admindashboard.html');
             } else {
                 showLogin();

@@ -401,3 +401,16 @@
 {"level":"info","message":"Database connected successfully","timestamp":"2025-05-12T14:25:58.413Z"}
 {"databaseUrl":"postgresql://<user>:<pass>@postgres:9810@localhost:5432/delicute_db","level":"error","message":"Database connection attempt failed (0 retries left) column \"image\" of relation \"users\" does not exist","stack":"error: column \"image\" of relation \"users\" does not exist\n    at C:\\Users\\svasu\\OneDrive\\Desktop\\Delicute\\node_modules\\pg\\lib\\client.js:545:17\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async initializeDatabase (C:\\Users\\svasu\\OneDrive\\Desktop\\Delicute\\server.js:267:28)\n    at async startServer (C:\\Users\\svasu\\OneDrive\\Desktop\\Delicute\\server.js:1082:5)","timestamp":"2025-05-12T14:25:58.553Z"}
 >>>>>>> 3d3eaa666bc79b072af73f5d3ffa91ebbfdcd0e1
+{"level":"info","message":"Attempting to connect to MySQL...","timestamp":"2025-06-08T08:45:21.688Z"}
+{"level":"info","message":"✅ Connected to MySQL database","timestamp":"2025-06-08T08:45:21.779Z"}
+{"level":"info","message":"✅ Created users table","timestamp":"2025-06-08T08:45:21.844Z"}
+{"level":"info","message":"✅ Created addresses table","timestamp":"2025-06-08T08:45:21.848Z"}
+{"level":"info","message":"✅ Created menu_items table","timestamp":"2025-06-08T08:45:21.850Z"}
+{"level":"info","message":"✅ Created offers table","timestamp":"2025-06-08T08:45:21.852Z"}
+{"level":"info","message":"✅ Created orders table","timestamp":"2025-06-08T08:45:21.855Z"}
+{"level":"info","message":"✅ Created restaurant_status table","timestamp":"2025-06-08T08:45:21.858Z"}
+{"level":"info","message":"✅ Created coupons table","timestamp":"2025-06-08T08:45:21.866Z"}
+{"level":"info","message":"✅ Created contact_messages table","timestamp":"2025-06-08T08:45:21.868Z"}
+{"level":"info","message":"✅ Database initialization completed","timestamp":"2025-06-08T08:45:21.870Z"}
+{"level":"info","message":"📋 Tables:","timestamp":"2025-06-08T08:45:21.872Z"}
+{"level":"info","message":"Server running on port 3000 in development mode","timestamp":"2025-06-08T08:45:21.875Z"}
