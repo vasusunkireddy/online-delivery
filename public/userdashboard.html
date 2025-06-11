@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - User Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f0f2f6 0%, #e5e7eb 100%);
+            background: linear-gradient(135deg, rgba(0, 0,0, 0.7), rgba(0,0,0,0,0.7)), url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #1f2937;
             transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
         }
         body.dark-mode {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            background: linear-gradient(135deg, rgba(31,31,41, 0.9), rgba(55,65,81,0.9)), url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
             color: #e5e7eb;
         }
         .modal {
@@ -24,34 +27,39 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0, 0.8);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
+            animation: fadeIn 0.3s ease;
         }
         .modal-content {
             background: white;
             padding: 24px;
             border-radius: 16px;
             max-width: 90%;
-            width: 500px;
+            width: 600px;
             position: relative;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0, 0.4);
             animation: slideIn 0.3s ease-out;
         }
         body.dark-mode .modal-content {
-            background: #374151;
+            background: #1f2937;
         }
         @keyframes slideIn {
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         .close-btn {
             position: absolute;
             top: 12px;
             right: 12px;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
             color: #374151;
             transition: color 0.2s;
@@ -64,15 +72,15 @@
         }
         .toast {
             position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 12px 16px;
-            border-radius: 8px;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
             color: white;
             z-index: 2000;
             display: none;
-            min-width: 200px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
+            box-shadow: 0 6px 12px rgba(0,0,0, 0.3);
             animation: fadeIn 0.3s ease-in;
         }
         .toast.success {
@@ -80,10 +88,6 @@
         }
         .toast.error {
             background-color: #ef4444;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
         .btn-primary {
             background: linear-gradient(90deg, #f59e0b, #d97706);
@@ -95,15 +99,18 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            font-weight: 600;
         }
         .btn-primary:hover {
             background: linear-gradient(90deg, #d97706, #f59e0b);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 16px rgba(0,0,0, 0.3);
         }
         .btn-primary:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .btn-secondary {
             background: linear-gradient(90deg, #6b7280, #4b5563);
@@ -111,6 +118,7 @@
             padding: 8px 16px;
             border-radius: 9999px;
             transition: background 0.3s, transform 0.2s;
+            font-weight: 600;
         }
         .btn-secondary:hover {
             background: linear-gradient(90deg, #4b5563, #6b7280);
@@ -120,19 +128,30 @@
             transition: border-color 0.3s, box-shadow 0.3s;
             border-radius: 8px;
             border: 1px solid #d1d5db;
+            background: white;
+            padding: 12px;
+        }
+        body.dark-mode .input-field {
+            background: #374151;
+            border-color: #4b5563;
+            color: #e5e7eb;
         }
         .input-field:focus {
             border-color: #f59e0b;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 0 3px rgba(245,158,11, 0.2);
             outline: none;
         }
         .navbar-menu {
             transition: max-height 0.3s ease-in-out;
             max-height: 0;
             overflow: hidden;
+            background: white;
+        }
+        body.dark-mode .navbar-menu {
+            background: #1f2937;
         }
         .navbar-menu.active {
-            max-height: 400px;
+            max-height: 500px;
         }
         .section {
             display: none;
@@ -140,59 +159,33 @@
         .section.active {
             display: block;
         }
-        .menu-card, .coupon-card, .cart-card {
+        .menu-card, .coupon-card, .cart-card, .address-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             background: white;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0, 0.15);
         }
-        body.dark-mode .menu-card, body.dark-mode .coupon-card, body.dark-mode .cart-card {
-            background: #374151;
+        body.dark-mode .menu-card, body.dark-mode .coupon-card, body.dark-mode .cart-card, body.dark-mode .address-card {
+            background: #1f2937;
+            box-shadow: 0 6px 20px rgba(0,0,0, 0.3);
         }
-        .menu-card:hover, .coupon-card:hover, .cart-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .menu-card:hover, .coupon-card:hover, .cart-card:hover, .address-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0, 0.25);
         }
         .menu-card img, .coupon-card img {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
             object-position: center;
         }
-        .cart-card img {
-            height: 80px;
-            width: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
         .coupon-card {
             border: 2px solid #f59e0b;
+            position: relative;
         }
         body.dark-mode .coupon-card {
             border-color: #d97706;
-        }
-        .special-coupon {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 2px solid #d97706;
-        }
-        body.dark-mode .special-coupon {
-            background: linear-gradient(135deg, #4b5563, #6b7280);
-        }
-        .address-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        body.dark-mode .address-card {
-            background: #374151;
-        }
-        .address-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
         .dropdown {
             position: relative;
@@ -202,24 +195,25 @@
             position: absolute;
             right: 0;
             background: white;
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            min-width: 220px;
+            box-shadow: 0 10px 20px rgba(0,0,0, 0.3);
             z-index: 1;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
         }
         body.dark-mode .dropdown-content {
-            background: #374151;
+            background: #1f2937;
         }
         .dropdown:hover .dropdown-content {
             display: block;
         }
         .dropdown-content a, .dropdown-content button {
             color: #374151;
-            padding: 12px 16px;
+            padding: 14px 18px;
             text-decoration: none;
             display: block;
             transition: background 0.2s;
+            font-weight: 500;
         }
         body.dark-mode .dropdown-content a, body.dark-mode .dropdown-content button {
             color: #e5e7eb;
@@ -232,20 +226,24 @@
         }
         .rating-stars {
             color: #f59e0b;
+            font-size: 18px;
         }
         .welcome-message {
             background: linear-gradient(90deg, #f59e0b, #d97706);
             color: white;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 20px;
+            border-radius: 16px;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0, 0.2);
         }
         .profile-card {
             background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
             border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0,0,0, 0.2);
+            padding: 40px;
             transform: perspective(1000px);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -253,8 +251,8 @@
             background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
         }
         .profile-card:hover {
-            transform: perspective(1000px) translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+            transform: perspective(1000px) translateY(-12px);
+            box-shadow: 0 20px 50px rgba(0,0,0, 0.3);
         }
         .profile-image-container {
             position: relative;
@@ -266,7 +264,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(245,158,11, 0.3);
             border-radius: 50%;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -274,63 +272,187 @@
         .profile-image-container:hover .profile-image-overlay {
             opacity: 1;
         }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
         .cart-container {
-            background: linear-gradient(135deg, #ffffff, #f9fafb);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0,0,0, 0.2);
+            padding: 32px;
+            max-width: 900px;
+            margin: 0 auto;
         }
         body.dark-mode .cart-container {
-            background: linear-gradient(135deg, #374151, #4b5563);
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
         }
-        .cart-item {
+        .cart-card {
+            background: linear-gradient(145deg, #f9fafb, #ffffff);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
             display: flex;
+            flex-direction: row;
             align-items: center;
-            padding: 16px;
-            margin-bottom: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark-mode .cart-card {
+            background: linear-gradient(145deg, #4b5563, #374151);
+        }
+        .cart-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0, 0.25);
+        }
+        .cart-item-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
             border-radius: 12px;
-            background: white;
-            transition: transform 0.3s ease;
+            margin-right: 20px;
         }
-        body.dark-mode .cart-item {
-            background: #4b5563;
+        .cart-item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .cart-item:hover {
-            transform: translateY(-3px);
-        }
-        .quantity-controls {
+        .cart-item-actions {
             display: flex;
             align-items: center;
             gap: 12px;
-            background: #f3f4f6;
-            border-radius: 9999px;
-            padding: 4px 8px;
         }
-        body.dark-mode .quantity-controls {
-            background: #6b7280;
-        }
-        .quantity-btn {
-            background: none;
-            color: #f59e0b;
+        .cart-item-actions button {
+            padding: 10px 14px;
+            border-radius: 10px;
             font-size: 18px;
-            padding: 4px 8px;
-            transition: color 0.2s;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0,0,0, 0.2);
         }
-        .quantity-btn:hover {
-            color: #d97706;
+        .cart-item-actions .increment, .cart-item-actions .decrement, .cart-item-actions .remove {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-item-actions .increment {
+            background: linear-gradient(90deg, #34d399, #22c55e);
+        }
+        .cart-item-actions .increment:hover {
+            background: linear-gradient(90deg, #22c55e, #34d399);
+            transform: scale(1.05);
+        }
+        .cart-item-actions .decrement {
+            background: linear-gradient(90deg, #fb923c, #f97316);
+        }
+        .cart-item-actions .decrement:hover {
+            background: linear-gradient(90deg, #f97316, #fb923c);
+            transform: scale(1.05);
+        }
+        .cart-item-actions .remove {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+        .cart-item-actions .remove:hover {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            transform: scale(1.05);
+        }
+        .cart-item-actions input {
+            width: 60px;
+            text-align: center;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            background: white;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        body.dark-mode .cart-item-actions input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #e5e7eb;
         }
         .cart-summary {
-            background: #fef3c7;
-            border-radius: 12px;
-            padding: 16px;
+            background: linear-gradient(145deg, #ffffff, #f9fafb);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 6px 20px rgba(0,0,0, 0.15);
             margin-top: 24px;
         }
         body.dark-mode .cart-summary {
+            background: linear-gradient(145deg, #4b5563, #374151);
+        }
+        .cart-summary h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        body.dark-mode .cart-summary h3 {
+            color: #e5e7eb;
+        }
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        body.dark-mode .payment-option {
             background: #4b5563;
         }
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
+        .payment-option:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        body.dark-mode .payment-option:hover {
+            background: #6b7280;
+        }
+        .payment-option input {
+            margin-right: 12px;
+        }
+        .payment-icon {
+            margin-right: 8px;
+        }
+        .address-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border: 2px solid #f59e0b;
+        }
+        body.dark-mode .address-card {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+            border-color: #d97706;
+        }
+        .address-card p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        .address-card .address-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        body.dark-mode .address-card .address-header {
+            color: #e5e7eb;
+        }
+        .address-card .address-details {
+            color: #4b5563;
+            font-size: 0.95rem;
+        }
+        body.dark-mode .address-card .address-details {
+            color: #d1d5db;
+        }
+        .address-card .address-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
         }
         @media (max-width: 640px) {
             .modal-content {
@@ -340,45 +462,71 @@
             .toast {
                 top: 12px;
                 right: 12px;
-                padding: 10px;
-                min-width: 160px;
+                padding: 12px;
+                min-width: 200px;
             }
             .navbar-menu {
                 max-height: 0;
                 overflow: hidden;
             }
             .navbar-menu.active {
-                max-height: 400px;
+                max-height: 600px;
             }
             .dropdown-content {
                 width: 100%;
+                right: 0;
             }
             .menu-card img, .coupon-card img {
-                height: 150px;
-            }
-            .cart-card img {
-                height: 60px;
-                width: 60px;
-            }
-            .cart-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            .cart-item img {
-                width: 100%;
-                height: 120px;
-            }
-            .quantity-controls {
-                width: 100%;
-                justify-content: center;
-            }
-            .cart-summary {
-                padding: 12px;
+                height: 180px;
             }
             .profile-card {
                 padding: 24px;
             }
+            .welcome-message {
+                font-size: 1.25rem;
+                padding: 16px;
+            }
+            .cart-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+            }
+            .cart-item-image {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 12px;
+            }
+            .cart-item-actions {
+                flex-direction: row;
+                gap: 8px;
+                width: 100%;
+                justify-content: space-between;
+            }
+            .cart-item-actions input {
+                width: 50px;
+            }
+            .cart-item-actions button {
+                padding: 8px;
+                font-size: 16px;
+            }
+            .cart-summary {
+                padding: 16px;
+            }
+            .cart-container {
+                padding: 16px;
+            }
+            .address-card {
+                padding: 16px;
+            }
+            .address-card .address-header {
+                font-size: 1.1rem;
+            }
+        }
+        .item-name, .coupon-code {
+            color: #000000 !important;
+        }
+        body.dark-mode .item-name, body.dark-mode .coupon-code {
+            color: #ffffff !important;
         }
     </style>
 </head>
@@ -387,20 +535,21 @@
     <div id="toast" class="toast"></div>
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
+                <div class="flex items-center space-x-4">
+                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
                     <div>
-                        <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">DELICUTE</h1>
-                        <p class="text-xs text-gray-500 sm:text-sm">Every bite tells a story</p>
+                        <h1 class="text-2xl font-bold text-gray-800 sm:text-3xl">DELICUTE</h1>
+                        <p class="text-sm text-gray-500 sm:text-base">Every bite tells a story</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="dropdown">
+                <div class="flex items-center space-x-6">
+                    <div class="dropdown hidden sm:block">
                         <button class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                            <img id="headerProfileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-10 w-10 rounded-full object-cover">
+                            <img id="headerProfileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-12 w-12 rounded-full object-cover border-2 border-yellow-500">
+                            <span id="headerUserName" class="font-semibold"></span>
                         </button>
                         <div class="dropdown-content">
                             <a href="#" onclick="showSection('home')">Home</a>
@@ -408,67 +557,48 @@
                             <a href="#" onclick="showSection('orders')">Orders</a>
                             <a href="#" onclick="showSection('favorites')">Favorites</a>
                             <a href="#" onclick="showSection('orderHistory')">Order History</a>
-                            <a href="#" onclick="showSection('profile')">Profile</a>
                             <a href="#" onclick="showSection('addresses')">Addresses</a>
+                            <a href="#" onclick="showSection('profile')">Profile</a>
+                            <a href="#" onclick="showSection('contact')">Contact Us</a>
                             <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
                             <button onclick="logout()">Logout</button>
                         </div>
                     </div>
-                    <div class="sm:hidden">
-                        <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <button id="menuToggle" class="sm:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <div id="navbarMenu" class="navbar-menu sm:hidden">
-                <div class="flex flex-col space-y-2 px-4 pb-4">
-                    <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-sm">Cart</a>
-                    <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-sm">Orders</a>
-                    <a href="#" onclick="showSection('favorites')" class="text-gray-600 hover:text-gray-900 text-sm">Favorites</a>
-                    <a href="#" onclick="showSection('orderHistory')" class="text-gray-600 hover:text-gray-900 text-sm">Order History</a>
-                    <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-sm">Profile</a>
-                    <a href="#" onclick="showSection('addresses')" class="text-gray-600 hover:text-gray-900 text-sm">Addresses</a>
-                    <button onclick="toggleDarkMode()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Toggle Dark Mode</button>
-                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-sm text-left">Logout</button>
+                <div class="flex flex-col space-y-3 px-4 pb-4">
+                    <a href="#" onclick="showSection('home')" class="text-gray-600 hover:text-gray-900 text-base">Home</a>
+                    <a href="#" onclick="showSection('cart')" class="text-gray-600 hover:text-gray-900 text-base">Cart</a>
+                    <a href="#" onclick="showSection('orders')" class="text-gray-600 hover:text-gray-900 text-base">Orders</a>
+                    <a href="#" onclick="showSection('favorites')" class="text-gray-600 hover:text-gray-900 text-base">Favorites</a>
+                    <a href="#" onclick="showSection('orderHistory')" class="text-gray-600 hover:text-gray-900 text-base">Order History</a>
+                    <a href="#" onclick="showSection('addresses')" class="text-gray-600 hover:text-gray-900 text-base">Addresses</a>
+                    <a href="#" onclick="showSection('profile')" class="text-gray-600 hover:text-gray-900 text-base">Profile</a>
+                    <a href="#" onclick="showSection('contact')" class="text-gray-600 hover:text-gray-900 text-base">Contact Us</a>
+                    <button onclick="toggleDarkMode()" class="text-gray-600 hover:text-gray-900 text-base text-left">Toggle Dark Mode</button>
+                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900 text-base text-left">Logout</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Payment Modal -->
-    <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('paymentModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Select Payment Method</h2>
-            <div class="space-y-4">
-                <button onclick="initiatePayment('phonepe')" class="btn-primary w-full text-sm sm:text-base">
-                    <img src="https://i.postimg.cc/15Z7fkyj/phonepe.jpg" alt="PhonePe" class="h-6">
-                    Pay with PhonePe
-                </button>
-                <button onclick="initiatePayment('gpay')" class="btn-primary w-full text-sm sm:text-base">
-                    <img src="https://i.postimg.cc/GhkNKcMR/gpay.webp" alt="Google Pay" class="h-6">
-                    Pay with Google Pay
-                </button>
-                <button onclick="initiatePayment('cod')" class="btn-primary w-full text-sm sm:text-base">Cash on Delivery</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Coupon Modal -->
     <div id="couponModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('couponModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Apply Coupon</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Apply Coupon</h2>
             <div>
-                <label for="couponCode" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter Coupon Code</label>
-                <input type="text" id="couponCode" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter coupon code">
+                <label for="couponCode" class="block text-gray-700 font-medium mb-2 text-base">Enter Coupon Code</label>
+                <input type="text" id="couponCode" class="input-field w-full p-3 text-base" placeholder="Enter coupon code">
             </div>
             <div class="mt-6">
-                <button onclick="applyCoupon()" class="btn-primary w-full text-sm sm:text-base">Apply Coupon</button>
+                <button onclick="applyCoupon()" class="btn-primary w-full">Apply Coupon</button>
             </div>
         </div>
     </div>
@@ -477,15 +607,15 @@
     <div id="rateModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('rateModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Rate Item</h2>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Rate Item</h2>
             <div>
-                <label for="rating" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Rating (1-5)</label>
-                <input type="number" id="rating" min="1" max="5" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter rating">
-                <label for="review" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Review (Optional)</label>
-                <textarea id="review" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Write your review"></textarea>
+                <label for="rating" class="block text-gray-700 font-medium mb-2 text-base">Rating (1-5)</label>
+                <input type="number" id="rating" min="1" max="5" class="input-field w-full p-3 text-base" placeholder="Enter rating">
+                <label for="review" class="block text-gray-700 font-medium mb-4 mt-4 text-base">Review (Optional)</label>
+                <textarea id="review" class="input-field w-full p-3 text-base" rows="4" placeholder="Write your review"></textarea>
             </div>
             <div class="mt-6">
-                <button onclick="submitRating()" class="btn-primary w-full text-sm sm:text-base">Submit Rating</button>
+                <button onclick="submitRating()" class="btn-primary w-full">Submit Rating</button>
             </div>
         </div>
     </div>
@@ -494,10 +624,26 @@
     <div id="orderConfirmationModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('orderConfirmationModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Order Confirmed!</h2>
-            <div id="orderConfirmationDetails" class="text-sm sm:text-base text-gray-600"></div>
+            <h2 class="text-2xl font-bold text-gray-800 text-base mb-6">Order Confirmed!</h2>
+            <div id="orderConfirmationDetails" class="text-center text-base text-gray-600"></div>
             <div class="mt-6">
-                <button onclick="closeModal('orderConfirmationModal')" class="btn-primary w-full text-sm sm:text-base">Close</button>
+                <button onclick="closeModal('orderConfirmationModal')" class="btn-primary w-full text-base">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div id="cancelOrderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('cancelOrderModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Cancel Order</h2>
+            <div>
+                <label for="cancelReason" class="block text-gray-700 font-medium mb-2 text-base">Reason for Cancellation</label>
+                <textarea id="cancelReason" class="input-field w-full p-3 text-base" rows="4" placeholder="Enter reason for cancellation"></textarea>
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="submitCancelOrder()" class="btn-primary w-full text-base">Submit</button>
+                <button onclick="closeModal('cancelOrderModal')" class="btn-secondary w-full text-base">Cancel</button>
             </div>
         </div>
     </div>
@@ -506,41 +652,59 @@
     <div id="addressModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('addressModal')">×</span>
-            <h2 id="addressModalTitle" class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Add Address</h2>
+            <h2 id="addressModalTitle" class="text-2xl font-bold text-gray-800 text-center mb-6">Add Address</h2>
             <div>
-                <label for="addressFullName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Full Name</label>
-                <input type="text" id="addressFullName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter full name">
-                <label for="addressMobile" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Mobile Number</label>
-                <input type="tel" id="addressMobile" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter mobile number">
-                <label for="addressHouse" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">House Number</label>
-                <input type="text" id="addressHouse" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter house number">
-                <label for="addressStreet" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Street</label>
-                <input type="text" id="addressStreet" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter street">
-                <label for="addressLandmark" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Landmark</label>
-                <input type="text" id="addressLandmark" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter landmark (optional)">
-                <label for="addressPincode" class="block text-gray-700 font-medium mb-2 mt-4 text-sm sm:text-base">Pincode</label>
-                <input type="text" id="addressPincode" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter pincode">
+                <label for="fullName" class="block text-gray-700 font-medium mb-2 text-base">Full Name</label>
+                <input type="text" id="fullName" class="input-field w-full p-3 text-base" placeholder="Enter full name">
+                <label for="mobileNumber" class="block text-gray-700 font-medium mb-3 mt-4 text-base">Mobile Number</label>
+                <input type="tel" id="mobileNumber" class="input-field w-full p-3 text-base" placeholder="Enter mobile number">
+                <label for="addressLine1" class="block text-gray-700 font-medium mb-2 mt-4 text-base">Address Line 1</label>
+                <input type="text" id="addressLine1" class="input-field w-full p-3 text-base" placeholder="Enter address line 1">
+                <label for="addressLine2" class="block text-gray-700 font-medium mb-2 mt-4 text-base">Address Line 2 (Optional)</label>
+                <input type="text" id="addressLine2" class="input-field w-full p-3 text-base" placeholder="Enter address line 2">
+                <label for="city" class="block text-gray-700 font-medium mb-2 mt-4 text-base">City</label>
+                <input type="text" id="city" class="input-field w-full p-3 text-base" placeholder="Enter city">
+                <label for="state" class="block text-gray-700 font-medium mb-2 mt-4 text-base">State</label>
+                <input type="text" id="state" class="input-field w-full p-3 text-base" placeholder="Enter state">
+                <label for="zipCode" class="block text-gray-700 font-medium mb-2 mt-4 text-base">Zip Code</label>
+                <input type="text" id="zipCode" class="input-field w-full p-3 text-base" placeholder="Enter zip code">
             </div>
             <div class="mt-6 flex space-x-4">
-                <button id="saveAddressBtn" onclick="saveAddress()" class="btn-primary w-full text-sm sm:text-base">Save Address</button>
-                <button onclick="closeModal('addressModal')" class="btn-secondary w-full text-sm sm:text-base">Cancel</button>
+                <button id="saveAddressBtn" onclick="saveAddress()" class="btn-primary w-full text-base">Save Address</button>
+                <button onclick="closeModal('addressModal')" class="btn-secondary w-full text-base">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Us Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('contactModal')">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Contact Us</h2>
+            <p class="text-gray-600 text-base mb-4">For order-related issues, please feel free to contact our team at <a href="mailto:support@delicute.com" class="text-blue-500 hover:underline">support@delicute.com</a> or call us at <a href="tel:+919652296548" class="text-blue-500 hover:underline">+91 9652296548</a>. Our team is ready to assist you!</p>
+            <div>
+                <label for="contactSubject" class="block text-gray-600 font-medium mb-2 text-base">Subject</label>
+                <input type="text" id="contactSubject" class="input-field w-full p-3 text-base" placeholder="Enter subject">
+                <label for="contactMessage" class="block text-gray-600 font-medium mb-2 mt-4 text-base">Your Message</label>
+                <textarea id="contactMessage" class="input-field w-full p-3 text-base" rows="4" placeholder="Enter your message"></textarea>
+            </div>
+            <div class="mt-6">
+                <button onclick="submitContactMessage()" class="btn-primary w-full text-base"><i class="fas fa-paper-plane mr-2"></i>Send Message</button>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <!-- Home Section -->
         <section id="homeSection" class="section active">
-            <div id="welcomeMessage" class="welcome-message text-lg sm:text-xl font-semibold"></div>
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Special Offers</h2>
-            <div id="specialCouponItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Available Coupons</h2>
-            <div id="couponItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Explore Our Menu</h2>
-            <div class="flex flex-col sm:flex-row justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
-                <input type="text" id="searchInput" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items...">
-                <select id="categoryFilter" class="input-field w-full sm:w-1/4 p-3 border rounded-md text-sm sm:text-base">
+            <div id="welcomeMessage" class="welcome-message"></div>
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Available Coupons</h2>
+            <div id="couponItems" class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12"></div>
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Explore Our Menu</h2>
+            <div class="flex flex-col sm:flex-row justify-between mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <input type="text" id="searchInput" class="input-field w-full sm:w-1/2 p-3 text-base" placeholder="Search menu items...">
+                <select id="categoryFilter" class="input-field w-full sm:w-1/4 p-3 text-base">
                     <option value="">All Categories</option>
                     <option value="veg">Vegetarian</option>
                     <option value="non-veg">Non-Vegetarian</option>
@@ -548,103 +712,146 @@
                     <option value="beverage">Beverage</option>
                 </select>
             </div>
-            <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <div id="menuItems" class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
         </section>
 
         <!-- Cart Section -->
         <section id="cartSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Cart</h2>
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Your Cart</h2>
             <div class="cart-container">
-                <div class="flex flex-col sm:flex-row justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button onclick="showCouponModal()" class="btn-primary text-sm sm:text-base">Apply Coupon</button>
-                    <select id="deliveryAddress" class="input-field w-full sm:w-1/2 p-3 border rounded-md text-sm sm:text-base" onchange="selectDeliveryAddress(this.value)">
-                        <option value="">Select Delivery Address</option>
-                    </select>
-                </div>
-                <div id="couponInfo" class="mb-4 text-sm sm:text-base text-gray-600"></div>
-                <div id="cartItems" class="mb-6"></div>
-                <div id="cartSummary" class="cart-summary"></div>
-                <div class="text-center mt-6">
-                    <button id="proceedToPayment" onclick="showPaymentModal()" class="btn-primary text-sm sm:text-base">Proceed to Payment</button>
+                <div id="cartItems" class="grid grid-cols-1 gap-8"></div>
+                <div id="cartSummary" class="cart-summary">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Cart Summary</h3>
+                    <div class="flex justify-between text-gray-600 dark:text-gray-400 mb-2">
+                        <span>Subtotal:</span>
+                        <span id="cartSubtotal">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600 dark:text-gray-400 mb-2">
+                        <span>Discount:</span>
+                        <span id="cartDiscount">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600 dark:text-gray-400 mb-2">
+                        <span>Total:</span>
+                        <span id="cartTotal">₹0.00</span>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                        <button onclick="showCouponModal()" class="btn-primary w-full text-base">
+                            <i class="fas fa-ticket-alt mr-2"></i>Apply Coupon
+                        </button>
+                        <select id="addressSelect" class="input-field w-full p-3 text-base">
+                            <option value="">Select Delivery Address</option>
+                        </select>
+                        <div class="payment-options">
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="cod" checked>
+                                <img src="https://img.icons8.com/color/48/000000/cash-in-hand.png" alt="Cash on Delivery" class="payment-icon w-6 h-6">
+                                <span>Cash on Delivery</span>
+                            </label>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Note: PhonePe and Google Pay will be available soon. Please use Cash on Delivery.Thankyou.</p>
+                        </div>
+                        <button id="placeOrderBtn" onclick="placeOrder()" class="btn-primary w-full text-base">
+                            <i class="fas fa-check-circle mr-2"></i>Place Order
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Orders Section -->
         <section id="ordersSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Orders</h2>
-            <div id="orderItems"></div>
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Your Orders</h2>
+            <div id="orderItems" class="grid grid-cols-1 gap-8"></div>
         </section>
 
         <!-- Favorites Section -->
         <section id="favoritesSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Favorites</h2>
-            <div id="favoriteItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Your Favorites</h2>
+            <div id="favoriteItems" class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
         </section>
 
         <!-- Order History Section -->
         <section id="orderHistorySection" class="section">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 text-center sm:text-3xl">Order History</h2>
-                <button onclick="clearOrderHistory()" class="btn-primary text-sm sm:text-base">Clear History</button>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white text-center sm:text-4xl">Order History</h2>
+                <button onclick="clearOrderHistory()" class="btn-primary text-base"><i class="fas fa-trash-alt mr-2"></i>Clear History</button>
             </div>
-            <div id="orderHistoryItems"></div>
-        </section>
-
-        <!-- Profile Section -->
-        <section id="profileSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Profile</h2>
-            <div class="max-w-lg mx-auto profile-card">
-                <div class="flex justify-center mb-6 profile-image-container">
-                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-40 w-40 rounded-full object-cover border-4 border-yellow-500 shadow-lg">
-                    <div class="profile-image-overlay"></div>
-                </div>
-                <div>
-                    <label for="profileName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
-                    <input type="text" id="profileName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter your name">
-                </div>
-                <div class="mt-4">
-                    <label for="profileEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
-                    <input type="email" id="profileEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base bg-gray-100" readonly>
-                </div>
-                <div class="mt-4">
-                    <label for="profilePhone" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Phone</label>
-                    <input type="tel" id="profilePhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base bg-gray-100" readonly>
-                </div>
-                <div class="mt-4">
-                    <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Upload Profile Image</label>
-                    <input type="file" id="profileImageUpload" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" accept="image/*">
-                </div>
-                <div class="mt-6 text-center">
-                    <button id="saveProfileBtn" onclick="saveProfile()" class="btn-primary text-sm sm:text-base">Save Profile</button>
-                </div>
-            </div>
+            <div id="orderHistoryItems" class="grid grid-cols-1 gap-8"></div>
         </section>
 
         <!-- Addresses Section -->
         <section id="addressesSection" class="section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Your Addresses</h2>
-            <div class="flex justify-end mb-4">
-                <button onclick="showAddAddressModal()" class="btn-primary text-sm sm:text-base">Add New Address</button>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white text-center sm:text-4xl">Your Addresses</h2>
+                <button onclick="showAddressModal()" class="btn-primary text-base"><i class="fas fa-plus-circle mr-2"></i>Add Address</button>
             </div>
-            <div id="addressList" class="max-w-3xl mx-auto"></div>
+            <div id="addressItems" class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profileSection" class="section">
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Your Profile</h2>
+            <div class="max-w-lg mx-auto profile-card">
+                <div class="flex justify-center mb-6 profile-image-container">
+                    <img id="profileImage" src="https://via.placeholder.com/100" alt="Profile" class="h-48 w-48 rounded-full object-cover border-4 border-yellow-500 shadow-lg">
+                    <div class="profile-image-overlay"></div>
+                </div>
+                <div>
+                    <label for="profileName" class="block text-gray-700 font-medium mb-2 text-base">Name</label>
+                    <input type="text" id="profileName" class="input-field w-full p-3 text-base" placeholder="Enter your name">
+                </div>
+                <div class="mt-4">
+                    <label for="profileEmail" class="block text-gray-700 font-medium mb-2 text-base">Email</label>
+                    <input type="email" id="profileEmail" class="input-field w-full p-3 text-base bg-gray-100" readonly>
+                </div>
+                <div class="mt-4">
+                    <label for="profilePhone" class="block text-gray-700 font-medium mb-2 text-base">Phone</label>
+                    <input type="tel" id="profilePhone" class="input-field w-full p-3 text-base bg-gray-100" readonly>
+                </div>
+                <div class="mt-4">
+                    <label for="profileImageUpload" class="block text-gray-700 font-medium mb-2 text-base">Upload Profile Image</label>
+                    <input type="file" id="profileImageUpload" class="input-field w-full p-3 text-base" accept="image/*">
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="saveProfileBtn" onclick="saveProfile()" class="btn-primary text-base"><i class="fas fa-save mr-2"></i>Save Profile</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Us Section -->
+        <section id="contactSection" class="section">
+            <h2 class="text-3xl font-bold text-white text-center mb-8 sm:text-4xl">Contact Us</h2>
+            <div class="max-w-lg mx-auto profile-card">
+                <p class="text-gray-600 text-base mb-4">For order-related issues, please feel free to contact our team at <a href="mailto:support@delicute.com" class="text-blue-500 hover:underline">support@delicute.com</a> or call us at <a href="tel:+919652296548" class="text-blue-500 hover:underline">+91 9652296548</a>. Our team is ready to assist you!</p>
+                <div>
+                    <label for="contactSectionSubject" class="block text-gray-700 font-medium mb-2 text-base">Subject</label>
+                    <input type="text" id="contactSectionSubject" class="input-field w-full p-3 text-base" placeholder="Enter subject">
+                    <label for="contactSectionMessage" class="block text-gray-700 font-medium mb-2 mt-4 text-base">Your Message</label>
+                    <textarea id="contactSectionMessage" class="input-field w-full p-3 text-base" rows="4" placeholder="Enter your message"></textarea>
+                </div>
+                <div class="mt-6">
+                    <button onclick="submitContactMessage()" class="btn-primary w-full text-base"><i class="fas fa-paper-plane mr-2"></i>Send Message</button>
+                </div>
+            </div>
         </section>
     </div>
 
     <script>
+        // Configuration
         const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
         const DEFAULT_IMAGE = 'https://via.placeholder.com/300';
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-        let addresses = [];
-        let currentOrderTotal = 0;
-        let appliedCoupon = null;
-        let currentRatingItemId = null;
-        let userName = '';
-        let selectedAddressId = localStorage.getItem('selectedAddressId') || null;
-        let editingAddressId = null;
-        let isLoading = false;
 
+        // State Management
+        let cart = [];
+        let addresses = JSON.parse(localStorage.getItem('addresses')) || [];
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let userName = '';
+        let isLoading = false;
+        let currentRatingItemId = null;
+        let currentCancelOrderId = null;
+        let currentAddressId = null;
+        let appliedCoupon = null;
+
+        // Utility Functions
         function sanitizeHTML(str) {
             if (!str) return '';
             const div = document.createElement('div');
@@ -664,9 +871,10 @@
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             if (!toast) return;
-            toast.textContent = sanitizeHTML(message);
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>${sanitizeHTML(message)}`;
             toast.className = `toast ${type}`;
-            toast.style.display = 'block';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 3000);
@@ -687,12 +895,31 @@
             const section = document.getElementById(`${sectionId}Section`);
             if (section) section.classList.add('active');
             switch (sectionId) {
-                case 'cart': loadCart(); break;
-                case 'orders': fetchOrders(); break;
-                case 'home': fetchMenuItems(); fetchCoupons(); fetchSpecialCoupons(); break;
-                case 'favorites': loadFavorites(); break;
-                case 'orderHistory': fetchOrderHistory(); break;
-                case 'addresses': fetchAddresses(); break;
+                case 'home':
+                    fetchMenuItems();
+                    fetchCoupons();
+                    break;
+                case 'cart':
+                    fetchCart();
+                    loadAddresses();
+                    break;
+                case 'orders':
+                    fetchOrders();
+                    break;
+                case 'favorites':
+                    loadFavorites();
+                    break;
+                case 'orderHistory':
+                    fetchOrderHistory();
+                    break;
+                case 'addresses':
+                    loadAddresses();
+                    break;
+                case 'profile':
+                    fetchUserDetails();
+                    break;
+                case 'contact':
+                    break;
             }
             const navbarMenu = document.getElementById('navbarMenu');
             if (navbarMenu) navbarMenu.classList.remove('active');
@@ -703,6 +930,7 @@
             localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         }
 
+        // Authentication
         async function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -715,9 +943,8 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error('Invalid token');
-                await Promise.all([fetchUserDetails(), fetchAddresses()]);
+                await fetchUserDetails();
                 showSection('home');
-                loadCart();
                 if (localStorage.getItem('darkMode') === 'true') {
                     document.body.classList.add('dark-mode');
                 }
@@ -725,12 +952,13 @@
             } catch (error) {
                 console.error('Auth error:', error);
                 showToast('Session expired. Please log in again.', 'error');
-                localStorage.clear();
+                localStorage.removeItem('token');
                 setTimeout(() => window.location.href = 'index.html', 1000);
                 return false;
             }
         }
 
+        // User Profile
         async function fetchUserDetails() {
             const token = localStorage.getItem('token');
             setLoading('saveProfileBtn', true);
@@ -741,19 +969,14 @@
                 const data = await response.json();
                 if (response.ok) {
                     userName = sanitizeHTML(data.name || 'Guest');
-                    const welcomeMessage = document.getElementById('welcomeMessage');
-                    if (welcomeMessage) welcomeMessage.textContent = `Welcome, ${userName}!`;
-                    const profileName = document.getElementById('profileName');
-                    const profileEmail = document.getElementById('profileEmail');
-                    const profilePhone = document.getElementById('profilePhone');
-                    const profileImage = document.getElementById('profileImage');
-                    const headerProfileImage = document.getElementById('headerProfileImage');
-                    if (profileName) profileName.value = data.name || '';
-                    if (profileEmail) profileEmail.value = data.email || '';
-                    if (profilePhone) profilePhone.value = data.phone || '';
+                    document.getElementById('welcomeMessage').innerHTML = `<i class="fas fa-user-circle mr-2"></i>Welcome, ${userName}!`;
+                    document.getElementById('headerUserName').textContent = userName;
+                    document.getElementById('profileName').value = data.name || '';
+                    document.getElementById('profileEmail').value = data.email || '';
+                    document.getElementById('profilePhone').value = data.phone || '';
                     const profileImageUrl = data.profileImage || DEFAULT_IMAGE;
-                    if (profileImage) profileImage.src = profileImageUrl;
-                    if (headerProfileImage) headerProfileImage.src = profileImageUrl;
+                    document.getElementById('profileImage').src = profileImageUrl;
+                    document.getElementById('headerProfileImage').src = profileImageUrl;
                     localStorage.setItem('userProfileImage', profileImageUrl);
                 } else {
                     showToast(data.error || 'Failed to fetch profile.', 'error');
@@ -796,13 +1019,11 @@
                 if (response.ok) {
                     showToast('Profile updated successfully!', 'success');
                     userName = sanitizeHTML(name);
-                    const welcomeMessage = document.getElementById('welcomeMessage');
-                    if (welcomeMessage) welcomeMessage.textContent = `Welcome, ${userName}!`;
+                    document.getElementById('welcomeMessage').innerHTML = `<i class="fas fa-user-circle mr-2"></i>Welcome, ${userName}!`;
+                    document.getElementById('headerUserName').textContent = userName;
                     if (data.profileImage) {
-                        const profileImage = document.getElementById('profileImage');
-                        const headerProfileImage = document.getElementById('headerProfileImage');
-                        if (profileImage) profileImage.src = data.profileImage;
-                        if (headerProfileImage) headerProfileImage.src = data.profileImage;
+                        document.getElementById('profileImage').src = data.profileImage;
+                        document.getElementById('headerProfileImage').src = data.profileImage;
                         localStorage.setItem('userProfileImage', data.profileImage);
                     }
                     if (fileInput) fileInput.value = '';
@@ -817,210 +1038,250 @@
             }
         }
 
-        async function fetchAddresses() {
-            const token = localStorage.getItem('token');
+        // Cart Management
+        async function fetchCart() {
             try {
-                const response = await fetch(`${BASE_URL}/api/addresses`, {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/cart`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    addresses = data || [];
-                    renderAddresses();
-                    updateDeliveryAddressDropdown();
-                    if (selectedAddressId && !addresses.find(addr => addr._id === selectedAddressId)) {
-                        selectedAddressId = null;
-                        localStorage.removeItem('selectedAddressId');
-                    }
-                    if (addresses.length > 0 && !selectedAddressId) {
-                        selectDeliveryAddress(addresses[0]._id);
-                    }
+                    cart = data.items.map(item => ({
+                        id: item.itemId._id,
+                        name: sanitizeHTML(item.itemId.name),
+                        price: parseFloat(item.itemId.price),
+                        image: item.itemId.image || DEFAULT_IMAGE,
+                        quantity: item.quantity,
+                        category: item.itemId.category
+                    }));
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    loadCart();
                 } else {
-                    showToast(data.error || 'Failed to fetch addresses.', 'error');
-                    addresses = [];
-                    renderAddresses();
-                    updateDeliveryAddressDropdown();
+                    showToast(data.error || 'Failed to fetch cart.', 'error');
                 }
             } catch (error) {
-                console.error('Fetch addresses error:', error);
-                showToast('Failed to fetch addresses.', 'error');
-                addresses = [];
-                renderAddresses();
-                updateDeliveryAddressDropdown();
+                console.error('Fetch cart error:', error);
+                showToast('Failed to fetch cart.', 'error');
             }
         }
 
-        function renderAddresses() {
-            const addressListDiv = document.getElementById('addressList');
-            if (!addressListDiv) return;
-            if (addresses.length === 0) {
-                addressListDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No addresses saved. Please add an address.</p>';
+        async function addToCart(item) {
+            if (!item._id || !item.name || !item.price) {
+                showToast('Invalid item data.', 'error');
                 return;
             }
-            addressListDiv.innerHTML = addresses.map(address => `
-                <div class="address-card">
-                    <p class="text-gray-800 font-medium text-sm sm:text-base">${sanitizeHTML(address.fullName || 'Unknown')}</p>
-                    <p class="text-gray-600 text-sm sm:text-base">${sanitizeHTML(address.houseNumber || '')}, ${sanitizeHTML(address.street || '')}${address.landmark ? `, ${sanitizeHTML(address.landmark)}` : ''}, ${sanitizeHTML(address.pincode || '')}</p>
-                    <p class="text-gray-600 text-sm sm:text-base">Mobile: ${sanitizeHTML(address.mobile || 'N/A')}</p>
-                    <div class="flex space-x-2 mt-3">
-                        <button onclick="showEditAddressModal('${address._id}')" class="btn-primary text-sm sm:text-base">Edit</button>
-                        <button onclick="deleteAddress('${address._id}')" class="btn-secondary text-sm sm:text-base">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateDeliveryAddressDropdown() {
-            const dropdown = document.getElementById('deliveryAddress');
-            if (!dropdown) return;
-            dropdown.innerHTML = '<option value="">Select Delivery Address</option>';
-            addresses.forEach(address => {
-                const option = document.createElement('option');
-                option.value = address._id;
-                option.textContent = `${sanitizeHTML(address.fullName || 'Unknown')}, ${sanitizeHTML(address.houseNumber || '')}, ${sanitizeHTML(address.street || '')}, ${sanitizeHTML(address.pincode || '')}`;
-                if (address._id === selectedAddressId) {
-                    option.selected = true;
-                }
-                dropdown.appendChild(option);
-            });
-        }
-
-        function showAddAddressModal() {
-            editingAddressId = null;
-            const addressModalTitle = document.getElementById('addressModalTitle');
-            const addressFullName = document.getElementById('addressFullName');
-            const addressMobile = document.getElementById('addressMobile');
-            const addressHouse = document.getElementById('addressHouse');
-            const addressStreet = document.getElementById('addressStreet');
-            const addressLandmark = document.getElementById('addressLandmark');
-            const addressPincode = document.getElementById('addressPincode');
-            if (addressModalTitle) addressModalTitle.textContent = 'Add Address';
-            if (addressFullName) addressFullName.value = '';
-            if (addressMobile) addressMobile.value = '';
-            if (addressHouse) addressHouse.value = '';
-            if (addressStreet) addressStreet.value = '';
-            if (addressLandmark) addressLandmark.value = '';
-            if (addressPincode) addressPincode.value = '';
-            showModal('addressModal');
-        }
-
-        function showEditAddressModal(addressId) {
-            editingAddressId = addressId;
-            const address = addresses.find(addr => addr._id === addressId);
-            if (!address) {
-                showToast('Address not found.', 'error');
-                return;
-            }
-            const addressModalTitle = document.getElementById('addressModalTitle');
-            const addressFullName = document.getElementById('addressFullName');
-            const addressMobile = document.getElementById('addressMobile');
-            const addressHouse = document.getElementById('addressHouse');
-            const addressStreet = document.getElementById('addressStreet');
-            const addressLandmark = document.getElementById('addressLandmark');
-            const addressPincode = document.getElementById('addressPincode');
-            if (addressModalTitle) addressModalTitle.textContent = 'Edit Address';
-            if (addressFullName) addressFullName.value = address.fullName || '';
-            if (addressMobile) addressMobile.value = address.mobile || '';
-            if (addressHouse) addressHouse.value = address.houseNumber || '';
-            if (addressStreet) addressStreet.value = address.street || '';
-            if (addressLandmark) addressLandmark.value = address.landmark || '';
-            if (addressPincode) addressPincode.value = address.pincode || '';
-            showModal('addressModal');
-        }
-
-        async function saveAddress() {
-            if (isLoading) return;
-            const token = localStorage.getItem('token');
-            const fullName = document.getElementById('addressFullName')?.value.trim();
-            const mobile = document.getElementById('addressMobile')?.value.trim();
-            const houseNumber = document.getElementById('addressHouse')?.value.trim();
-            const street = document.getElementById('addressStreet')?.value.trim();
-            const landmark = document.getElementById('addressLandmark')?.value.trim();
-            const pincode = document.getElementById('addressPincode')?.value.trim();
-
-            if (!fullName || !mobile || !houseNumber || !street || !pincode) {
-                showToast('Please fill in all required fields.', 'error');
-                return;
-            }
-
-            if (!/^\d{10}$/.test(mobile)) {
-                showToast('Please enter a valid 10-digit mobile number.', 'error');
-                return;
-            }
-
-            if (!/^\d{6}$/.test(pincode)) {
-                showToast('Please enter a valid 6-digit pincode.', 'error');
-                return;
-            }
-
-            const addressData = { fullName, mobile, houseNumber, street, landmark, pincode };
-            const url = editingAddressId ? `${BASE_URL}/api/addresses/${editingAddressId}` : `${BASE_URL}/api/addresses`;
-            const method = editingAddressId ? 'PUT' : 'POST';
-            setLoading('saveAddressBtn', true);
-
             try {
-                const response = await fetch(url, {
-                    method,
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/cart/add`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(addressData)
+                    body: JSON.stringify({
+                        itemId: item._id,
+                        quantity: 1
+                    })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast(editingAddressId ? 'Address updated successfully!' : 'Address added successfully!', 'success');
-                    closeModal('addressModal');
-                    await fetchAddresses();
-                    if (!selectedAddressId && addresses.length > 0) {
-                        selectDeliveryAddress(addresses[0]._id);
+                    const existingItem = cart.find(cartItem => cartItem.id === item._id);
+                    if (existingItem) {
+                        existingItem.quantity += 1;
+                    } else {
+                        cart.push({
+                            id: item._id,
+                            name: sanitizeHTML(item.name),
+                            price: parseFloat(item.price),
+                            image: item.image || DEFAULT_IMAGE,
+                            quantity: 1,
+                            category: item.category
+                        });
+                    }
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    showToast(`${sanitizeHTML(item.name)} added to cart!`, 'success');
+                    loadCart();
+                    if (document.getElementById('homeSection')?.classList.contains('active')) {
+                        fetchMenuItems();
                     }
                 } else {
-                    showToast(data.error || 'Failed to save address.', 'error');
+                    showToast(data.error || 'Failed to add to cart.', 'error');
                 }
             } catch (error) {
-                console.error('Save address error:', error);
-                showToast('Failed to save address.', 'error');
-            } finally {
-                setLoading('saveAddressBtn', false);
+                console.error('Add to cart error:', error);
+                showToast('Failed to add to cart.', 'error');
             }
         }
 
-        async function deleteAddress(addressId) {
-            if (isLoading) return;
-            const token = localStorage.getItem('token');
-            setLoading('addressList', true);
+        async function removeFromCart(itemId) {
             try {
-                const response = await fetch(`${BASE_URL}/api/addresses/${addressId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/cart/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ itemId })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Address deleted successfully!', 'success');
-                    if (selectedAddressId === addressId) {
-                        selectedAddressId = null;
-                        localStorage.removeItem('selectedAddressId');
-                    }
-                    await fetchAddresses();
+                    cart = cart.filter(item => item.id !== itemId);
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    showToast('Item removed from cart.', 'success');
+                    loadCart();
                 } else {
-                    showToast(data.error || 'Failed to delete address.', 'error');
+                    showToast(data.error || 'Failed to remove item from cart.', 'error');
                 }
             } catch (error) {
-                console.error('Delete address error:', error);
-                showToast('Failed to delete address.', 'error');
-            } finally {
-                setLoading('addressList', false);
+                console.error('Remove from cart error:', error);
+                showToast('Failed to remove item from cart.', 'error');
             }
         }
 
-        function selectDeliveryAddress(addressId) {
-            selectedAddressId = addressId || null;
-            localStorage.setItem('selectedAddressId', selectedAddressId);
-            updateDeliveryAddressDropdown();
-            loadCart();
+        async function updateCartQuantity(itemId, operation) {
+            const item = cart.find(item => item.id === itemId);
+            if (!item) return;
+            let newQuantity = item.quantity;
+            if (operation === 'increment') {
+                newQuantity += 1;
+            } else if (operation === 'decrement') {
+                if (item.quantity <= 1) {
+                    await removeFromCart(itemId);
+                    return;
+                }
+                newQuantity -= 1;
+            }
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/cart/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        itemId,
+                        quantity: newQuantity
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    item.quantity = newQuantity;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    showToast(`${sanitizeHTML(item.name)} quantity ${operation === 'increment' ? 'increased' : 'decreased'}.`, 'success');
+                    loadCart();
+                } else {
+                    showToast(data.error || 'Failed to update quantity.', 'error');
+                }
+            } catch (error) {
+                console.error('Update cart quantity error:', error);
+                showToast('Failed to update quantity.', 'error');
+            }
         }
 
+        async function updateCartQuantityInput(itemId, quantity) {
+            quantity = parseInt(quantity);
+            if (isNaN(quantity) || quantity < 1) {
+                showToast('Quantity must be at least 1.', 'error');
+                loadCart();
+                return;
+            }
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/cart/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        itemId,
+                        quantity
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const item = cart.find(item => item.id === itemId);
+                    if (item) {
+                        item.quantity = quantity;
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        showToast(`${sanitizeHTML(item.name)} quantity updated.`, 'success');
+                        loadCart();
+                    }
+                } else {
+                    showToast(data.error || 'Failed to update quantity.', 'error');
+                }
+            } catch (error) {
+                console.error('Update cart quantity input error:', error);
+                showToast('Failed to update quantity.', 'error');
+            }
+        }
+
+        function loadCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartSubtotalDiv = document.getElementById('cartSubtotal');
+            const cartDiscountDiv = document.getElementById('cartDiscount');
+            const cartTotalDiv = document.getElementById('cartTotal');
+            if (!cartItemsDiv || !cartSubtotalDiv || !cartDiscountDiv || !cartTotalDiv) return;
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = `
+                    <div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                        <i class="fas fa-shopping-cart text-4xl mb-4 text-yellow-500"></i>
+                        <p class="text-lg font-medium">Your cart is empty</p>
+                        <p class="text-sm text-gray-500 mt-2">Explore our delicious menu and add some items!</p>
+                        <button onclick="showSection('home')" class="btn-primary mt-4">Browse our Menu</button>
+                    </div>
+                `;
+                cartSubtotalDiv.textContent = '₹0.00';
+                cartDiscountDiv.textContent = '₹0.00';
+                cartTotalDiv.textContent = '₹0.00';
+                return;
+            }
+
+            let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            let discount = 0;
+            if (appliedCoupon) {
+                const eligibleItems = cart.filter(item => appliedCoupon.itemCategory === item.category);
+                const eligibleQuantity = eligibleItems.reduce((sum, item) => sum + item.quantity, 0);
+                if (eligibleQuantity >= appliedCoupon.minQuantity) {
+                    discount = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity * appliedCoupon.discount / 100), 0);
+                }
+            }
+            let total = subtotal - discount;
+
+            cartItemsDiv.innerHTML = cart.map(item => `
+                <div class="cart-card flex flex-col sm:flex-row items-center p-4">
+                    <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="cart-item-image">
+                    <div class="cart-item-details flex-1">
+                        <h3 class="text-lg font-semibold item-name">${sanitizeHTML(item.name)}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Price: ₹${item.price.toFixed(2)} / unit</p>
+                        <p class="text-yellow-600 font-bold mt-1">Total: ₹${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <div class="cart-item-actions flex items-center gap-2 mt-4 sm:mt-0">
+                        <button onclick="updateCartQuantity('${item.id}', 'decrement')" class="decrement btn-secondary">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" value="${item.quantity}" min="1" class="input-field text-center"
+                               onchange="updateCartQuantityInput('${item.id}', this.value)">
+                        <button onclick="updateCartQuantity('${item.id}', 'increment')" class="increment btn-secondary">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button onclick="removeFromCart('${item.id}')" class="remove btn-primary">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            cartSubtotalDiv.textContent = `₹${subtotal.toFixed(2)}`;
+            cartDiscountDiv.textContent = `₹${discount.toFixed(2)}`;
+            cartTotalDiv.textContent = `₹${total.toFixed(2)}`;
+        }
+
+        // Menu and Favorites
         async function fetchMenuItems() {
             setLoading('menuItems', true);
             try {
@@ -1036,31 +1297,31 @@
                 const menuItemsDiv = document.getElementById('menuItems');
                 if (!menuItemsDiv) return;
                 if (filteredItems.length === 0) {
-                    menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items available.</p>';
+                    menuItemsDiv.innerHTML = '<div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><i class="fas fa-utensils text-3xl mb-2"></i><p class="text-lg">No items available.</p></div>';
                     return;
                 }
                 menuItemsDiv.innerHTML = filteredItems.map(item => `
                     <div class="menu-card">
-                        <img src="${sanitizeHTML(item.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover h-48">
+                        <img src="${sanitizeHTML(item.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover">
                         <div class="p-6">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(item.description || 'No description available')}</p>
-                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base rating-stars">${'★'.repeat(item.rating || 0)}${'☆'.repeat(5 - (item.rating || 0))}</p>
-                            <div class="flex justify-between mt-3">
-                                <button onclick='addToCart(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image })})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
-                                <button onclick='toggleFavorite(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">
+                            <h3 class="text-lg font-semibold item-name">${sanitizeHTML(item.name)}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">${sanitizeHTML(item.description || 'No description available')}</p>
+                            <p class="text-yellow-600 font-bold mt-2">₹${item.price.toFixed(2)}</p>
+                            <p class="rating-stars mt-2">${'★'.repeat(item.rating || 0)}${'☆'.repeat(5 - (item.rating || 0))}</p>
+                            <div class="flex justify-between items-center mt-4">
+                                <button onclick='toggleFavorite(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-2xl">
                                     ${favorites.some(fav => fav.id === item._id) ? '♥' : '♡'}
                                 </button>
+                                <button onclick='addToCart(${JSON.stringify({ _id: item._id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="btn-primary"><i class="fas fa-cart-plus mr-2"></i>Add to Cart</button>
                             </div>
-                            <button onclick="showRateModal('${item._id}')" class="mt-3 text-sm sm:text-base text-gray-600 hover:text-gray-900">Rate Item</button>
+                            <button onclick="showRateModal('${item._id}')" class="mt-4 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">Rate Item</button>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Fetch menu error:', error);
                 const menuItemsDiv = document.getElementById('menuItems');
-                if (menuItemsDiv) menuItemsDiv.innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+                if (menuItemsDiv) menuItemsDiv.innerHTML = '<div class="text-center text-red-500 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p class="text-lg">Failed to load menu items.</p></div>';
             } finally {
                 setLoading('menuItems', false);
             }
@@ -1077,218 +1338,66 @@
                 const couponItemsDiv = document.getElementById('couponItems');
                 if (!couponItemsDiv) return;
                 if (coupons.length === 0) {
-                    couponItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No coupons available.</p>';
+                    couponItemsDiv.innerHTML = '<div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><i class="fas fa-ticket-alt text-3xl mb-2"></i><p class="text-lg">No coupons available.</p></div>';
                     return;
                 }
-                couponItemsDiv.innerHTML = coupons.filter(coupon => !coupon.isSpecial).map(coupon => `
+                couponItemsDiv.innerHTML = coupons.map(coupon => `
                     <div class="coupon-card">
-                        <img src="${sanitizeHTML(coupon.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(coupon.code)}" class="w-full object-cover h-48">
+                        <img src="${sanitizeHTML(coupon.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(coupon.code)}" class="w-full object-cover">
                         <div class="p-6">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(coupon.code)}</h3>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(coupon.description || 'No description available')}</p>
-                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">${coupon.discount}% Off</p>
-                            <button onclick="applyCouponDirectly('${sanitizeHTML(coupon.code)}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
+                            <h3 class="text-lg font-semibold coupon-code">${sanitizeHTML(coupon.code)}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">${sanitizeHTML(coupon.description)}</p>
+                            <p class="text-yellow-600 font-bold mt-2">${coupon.discount}% OFF on ${coupon.minQuantity} ${sanitizeHTML(coupon.itemCategory)} items</p>
+                            <button onclick="applyCoupon('${sanitizeHTML(coupon.code)}')" class="btn-primary mt-4 w-full text-base">
+                                <i class="fas fa-ticket-alt mr-2"></i>Apply Coupon
+                            </button>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Fetch coupons error:', error);
                 const couponItemsDiv = document.getElementById('couponItems');
-                if (couponItemsDiv) couponItemsDiv.innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load coupons.</p>';
+                if (couponItemsDiv) couponItemsDiv.innerHTML = '<div class="text-center text-red-500 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p class="text-lg">Failed to load coupons.</p></div>';
             } finally {
                 setLoading('couponItems', false);
             }
         }
 
-        async function fetchSpecialCoupons() {
-            setLoading('specialCouponItems', true);
-            try {
-                const response = await fetch(`${BASE_URL}/api/coupons`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                if (!response.ok) throw new Error('Failed to fetch special coupons');
-                const coupons = await response.json();
-                const specialCouponItemsDiv = document.getElementById('specialCouponItems');
-                if (!specialCouponItemsDiv) return;
-                const specialCoupons = coupons.filter(coupon => coupon.isSpecial);
-                if (specialCoupons.length === 0) {
-                    specialCouponItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No special offers available.</p>';
-                    return;
-                }
-                specialCouponItemsDiv.innerHTML = specialCoupons.map(coupon => `
-                    <div class="coupon-card special-coupon">
-                        <img src="${sanitizeHTML(coupon.image || DEFAULT_IMAGE)}" alt="${sanitizeHTML(coupon.code)}" class="w-full object-cover h-48">
-                        <div class="p-6">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(coupon.code)}</h3>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(coupon.description || 'No description available')}</p>
-                            <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">${coupon.discount}% Off</p>
-                            <p class="text-gray-600 text-sm mt-2 sm:text-base">Special Offer by Admin</p>
-                            <button onclick="applyCouponDirectly('${sanitizeHTML(coupon.code)}')" class="btn-primary w-full mt-3 text-sm sm:text-base">Apply Coupon</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Fetch special coupons error:', error);
-                const specialCouponItemsDiv = document.getElementById('specialCouponItems');
-                if (specialCouponItemsDiv) specialCouponItemsDiv.innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load special coupons.</p>';
-            } finally {
-                setLoading('specialCouponItems', false);
-            }
-        }
-
-        async function applyCouponDirectly(couponCode) {
+        async function applyCoupon(code = null) {
             if (isLoading) return;
-            setLoading('couponItems', true);
-            try {
-                const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ couponCode })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    appliedCoupon = data;
-                    showToast(`Coupon ${sanitizeHTML(couponCode)} applied! ${data.discount}% off`, 'success');
-                    loadCart();
-                } else {
-                    showToast(data.error || 'Invalid coupon code.', 'error');
-                }
-            } catch (error) {
-                console.error('Apply coupon error:', error);
-                showToast('Failed to apply coupon.', 'error');
-            } finally {
-                setLoading('couponItems', false);
-            }
-        }
-
-        function addToCart(item) {
-            if (!item._id || !item.name || !item.price) {
-                showToast('Invalid item data.', 'error');
-                return;
-            }
-            const existingItem = cart.find(cartItem => cartItem.id === item._id);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    id: item._id,
-                    name: sanitizeHTML(item.name),
-                    price: parseFloat(item.price),
-                    quantity: 1,
-                    image: item.image || DEFAULT_IMAGE,
-                    type: 'menu'
-                });
-            }
-            localStorage.setItem('cart', JSON.stringify(cart));
-            showToast(`${sanitizeHTML(item.name)} added to cart!`, 'success');
-            if (document.getElementById('cartSection')?.classList.contains('active')) loadCart();
-        }
-
-        function toggleFavorite(item) {
-            if (!item._id || !item.name || !item.price) {
-                showToast('Invalid item data.', 'error');
-                return;
-            }
-            const existingFav = favorites.find(fav => fav.id === item._id);
-            if (existingFav) {
-                favorites = favorites.filter(fav => fav.id !== item._id);
-                showToast(`${sanitizeHTML(item.name)} removed from favorites.`, 'success');
-            } else {
-                favorites.push({
-                    id: item._id,
-                    name: sanitizeHTML(item.name),
-                    price: parseFloat(item.price),
-                    image: item.image || DEFAULT_IMAGE,
-                    category: item.category || 'Unknown'
-                });
-                showToast(`${sanitizeHTML(item.name)} added to favorites!`, 'success');
-            }
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-            if (document.getElementById('favoritesSection')?.classList.contains('active')) loadFavorites();
-            if (document.getElementById('homeSection')?.classList.contains('active')) fetchMenuItems();
-        }
-
-        function loadFavorites() {
-            const favoriteItemsDiv = document.getElementById('favoriteItems');
-            if (!favoriteItemsDiv) return;
-            if (favorites.length === 0) {
-                favoriteItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No favorite items.</p>';
-                return;
-            }
-            favoriteItemsDiv.innerHTML = favorites.map(item => `
-                <div class="menu-card">
-                    <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover h-48">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${sanitizeHTML(item.category)}</p>
-                        <p class="text-yellow-600 font-bold mt-2 text-sm sm:text-base">₹${item.price.toFixed(2)}</p>
-                        <div class="flex justify-between mt-3">
-                            <button onclick='addToCart(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image })})' class="btn-primary w-3/4 text-sm sm:text-base">Add to Cart</button>
-                            <button onclick='toggleFavorite(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-sm sm:text-base">♥</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function removeFromCart(index) {
-            if (index < 0 || index >= cart.length) {
-                showToast('Invalid cart item.', 'error');
-                return;
-            }
-            const itemName = cart[index].name;
-            cart.splice(index, 1);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            loadCart();
-            showToast(`${sanitizeHTML(itemName)} removed from cart.`, 'success');
-        }
-
-        function updateQuantity(index, delta) {
-            if (index < 0 || index >= cart.length) {
-                showToast('Invalid cart item.', 'error');
-                return;
-            }
-            cart[index].quantity += delta;
-            if (cart[index].quantity <= 0) {
-                removeFromCart(index);
-            } else {
-                localStorage.setItem('cart', JSON.stringify(cart));
-                loadCart();
-            }
-        }
-
-        function showCouponModal() {
-            const couponCode = document.getElementById('couponCode');
-            if (couponCode) couponCode.value = '';
-            showModal('couponModal');
-        }
-
-        async function applyCoupon() {
-            if (isLoading) return;
-            const couponCode = document.getElementById('couponCode')?.value.trim();
+            const couponCode = code || document.getElementById('couponCode')?.value.trim();
             if (!couponCode) {
                 showToast('Please enter a coupon code.', 'error');
                 return;
             }
             setLoading('couponModal', true);
             try {
-                const response = await fetch(`${BASE_URL}/api/coupons/validate`, {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/coupons/apply`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ couponCode })
+                    body: JSON.stringify({ code: sanitizeHTML(couponCode) })
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    appliedCoupon = data;
-                    showToast(`Coupon ${sanitizeHTML(couponCode)} applied! ${data.discount}% off`, 'success');
-                    closeModal('couponModal');
-                    loadCart();
+                    const eligibleItems = cart.filter(item => item.category === data.itemCategory);
+                    const eligibleQuantity = eligibleItems.reduce((sum, item) => sum + item.quantity, 0);
+                    if (eligibleQuantity >= data.minQuantity) {
+                        appliedCoupon = {
+                            code: couponCode,
+                            discount: data.discount,
+                            itemCategory: data.itemCategory,
+                            minQuantity: data.minQuantity
+                        };
+                        showToast(`Coupon ${sanitizeHTML(couponCode)} applied! ${data.discount}% off on ${data.minQuantity} ${data.itemCategory} items`, 'success');
+                        closeModal('couponModal');
+                        loadCart();
+                    } else {
+                        showToast(`Coupon requires at least ${data.minQuantity} ${data.itemCategory} items.`, 'error');
+                    }
                 } else {
                     showToast(data.error || 'Invalid coupon code.', 'error');
                 }
@@ -1300,200 +1409,222 @@
             }
         }
 
-        function loadCart() {
-            const cartItemsDiv = document.getElementById('cartItems');
-            const cartSummaryDiv = document.getElementById('cartSummary');
-            const couponInfoDiv = document.getElementById('couponInfo');
-            const deliveryAddress = document.getElementById('deliveryAddress');
-            if (!cartItemsDiv || !cartSummaryDiv || !couponInfoDiv || !deliveryAddress) return;
-
-            // Validate cart items
-            cart = cart.filter(item => item.id && item.name && typeof item.price === 'number' && item.quantity > 0);
-            localStorage.setItem('cart', JSON.stringify(cart));
-
-            if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-center text-sm sm:text-base">Your cart is empty. Add some delicious items!</p>';
-                cartSummaryDiv.innerHTML = '';
-                couponInfoDiv.innerHTML = '';
-                deliveryAddress.value = selectedAddressId || '';
-                currentOrderTotal = 0;
-                return;
-            }
-
-            let subtotal = 0;
-            cartItemsDiv.innerHTML = cart.map((item, index) => {
-                const itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
-                return `
-                    <div class="cart-item cart-card">
-                        <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="cart-card-img">
-                        <div class="flex-1 ml-4">
-                            <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${sanitizeHTML(item.name)}</h3>
-                            <p class="text-gray-600 text-sm sm:text-base">₹${item.price.toFixed(2)} x ${item.quantity}</p>
-                            <p class="text-yellow-600 font-bold text-sm sm:text-base">₹${itemTotal.toFixed(2)}</p>
-                        </div>
-                        <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
-                            <span class="text-sm sm:text-base">${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                        </div>
-                        <button onclick="removeFromCart(${index})" class="ml-4 text-red-500 hover:text-red-700 text-sm sm:text-base">Remove</button>
-                    </div>
-                `;
-            }).join('');
-
-            let discount = 0;
-            if (appliedCoupon) {
-                discount = (subtotal * appliedCoupon.discount) / 100;
-                couponInfoDiv.innerHTML = `<p class="text-green-600 text-sm sm:text-base">Coupon Applied: ${sanitizeHTML(appliedCoupon.code)} (${appliedCoupon.discount}% off)</p>`;
-            } else {
-                couponInfoDiv.innerHTML = '<button onclick="showCouponModal()" class="text-blue-500 hover:text-blue-700 text-sm sm:text-base">Apply a coupon</button>';
-            }
-
-            currentOrderTotal = subtotal - discount;
-            const selectedAddress = addresses.find(addr => addr._id === selectedAddressId);
-            cartSummaryDiv.innerHTML = `
-                <div class="flex justify-between text-sm sm:text-base mb-2">
-                    <span>Subtotal</span>
-                    <span>₹${subtotal.toFixed(2)}</span>
-                </div>
-                <div class="flex justify-between text-sm sm:text-base mb-2">
-                    <span>Discount</span>
-                    <span>-₹${discount.toFixed(2)}</span>
-                </div>
-                <div class="flex justify-between font-bold text-sm sm:text-base mb-2">
-                    <span>Total</span>
-                    <span>₹${currentOrderTotal.toFixed(2)}</span>
-                </div>
-                <div class="text-sm sm:text-base">
-                    <span class="font-medium">Delivery Address:</span>
-                    <span>${selectedAddress ? `${sanitizeHTML(selectedAddress.fullName || 'Unknown')}, ${sanitizeHTML(selectedAddress.houseNumber || '')}, ${sanitizeHTML(selectedAddress.street || '')}, ${sanitizeHTML(selectedAddress.pincode || '')}` : 'Please select an address'}</span>
-                </div>
-            `;
-            deliveryAddress.value = selectedAddressId || '';
+        // Address Management
+        function showAddressModal(address = null) {
+            currentAddressId = address ? address.id : null;
+            document.getElementById('addressModalTitle').textContent = address ? 'Edit Address' : 'Add Address';
+            document.getElementById('fullName').value = address ? sanitizeHTML(address.fullName) : '';
+            document.getElementById('mobileNumber').value = address ? sanitizeHTML(address.mobileNumber) : '';
+            document.getElementById('addressLine1').value = address ? sanitizeHTML(address.addressLine1) : '';
+            document.getElementById('addressLine2').value = address ? sanitizeHTML(address.addressLine2) : '';
+            document.getElementById('city').value = address ? sanitizeHTML(address.city) : '';
+            document.getElementById('state').value = address ? sanitizeHTML(address.state) : '';
+            document.getElementById('zipCode').value = address ? sanitizeHTML(address.zipCode) : '';
+            showModal('addressModal');
         }
 
-        function showPaymentModal() {
-            if (cart.length === 0) {
-                showToast('Your cart is empty.', 'error');
-                return;
-            }
-            if (!selectedAddressId) {
-                showToast('Please select a delivery address.', 'error');
-                return;
-            }
-            showModal('paymentModal');
-        }
-
-        async function initiatePayment(method) {
+        async function saveAddress() {
             if (isLoading) return;
-            if (cart.length === 0) {
-                showToast('Your cart is empty.', 'error');
-                closeModal('paymentModal');
+            const fullName = document.getElementById('fullName')?.value.trim();
+            const mobileNumber = document.getElementById('mobileNumber')?.value.trim();
+            const addressLine1 = document.getElementById('addressLine1')?.value.trim();
+            const addressLine2 = document.getElementById('addressLine2')?.value.trim();
+            const city = document.getElementById('city')?.value.trim();
+            const state = document.getElementById('state')?.value.trim();
+            const zipCode = document.getElementById('zipCode')?.value.trim();
+
+            if (!fullName || !mobileNumber || !addressLine1 || !city || !state || !zipCode) {
+                showToast('Please fill in all required fields.', 'error');
                 return;
             }
-            if (!selectedAddressId) {
-                showToast('Please select a delivery address.', 'error');
-                closeModal('paymentModal');
+
+            if (!/^\d{10}$/.test(mobileNumber)) {
+                showToast('Please enter a valid 10-digit mobile number.', 'error');
                 return;
             }
-            setLoading('paymentModal', true);
-            const paymentMethod = method === 'cod' ? 'COD' : method.toUpperCase();
+
+            if (!/^\d{6}$/.test(zipCode)) {
+                showToast('Please enter a valid 6-digit zip code.', 'error');
+                return;
+            }
+
+            setLoading('saveAddressBtn', true);
             try {
-                if (method === 'phonepe' || method === 'gpay') {
-                    // Simulate payment API response for testing due to 404 errors
-                    console.warn(`Simulating ${method} payment due to unavailable backend endpoint.`);
-                    const simulatedResponse = {
-                        transactionId: `SIMULATED_${method.toUpperCase()}_${Date.now()}`
-                    };
-                    showToast(`Redirecting to ${method === 'phonepe' ? 'PhonePe' : 'Google Pay'}...`, 'success');
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-                    await placeOrder(paymentMethod, { transactionId: simulatedResponse.transactionId });
-                    /*
-                    // Uncomment when backend is fixed
-                    const response = await fetch(`${BASE_URL}/api/payment/${method}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            amount: currentOrderTotal,
-                            deliveryAddress: selectedAddressId
-                        })
-                    });
-                    if (!response.ok) {
-                        const text = await response.text();
-                        console.error('Payment response:', text);
-                        throw new Error(`HTTP ${response.status}: ${text}`);
+                const token = localStorage.getItem('token');
+                const addressData = {
+                    id: currentAddressId || `addr_${Date.now()}`,
+                    fullName: sanitizeHTML(fullName),
+                    mobileNumber: sanitizeHTML(mobileNumber),
+                    addressLine1: sanitizeHTML(addressLine1),
+                    addressLine2: sanitizeHTML(addressLine2),
+                    city: sanitizeHTML(city),
+                    state: sanitizeHTML(state),
+                    zipCode: sanitizeHTML(zipCode)
+                };
+                const response = await fetch(`${BASE_URL}/api/addresses${currentAddressId ? `/${currentAddressId}` : ''}`, {
+                    method: currentAddressId ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(addressData)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (currentAddressId) {
+                        const index = addresses.findIndex(addr => addr.id === currentAddressId);
+                        if (index !== -1) {
+                            addresses[index] = addressData;
+                        }
+                    } else {
+                        addresses.push(addressData);
                     }
-                    const data = await response.json();
-                    showToast(`Redirecting to ${method === 'phonepe' ? 'PhonePe' : 'Google Pay'}...`, 'success');
-                    await placeOrder(paymentMethod, { transactionId: data.transactionId || 'SIMULATED' });
-                    */
-                } else if (method === 'cod') {
-                    await placeOrder('COD', {});
+                    localStorage.setItem('addresses', JSON.stringify(addresses));
+                    showToast(`Address ${currentAddressId ? 'updated' : 'added'} successfully!`, 'success');
+                    closeModal('addressModal');
+                    loadAddresses();
+                } else {
+                    showToast(data.error || 'Failed to save address.', 'error');
                 }
             } catch (error) {
-                console.error(`Initiate payment error for ${method}:`, error);
-                showToast(`Failed to initiate ${method === 'cod' ? 'Cash on Delivery' : method} payment.`, 'error');
+                console.error('Save address error:', error);
+                showToast('Failed to save address.', 'error');
             } finally {
-                setLoading('paymentModal', false);
+                setLoading('saveAddressBtn', false);
             }
         }
 
-        async function placeOrder(paymentMethod, paymentDetails = {}) {
+        async function loadAddresses() {
+            setLoading('addressSelect', true);
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/addresses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Failed to fetch addresses');
+                addresses = await response.json();
+                localStorage.setItem('addresses', JSON.stringify(addresses));
+                const addressSelect = document.getElementById('addressSelect');
+                const addressItemsDiv = document.getElementById('addressItems');
+                if (addressSelect) {
+                    if (addresses.length === 0) {
+                        addressSelect.innerHTML = '<option value="">No addresses available</option>';
+                    } else {
+                        addressSelect.innerHTML = '<option value="">Select Delivery Address</option>' + addresses.map(address => `
+                            <option value="${address.id}">
+                                ${sanitizeHTML(address.fullName)}, ${sanitizeHTML(address.addressLine1)}, ${sanitizeHTML(address.city)}
+                            </option>
+                        `).join('');
+                    }
+                }
+                if (addressItemsDiv) {
+                    if (addresses.length === 0) {
+                        addressItemsDiv.innerHTML = `
+                            <div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                                <i class="fas fa-map-marker-alt text-3xl mb-2"></i>
+                                <p class="text-lg">No addresses saved.</p>
+                                <button onclick="showAddressModal()" class="btn-primary mt-4">Add Address</button>
+                            </div>
+                        `;
+                    } else {
+                        addressItemsDiv.innerHTML = addresses.map(address => `
+                            <div class="address-card">
+                                <p class="address-header"><i class="fas fa-user mr-2"></i>${sanitizeHTML(address.fullName)}</p>
+                                <p class="address-details"><i class="fas fa-phone mr-2"></i>${sanitizeHTML(address.mobileNumber)}</p>
+                                <p class="address-details"><i class="fas fa-map-marker-alt mr-2"></i>
+                                    ${sanitizeHTML(address.addressLine1)}${address.addressLine2 ? ', ' + sanitizeHTML(address.addressLine2) : ''}, 
+                                    ${sanitizeHTML(address.city)}, ${sanitizeHTML(address.state)} ${sanitizeHTML(address.zipCode)}
+                                </p>
+                                <div class="address-actions">
+                                                                        <button onclick="showAddressModal(${JSON.stringify(address)})" class="btn-primary"><i class="fas fa-edit mr-2"></i>Edit</button>
+                                    <button onclick="deleteAddress('${address.id}')" class="btn-secondary"><i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Fetch addresses error:', error);
+                showToast('Failed to load addresses.', 'error');
+            } finally {
+                setLoading('addressSelect', false);
+            }
+        }
+
+        async function deleteAddress(addressId) {
+            if (!confirm('Are you sure you want to delete this address?')) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/addresses/${addressId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    addresses = addresses.filter(addr => addr.id !== addressId);
+                    localStorage.setItem('addresses', JSON.stringify(addresses));
+                    showToast('Address deleted successfully!', 'success');
+                    loadAddresses();
+                } else {
+                    showToast(data.error || 'Failed to delete address.', 'error');
+                }
+            } catch (error) {
+                console.error('Delete address error:', error);
+                showToast('Failed to delete address.', 'error');
+            }
+        }
+
+        // Place Order
+        async function placeOrder() {
             if (isLoading) return;
-            const token = localStorage.getItem('token');
-            const selectedAddress = addresses.find(addr => addr._id === selectedAddressId);
-            if (!selectedAddress) {
-                showToast('Invalid delivery address.', 'error');
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
                 return;
             }
-            setLoading('proceedToPayment', true);
+            const addressId = document.getElementById('addressSelect')?.value;
+            if (!addressId) {
+                showToast('Please select a delivery address.', 'error');
+                return;
+            }
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+            if (!paymentMethod) {
+                showToast('Please select a payment method.', 'error');
+                return;
+            }
+            setLoading('placeOrderBtn', true);
             try {
+                const token = localStorage.getItem('token');
+                const orderData = {
+                    items: cart.map(item => ({
+                        itemId: item.id,
+                        quantity: item.quantity
+                    })),
+                    addressId,
+                    paymentMethod,
+                    couponCode: appliedCoupon?.code
+                };
                 const response = await fetch(`${BASE_URL}/api/orders`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({
-                        items: cart.map(item => ({
-                            item: item.id,
-                            quantity: item.quantity,
-                            itemName: sanitizeHTML(item.name),
-                            price: item.price
-                        })),
-                        total: currentOrderTotal,
-                        paymentMethod,
-                        paymentDetails,
-                        coupon: appliedCoupon ? appliedCoupon.code : null,
-                        deliveryAddress: selectedAddressId
-                    })
+                    body: JSON.stringify(orderData)
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Order placed successfully!', 'success');
-                    const orderConfirmationDetails = document.getElementById('orderConfirmationDetails');
-                    if (orderConfirmationDetails) {
-                        orderConfirmationDetails.innerHTML = `
-                            <p><strong>Order #${sanitizeHTML(data._id)}</strong></p>
-                            <p>Total: ₹${data.total.toFixed(2)}</p>
-                            <p>Payment Method: ${sanitizeHTML(data.paymentMethod)}</p>
-                            <p>Delivery Address: ${sanitizeHTML(selectedAddress.fullName || 'Unknown')}, ${sanitizeHTML(selectedAddress.houseNumber || '')}, ${sanitizeHTML(selectedAddress.street || '')}, ${sanitizeHTML(selectedAddress.pincode || '')}</p>
-                            <p>Items: ${cart.map(item => `${sanitizeHTML(item.name)} (Qty: ${item.quantity})`).join(', ')}</p>
-                            ${appliedCoupon ? `<p>Coupon: ${sanitizeHTML(appliedCoupon.code)} (${appliedCoupon.discount}% off)</p>` : ''}
-                        `;
-                    }
-                    showModal('orderConfirmationModal');
                     cart = [];
                     appliedCoupon = null;
                     localStorage.setItem('cart', JSON.stringify(cart));
-                    closeModal('paymentModal');
+                    showToast('Order placed successfully!', 'success');
+                    document.getElementById('orderConfirmationDetails').innerHTML = `
+                        <p>Order ID: ${sanitizeHTML(data.orderId)}</p>
+                        <p>Total: ₹${data.total.toFixed(2)}</p>
+                        <p>Estimated Delivery: ${new Date(data.estimatedDelivery).toLocaleString()}</p>
+                    `;
+                    showModal('orderConfirmationModal');
                     loadCart();
                     fetchOrders();
-                    fetchOrderHistory();
                 } else {
                     showToast(data.error || 'Failed to place order.', 'error');
                 }
@@ -1501,84 +1632,221 @@
                 console.error('Place order error:', error);
                 showToast('Failed to place order.', 'error');
             } finally {
-                setLoading('proceedToPayment', false);
+                setLoading('placeOrderBtn', false);
             }
         }
 
+        // Orders Management
         async function fetchOrders() {
             setLoading('orderItems', true);
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch(`${BASE_URL}/api/orders`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) throw new Error('Failed to fetch orders');
                 const orders = await response.json();
                 const orderItemsDiv = document.getElementById('orderItems');
                 if (!orderItemsDiv) return;
                 if (orders.length === 0) {
-                    orderItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No orders found.</p>';
+                    orderItemsDiv.innerHTML = `
+                        <div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                            <i class="fas fa-box-open text-3xl mb-2"></i>
+                            <p class="text-lg">No active orders.</p>
+                        </div>
+                    `;
                     return;
                 }
                 orderItemsDiv.innerHTML = orders.map(order => `
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${sanitizeHTML(order._id)}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${sanitizeHTML(order.status)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${sanitizeHTML(order.paymentMethod)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Items: ${order.items.map(item => `${sanitizeHTML(item.itemName)} (Qty: ${item.quantity})`).join(', ')}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${sanitizeHTML(order.deliveryAddress.fullName || 'Unknown')}, ${sanitizeHTML(order.deliveryAddress.houseNumber || '')}, ${sanitizeHTML(order.deliveryAddress.street || '')}, ${sanitizeHTML(order.deliveryAddress.pincode || '')}</p>
-                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${sanitizeHTML(order.coupon)} (${order.couponDiscount}% off)</p>` : ''}
+                    <div class="cart-card">
+                        <div class="p-4 flex-1">
+                            <h3 class="text-lg font-semibold">Order ID: ${sanitizeHTML(order.orderId)}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Total: ₹${order.total.toFixed(2)}</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Status: ${sanitizeHTML(order.status)}</p>
+                            <div class="mt-4">
+                                <button onclick="showOrderDetails('${order._id}')" class="btn-primary mr-2"><i class="fas fa-eye mr-2"></i>View Details</button>
+                                ${order.status === 'Pending' ? `
+                                    <button onclick="showCancelOrderModal('${order._id}')" class="btn-secondary"><i class="fas fa-times-circle mr-2"></i>Cancel</button>
+                                ` : ''}
+                            </div>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Fetch orders error:', error);
-                const orderItemsDiv = document.getElementById('orderItems');
-                if (orderItemsDiv) orderItemsDiv.innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load orders.</p>';
+                showToast('Failed to load orders.', 'error');
             } finally {
                 setLoading('orderItems', false);
             }
         }
 
+        async function showOrderDetails(orderId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const order = await response.json();
+                if (response.ok) {
+                    document.getElementById('orderConfirmationDetails').innerHTML = `
+                        <p><strong>Order ID:</strong> ${sanitizeHTML(order.orderId)}</p>
+                        <p><strong>Placed on:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                        <p><strong>Total:</strong> ₹${order.total.toFixed(2)}</p>
+                        <p><strong>Status:</strong> ${sanitizeHTML(order.status)}</p>
+                        <p><strong>Items:</strong></p>
+                        <ul class="list-disc pl-5">
+                            ${order.items.map(item => `
+                                <li>${sanitizeHTML(item.itemId.name)} x${item.quantity} - ₹${(item.itemId.price * item.quantity).toFixed(2)}</li>
+                            `).join('')}
+                        </ul>
+                        <p><strong>Delivery Address:</strong> ${sanitizeHTML(order.address.fullName)}, ${sanitizeHTML(order.address.addressLine1)}, ${sanitizeHTML(order.address.city)}, ${sanitizeHTML(order.address.state)} ${sanitizeHTML(order.address.zipCode)}</p>
+                        <p><strong>Payment Method:</strong> ${sanitizeHTML(order.paymentMethod)}</p>
+                    `;
+                    showModal('orderConfirmationModal');
+                } else {
+                    showToast(order.error || 'Failed to fetch order details.', 'error');
+                }
+            } catch (error) {
+                console.error('Fetch order details error:', error);
+                showToast('Failed to fetch order details.', 'error');
+            }
+        }
+
+        function showCancelOrderModal(orderId) {
+            currentCancelOrderId = orderId;
+            document.getElementById('cancelReason').value = '';
+            showModal('cancelOrderModal');
+        }
+
+        async function submitCancelOrder() {
+            if (isLoading) return;
+            const reason = document.getElementById('cancelReason')?.value.trim();
+            if (!reason) {
+                showToast('Please provide a reason for cancellation.', 'error');
+                return;
+            }
+            setLoading('cancelOrderModal', true);
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/orders/${currentCancelOrderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ reason: sanitizeHTML(reason) })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Order cancelled successfully!', 'success');
+                    closeModal('cancelOrderModal');
+                    fetchOrders();
+                    fetchOrderHistory();
+                } else {
+                    showToast(data.error || 'Failed to cancel order.', 'error');
+                }
+            } catch (error) {
+                console.error('Cancel order error:', error);
+                showToast('Failed to cancel order.', 'error');
+            } finally {
+                setLoading('cancelOrderModal', false);
+            }
+        }
+
+        // Favorites Management
+        function toggleFavorite(item) {
+            const index = favorites.findIndex(fav => fav.id === item._id);
+            if (index === -1) {
+                favorites.push({
+                    id: item._id,
+                    name: sanitizeHTML(item.name),
+                    price: parseFloat(item.price),
+                    image: item.image || DEFAULT_IMAGE,
+                    category: item.category
+                });
+                showToast(`${sanitizeHTML(item.name)} added to favorites!`, 'success');
+            } else {
+                favorites.splice(index, 1);
+                showToast(`${sanitizeHTML(item.name)} removed from favorites.`, 'success');
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            loadFavorites();
+            if (document.getElementById('homeSection')?.classList.contains('active')) {
+                fetchMenuItems();
+            }
+        }
+
+        function loadFavorites() {
+            const favoriteItemsDiv = document.getElementById('favoriteItems');
+            if (!favoriteItemsDiv) return;
+            if (favorites.length === 0) {
+                favoriteItemsDiv.innerHTML = `
+                    <div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                        <i class="fas fa-heart text-3xl mb-2 text-red-500"></i>
+                        <p class="text-lg">No favorite items.</p>
+                        <button onclick="showSection('home')" class="btn-primary mt-4">Explore Menu</button>
+                    </div>
+                `;
+                return;
+            }
+            favoriteItemsDiv.innerHTML = favorites.map(item => `
+                <div class="menu-card">
+                    <img src="${sanitizeHTML(item.image)}" alt="${sanitizeHTML(item.name)}" class="w-full object-cover">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold item-name">${sanitizeHTML(item.name)}</h3>
+                        <p class="text-yellow-600 font-bold mt-2">₹${item.price.toFixed(2)}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <button onclick='toggleFavorite(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="text-red-500 hover:text-red-700 text-2xl">♥</button>
+                            <button onclick='addToCart(${JSON.stringify({ _id: item.id, name: item.name, price: item.price, image: item.image, category: item.category })})' class="btn-primary"><i class="fas fa-cart-plus mr-2"></i>Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Order History
         async function fetchOrderHistory() {
             setLoading('orderHistoryItems', true);
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch(`${BASE_URL}/api/orders/history`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) throw new Error('Failed to fetch order history');
                 const orders = await response.json();
                 const orderHistoryItemsDiv = document.getElementById('orderHistoryItems');
                 if (!orderHistoryItemsDiv) return;
                 if (orders.length === 0) {
-                    orderHistoryItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No order history found.</p>';
+                    orderHistoryItemsDiv.innerHTML = `
+                        <div class="text-center text-gray-600 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                            <i class="fas fa-history text-3xl mb-2"></i>
+                            <p class="text-lg">No order history.</p>
+                        </div>
+                    `;
                     return;
                 }
                 orderHistoryItemsDiv.innerHTML = orders.map(order => `
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">Order #${sanitizeHTML(order._id)}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Date: ${new Date(order.createdAt).toLocaleString()}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Total: ₹${order.total.toFixed(2)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Status: ${sanitizeHTML(order.status)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Payment Method: ${sanitizeHTML(order.paymentMethod)}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Items: ${order.items.map(item => `${sanitizeHTML(item.itemName)} (Qty: ${item.quantity})`).join(', ')}</p>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">Delivery Address: ${sanitizeHTML(order.deliveryAddress.fullName || 'Unknown')}, ${sanitizeHTML(order.deliveryAddress.houseNumber || '')}, ${sanitizeHTML(order.deliveryAddress.street || '')}, ${sanitizeHTML(order.deliveryAddress.pincode || '')}</p>
-                        ${order.coupon ? `<p class="text-gray-600 text-sm mt-2 sm:text-base">Coupon: ${sanitizeHTML(order.coupon)} (${order.couponDiscount}% off)</p>` : ''}
+                    <div class="cart-card">
+                        <div class="p-4 flex-1">
+                            <h3 class="text-lg font-semibold">Order ID: ${sanitizeHTML(order.orderId)}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Total: ₹${order.total.toFixed(2)}</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">Status: ${sanitizeHTML(order.status)}</p>
+                            <button onclick="showOrderDetails('${order._id}')" class="btn-primary mt-4"><i class="fas fa-eye mr-2"></i>View Details</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Fetch order history error:', error);
-                const orderHistoryItemsDiv = document.getElementById('orderHistoryItems');
-                if (orderHistoryItemsDiv) orderHistoryItemsDiv.innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load order history.</p>';
+                showToast('Failed to load order history.', 'error');
             } finally {
                 setLoading('orderHistoryItems', false);
             }
         }
 
         async function clearOrderHistory() {
-            if (isLoading) return;
-            const token = localStorage.getItem('token');
-            setLoading('orderHistoryItems', true);
+            if (!confirm('Are you sure you want to clear your order history?')) return;
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch(`${BASE_URL}/api/orders/history`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -1593,52 +1861,41 @@
             } catch (error) {
                 console.error('Clear order history error:', error);
                 showToast('Failed to clear order history.', 'error');
-            } finally {
-                setLoading('orderHistoryItems', false);
             }
         }
 
+        // Rating and Review
         function showRateModal(itemId) {
             currentRatingItemId = itemId;
-            const rating = document.getElementById('rating');
-            const review = document.getElementById('review');
-            if (rating) rating.value = '';
-            if (review) review.value = '';
+            document.getElementById('rating').value = '';
+            document.getElementById('review').value = '';
             showModal('rateModal');
         }
 
         async function submitRating() {
             if (isLoading) return;
-            const token = localStorage.getItem('token');
             const rating = parseInt(document.getElementById('rating')?.value);
             const review = document.getElementById('review')?.value.trim();
-
-            if (!currentRatingItemId) {
-                showToast('No item selected for rating.', 'error');
+            if (!rating || rating < 1 || rating > 5) {
+                showToast('Please enter a rating between 1 and 5.', 'error');
                 return;
             }
-
-            if (isNaN(rating) || rating < 1 || rating > 5) {
-                showToast('Please enter a valid rating between 1 and 5.', 'error');
-                return;
-            }
-
             setLoading('rateModal', true);
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch(`${BASE_URL}/api/menu/${currentRatingItemId}/rate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ rating, review })
+                    body: JSON.stringify({ rating, review: sanitizeHTML(review) })
                 });
                 const data = await response.json();
                 if (response.ok) {
                     showToast('Rating submitted successfully!', 'success');
                     closeModal('rateModal');
-                    currentRatingItemId = null;
-                    if (document.getElementById('homeSection')?.classList.contains('active')) fetchMenuItems();
+                    fetchMenuItems();
                 } else {
                     showToast(data.error || 'Failed to submit rating.', 'error');
                 }
@@ -1650,40 +1907,86 @@
             }
         }
 
+        // Contact Us
+        async function submitContactMessage() {
+            if (isLoading) return;
+            const subject = document.getElementById('contactSubject')?.value.trim() || document.getElementById('contactSectionSubject')?.value.trim();
+            const message = document.getElementById('contactMessage')?.value.trim() || document.getElementById('contactSectionMessage')?.value.trim();
+            if (!subject || !message) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+            setLoading('contactModal', true);
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${BASE_URL}/api/contact`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        subject: sanitizeHTML(subject),
+                        message: sanitizeHTML(message)
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Message sent successfully!', 'success');
+                    closeModal('contactModal');
+                    if (document.getElementById('contactSectionSubject')) {
+                        document.getElementById('contactSectionSubject').value = '';
+                        document.getElementById('contactSectionMessage').value = '';
+                    }
+                } else {
+                    showToast(data.error || 'Failed to send message.', 'error');
+                }
+            } catch (error) {
+                console.error('Submit contact message error:', error);
+                showToast('Failed to send message.', 'error');
+            } finally {
+                setLoading('contactModal', false);
+            }
+        }
+
+        // Logout
         function logout() {
-            localStorage.clear();
+            localStorage.removeItem('token');
+            localStorage.removeItem('cart');
+            localStorage.removeItem('favorites');
+            localStorage.removeItem('addresses');
+            localStorage.removeItem('userProfileImage');
             showToast('Logged out successfully!', 'success');
             setTimeout(() => window.location.href = 'index.html', 1000);
         }
 
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', async () => {
-            const isAuthenticated = await checkAuth();
-            if (!isAuthenticated) return;
-
-            const menuToggle = document.getElementById('menuToggle');
+        document.getElementById('menuToggle')?.addEventListener('click', () => {
             const navbarMenu = document.getElementById('navbarMenu');
-            if (menuToggle && navbarMenu) {
-                menuToggle.addEventListener('click', () => {
-                    navbarMenu.classList.toggle('active');
-                });
-            }
+            if (navbarMenu) navbarMenu.classList.toggle('active');
+        });
 
-            const searchInput = document.getElementById('searchInput');
-            const categoryFilter = document.getElementById('categoryFilter');
-            let searchTimeout;
-
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(fetchMenuItems, 300);
-                });
-            }
-
-            if (categoryFilter) {
-                categoryFilter.addEventListener('change', fetchMenuItems);
+        document.getElementById('searchInput')?.addEventListener('input', () => {
+            if (document.getElementById('homeSection')?.classList.contains('active')) {
+                fetchMenuItems();
             }
         });
+
+        document.getElementById('categoryFilter')?.addEventListener('change', () => {
+            if (document.getElementById('homeSection')?.classList.contains('active')) {
+                fetchMenuItems();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAuth()) {
+                fetchMenuItems();
+                fetchCoupons();
+                fetchCart();
+            }
+        });
+
     </script>
 </body>
 </html>
