@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -162,9 +163,7 @@
         }
         .profile-img:hover {
             transform: scale(1.2);
-            box-shadow: 0  نمایند
-
-0 0 5px rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2);
         }
         .dropdown-menu {
             display: none;
@@ -488,7 +487,7 @@
                     <input type="text" id="editItemImage" class="input-field" placeholder="Image URL">
                 </div>
                 <div>
-                    <label for="editItemImageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
+                    <label for="editItemImageUpload" class="block text.sm font-medium text-gray-700 mb-2">Upload Image (Optional)</label>
                     <input type="file" id="editItemImageUpload" class="input-field" accept="image/*">
                 </div>
                 <div>
@@ -895,1147 +894,1110 @@
         </section>
     </div>
 
-    <script>
-        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-        const TOKEN_KEY = 'adminToken';
-        const PROFILE_IMAGE_KEY = 'adminProfileImage';
+    <!-- Replace the entire <script> section in your admindashboard.html with this -->
+<script>
+    const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+    const TOKEN_KEY = 'adminToken';
+    const PROFILE_IMAGE_KEY = 'adminProfileImage';
 
-        // Utility Functions
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            toast.textContent = DOMPurify.sanitize(message);
-            toast.className = `toast ${type}`;
-            toast.style.display = 'flex';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+    // Utility Functions
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = DOMPurify.sanitize(message);
+        toast.className = `toast ${type}`;
+        toast.style.display = 'flex';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    function showLoader(loaderId) {
+        const loader = document.getElementById(loaderId);
+        if (loader) loader.style.display = 'block';
+    }
+
+    function hideLoader(loaderId) {
+        const loader = document.getElementById(loaderId);
+        if (loader) loader.style.display = 'none';
+    }
+
+    function toggleDropdown() {
+        const dropdown = document.getElementById('profileDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('active');
         }
+    }
 
-        function showLoader(loaderId) {
-            const loader = document.getElementById(loaderId);
-            if (loader) loader.style.display = 'block';
+    function showSection(section) {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        const sectionElement = document.getElementById(`${section}Section`);
+        if (sectionElement) {
+            sectionElement.classList.remove('hidden');
         }
-
-        function hideLoader(loaderId) {
-            const loader = document.getElementById(loaderId);
-            if (loader) loader.style.display = 'none';
+        toggleDropdown();
+        const actions = {
+            menu: fetchMenuItems,
+            orders: fetchOrders,
+            coupons: fetchCoupons,
+            customers: fetchCustomers,
+            contact: fetchContactMessages,
+            profile: fetchProfileDetails
+        };
+        if (actions[section]) {
+            actions[section]();
         }
+    }
 
-        function toggleDropdown() {
-            const dropdown = document.getElementById('profileDropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('active');
-            }
+    function showModal(modalId) {
+        closeModalAll();
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
         }
+    }
 
-        function showSection(section) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            const sectionElement = document.getElementById(`${section}Section`);
-            if (sectionElement) {
-                sectionElement.classList.remove('hidden');
-            }
-            toggleDropdown();
-            const actions = {
-                menu: fetchMenuItems,
-                orders: fetchOrders,
-                coupons: fetchCoupons,
-                customers: fetchCustomers,
-                contact: fetchContactMessages,
-                profile: fetchProfileDetails
-            };
-            if (actions[section]) {
-                actions[section]();
-            }
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
         }
+    }
 
-        function showModal(modalId) {
-            closeModalAll();
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+    function closeModalAll() {
+        document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
+    }
+
+    function validateInput(value, type) {
+        if (!value) return false;
+        switch (type) {
+            case 'text': return value.trim().length > 0;
+            case 'number': return !isNaN(value) && value > 0;
+            case 'couponCode': return /^[A-Z0-9]{5,15}$/.test(value.trim());
+            case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+            default: return true;
         }
+    }
 
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'none';
-            }
+    async function uploadImage(file, loaderId) {
+        if (!file) return null;
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('Please upload a valid image (JPEG, PNG, GIF, WebP).', 'error');
+            return null;
         }
-
-        function closeModalAll() {
-            document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size must be less than 5MB.', 'error');
+            return null;
         }
-
-        function validateInput(value, type) {
-            if (!value) return false;
-            switch (type) {
-                case 'text': return value.trim().length > 0;
-                case 'number': return !isNaN(value) && value > 0;
-                case 'couponCode': return /^[A-Z0-9]{5,15}$/.test(value.trim());
-                case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-                default: return true;
-            }
-        }
-
-        async function uploadImage(file, loaderId) {
-            if (!file) return null;
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                showToast('Please upload a valid image (JPEG, PNG, GIF, WebP).', 'error');
-                return null;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image size must be less than 5MB.', 'error');
-                return null;
-            }
-            const formData = new FormData();
-            formData.append('file', file);
-            try {
-                showLoader(loaderId);
-                const response = await fetch(`${BASE_URL}/api/files/upload`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
-                    body: formData
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    return data.fileUrl;
-                }
-                showToast(data.error || 'Failed to upload image.', 'error');
-                return null;
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                showToast('Failed to upload image.', 'error');
-                return null;
-            } finally {
-                hideLoader(loaderId);
-            }
-        }
-
-        // Authentication and Profile
-        async function fetchProfileDetails() {
-            try {
-                showLoader('profileLoader');
-                const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    const welcomeMessage = document.getElementById('welcomeMessage');
-                    if (welcomeMessage) {
-                        welcomeMessage.textContent = `Welcome, ${DOMPurify.sanitize(data.name || 'User')}`;
-                    }
-                    const profileName = document.getElementById('profileName');
-                    if (profileName) profileName.value = DOMPurify.sanitize(data.name || '');
-                    const profileEmail = document.getElementById('profileEmail');
-                    if (profileEmail) profileEmail.value = DOMPurify.sanitize(data.email || '');
-                    const profilePhone = document.getElementById('profilePhone');
-                    if (profilePhone) profilePhone.value = DOMPurify.sanitize(data.phone || '');
-                    const displayProfileName = document.getElementById('displayProfileName');
-                    if (displayProfileName) displayProfileName.textContent = DOMPurify.sanitize(data.name || '');
-                    const displayProfileEmail = document.getElementById('displayProfileEmail');
-                    if (displayProfileEmail) displayProfileEmail.textContent = DOMPurify.sanitize(data.email || '');
-                    const displayProfilePhone = document.getElementById('displayProfilePhone');
-                    if (displayProfilePhone) displayProfilePhone.textContent = DOMPurify.sanitize(data.phone || '');
-                    const savedProfileImage = localStorage.getItem(PROFILE_IMAGE_KEY) || data.profileImage;
-                    if (savedProfileImage) {
-                        const profileImage = document.getElementById('profileImage');
-                        if (profileImage) profileImage.src = DOMPurify.sanitize(savedProfileImage);
-                        const modalProfileImage = document.getElementById('modalProfileImage');
-                        if (modalProfileImage) modalProfileImage.src = DOMPurify.sanitize(savedProfileImage);
-                        const displayProfileImage = document.getElementById('displayProfileImage');
-                        if (displayProfileImage) displayProfileImage.src = DOMPurify.sanitize(savedProfileImage);
-                    }
-                } else {
-                    showToast(data.error || 'Failed to fetch profile details.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching profile details:', error);
-                showToast('Failed to fetch profile details.', 'error');
-            } finally {
-                hideLoader('profileLoader');
-            }
-        }
-
-        async function updateProfileImage() {
-            const fileInput = document.getElementById('profileImageUpload');
-            if (!fileInput) return;
-            const file = fileInput.files[0];
-            if (!file) {
-                showToast('Please select an image.', 'error');
-                return;
-            }
-            const imageUrl = await uploadImage(file, 'profileLoader');
-            if (!imageUrl) return;
-            try {
-                showLoader('profileLoader');
-                const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({ profileImage: imageUrl })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Profile image updated successfully!', 'success');
-                    localStorage.setItem(PROFILE_IMAGE_KEY, imageUrl);
-                    fetchProfileDetails();
-                    closeModal('profileModal');
-                } else {
-                    showToast(data.error || 'Failed to update profile image.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error updating profile image:', error);
-                showToast('Failed to update profile image.', 'error');
-            } finally {
-                hideLoader('profileLoader');
-            }
-        }
-
-        async function checkAuth() {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (!token) {
-                window.location.href = 'admin.html';
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    fetchProfileDetails();
-                    showSection('home');
-                    Promise.all([fetchOrders(), fetchMenuItems(), fetchRestaurantStatus()])
-                        .catch(error => {
-                            console.error('Error fetching initial data:', error);
-                            showToast('Failed to load initial data.', 'error');
-                        });
-                } else {
-                    showToast(data.error || 'Session expired. Please log in again.', 'error');
-                    logout();
-                }
-            } catch (error) {
-                console.error('Error during authentication check:', error);
-                showToast('Unable to verify session. Please try again later.', 'error');
-                if (error.message.includes('Unauthorized') || error.message.includes('401')) {
-                    logout();
-                }
-            }
-        }
-
-        // Menu Management
-        async function fetchMenuItems() {
-            try {
-                showLoader('menuLoader');
-                const response = await fetch(`${BASE_URL}/api/menu`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const items = await response.json();
-                if (response.ok) {
-                    displayMenuItems(items);
-                    document.getElementById('totalMenuItems').textContent = items.length;
-                } else {
-                    showToast(items.error || 'Failed to fetch menu items.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching menu items:', error);
-                showToast('Failed to load menu items.', 'error');
-            } finally {
-                hideLoader('menuLoader');
-            }
-        }
-
-        function displayMenuItems(items) {
-            const menuTableBody = document.getElementById('menuTableBody');
-            if (!menuTableBody) return;
-            menuTableBody.innerHTML = items.map(item => `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 px-4">
-                        ${item.image ? `<img src="${DOMPurify.sanitize(item.image)}" alt="${DOMPurify.sanitize(item.name)}" class="menu-img">` : 'No Image'}
-                    </td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(item.name || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(item.category || 'N/A')}</td>
-                    <td class="py-4 px-4 text-right">₹${item.price ? item.price.toFixed(2) : '0.00'}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(item.description || 'N/A')}</td>
-                    <td class="py-4 px-4 flex space-x-3">
-                        <button onclick="editMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
-                        <button onclick="deleteMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function addMenuItem() {
-            const item = {
-                name: document.getElementById('itemName')?.value.trim() || '',
-                price: parseFloat(document.getElementById('itemPrice')?.value) || null,
-                category: document.getElementById('itemCategory')?.value.trim() || '',
-                imageUrl: document.getElementById('itemImage')?.value.trim() || '',
-                file: document.getElementById('itemImageUpload')?.files[0] || null,
-                description: document.getElementById('itemDescription')?.value.trim() || ''
-            };
-
-            if (!validateInput(item.name, 'text') || !validateInput(item.category, 'text') || !validateInput(item.price, 'number')) {
-                showToast('Item name, category, and price are required.', 'error');
-                return;
-            }
-
-            const button = document.querySelector('#menuSection .auth-btn');
-            if (button) button.disabled = true;
-            showLoader('addMenuLoader');
-
-            const uploadedImageUrl = item.file ? await uploadImage(item.file, 'addMenuLoader') : item.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/menu`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({
-                        name: item.name,
-                        price: item.price,
-                        category: item.category,
-                        image: uploadedImageUrl,
-                        description: item.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Menu item added successfully!', 'success');
-                    ['itemName', 'itemPrice', 'itemCategory', 'itemImage', 'itemImageUpload', 'itemDescription'].forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) element.value = '';
-                    });
-                    fetchMenuItems();
-                } else {
-                    showToast(data.error || 'Failed to add menu item.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error adding menu item:', error);
-                showToast('Failed to add menu item.', 'error');
-            } finally {
-                if (button) button.disabled = false;
-                hideLoader('addMenuLoader');
-            }
-        }
-
-        async function editMenuItem(itemId) {
-            try {
-                showLoader('menuLoader');
-                const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const item = await response.json();
-                if (response.ok) {
-                    document.getElementById('editItemId').value = DOMPurify.sanitize(item._id || '');
-                    document.getElementById('editItemName').value = DOMPurify.sanitize(item.name || '');
-                    document.getElementById('editItemPrice').value = item.price || '';
-                    document.getElementById('editItemCategory').value = DOMPurify.sanitize(item.category || '');
-                    document.getElementById('editItemImage').value = DOMPurify.sanitize(item.image || '');
-                    document.getElementById('editItemDescription').value = DOMPurify.sanitize(item.description || '');
-                    showModal('editMenuModal');
-                } else {
-                    showToast(item.error || 'Failed to load menu item.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching menu item:', error);
-                showToast('Failed to load menu item.', 'error');
-            } finally {
-                hideLoader('menuLoader');
-            }
-        }
-
-        async function updateMenuItem() {
-            const item = {
-                id: document.getElementById('editItemId')?.value || '',
-                name: document.getElementById('editItemName')?.value.trim() || '',
-                price: parseFloat(document.getElementById('editItemPrice')?.value) || null,
-                category: document.getElementById('editItemCategory')?.value.trim() || '',
-                imageUrl: document.getElementById('editItemImage')?.value.trim() || '',
-                file: document.getElementById('editItemImageUpload')?.files[0] || null,
-                description: document.getElementById('editItemDescription')?.value.trim() || ''
-            };
-
-            if (!validateInput(item.name, 'text') || !validateInput(item.category, 'text') || !validateInput(item.price, 'number')) {
-                showToast('Item name, category, and price are required.', 'error');
-                return;
-            }
-
-            const button = document.querySelector('#editMenuModal .auth-btn');
-            if (button) button.disabled = true;
-            showLoader('menuLoader');
-
-            const uploadedImageUrl = item.file ? await uploadImage(item.file, 'menuLoader') : item.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/menu/${item.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({
-                        name: item.name,
-                        price: item.price,
-                        category: item.category,
-                        image: uploadedImageUrl,
-                        description: item.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Menu item updated successfully!', 'success');
-                    closeModal('editMenuModal');
-                    fetchMenuItems();
-                } else {
-                    showToast(data.error || 'Failed to update menu item.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error updating menu item:', error);
-                showToast('Failed to update menu item.', 'error');
-            } finally {
-                if (button) button.disabled = false;
-                hideLoader('menuLoader');
-            }
-        }
-
-        async function deleteMenuItem(itemId) {
-            if (!confirm('Are you sure you want to delete this menu item?')) return;
-            try {
-                showLoader('menuLoader');
-                const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Menu item deleted successfully!', 'success');
-                    fetchMenuItems();
-                } else {
-                    showToast(data.error || 'Failed to delete menu item.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error deleting menu item:', error);
-                showToast('Failed to delete menu item.', 'error');
-            } finally {
-                hideLoader('menuLoader');
-            }
-        }
-
-        // Order Management
-        async function fetchOrders() {
-            try {
-                showLoader('orderLoader');
-                const response = await fetch(`${BASE_URL}/api/orders`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const orders = await response.json();
-                if (response.ok) {
-                    displayOrders(orders);
-                    document.getElementById('totalOrders').textContent = orders.length;
-                    document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
-                } else {
-                    showToast(orders.error || 'Failed to fetch orders.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching orders:', error);
-                showToast('Failed to load orders.', 'error');
-            } finally {
-                hideLoader('orderLoader');
-            }
-        }
-
-        function displayOrders(orders) {
-            const orderTableBody = document.getElementById('orderTableBody');
-            if (!orderTableBody) return;
-            orderTableBody.innerHTML = orders.map(order => `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerName || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerEmail || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(order.customerPhone || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(order.address || 'N/A')}</td>
-                    <td class="py-4 px-4 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
-                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentStatus || 'N/A')}</td>
-                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentMethod || 'N/A')}</td>
-                    <td class="py-4 px-4 flex space-x-3">
-                        <button onclick="viewOrderDetails('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
-                        ${['Delivered', 'Cancelled'].includes(order.status) ? `
-                            <button onclick="deleteOrder('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
-                        ` : ''}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function viewOrderDetails(orderId) {
-            try {
-                showLoader('orderLoader');
-                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const order = await response.json();
-                if (response.ok) {
-                    document.getElementById('orderId').textContent = DOMPurify.sanitize(order._id || 'N/A');
-                    document.getElementById('orderCustomerName').textContent = DOMPurify.sanitize(order.customerName || 'N/A');
-                    document.getElementById('orderCustomerEmail').textContent = DOMPurify.sanitize(order.customerEmail || 'N/A');
-                    document.getElementById('orderCustomerPhone').textContent = DOMPurify.sanitize(order.customerPhone || 'N/A');
-                    document.getElementById('orderAddress').textContent = DOMPurify.sanitize(order.address || 'N/A');
-                    document.getElementById('orderDate').textContent = DOMPurify.sanitize(new Date(order.createdAt).toLocaleString() || 'N/A');
-                    document.getElementById('orderTotal').textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
-                    document.getElementById('orderStatus').textContent = DOMPurify.sanitize(order.status || 'N/A');
-                    document.getElementById('orderPaymentStatus').textContent = DOMPurify.sanitize(order.paymentStatus || 'N/A');
-                    document.getElementById('orderPaymentMethod').textContent = DOMPurify.sanitize(order.paymentMethod || 'N/A');
-                    document.getElementById('orderItems').innerHTML = order.items?.map(item => `
-                        <div class="text-sm mb-3">
-                            ${DOMPurify.sanitize(item.name || 'N/A')} - ₹${item.price?.toFixed(2) || '0.00'} x ${item.quantity || 0}
-                        </div>
-                    `).join('') || 'No items';
-                    document.getElementById('orderReview').innerHTML = order.review ? `
-                        <div class="flex items-center space-x-3">
-                            <span class="rating-stars">${'★'.repeat(order.review.rating)}${'☆'.repeat(5 - order.review.rating)}</span>
-                            <span>${DOMPurify.sanitize(order.review.comment || 'No comment')}</span>
-                        </div>
-                    ` : 'No review';
-                    const orderStatusSelect = document.getElementById('orderStatusSelect');
-                    if (orderStatusSelect) orderStatusSelect.value = order.status || 'Pending';
-                    const refundBtn = document.getElementById('refundOrderBtn');
-                    if (refundBtn) refundBtn.classList.toggle('hidden', order.status !== 'Cancelled' || order.paymentStatus !== 'Paid' || !['PhonePe', 'GPay'].includes(order.paymentMethod));
-                    const deleteBtn = document.getElementById('deleteOrderBtn');
-                    if (deleteBtn) deleteBtn.classList.toggle('hidden', !['Delivered', 'Cancelled'].includes(order.status));
-                    const updateBtn = document.getElementById('updateOrderStatusBtn');
-                    if (updateBtn) updateBtn.onclick = () => updateOrderStatus(order._id);
-                    if (refundBtn) refundBtn.onclick = () => refundOrder(order._id, order.paymentMethod);
-                    if (deleteBtn) deleteBtn.onclick = () => deleteOrder(order._id);
-                    showModal('orderDetailsModal');
-                } else {
-                    showToast(order.error || 'Failed to load order details.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching order details:', error);
-                showToast('Failed to load order details.', 'error');
-            } finally {
-                hideLoader('orderLoader');
-            }
-        }
-
-        async function updateOrderStatus(orderId) {
-            const status = document.getElementById('orderStatusSelect')?.value;
-            if (!status) {
-                showToast('Please select a status.', 'error');
-                return;
-            }
-            try {
-                showLoader('orderLoader');
-                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({ status })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Order status updated successfully!', 'success');
-                    closeModal('orderDetailsModal');
-                    fetchOrders();
-                } else {
-                    showToast(data.error || 'Failed to update order status.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error updating order status:', error);
-                showToast('Failed to update order status.', 'error');
-            } finally {
-                hideLoader('orderLoader');
-            }
-        }
-
-        async function refundOrder(orderId, paymentMethod) {
-            if (!confirm(`Are you sure you want to refund this order via ${paymentMethod}?`)) return;
-            try {
-                showLoader('orderLoader');
-                const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({ paymentMethod })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Refund processed successfully!', 'success');
-                    closeModal('orderDetailsModal');
-                    fetchOrders();
-                } else {
-                    showToast(data.error || 'Failed to process refund.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error processing refund:', error);
-                showToast('Failed to process refund.', 'error');
-            } finally {
-                hideLoader('orderLoader');
-            }
-        }
-
-        async function deleteOrder(orderId) {
-            if (!confirm('Are you sure you want to delete this order?')) return;
-            try {
-                showLoader('orderLoader');
-                const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Order deleted successfully!', 'success');
-                    closeModal('orderDetailsModal');
-                    fetchOrders();
-                } else {
-                    showToast(data.error || 'Failed to delete order.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error deleting order:', error);
-                showToast('Failed to delete order.', 'error');
-            } finally {
-                hideLoader('orderLoader');
-            }
-        }
-
-        // Coupon Management
-        async function fetchCoupons() {
-            try {
-                showLoader('couponLoader');
-                const response = await fetch(`${BASE_URL}/api/coupons`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const coupons = await response.json();
-                if (response.ok) {
-                    displayCoupons(coupons);
-                } else {
-                    showToast(coupons.error || 'Failed to fetch coupons.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching coupons:', error);
-                showToast('Failed to load coupons.', 'error');
-            } finally {
-                hideLoader('couponLoader');
-            }
-        }
-
-        function displayCoupons(coupons) {
-            const couponTableBody = document.getElementById('couponTableBody');
-            if (!couponTableBody) return;
-            couponTableBody.innerHTML = coupons.map(coupon => `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 px-4">
-                        ${coupon.image ? `<img src="${DOMPurify.sanitize(coupon.image)}" alt="${DOMPurify.sanitize(coupon.code)}" class="menu-img">` : 'No Image'}
-                    </td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(coupon.code || 'N/A')}</td>
-                    <td class="py-4 px-4 text-right">${coupon.discount || 0}%</td>
-                    <td class="py-4 px-4 flex space-x-3">
-                        <button onclick="editCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
-                        <button onclick="deleteCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function addCoupon() {
-            const coupon = {
-                code: document.getElementById('couponCode')?.value.trim() || '',
-                discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
-                imageUrl: document.getElementById('couponImage')?.value.trim() || '',
-                file: document.getElementById('couponImageUpload')?.files[0] || null,
-                description: document.getElementById('couponDescription')?.value.trim() || ''
-            };
-
-            if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
-                showToast('Coupon code and discount are required.', 'error');
-                return;
-            }
-
-            const button = document.querySelector('#couponsSection .auth-btn');
-            if (button) button.disabled = true;
-            showLoader('addCouponLoader');
-            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'addCouponLoader') : coupon.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/coupons`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({
-                        code: coupon.code,
-                        discount: coupon.discount,
-                        image: uploadedImageUrl,
-                        description: coupon.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Coupon added successfully!', 'success');
-                    ['couponCode', 'couponDiscount', 'couponImage', 'couponImageUpload', 'couponDescription'].forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) element.value = '';
-                    });
-                    fetchCoupons();
-                } else {
-                    showToast(data.error || 'Failed to add coupon.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error adding coupon:', error);
-                showToast('Failed to add coupon.', 'error');
-            } finally {
-                if (button) button.disabled = false;
-                hideLoader('addCouponLoader');
-            }
-        }
-
-        async function editCoupon(couponId) {
-            try {
-                showLoader('couponLoader');
-                const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const coupon = await response.json();
-                if (response.ok) {
-                    document.getElementById('editCouponId').value = DOMPurify.sanitize(coupon._id || '');
-                    document.getElementById('editCouponCode').value = DOMPurify.sanitize(coupon.code || '');
-                    document.getElementById('editCouponDiscount').value = coupon.discount || '';
-                    document.getElementById('editCouponImage').value = DOMPurify.sanitize(coupon.image || '');
-                    document.getElementById('editCouponDescription').value = DOMPurify.sanitize(coupon.description || '');
-                    showModal('editCouponModal');
-                } else {
-                    showToast(coupon.error || 'Failed to load coupon.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching coupon:', error);
-                showToast('Failed to load coupon.', 'error');
-            } finally {
-                hideLoader('couponLoader');
-            }
-        }
-
-        async function updateCoupon() {
-            const coupon = {
-                id: document.getElementById('editCouponId')?.value || '',
-                code: document.getElementById('editCouponCode')?.value.trim() || '',
-                discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
-                imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
-                file: document.getElementById('editCouponImageUpload')?.files[0] || null,
-                description: document.getElementById('editCouponDescription')?.value.trim() || ''
-            };
-
-            if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
-                showToast('Coupon code and discount are required.', 'error');
-                return;
-            }
-
-            const button = document.querySelector('#editCouponModal .auth-btn');
-            if (button) button.disabled = true;
-            showLoader('couponLoader');
-
-            const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'couponLoader') : coupon.imageUrl || null;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/coupons/${coupon.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({
-                        code: coupon.code,
-                        discount: coupon.discount,
-                        image: uploadedImageUrl,
-                        description: coupon.description
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Coupon updated successfully!', 'success');
-                    closeModal('editCouponModal');
-                    fetchCoupons();
-                } else {
-                    showToast(data.error || 'Failed to update coupon.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error updating coupon:', error);
-                showToast('Failed to update coupon.', 'error');
-            } finally {
-                if (button) button.disabled = false;
-                hideLoader('couponLoader');
-            }
-        }
-
-        async function deleteCoupon(couponId) {
-            if (!confirm('Are you sure you want to delete this coupon?')) return;
-            try {
-                showLoader('couponLoader');
-                const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Coupon deleted successfully!', 'success');
-                    fetchCoupons();
-                } else {
-                    showToast(data.error || 'Failed to delete coupon.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error deleting coupon:', error);
-                showToast('Failed to delete coupon.', 'error');
-            } finally {
-                hideLoader('couponLoader');
-            }
-        }
-
-        // Customer Management
-        async function fetchCustomers() {
-            try {
-                showLoader('customerLoader');
-                const response = await fetch(`${BASE_URL}/api/users`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const customers = await response.json();
-                if (response.ok) {
-                    displayCustomers(customers);
-                } else {
-                    showToast(customers.error || 'Failed to fetch customers.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching customers:', error);
-                showToast('Failed to load customers.', 'error');
-            } finally {
-                hideLoader('customerLoader');
-            }
-        }
-
-        function displayCustomers(customers) {
-            const customerTableBody = document.getElementById('customerTableBody');
-            if (!customerTableBody) return;
-            customerTableBody.innerHTML = customers.map(customer => `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.name || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.email || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.phone || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(customer.address || 'N/A')}</td>
-                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(customer.status || 'Active')}</td>
-                    <td class="py-4 px-4 flex space-x-3">
-                        <button onclick="viewCustomerDetails('${DOMPurify.sanitize(customer._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function viewCustomerDetails(customerId) {
-            try {
-                showLoader('customerLoader');
-                const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const customer = await response.json();
-                if (response.ok) {
-                    document.getElementById('customerName').textContent = DOMPurify.sanitize(customer.name || 'N/A');
-                    document.getElementById('customerEmail').textContent = DOMPurify.sanitize(customer.email || 'N/A');
-                    document.getElementById('customerPhone').textContent = DOMPurify.sanitize(customer.phone || 'N/A');
-                    document.getElementById('customerAddress').textContent = DOMPurify.sanitize(customer.address || 'N/A');
-                    document.getElementById('customerStatus').textContent = DOMPurify.sanitize(customer.status || 'Active');
-                    const blockUnblockBtn = document.getElementById('blockUnblockBtn');
-                    if (blockUnblockBtn) {
-                        blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
-                        blockUnblockBtn.className = `auth-btn ${customer.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} px-4 py-2`;
-                        blockUnblockBtn.onclick = () => toggleCustomerStatus(customer._id, customer.status);
-                    }
-                    const ordersResponse = await fetch(`${BASE_URL}/api/orders/user/${customerId}`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                    });
-                    const orders = await ordersResponse.json();
-                    if (ordersResponse.ok) {
-                        document.getElementById('customerOrderHistory').innerHTML = orders.length > 0 ? `
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr>
-                                        <th class="py-2 px-4">Order ID</th>
-                                        <th class="py-2 px-4">Date</th>
-                                        <th class="py-2 px-4">Total</th>
-                                        <th class="py-2 px-4">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${orders.map(order => `
-                                        <tr class="border-b">
-                                            <td class="py-2 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
-                                            <td class="py-2 px-4">${DOMPurify.sanitize(new Date(order.createdAt).toLocaleDateString() || 'N/A')}</td>
-                                            <td class="py-2 px-4 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                                            <td class="py-2 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : 'No orders found.';
-                    } else {
-                        document.getElementById('customerOrderHistory').innerHTML = 'Failed to load order history.';
-                    }
-                    showModal('customerDetailsModal');
-                } else {
-                    showToast(customer.error || 'Failed to load customer details.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching customer details:', error);
-                showToast('Failed to load customer details.', 'error');
-            } finally {
-                hideLoader('customerLoader');
-            }
-        }
-
-        async function toggleCustomerStatus(customerId, currentStatus) {
-            const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
-            try {
-                showLoader('customerLoader');
-                const response = await fetch(`${BASE_URL}/api/users/${customerId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(`Customer ${newStatus.toLowerCase()} successfully!`, 'success');
-                    closeModal('customerDetailsModal');
-                    fetchCustomers();
-                } else {
-                    showToast(data.error || `Failed to ${newStatus.toLowerCase()} customer.`, 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error(`Error toggling customer status:`, error);
-                showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
-            } finally {
-                hideLoader('customerLoader');
-            }
-        }
-
-        // Contact Messages
-        async function fetchContactMessages() {
-            try {
-                showLoader('replyLoader');
-                const response = await fetch(`${BASE_URL}/api/contact`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const messages = await response.json();
-                if (response.ok) {
-                    displayContactMessages(messages);
-                } else {
-                    showToast(messages.error || 'Failed to fetch contact messages.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching contact messages:', error);
-                showToast('Failed to load contact messages.', 'error');
-            } finally {
-                hideLoader('replyLoader');
-            }
-        }
-
-        function displayContactMessages(messages) {
-            const contactTableBody = document.getElementById('contactTableBody');
-            if (!contactTableBody) return;
-            contactTableBody.innerHTML = messages.map(message => `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 px-4">${DOMPurify.sanitize(message.name || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(message.email || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(message.subject || 'N/A')}</td>
-                    <td class="py-4 px-4">${DOMPurify.sanitize(message.message.substring(0, 50) || 'N/A')}${message.message.length > 50 ? '...' : ''}</td>
-                    <td class="py-4 px-4 text-center">${DOMPurify.sanitize(message.status || 'Pending')}</td>
-                    <td class="py-4 px-4 flex space-x-3">
-                        <button onclick="replyContactMessage('${DOMPurify.sanitize(message._id)}', '${DOMPurify.sanitize(message.subject)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Reply</button>
-                        <button onclick="deleteContactMessage('${DOMPurify.sanitize(message._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function replyContactMessage(messageId, subject) {
-            document.getElementById('contactMessageId').value = DOMPurify.sanitize(messageId);
-            document.getElementById('contactReplySubject').value = DOMPurify.sanitize(`Re: ${subject}`);
-            document.getElementById('contactReplyMessage').value = '';
-            showModal('replyContactModal');
-        }
-
-        async function sendReply() {
-            const reply = {
-                messageId: document.getElementById('contactMessageId')?.value || '',
-                subject: document.getElementById('contactReplySubject')?.value.trim() || '',
-                message: document.getElementById('contactReplyMessage')?.value.trim() || ''
-            };
-
-            if (!validateInput(reply.subject, 'text') || !validateInput(reply.message, 'text')) {
-                showToast('Subject and message are required.', 'error');
-                return;
-            }
-
-            const button = document.querySelector('#replyContactModal .auth-btn');
-            if (button) button.disabled = true;
-            showLoader('replyLoader');
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/contact/${reply.messageId}/reply`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    },
-                    body: JSON.stringify({
-                        subject: reply.subject,
-                        message: reply.message
-                    })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Reply sent successfully!', 'success');
-                    closeModal('replyContactModal');
-                    fetchContactMessages();
-                } else {
-                    showToast(data.error || 'Failed to send reply.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error sending reply:', error);
-                showToast('Failed to send reply.', 'error');
-            } finally {
-                if (button) button.disabled = false;
-                hideLoader('replyLoader');
-            }
-        }
-
-        async function deleteContactMessage(messageId) {
-            if (!confirm('Are you sure you want to delete this message?')) return;
-            try {
-                showLoader('replyLoader');
-                const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Message deleted successfully!', 'success');
-                    fetchContactMessages();
-                } else {
-                    showToast(data.error || 'Failed to delete message.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error deleting contact message:', error);
-                showToast('Failed to delete message.', 'error');
-            } finally {
-                hideLoader('replyLoader');
-            }
-        }
-
-        // Restaurant Status
-        async function fetchRestaurantStatus() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    const statusText = document.getElementById('restaurantStatus');
-                    const statusBtn = document.getElementById('statusToggleBtn');
-                    if (statusText) statusText.textContent = data.isOpen ? 'Open' : 'Closed';
-                    if (statusBtn) {
-                        statusBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
-                        statusBtn.className = `auth-btn px-6 py-3 mt-4 ${data.isOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
-                    }
-                } else {
-                    showToast(data.error || 'Failed to fetch restaurant status.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error fetching restaurant status:', error);
-                showToast('Failed to load restaurant status.', 'error');
-            }
-        }
-
-        async function toggleRestaurantStatus() {
-            try {
-                showLoader('statusLoader');
-                const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-                    }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(`Restaurant ${data.isOpen ? 'opened' : 'closed'} successfully!`, 'success');
-                    fetchRestaurantStatus();
-                } else {
-                    showToast(data.error || 'Failed to update restaurant status.', 'error');
-                    if (response.status === 401) logout();
-                }
-            } catch (error) {
-                console.error('Error toggling restaurant status:', error);
-                showToast('Failed to update restaurant status.', 'error');
-            } finally {
-                hideLoader('statusLoader');
-            }
-        }
-
-        // Logout
-        function logout() {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(PROFILE_IMAGE_KEY);
-            window.location.href = 'admin.html';
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            document.addEventListener('click', (e) => {
-                const dropdown = document.getElementById('profileDropdown');
-                const profileImg = document.getElementById('profileImage');
-                if (dropdown && profileImg && !dropdown.contains(e.target) && !profileImg.contains(e.target)) {
-                    dropdown.classList.remove('active');
-                }
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            showLoader(loaderId);
+            const response = await fetch(`${BASE_URL}/api/files/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
+                body: formData
             });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 404) {
+                    showToast('Image upload endpoint not found.', 'error');
+                } else if (response.status === 401) {
+                    showToast('Session expired. Please log in again.', 'error');
+                    logout();
+                } else {
+                    showToast(errorData.error || 'Failed to upload image.', 'error');
+                }
+                return null;
+            }
+            const data = await response.json();
+            return data.fileUrl;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            showToast('Failed to upload image.', 'error');
+            return null;
+        } finally {
+            hideLoader(loaderId);
+        }
+    }
+
+    // Authentication and Profile
+    async function fetchProfileDetails() {
+        try {
+            showLoader('profileLoader');
+            const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${DOMPurify.sanitize(data.name || 'User')}`;
+            document.getElementById('profileName').value = DOMPurify.sanitize(data.name || '');
+            document.getElementById('profileEmail').value = DOMPurify.sanitize(data.email || '');
+            document.getElementById('profilePhone').value = DOMPurify.sanitize(data.phone || '');
+            document.getElementById('displayProfileName').textContent = DOMPurify.sanitize(data.name || '');
+            document.getElementById('displayProfileEmail').textContent = DOMPurify.sanitize(data.email || '');
+            document.getElementById('displayProfilePhone').textContent = DOMPurify.sanitize(data.phone || '');
+            const savedProfileImage = localStorage.getItem(PROFILE_IMAGE_KEY) || data.profileImage;
+            if (savedProfileImage) {
+                document.getElementById('profileImage').src = DOMPurify.sanitize(savedProfileImage);
+                document.getElementById('modalProfileImage').src = DOMPurify.sanitize(savedProfileImage);
+                document.getElementById('displayProfileImage').src = DOMPurify.sanitize(savedProfileImage);
+            }
+        } catch (error) {
+            console.error('Error fetching profile details:', error);
+            showToast('Failed to fetch profile details.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('profileLoader');
+        }
+    }
+
+    async function updateProfileImage() {
+        const fileInput = document.getElementById('profileImageUpload');
+        const file = fileInput?.files[0];
+        if (!file) {
+            showToast('Please select an image.', 'error');
+            return;
+        }
+        const imageUrl = await uploadImage(file, 'profileLoader');
+        if (!imageUrl) return;
+        try {
+            showLoader('profileLoader');
+            const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({ profileImage: imageUrl })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Profile image updated successfully!', 'success');
+            localStorage.setItem(PROFILE_IMAGE_KEY, imageUrl);
+            fetchProfileDetails();
+            closeModal('profileModal');
+        } catch (error) {
+            console.error('Error updating profile image:', error);
+            showToast('Failed to update profile image.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('profileLoader');
+        }
+    }
+
+    async function checkAuth() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            window.location.href = 'admin.html';
+            return;
+        }
+        try {
+            const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            fetchProfileDetails();
+            showSection('home');
+            Promise.all([fetchOrders(), fetchMenuItems(), fetchRestaurantStatus()]).catch(error => {
+                console.error('Error fetching initial data:', error);
+                showToast('Failed to load initial data.', 'error');
+            });
+        } catch (error) {
+            console.error('Error during authentication check:', error);
+            showToast('Unable to verify session.', 'error');
+            if (error.message.includes('401')) logout();
+        }
+    }
+
+    // Menu Management
+    async function fetchMenuItems() {
+        try {
+            showLoader('menuLoader');
+            const response = await fetch(`${BASE_URL}/api/menu`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const items = await response.json();
+            displayMenuItems(items);
+            document.getElementById('totalMenuItems').textContent = items.length;
+        } catch (error) {
+            console.error('Error fetching menu items:', error);
+            showToast('Failed to load menu items.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('menuLoader');
+        }
+    }
+
+    function displayMenuItems(items) {
+        const menuTableBody = document.getElementById('menuTableBody');
+        if (!menuTableBody) return;
+        menuTableBody.innerHTML = items.map(item => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-4 px-4">
+                    ${item.image ? `<img src="${DOMPurify.sanitize(item.image)}" alt="${DOMPurify.sanitize(item.name)}" class="menu-img">` : 'No Image'}
+                </td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(item.name || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(item.category || 'N/A')}</td>
+                <td class="py-4 px-4 text-right">₹${typeof item.price === 'number' ? item.price.toFixed(2) : '0.00'}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(item.description || 'N/A')}</td>
+                <td class="py-4 px-4 flex space-x-3">
+                    <button onclick="editMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
+                    <button onclick="deleteMenuItem('${DOMPurify.sanitize(item._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function addMenuItem() {
+        const item = {
+            name: document.getElementById('itemName')?.value.trim() || '',
+            price: parseFloat(document.getElementById('itemPrice')?.value) || null,
+            category: document.getElementById('itemCategory')?.value.trim() || '',
+            imageUrl: document.getElementById('itemImage')?.value.trim() || '',
+            file: document.getElementById('itemImageUpload')?.files[0] || null,
+            description: document.getElementById('itemDescription')?.value.trim() || ''
+        };
+
+        if (!validateInput(item.name, 'text') || !validateInput(item.category, 'text') || !validateInput(item.price, 'number')) {
+            showToast('Item name, category, and price are required.', 'error');
+            return;
+        }
+
+        const button = document.querySelector('#menuSection .auth-btn');
+        if (button) button.disabled = true;
+        showLoader('addMenuLoader');
+
+        const uploadedImageUrl = item.file ? await uploadImage(item.file, 'addMenuLoader') : item.imageUrl || null;
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/menu`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({
+                    name: item.name,
+                    price: item.price,
+                    category: item.category,
+                    image: uploadedImageUrl,
+                    description: item.description
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Menu item added successfully!', 'success');
+            ['itemName', 'itemPrice', 'itemCategory', 'itemImage', 'itemImageUpload', 'itemDescription'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = '';
+            });
+            fetchMenuItems();
+        } catch (error) {
+            console.error('Error adding menu item:', error);
+            showToast('Failed to add menu item.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            if (button) button.disabled = false;
+            hideLoader('addMenuLoader');
+        }
+    }
+
+    async function editMenuItem(itemId) {
+        try {
+            showLoader('menuLoader');
+            const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const item = await response.json();
+            document.getElementById('editItemId').value = DOMPurify.sanitize(item._id || '');
+            document.getElementById('editItemName').value = DOMPurify.sanitize(item.name || '');
+            document.getElementById('editItemPrice').value = typeof item.price === 'number' ? item.price : '';
+            document.getElementById('editItemCategory').value = DOMPurify.sanitize(item.category || '');
+            document.getElementById('editItemImage').value = DOMPurify.sanitize(item.image || '');
+            document.getElementById('editItemDescription').value = DOMPurify.sanitize(item.description || '');
+            showModal('editMenuModal');
+        } catch (error) {
+            console.error('Error fetching menu item:', error);
+            showToast('Failed to load menu item.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('menuLoader');
+        }
+    }
+
+    async function updateMenuItem() {
+        const item = {
+            id: document.getElementById('editItemId')?.value || '',
+            name: document.getElementById('editItemName')?.value.trim() || '',
+            price: parseFloat(document.getElementById('editItemPrice')?.value) || null,
+            category: document.getElementById('editItemCategory')?.value.trim() || '',
+            imageUrl: document.getElementById('editItemImage')?.value.trim() || '',
+            file: document.getElementById('editItemImageUpload')?.files[0] || null,
+            description: document.getElementById('editItemDescription')?.value.trim() || ''
+        };
+
+        if (!validateInput(item.name, 'text') || !validateInput(item.price, 'number') || !validateInput(item.category, 'text')) {
+            showToast('Valid name, price, and category are required.', 'error');
+            return;
+        }
+
+        const button = document.querySelector('#editMenuModal .auth-btn');
+        if (button) button.disabled = true;
+        showLoader('menuLoader');
+
+        const uploadedImageUrl = item.file ? await uploadImage(item.file, 'menuLoader') : item.imageUrl || null;
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/menu/${item.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({
+                    name: item.name,
+                    price: item.price,
+                    category: item.category,
+                    image: uploadedImageUrl,
+                    description: item.description
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Menu item updated successfully!', 'success');
+            closeModal('editMenuModal');
+            fetchMenuItems();
+        } catch (error) {
+            console.error('Error updating menu item:', error);
+            showToast('Failed to update menu item.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            if (button) button.disabled = false;
+            hideLoader('menuLoader');
+        }
+    }
+
+    async function deleteMenuItem(itemId) {
+        if (!confirm('Are you sure you want to delete this menu item?')) return;
+        try {
+            showLoader('menuLoader');
+            const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Menu item deleted successfully!', 'success');
+            fetchMenuItems();
+        } catch (error) {
+            console.error('Error deleting menu item:', error);
+            showToast('Failed to delete menu item.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('menuLoader');
+        }
+    }
+
+    // Order Management
+    async function fetchOrders() {
+        try {
+            showLoader('orderLoader');
+            const response = await fetch(`${BASE_URL}/api/orders`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const orders = await response.json();
+            displayOrders(orders);
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('pendingOrders').textContent = orders.filter(order => order.status === 'Pending').length;
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            showToast('Failed to load orders.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('orderLoader');
+        }
+    }
+
+    function displayOrders(orders) {
+        const orderTableBody = document.getElementById('orderTableBody');
+        if (!orderTableBody) return;
+        orderTableBody.innerHTML = orders.map(order => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-4 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(order.customerName || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(order.customerEmail || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(order.customerPhone || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(order.address || 'N/A')}</td>
+                <td class="py-4 px-4 text-right">₹${typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</td>
+                <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
+                <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentStatus || 'N/A')}</td>
+                <td class="py-4 px-4 text-center">${DOMPurify.sanitize(order.paymentMethod || 'N/A')}</td>
+                <td class="py-4 px-4 flex space-x-3">
+                    <button onclick="viewOrderDetails('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
+                    ${['Delivered', 'Cancelled'].includes(order.status) ? `
+                        <button onclick="deleteOrder('${DOMPurify.sanitize(order._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
+                    ` : ''}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function viewOrderDetails(orderId) {
+        try {
+            showLoader('orderLoader');
+            const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const order = await response.json();
+            document.getElementById('orderId').textContent = DOMPurify.sanitize(order._id || 'N/A');
+            document.getElementById('orderCustomerName').textContent = DOMPurify.sanitize(order.customerName || 'N/A');
+            document.getElementById('orderCustomerEmail').textContent = DOMPurify.sanitize(order.customerEmail || 'N/A');
+            document.getElementById('orderCustomerPhone').textContent = DOMPurify.sanitize(order.customerPhone || 'N/A');
+            document.getElementById('orderAddress').textContent = DOMPurify.sanitize(order.address || 'N/A');
+            document.getElementById('orderDate').textContent = DOMPurify.sanitize(new Date(order.createdAt).toLocaleString() || 'N/A');
+            document.getElementById('orderTotal').textContent = `₹${typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}`;
+            document.getElementById('orderStatus').textContent = DOMPurify.sanitize(order.status || 'N/A');
+            document.getElementById('orderPaymentStatus').textContent = DOMPurify.sanitize(order.paymentStatus || 'N/A');
+            document.getElementById('orderPaymentMethod').textContent = DOMPurify.sanitize(order.paymentMethod || 'N/A');
+            document.getElementById('orderItems').innerHTML = (order.items || []).map(item => `
+                <div class="text-sm mb-2">
+                    <span>${DOMPurify.sanitize(item.name || 'N/A')}</span> (x${item.quantity}) - ₹${typeof item.price === 'number' ? item.price.toFixed(2) : '0.00'}
+                </div>
+            `).join('');
+            document.getElementById('orderReview').innerHTML = order.review ? `
+                <p><strong>Rating:</strong> ${'★'.repeat(order.review.rating)}${'☆'.repeat(5 - order.review.rating)}</p>
+                <p><strong>Comment:</strong> ${DOMPurify.sanitize(order.review.comment || 'N/A')}</p>
+            ` : 'No review provided.';
+            document.getElementById('orderStatusSelect').value = DOMPurify.sanitize(order.status || 'Pending');
+            const refundBtn = document.getElementById('refundOrderBtn');
+            const deleteBtn = document.getElementById('deleteOrderBtn');
+            refundBtn.style.display = order.paymentStatus === 'Paid' && order.status !== 'Refunded' ? 'block' : 'none';
+            refundBtn.onclick = () => refundOrder(order._id);
+            deleteBtn.style.display = ['Delivered', 'Cancelled'].includes(order.status) ? 'block' : 'none';
+            deleteBtn.onclick = () => deleteOrder(order._id);
+            document.getElementById('updateOrderStatusBtn').onclick = () => updateOrderStatus(order._id);
+            showModal('orderDetailsModal');
+        } catch (error) {
+            console.error('Error fetching order details:', error);
+            showToast('Failed to load order details.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('orderLoader');
+        }
+    }
+
+    async function updateOrderStatus(orderId) {
+        const status = document.getElementById('orderStatusSelect')?.value;
+        if (!status) {
+            showToast('Please select a status.', 'error');
+            return;
+        }
+        try {
+            showLoader('orderLoader');
+            const response = await fetch(`${BASE_URL}/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({ status })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Order status updated successfully!', 'success');
+            closeModal('orderDetailsModal');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            showToast('Failed to update order status.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('orderLoader');
+        }
+    }
+
+    async function refundOrder(orderId) {
+        if (!confirm('Are you sure you want to refund this order?')) return;
+        try {
+            showLoader('orderLoader');
+            const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Order refunded successfully!', 'success');
+            closeModal('orderDetailsModal');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error refunding order:', error);
+            showToast('Failed to refund order.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('orderLoader');
+        }
+    }
+
+    async function deleteOrder(orderId) {
+        if (!confirm('Are you sure you want to delete this order?')) return;
+        try {
+            showLoader('orderLoader');
+            const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Order deleted successfully!', 'success');
+            closeModal('orderDetailsModal');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            showToast('Failed to delete order.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('orderLoader');
+        }
+    }
+
+    // Coupon Management
+    async function fetchCoupons() {
+        try {
+            showLoader('couponLoader');
+            const response = await fetch(`${BASE_URL}/api/coupons`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const coupons = await response.json();
+            displayCoupons(coupons);
+        } catch (error) {
+            console.error('Error fetching coupons:', error);
+            showToast('Failed to load coupons.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('couponLoader');
+        }
+    }
+
+    function displayCoupons(coupons) {
+        const couponTableBody = document.getElementById('couponTableBody');
+        if (!couponTableBody) return;
+        couponTableBody.innerHTML = coupons.map(coupon => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-4 px-4">
+                    ${coupon.image ? `<img src="${DOMPurify.sanitize(coupon.image)}" alt="${DOMPurify.sanitize(coupon.code)}" class="menu-img">` : 'No Image'}
+                </td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(coupon.code || 'N/A')}</td>
+                <td class="py-4 px-4 text-right">${typeof coupon.discount === 'number' ? coupon.discount : '0'}%</td>
+                <td class="py-4 px-4 flex space-x-3">
+                    <button onclick="editCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Edit</button>
+                    <button onclick="deleteCoupon('${DOMPurify.sanitize(coupon._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function addCoupon() {
+        const coupon = {
+            code: document.getElementById('couponCode')?.value.trim() || '',
+            discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
+            imageUrl: document.getElementById('couponImage')?.value.trim() || '',
+            file: document.getElementById('couponImageUpload')?.files[0] || null,
+            description: document.getElementById('couponDescription')?.value.trim() || ''
+        };
+
+        if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
+            showToast('Valid coupon code and discount percentage are required.', 'error');
+            return;
+        }
+
+        const button = document.querySelector('#couponsSection .auth-btn');
+        if (button) button.disabled = true;
+        showLoader('addCouponLoader');
+
+        const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'addCouponLoader') : coupon.imageUrl || null;
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/coupons`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({
+                    code: coupon.code,
+                    discount: coupon.discount,
+                    image: uploadedImageUrl,
+                    description: coupon.description
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Coupon added successfully!', 'success');
+            ['couponCode', 'couponDiscount', 'couponImage', 'couponImageUpload', 'couponDescription'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = '';
+            });
+            fetchCoupons();
+        } catch (error) {
+            console.error('Error adding coupon:', error);
+            showToast('Failed to add coupon.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            if (button) button.disabled = false;
+            hideLoader('addCouponLoader');
+        }
+    }
+
+    async function editCoupon(couponId) {
+        try {
+            showLoader('couponLoader');
+            const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const coupon = await response.json();
+            document.getElementById('editCouponId').value = DOMPurify.sanitize(coupon._id || '');
+            document.getElementById('editCouponCode').value = DOMPurify.sanitize(coupon.code || '');
+            document.getElementById('editCouponDiscount').value = typeof coupon.discount === 'number' ? coupon.discount : '';
+            document.getElementById('editCouponImage').value = DOMPurify.sanitize(coupon.image || '');
+            document.getElementById('editCouponDescription').value = DOMPurify.sanitize(coupon.description || '');
+            showModal('editCouponModal');
+        } catch (error) {
+            console.error('Error fetching coupon:', error);
+            showToast('Failed to load coupon.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('couponLoader');
+        }
+    }
+
+    async function updateCoupon() {
+        const coupon = {
+            id: document.getElementById('editCouponId')?.value || '',
+            code: document.getElementById('editCouponCode')?.value.trim() || '',
+            discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
+            imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
+            file: document.getElementById('editCouponImageUpload')?.files[0] || null,
+            description: document.getElementById('editCouponDescription')?.value.trim() || ''
+        };
+
+        if (!validateInput(coupon.code, 'couponCode') || !validateInput(coupon.discount, 'number')) {
+            showToast('Valid coupon code and discount percentage are required.', 'error');
+            return;
+        }
+
+        const button = document.querySelector('#editCouponModal .auth-btn');
+        if (button) button.disabled = true;
+        showLoader('couponLoader');
+
+        const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file, 'couponLoader') : coupon.imageUrl || null;
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/coupons/${coupon.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({
+                    code: coupon.code,
+                    discount: coupon.discount,
+                    image: uploadedImageUrl,
+                    description: coupon.description
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Coupon updated successfully!', 'success');
+            closeModal('editCouponModal');
+            fetchCoupons();
+        } catch (error) {
+            console.error('Error updating coupon:', error);
+            showToast('Failed to update coupon.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            if (button) button.disabled = false;
+            hideLoader('couponLoader');
+        }
+    }
+
+    async function deleteCoupon(couponId) {
+        if (!confirm('Are you sure you want to delete this coupon?')) return;
+        try {
+            showLoader('couponLoader');
+            const response = await fetch(`${BASE_URL}/api/coupons/${couponId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Coupon deleted successfully!', 'success');
+            fetchCoupons();
+        } catch (error) {
+            console.error('Error deleting coupon:', error);
+            showToast('Failed to delete coupon.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('couponLoader');
+        }
+    }
+
+    // Contact Messages
+    async function fetchContactMessages() {
+        try {
+            showLoader('replyLoader');
+            const response = await fetch(`${BASE_URL}/api/contact`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const messages = await response.json();
+            displayContactMessages(messages);
+        } catch (error) {
+            console.error('Error fetching contact messages:', error);
+            showToast('Failed to load contact messages.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('replyLoader');
+        }
+    }
+
+    function displayContactMessages(messages) {
+        const contactTableBody = document.getElementById('contactTableBody');
+        if (!contactTableBody) return;
+        contactTableBody.innerHTML = messages.map(message => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-4 px-4">${DOMPurify.sanitize(message.name || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(message.email || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(message.subject || 'N/A')}</td>
+                <td class="py-4 px-4">
+                    <div class="contact-message">${DOMPurify.sanitize(message.message || 'N/A')}</div>
+                </td>
+                <td class="py-4 px-4 text-center">${DOMPurify.sanitize(message.status || 'Pending')}</td>
+                <td class="py-4 px-4 flex space-x-3">
+                    <button onclick="replyToMessage('${DOMPurify.sanitize(message._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">Reply</button>
+                    <button onclick="deleteContactMessage('${DOMPurify.sanitize(message._id)}')" class="auth-btn bg-red-600 hover:bg-red-700 text-sm px-4 py-2">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function replyToMessage(messageId) {
+        document.getElementById('contactMessageId').value = DOMPurify.sanitize(messageId);
+        document.getElementById('contactReplySubject').value = '';
+        document.getElementById('contactReplyMessage').value = '';
+        showModal('replyContactModal');
+    }
+
+    async function sendReply() {
+        const messageId = document.getElementById('contactMessageId')?.value;
+        const subject = document.getElementById('contactReplySubject')?.value.trim();
+        const message = document.getElementById('contactReplyMessage')?.value.trim();
+
+        if (!validateInput(subject, 'text') || !validateInput(message, 'text')) {
+            showToast('Subject and message are required.', 'error');
+            return;
+        }
+
+        const button = document.querySelector('#replyContactModal .auth-btn');
+        if (button) button.disabled = true;
+        showLoader('replyLoader');
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({ subject, message })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Reply sent successfully!', 'success');
+            closeModal('replyContactModal');
+            fetchContactMessages();
+        } catch (error) {
+            console.error('Error sending reply:', error);
+            showToast('Failed to send reply.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            if (button) button.disabled = false;
+            hideLoader('replyLoader');
+        }
+    }
+
+    async function deleteContactMessage(messageId) {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+        try {
+            showLoader('replyLoader');
+            const response = await fetch(`${BASE_URL}/api/contact/${messageId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast('Message deleted successfully!', 'success');
+            fetchContactMessages();
+        } catch (error) {
+            console.error('Error deleting contact message:', error);
+            showToast('Failed to delete message.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('replyLoader');
+        }
+    }
+
+    // Customer Management
+    async function fetchCustomers() {
+        try {
+            showLoader('customerLoader');
+            const response = await fetch(`${BASE_URL}/api/users`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const customers = await response.json();
+            displayCustomers(customers);
+        } catch (error) {
+            console.error('Error fetching customers:', error);
+            showToast('Failed to load customers.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('customerLoader');
+        }
+    }
+
+    function displayCustomers(customers) {
+        const customerTableBody = document.getElementById('customerTableBody');
+        if (!customerTableBody) return;
+        customerTableBody.innerHTML = customers.map(customer => `
+            <tr class="border-b hover:bg-gray-50 transition-colors">
+                <td class="py-4 px-4">${DOMPurify.sanitize(customer.name || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(customer.email || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(customer.phone || 'N/A')}</td>
+                <td class="py-4 px-4">${DOMPurify.sanitize(customer.address || 'N/A')}</td>
+                <td class="py-4 px-4 text-center">${DOMPurify.sanitize(customer.status || 'Active')}</td>
+                <td class="py-4 px-4 flex space-x-3">
+                    <button onclick="viewCustomerDetails('${DOMPurify.sanitize(customer._id)}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2">View</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function viewCustomerDetails(customerId) {
+        try {
+            showLoader('customerLoader');
+            const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const customer = await response.json();
+            document.getElementById('customerName').textContent = DOMPurify.sanitize(customer.name || 'N/A');
+            document.getElementById('customerEmail').textContent = DOMPurify.sanitize(customer.email || 'N/A');
+            document.getElementById('customerPhone').textContent = DOMPurify.sanitize(customer.phone || 'N/A');
+            document.getElementById('customerAddress').textContent = DOMPurify.sanitize(customer.address || 'N/A');
+            document.getElementById('customerStatus').textContent = DOMPurify.sanitize(customer.status || 'Active');
+            const blockUnblockBtn = document.getElementById('blockUnblockBtn');
+            blockUnblockBtn.textContent = customer.status === 'Active' ? 'Block' : 'Unblock';
+            blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+            blockUnblockBtn.onclick = () => toggleCustomerStatus(customer._id, customer.status);
+            const orderHistory = customer.orders || [];
+            document.getElementById('customerOrderHistory').innerHTML = orderHistory.length ? `
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-4">Order ID</th>
+                            <th class="py-2 px-4">Date</th>
+                            <th class="py-2 px-4">Total</th>
+                            <th class="py-2 px-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orderHistory.map(order => `
+                            <tr class="border-b">
+                                <td class="py-2 px-4">${DOMPurify.sanitize(order._id || 'N/A')}</td>
+                                <td class="py-2 px-4">${DOMPurify.sanitize(new Date(order.createdAt).toLocaleString() || 'N/A')}</td>
+                                <td class="py-2 px-4 text-right">₹${typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</td>
+                                <td class="py-2 px-4 text-center">${DOMPurify.sanitize(order.status || 'N/A')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : '<p class="text-sm text-gray-600">No orders found.</p>';
+            showModal('customerDetailsModal');
+        } catch (error) {
+            console.error('Error fetching customer details:', error);
+            showToast('Failed to load customer details.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('customerLoader');
+        }
+    }
+
+    async function toggleCustomerStatus(customerId, currentStatus) {
+        const newStatus = currentStatus === 'Active' ? 'Blocked' : 'Active';
+        try {
+            showLoader('customerLoader');
+            const response = await fetch(`${BASE_URL}/api/users/${customerId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast(`Customer ${newStatus.toLowerCase()} successfully!`, 'success');
+            closeModal('customerDetailsModal');
+            fetchCustomers();
+        } catch (error) {
+            console.error('Error toggling customer status:', error);
+            showToast(`Failed to ${newStatus.toLowerCase()} customer.`, 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('customerLoader');
+        }
+    }
+
+    // Restaurant Status
+    async function fetchRestaurantStatus() {
+        try {
+            showLoader('statusLoader');
+            const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            const statusText = document.getElementById('restaurantStatus');
+            const statusBtn = document.getElementById('statusToggleBtn');
+            statusText.textContent = data.isOpen ? 'Open' : 'Closed';
+            statusBtn.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
+            statusBtn.className = `auth-btn px-6 py-3 mt-4 ${data.isOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+        } catch (error) {
+            console.error('Error fetching restaurant status:', error);
+            showToast('Failed to load restaurant status.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('statusLoader');
+        }
+    }
+
+    async function toggleRestaurantStatus() {
+        const statusText = document.getElementById('restaurantStatus')?.textContent;
+        const isOpen = statusText === 'Open';
+        try {
+            showLoader('statusLoader');
+            const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                },
+                body: JSON.stringify({ isOpen: !isOpen })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            showToast(`Restaurant is now ${!isOpen ? 'open' : 'closed'}!`, 'success');
+            fetchRestaurantStatus();
+        } catch (error) {
+            console.error('Error toggling restaurant status:', error);
+            showToast('Failed to update restaurant status.', 'error');
+            if (error.message.includes('401')) logout();
+        } finally {
+            hideLoader('statusLoader');
+        }
+    }
+
+    // Logout
+    function logout() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(PROFILE_IMAGE_KEY);
+        window.location.href = 'admin.html';
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+        checkAuth();
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('profileDropdown');
+            const profileImg = document.getElementById('profileImage');
+            if (dropdown && profileImg && !profileImg.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>
+</xaiArtifact>

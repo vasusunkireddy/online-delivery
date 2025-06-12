@@ -1,1061 +1,962 @@
-const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+const express = require('express');
+const router = express.Router();
+const path = require('path');
+const mysql = require('mysql2/promise');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const fs = require('fs');
+const nodemailer = require('nodemailer');
+const cors = require('cors');
 
-// Utility Functions
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.style.display = 'flex';
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 3000);
+// Enable CORS for all routes (adjust origin as needed for production)
+router.use(cors({
+  origin: ['http://localhost:3000', 'https://your-frontend-domain.com'], // Update with your frontend domain
+  credentials: true,
+}));
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-function toggleDropdown() {
-    const dropdown = document.getElementById('profileDropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('active');
-    }
-}
-
-function showSection(section) {
-    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-    const sectionElement = document.getElementById(`${section}Section`);
-    if (sectionElement) {
-        sectionElement.classList.remove('hidden');
-    }
-    toggleDropdown();
-    const actions = {
-        menu: fetchMenuItems,
-        orders: fetchOrders,
-        offers: fetchOffers,
-        coupons: fetchCoupons,
-        customers: fetchCustomers,
-        contact: fetchContactMessages,
-        profile: fetchAdminDetails
-    };
-    if (actions[section]) {
-        actions[section]();
-    }
-}
-
-function showModal(modalId) {
-    closeModalAll();
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-function closeModalAll() {
-    document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
-}
-
-async function uploadImage(file) {
-    if (!file) return null;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-        const response = await fetch(`${BASE_URL}/api/files/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
-            body: formData
-        });
-        const data = await response.json();
-        if (response.ok) {
-            localStorage.setItem('adminProfileImage', data.fileUrl);
-            return data.fileUrl;
-        }
-        showToast(data.error || 'Failed to upload image.', 'error');
-        return null;
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        showToast('Failed to upload image.', 'error');
-        return null;
-    }
-}
-
-// Authentication and Profile
-async function fetchAdminDetails() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('welcomeMessage')?.textContent = `Welcome, ${data.name || 'Admin'}`;
-            document.getElementById('profileName')?.value = data.name || '';
-            document.getElementById('profileEmail')?.value = data.email || '';
-            document.getElementById('profilePhone')?.value = data.phone || '';
-            document.getElementById('displayProfileName')?.textContent = data.name || '';
-            document.getElementById('displayProfileEmail')?.textContent = data.email || '';
-            document.getElementById('displayProfilePhone')?.textContent = data.phone || '';
-            const savedProfileImage = localStorage.getItem('adminProfileImage') || data.profileImage;
-            if (savedProfileImage) {
-                document.getElementById('profileImage')?.setAttribute('src', savedProfileImage);
-                document.getElementById('modalProfileImage')?.setAttribute('src', savedProfileImage);
-                document.getElementById('displayProfileImage')?.setAttribute('src', savedProfileImage);
-            }
-        } else {
-            showToast(data.error || 'Failed to fetch admin details.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching admin details:', error);
-        showToast('Failed to fetch admin details.', 'error');
-    }
-}
-
-async function updateProfileImage() {
-    const fileInput = document.getElementById('profileImageUpload');
-    if (!fileInput?.files[0]) {
-        showToast('Please select an image.', 'error');
-        return;
-    }
-    const imageUrl = await uploadImage(fileInput.files[0]);
-    if (!imageUrl) return;
-    try {
-        const response = await fetch(`${BASE_URL}/api/auth/admin/profile`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({ profileImage: imageUrl })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Profile image updated successfully!', 'success');
-            fetchAdminDetails();
-            closeModal('profileModal');
-        } else {
-            showToast(data.error || 'Failed to update profile image.', 'error');
-        }
-    } catch (error) {
-        console.error('Error updating profile image:', error);
-        showToast('Failed to update profile image.', 'error');
-    }
-}
-
-async function checkAuth() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-        window.location.href = 'admin.html';
-        return;
-    }
-    try {
-        const response = await fetch(`${BASE_URL}/api/auth/admin/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminProfileImage');
-            window.location.href = 'admin.html';
-        } else {
-            fetchAdminDetails();
-            showSection('home');
-            fetchOrders();
-            fetchMenuItems();
-            fetchRestaurantStatus();
-        }
-    } catch (error) {
-        console.error('Error checking auth:', error);
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminProfileImage');
-        window.location.href = 'admin.html';
-    }
-}
-
-// Menu Management
-async function fetchMenuItems() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/menu`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const items = await response.json();
-        displayMenuItems(items);
-        document.getElementById('totalMenuItems')?.textContent = items.length;
-    } catch (error) {
-        console.error('Error fetching menu items:', error);
-        showToast('Failed to load menu items.', 'error');
-    }
-}
-
-function displayMenuItems(items) {
-    const menuTableBody = document.getElementById('menuTableBody');
-    if (!menuTableBody) return;
-    menuTableBody.innerHTML = items.map(item => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-img">` : 'No Image'}</td>
-            <td class="py-3 px-3">${item.name || 'N/A'}</td>
-            <td class="py-3 px-3">${item.category || 'N/A'}</td>
-            <td class="py-3 px-3 text-right">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</td>
-            <td class="py-3 px-3">${item.description || 'N/A'}</td>
-            <td class="py-3 px-3 flex space-x-2">
-                <button onclick="editMenuItem('${item._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                <button onclick="deleteMenuItem('${item._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function addMenuItem() {
-    const item = {
-        name: document.getElementById('itemName')?.value.trim() || '',
-        price: parseFloat(document.getElementById('itemPrice')?.value) || null,
-        category: document.getElementById('itemCategory')?.value.trim() || '',
-        imageUrl: document.getElementById('itemImage')?.value.trim() || '',
-        file: document.getElementById('itemImageUpload')?.files[0] || null,
-        description: document.getElementById('itemDescription')?.value.trim() || ''
-    };
-
-    if (!item.name || !item.category || !item.price) {
-        showToast('Item name, category, and price are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/menu`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                name: item.name,
-                price: item.price,
-                category: item.category,
-                image: uploadedImageUrl,
-                description: item.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Menu item added successfully!', 'success');
-            ['itemName', 'itemPrice', 'itemCategory', 'itemImage', 'itemImageUpload', 'itemDescription'].forEach(id => {
-                const element = document.getElementById(id);
-                if (element) element.value = '';
-            });
-            fetchMenuItems();
-        } else {
-            showToast(data.error || 'Failed to add menu item.', 'error');
-        }
-    } catch (error) {
-        console.error('Error adding menu item:', error);
-        showToast('Failed to add menu item.', 'error');
-    }
-}
-
-async function editMenuItem(itemId) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const item = await response.json();
-        if (response.ok) {
-            document.getElementById('editItemId')?.value = item._id || '';
-            document.getElementById('editItemName')?.value = item.name || '';
-            document.getElementById('editItemPrice')?.value = item.price || '';
-            document.getElementById('editItemCategory')?.value = item.category || '';
-            document.getElementById('editItemImage')?.value = item.image || '';
-            document.getElementById('editItemDescription')?.value = item.description || '';
-            showModal('editMenuModal');
-        } else {
-            showToast(item.error || 'Failed to load menu item.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching menu item:', error);
-        showToast('Failed to load menu item.', 'error');
-    }
-}
-
-async function updateMenuItem() {
-    const item = {
-        id: document.getElementById('editItemId')?.value || '',
-        name: document.getElementById('editItemName')?.value.trim() || '',
-        price: parseFloat(document.getElementById('editItemPrice')?.value) || null,
-        category: document.getElementById('editItemCategory')?.value.trim() || '',
-        imageUrl: document.getElementById('editItemImage')?.value.trim() || '',
-        file: document.getElementById('editItemImageUpload')?.files[0] || null,
-        description: document.getElementById('editItemDescription')?.value.trim() || ''
-    };
-
-    if (!item.name || !item.category || !item.price) {
-        showToast('Item name, category, and price are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = item.file ? await uploadImage(item.file) : item.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/menu/${item.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                name: item.name,
-                price: item.price,
-                category: item.category,
-                image: uploadedImageUrl,
-                description: item.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Menu item updated successfully!', 'success');
-            closeModal('editMenuModal');
-            fetchMenuItems();
-        } else {
-            showToast(data.error || 'Failed to update menu item.', 'error');
-        }
-    } catch (error) {
-        console.error('Error updating menu item:', error);
-        showToast('Failed to update menu item.', 'error');
-    }
-}
-
-async function deleteMenuItem(itemId) {
-    if (!confirm('Are you sure you want to delete this menu item?')) return;
-    try {
-        const response = await fetch(`${BASE_URL}/api/menu/${itemId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Menu item deleted successfully!', 'success');
-            fetchMenuItems();
-        } else {
-            showToast(data.error || 'Failed to delete menu item.', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting menu item:', error);
-        showToast('Failed to delete menu item.', 'error');
-    }
-}
-
-// Order Management
-async function fetchOrders() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/orders`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const orders = await response.json();
-        displayOrders(orders);
-        document.getElementById('totalOrders')?.textContent = orders.length;
-        document.getElementById('pendingOrders')?.textContent = orders.filter(order => order.status === 'Pending').length;
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-        showToast('Failed to load orders.', 'error');
-    }
-}
-
-function displayOrders(orders) {
-    const orderTableBody = document.getElementById('orderTableBody');
-    if (!orderTableBody) return;
-    orderTableBody.innerHTML = orders.map(order => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${order._id || 'N/A'}</td>
-            <td class="py-3 px-3">${order.customerName || 'N/A'}</td>
-            <td class="py-3 px-3">${order.address || 'N/A'}</td>
-            <td class="py-3 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-            <td class="py-3 px-3 text-center">${order.status || 'Pending'}</td>
-            <td class="py-3 px-3 text-center">${order.paymentStatus || 'Pending'}</td>
-            <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button onclick="viewOrderDetails('${order._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function viewOrderDetails(orderId) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const order = await response.json();
-        if (response.ok) {
-            document.getElementById('orderId')?.textContent = order._id || 'N/A';
-            document.getElementById('orderCustomerName')?.textContent = order.customerName || 'N/A';
-            document.getElementById('orderAddress')?.textContent = order.address || 'N/A';
-            document.getElementById('orderTotal')?.textContent = `₹${order.total?.toFixed(2) || '0.00'}`;
-            document.getElementById('orderStatus')?.textContent = order.status || 'Pending';
-            document.getElementById('orderPaymentStatus')?.textContent = order.paymentStatus || 'Pending';
-            document.getElementById('orderStatusSelect')?.value = order.status || 'Pending';
-            document.getElementById('updateOrderStatusBtn')?.onclick = () => updateOrderStatus(orderId, document.getElementById('orderStatusSelect')?.value);
-            const refundOrderBtn = document.getElementById('refundOrderBtn');
-            if (refundOrderBtn) {
-                refundOrderBtn.style.display = order.paymentStatus === 'Paid' ? 'block' : 'none';
-                refundOrderBtn.onclick = () => refundOrder(orderId);
-            }
-
-            const orderItems = document.getElementById('orderItems');
-            if (orderItems) {
-                orderItems.innerHTML = order.items?.map(item => `
-                    <div class="text-sm mb-2">
-                        <p><strong>Item:</strong> ${item.name || 'N/A'}</p>
-                        <p><strong>Quantity:</strong> ${item.quantity || 1}</p>
-                        <p><strong>Price:</strong> ₹${item.price?.toFixed(2) || '0.00'}</p>
-                    </div>
-                `).join('') || 'No items';
-            }
-
-            const orderReview = document.getElementById('orderReview');
-            if (orderReview) {
-                if (order.review) {
-                    const stars = '★'.repeat(order.review.rating) + '☆'.repeat(5 - order.review.rating);
-                    orderReview.innerHTML = `
-                        <p><strong>Rating:</strong> <span class="rating-stars">${stars}</span> (${order.review.rating}/5)</p>
-                        <p><strong>Comment:</strong> ${order.review.comment || 'No comment'}</p>
-                    `;
-                } else {
-                    orderReview.innerHTML = 'No review provided';
-                }
-            }
-
-            showModal('orderDetailsModal');
-        } else {
-            showToast(order.error || 'Failed to load order details.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching order details:', error);
-        showToast('Failed to load order details.', 'error');
-    }
-}
-
-async function updateOrderStatus(orderId, status) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/orders/${orderId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({ status })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast(`Order status updated to ${status}!`, 'success');
-            closeModal('orderDetailsModal');
-            fetchOrders();
-        } else {
-            showToast(data.error || 'Failed to update order status.', 'error');
-        }
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        showToast('Failed to update order status.', 'error');
-    }
-}
-
-async function refundOrder(orderId) {
-    if (!confirm('Are you sure you want to refund this order?')) return;
-    try {
-        const response = await fetch(`${BASE_URL}/api/orders/${orderId}/refund`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Order refunded successfully!', 'success');
-            closeModal('orderDetailsModal');
-            fetchOrders();
-        } else {
-            showToast(data.error || 'Failed to process refund.', 'error');
-        }
-    } catch (error) {
-        console.error('Error processing refund:', error);
-        showToast('Failed to process refund.', 'error');
-    }
-}
-
-// Special Offers
-async function fetchOffers() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/offers`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const offers = await response.json();
-        displayOffers(offers);
-    } catch (error) {
-        console.error('Error fetching offers:', error);
-        showToast('Failed to load offers.', 'error');
-    }
-}
-
-function displayOffers(offers) {
-    const offerTableBody = document.getElementById('offerTableBody');
-    if (!offerTableBody) return;
-    offerTableBody.innerHTML = offers.map(offer => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${offer.image ? `<img src="${offer.image}" alt="${offer.name}" class="menu-img">` : 'No Image'}</td>
-            <td class="py-3 px-3">${offer.name || 'N/A'}</td>
-            <td class="py-3 px-3 text-right">₹${offer.price?.toFixed(2) || '0.00'}</td>
-            <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button onclick="editOffer('${offer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                <button onclick="deleteOffer('${offer._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function addOffer() {
-    const offer = {
-        name: document.getElementById('offerName')?.value.trim() || '',
-        price: parseFloat(document.getElementById('offerPrice')?.value) || null,
-        imageUrl: document.getElementById('offerImage')?.value.trim() || '',
-        file: document.getElementById('offerImageUpload')?.files[0] || null,
-        description: document.getElementById('offerDescription')?.value.trim() || ''
-    };
-
-    if (!offer.name || !offer.price) {
-        showToast('Offer name and price are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/offers`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                name: offer.name,
-                price: offer.price,
-                image: uploadedImageUrl,
-                description: offer.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Offer added successfully!', 'success');
-            ['offerName', 'offerPrice', 'offerImage', 'offerImageUpload', 'offerDescription'].forEach(id => {
-                document.getElementById(id)?.value = '';
-            });
-            fetchOffers();
-        } else {
-            showToast(data.error || 'Failed to add offer.', 'error');
-        }
-    } catch (error) {
-        console.error('Error adding offer:', error);
-        showToast('Failed to add offer.', 'error');
-    }
-}
-
-async function editOffer(id) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const offer = await response.json();
-        if (response.ok) {
-            document.getElementById('editOfferId')?.value = offer._id || '';
-            document.getElementById('editOfferName')?.value = offer.name || '';
-            document.getElementById('editOfferPrice')?.value = offer.price || '';
-            document.getElementById('editOfferImage')?.value = offer.image || '';
-            document.getElementById('editOfferDescription')?.value = offer.description || '';
-            showModal('editOfferModal');
-        } else {
-            showToast(offer.error || 'Failed to load offer.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching offer:', error);
-        showToast('Failed to load offer.', 'error');
-    }
-}
-
-async function updateOffer() {
-    const offer = {
-        id: document.getElementById('editOfferId')?.value || '',
-        name: document.getElementById('editOfferName')?.value.trim() || '',
-        price: parseFloat(document.getElementById('editOfferPrice')?.value) || null,
-        imageUrl: document.getElementById('editOfferImage')?.value.trim() || '',
-        file: document.getElementById('editOfferImageUpload')?.files[0] || null,
-        description: document.getElementById('editOfferDescription')?.value.trim() || ''
-    };
-
-    if (!offer.name || !offer.price) {
-        showToast('Offer name and price are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = offer.file ? await uploadImage(offer.file) : offer.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/offers/${offer.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                name: offer.name,
-                price: offer.price,
-                image: uploadedImageUrl,
-                description: offer.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Offer updated successfully!', 'success');
-            closeModal('editOfferModal');
-            fetchOffers();
-        } else {
-            showToast(data.error || 'Failed to update offer.', 'error');
-        }
-    } catch (error) {
-        console.error('Error updating offer:', error);
-        showToast('Failed to update offer.', 'error');
-    }
-}
-
-async function deleteOffer(id) {
-    if (!confirm('Are you sure you want to delete this offer?')) return;
-    try {
-        const response = await fetch(`${BASE_URL}/api/offers/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Offer deleted successfully!', 'success');
-            fetchOffers();
-        } else {
-            showToast(data.error || 'Failed to delete offer.', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting offer:', error);
-        showToast('Failed to delete offer.', 'error');
-    }
-}
-
-// Coupons Management
-async function fetchCoupons() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/coupons`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const coupons = await response.json();
-        displayCoupons(coupons);
-    } catch (error) {
-        console.error('Error fetching coupons:', error);
-        showToast('Failed to load coupons.', 'error');
-    }
-}
-
-function displayCoupons(coupons) {
-    const couponTableBody = document.getElementById('couponTableBody');
-    if (!couponTableBody) return;
-    couponTableBody.innerHTML = coupons.map(coupon => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${coupon.image ? `<img src="${coupon.image}" alt="${coupon.code}" class="menu-img">` : 'No Image'}</td>
-            <td class="py-3 px-3">${coupon.code || 'N/A'}</td>
-            <td class="py-3 px-3 text-right">${coupon.discount || 0}%</td>
-            <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button onclick="editCoupon('${coupon._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Edit</button>
-                <button onclick="deleteCoupon('${coupon._id}')" class="auth-btn bg-red-600 hover:bg-red-700 text-xs px-3 py-1.5">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function addCoupon() {
-    const coupon = {
-        code: document.getElementById('couponCode')?.value.trim().toUpperCase() || '',
-        discount: parseInt(document.getElementById('couponDiscount')?.value) || null,
-        imageUrl: document.getElementById('couponImage')?.value.trim() || '',
-        file: document.getElementById('couponImageUpload')?.files[0] || null,
-        description: document.getElementById('couponDescription')?.value.trim() || ''
-    };
-
-    if (!coupon.code || !coupon.discount) {
-        showToast('Coupon code and discount are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/coupons`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                code: coupon.code,
-                discount: coupon.discount,
-                image: uploadedImageUrl,
-                description: coupon.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Coupon added successfully!', 'success');
-            ['couponCode', 'couponDiscount', 'couponImage', 'couponImageUpload', 'couponDescription'].forEach(id => {
-                document.getElementById(id)?.value = '';
-            });
-            fetchCoupons();
-        } else {
-            showToast(data.error || 'Failed to add coupon.', 'error');
-        }
-    } catch (error) {
-        console.error('Error adding coupon:', error);
-        showToast('Failed to add coupon.', 'error');
-    }
-}
-
-async function editCoupon(id) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const coupon = await response.json();
-        if (response.ok) {
-            document.getElementById('editCouponId')?.value = coupon._id || '';
-            document.getElementById('editCouponCode')?.value = coupon.code || '';
-            document.getElementById('editCouponDiscount')?.value = coupon.discount || '';
-            document.getElementById('editCouponImage')?.value = coupon.image || '';
-            document.getElementById('editCouponDescription')?.value = coupon.description || '';
-            showModal('editCouponModal');
-        } else {
-            showToast(coupon.error || 'Failed to load coupon.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching coupon:', error);
-        showToast('Failed to load coupon.', 'error');
-    }
-}
-
-async function updateCoupon() {
-    const coupon = {
-        id: document.getElementById('editCouponId')?.value || '',
-        code: document.getElementById('editCouponCode')?.value.trim().toUpperCase() || '',
-        discount: parseInt(document.getElementById('editCouponDiscount')?.value) || null,
-        imageUrl: document.getElementById('editCouponImage')?.value.trim() || '',
-        file: document.getElementById('editCouponImageUpload')?.files[0] || null,
-        description: document.getElementById('editCouponDescription')?.value.trim() || ''
-    };
-
-    if (!coupon.code || !coupon.discount) {
-        showToast('Coupon code and discount are required.', 'error');
-        return;
-    }
-
-    const uploadedImageUrl = coupon.file ? await uploadImage(coupon.file) : coupon.imageUrl || null;
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/coupons/${coupon.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({
-                code: coupon.code,
-                discount: coupon.discount,
-                image: uploadedImageUrl,
-                description: coupon.description
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Coupon updated successfully!', 'success');
-            closeModal('editCouponModal');
-            fetchCoupons();
-        } else {
-            showToast(data.error || 'Failed to update coupon.', 'error');
-        }
-    } catch (error) {
-        console.error('Error updating coupon:', error);
-        showToast('Failed to update coupon.', 'error');
-    }
-}
-
-async function deleteCoupon(id) {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
-    try {
-        const response = await fetch(`${BASE_URL}/api/coupons/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Coupon deleted successfully!', 'success');
-            fetchCoupons();
-        } else {
-            showToast(data.error || 'Failed to delete coupon.', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting coupon:', error);
-        showToast('Failed to delete coupon.', 'error');
-    }
-}
-
-// Customer Management
-async function fetchCustomers() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/users`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const customers = await response.json();
-        displayCustomers(customers);
-    } catch (error) {
-        console.error('Error fetching customers:', error);
-        showToast('Failed to load customers.', 'error');
-    }
-}
-
-function displayCustomers(customers) {
-    const customerTableBody = document.getElementById('customerTableBody');
-    if (!customerTableBody) return;
-    customerTableBody.innerHTML = customers.map(customer => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${customer.name || 'N/A'}</td>
-            <td class="py-3 px-3">${customer.email || 'N/A'}</td>
-            <td class="py-3 px-3">${customer.phone || 'N/A'}</td>
-            <td class="py-3 px-3 text-center">${customer.isBlocked ? 'Blocked' : 'Active'}</td>
-            <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button onclick="viewCustomerDetails('${customer._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">View</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function viewCustomerDetails(customerId) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/users/${customerId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const customer = await response.json();
-        if (response.ok) {
-            document.getElementById('customerName')?.textContent = customer.name || 'N/A';
-            document.getElementById('customerEmail')?.textContent = customer.email || 'N/A';
-            document.getElementById('customerPhone')?.textContent = customer.phone || 'N/A';
-            document.getElementById('customerStatus')?.textContent = customer.isBlocked ? 'Blocked' : 'Active';
-            const blockUnblockBtn = document.getElementById('blockUnblockBtn');
-            if (blockUnblockBtn) {
-                blockUnblockBtn.textContent = customer.isBlocked ? 'Unblock' : 'Block';
-                blockUnblockBtn.className = `auth-btn px-4 py-2 ${customer.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`;
-                blockUnblockBtn.onclick = () => toggleCustomerBlock(customerId, customer.isBlocked);
-            }
-
-            const orderHistory = document.getElementById('customerOrderHistory');
-            if (orderHistory) {
-                orderHistory.innerHTML = customer.orders?.length ? `
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${customer.orders.map(order => `
-                                <tr class="border-b">
-                                    <td class="py-2 px-3">${order._id || 'N/A'}</td>
-                                    <td class="py-2 px-3 text-right">₹${order.total?.toFixed(2) || '0.00'}</td>
-                                    <td class="py-2 px-3 text-center">${order.status || 'Pending'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                ` : 'No order history';
-            }
-
-            showModal('customerDetailsModal');
-        } else {
-            showToast(customer.error || 'Failed to load customer details.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching customer details:', error);
-        showToast('Failed to load customer details.', 'error');
-    }
-}
-
-async function toggleCustomerBlock(customerId, isBlocked) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/users/${customerId}/block`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({ isBlocked: !isBlocked })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast(`Customer ${!isBlocked ? 'blocked' : 'unblocked'} successfully!`, 'success');
-            closeModal('customerDetailsModal');
-            fetchCustomers();
-        } else {
-            showToast(data.error || 'Failed to update customer status.', 'error');
-        }
-    } catch (error) {
-        console.error('Error toggling customer block:', error);
-        showToast('Failed to update customer status.', 'error');
-    }
-}
-
-// Contact Messages
-async function fetchContactMessages() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/contact`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const messages = await response.json();
-        displayContactMessages(messages);
-    } catch (error) {
-        console.error('Error fetching contact messages:', error);
-        showToast('Failed to load contact messages.', 'error');
-    }
-}
-
-function displayContactMessages(messages) {
-    const contactTableBody = document.getElementById('contactTableBody');
-    if (!contactTableBody) return;
-    contactTableBody.innerHTML = messages.map(message => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3 px-3">${message.name || 'N/A'}</td>
-            <td class="py-3 px-3">${message.email || 'N/A'}</td>
-            <td class="py-3 px-3">${message.subject || 'N/A'}</td>
-            <td class="py-3 px-3"><div class="contact-message">${message.message || 'N/A'}</div></td>
-            <td class="py-3 px-3 text-center">${message.status || 'Pending'}</td>
-            <td class="py-3 px-3 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button onclick="replyToMessage('${message._id}')" class="auth-btn bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1.5">Reply</button>
-                <button onclick="markAsResolved('${message._id}')" class="auth-btn bg-green-600 hover:bg-green-700 text-xs px-3 py-1.5">Resolve</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function replyToMessage(messageId) {
-    document.getElementById('contactMessageId')?.value = messageId;
-    showModal('replyContactModal');
-}
-
-async function sendReply() {
-    const messageId = document.getElementById('contactMessageId')?.value || '';
-    const subject = document.getElementById('contactReplySubject')?.value.trim() || '';
-    const message = document.getElementById('contactReplyMessage')?.value.trim() || '';
-
-    if (!subject || !message) {
-        showToast('Subject and message are required.', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${BASE_URL}/api/contact/${messageId}/reply`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify({ subject, message })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Reply sent successfully!', 'success');
-            closeModal('replyContactModal');
-            fetchContactMessages();
-        } else {
-            showToast(data.error || 'Failed to send reply.', 'error');
-        }
-    } catch (error) {
-        console.error('Error sending reply:', error);
-        showToast('Failed to send reply.', 'error');
-    }
-}
-
-async function markAsResolved(messageId) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/contact/${messageId}/resolve`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast('Message marked as resolved!', 'success');
-            fetchContactMessages();
-        } else {
-            showToast(data.error || 'Failed to resolve message.', 'error');
-        }
-    } catch (error) {
-        console.error('Error resolving message:', error);
-        showToast('Failed to resolve message.', 'error');
-    }
-}
-
-// Restaurant Status
-async function fetchRestaurantStatus() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('restaurantStatus')?.textContent = data.isOpen ? 'Open' : 'Closed';
-            document.getElementById('statusToggleBtn')?.textContent = data.isOpen ? 'Close Restaurant' : 'Open Restaurant';
-        } else {
-            showToast(data.error || 'Failed to fetch restaurant status.', 'error');
-        }
-    } catch (error) {
-        console.error('Error fetching restaurant status:', error);
-        showToast('Failed to fetch restaurant status.', 'error');
-    }
-}
-
-async function toggleRestaurantStatus() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/restaurant/status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            }
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showToast(`Restaurant ${data.isOpen ? 'opened' : 'closed'} successfully!`, 'success');
-            fetchRestaurantStatus();
-        } else {
-            showToast(data.error || 'Failed to toggle restaurant status.', 'error');
-        }
-    } catch (error) {
-        console.error('Error toggling restaurant status:', error);
-        showToast('Failed to toggle restaurant status.', 'error');
-    }
-}
-
-// Logout
-function logout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminProfileImage');
-    window.location.href = 'admin.html';
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    document.addEventListener('click', (e) => {
-        const profileDropdown = document.getElementById('profileDropdown');
-        const profileImage = document.getElementById('profileImage');
-        if (profileDropdown && profileImage && !profileImage.contains(e.target) && !profileDropdown.contains(e.target)) {
-            profileDropdown.classList.remove('active');
-        }
-    });
+// Multer configuration for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${Date.now()}-${Math.random().toString(36).substring(7)}${ext}`);
+  },
 });
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only JPEG, PNG, GIF, and WebP images are allowed'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter,
+});
+
+// Email configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Middleware to verify admin JWT
+const authenticateAdmin = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_fallback');
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied: Admin only' });
+    }
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error.message);
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// Serve static files (e.g., uploaded images)
+router.use('/uploads', express.static(uploadDir));
+
+// Serve admindashboard.html
+router.get('/', authenticateAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, '../public', 'admindashboard.html'));
+});
+
+// File Upload API
+router.post('/api/files/upload', authenticateAdmin, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({ fileUrl });
+  } catch (error) {
+    console.error('File upload error:', error.message);
+    res.status(500).json({ error: 'Failed to upload file', details: error.message });
+  }
+});
+
+// Profile APIs
+router.get('/api/auth/admin/me', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [users] = await connection.query(
+      'SELECT id, name, email, phone, profile_image FROM users WHERE id = ? AND role = ?',
+      [req.user.id, 'admin']
+    );
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    res.json(users[0]);
+  } catch (error) {
+    console.error('Fetch admin profile error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch profile', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.put('/api/auth/admin/profile', authenticateAdmin, async (req, res) => {
+  const { profileImage } = req.body;
+  if (!profileImage) {
+    return res.status(400).json({ error: 'Profile image URL is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    await connection.query(
+      'UPDATE users SET profile_image = ? WHERE id = ? AND role = ?',
+      [profileImage, req.user.id, 'admin']
+    );
+    res.json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Update admin profile error:', error.message);
+    res.status(500).json({ error: 'Failed to update profile', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Menu APIs
+router.get('/api/menu', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [items] = await connection.query('SELECT * FROM menu_items');
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching menu items:', error);
+    res.status(500).json({ error: 'Failed to fetch menu items', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.post('/api/menu', authenticateAdmin, async (req, res) => {
+  const { name, price, discount, image, description } = req.body;
+  if (!name || !price || !category) {
+    return res.status(400).json({ error: 'Missing required fields: name, price, category' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'INSERT INTO menu_items (name, price, category, image, description) VALUES (?, ?, ?, ?, ?)',
+      [name, price, category, image || null, description || null]
+    );
+
+    res.json({ id: rows.insertId, name, price, category, image, description });
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    res.status(500).json({ error: 'Failed to create menu item', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.post('/api/menu', authenticateAdmin, async (req, res) => {
+  const { name, price, category, image, description } = req.body;
+  if (!name || !price || !category) {
+    return res.status(400).json({ error: 'Missing required fields: name, price, category' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [result] = await connection.query(
+      'INSERT INTO menu_items (name, price, category, image, description) VALUES (?, ?, ?, ?, ?)',
+      [name, price, category, image || null, description || null]
+    );
+
+    res.json({ id: result.insertId, name, price, category, image, description });
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    res.status(500).json({ error: 'Failed to create menu item', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.get('/api/menu/:id', authenticateAdmin, async (req, res) => {
+  // Validate ID
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid menu item ID' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query('SELECT id, name, price, category, image, description FROM menu_items WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching menu item:', error.message);
+    res.status(500).json({ error: 'Failed to fetch menu item', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+router.put('/api/menu/:id', authenticateAdmin, async (req, res) => {
+  const { name, price, category, description, image } = req.body;
+  if (!name || !price || !category) {
+    return res.status(400).json({ error: 'Missing required fields: name, price, category' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'UPDATE menu_items SET name = ?, price = ?, category = ?, image = ?, description = ? WHERE id = ?',
+      [name, price, category, image || null, description || null, req.params.id]
+    );
+
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    res.json({ message: 'Menu item updated successfully' });
+  } catch (error) {
+    console.error('Error updating menu item:', error);
+    res.status(500).json({ error: 'Failed to update menu item', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.delete('/api/menu/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query('DELETE FROM menu_items WHERE id = ?', [req.params.id]);
+
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    res.json({ message: 'Menu item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting menu item:', error);
+    res.status(500).json({ error: 'Failed to delete menu item', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+// Order APIs
+router.get('/api/orders', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(`
+      SELECT o.*, u.name AS customerName, u.email AS customerEmail, u.phone AS customerPhone
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.get('/api/orders/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(`
+      SELECT o.*, u.name AS customerName, u.email AS customerEmail, u.phone AS customerPhone
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `, [req.params.id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ error: 'Failed to fetch order', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.put('/api/orders/:id', authenticateAdmin, async (req, res) => {
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'UPDATE orders SET status = ? WHERE id = ?',
+      [status, req.params.id]
+    );
+
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ message: 'Order status updated successfully' });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ error: 'Failed to update order status', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.post('/api/orders/:id/refund', authenticateAdmin, async (req, res) => {
+  const { paymentMethod } = req.body;
+  if (!['PhonePe', 'GPay'].includes(paymentMethod)) {
+    return res.status(400).json({ error: 'Invalid payment method' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT * FROM orders WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = rows[0];
+    if (order.status !== 'Cancelled' || order.payment_status !== 'Paid') {
+      return res.status(400).json({ error: 'Order not eligible for refund' });
+    }
+
+    // Simulate refund processing (replace with actual payment gateway integration)
+    await connection.query(
+      'UPDATE orders SET payment_status = ? WHERE id = ?',
+      ['Refunded', req.params.id]
+    );
+
+    res.json({ message: 'Refund processed successfully' });
+  } catch (error) {
+    console.error('Error processing refund:', error);
+    res.status(500).json({ error: 'Failed to process refund', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.delete('/api/orders/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT status FROM orders WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (!['Delivered', 'Cancelled'].includes(rows[0].status)) {
+      return res.status(400).json({ error: 'Only Delivered or Cancelled orders can be deleted' });
+    }
+
+    await connection.query('DELETE FROM orders WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Order deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    res.status(500).json({ error: 'Failed to delete order', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.get('/api/orders/user/:userId', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT * FROM orders WHERE user_id = ?',
+      [req.params.userId]
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    res.status(500).json({ error: 'Failed to fetch user orders', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+// Coupon APIs
+router.get('/api/coupons', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query('SELECT * FROM coupons');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching coupons:', error);
+    res.status(500).json({ error: 'Failed to fetch coupons', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.post('/api/coupons', authenticateAdmin, async (req, res) => {
+  const { code, discount, image, description } = req.body;
+  if (!code || !discount) {
+    return res.status(400).json({ error: 'Code and discount are required' });
+  }
+
+  if (!/^[A-Z0-9]{5,15}$/.test(code)) {
+    return res.status(400).json({ error: 'Invalid coupon code format' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT * FROM coupons WHERE code = ?',
+      [code]
+    );
+
+    if (rows.length > 0) {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+
+    const [result] = await connection.query(
+      'INSERT INTO coupons (code, discount, image, description) VALUES (?, ?, ?, ?)',
+      [code, discount, image || null, description || null]
+    );
+
+    res.json({ id: result.insertId, code, discount, image, description });
+  } catch (error) {
+    console.error('Error creating coupon:', error);
+    res.status(500).json({ error: 'Failed to create coupon', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.get('/api/coupons/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT * FROM coupons WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching coupon:', error);
+    res.status(500).json({ error: 'Failed to fetch coupon', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.put('/api/coupons/:id', authenticateAdmin, async (req, res) => {
+  const { code, discount, image, description } = req.body;
+  if (!code || !discount) {
+    return res.status(400).json({ error: 'Code and discount are required' });
+  }
+
+  if (!/^[A-Z0-9]{5,15}$/.test(code)) {
+    return res.status(400).json({ error: 'Invalid coupon code format' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT * FROM coupons WHERE code = ? AND id != ?',
+      [code, req.params.id]
+    );
+
+    if (rows.length > 0) {
+      return res.status(400).json({ error: 'Coupon code already exists' });
+    }
+
+    const [result] = await connection.query(
+      'UPDATE coupons SET code = ?, discount = ?, image = ?, description = ? WHERE id = ?',
+      [code, discount, image || null, description || null, req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+
+    res.json({ message: 'Coupon updated successfully' });
+  } catch (error) {
+    console.error('Error updating coupon:', error);
+    res.status(500).json({ error: 'Failed to update coupon', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.delete('/api/coupons/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [result] = await connection.query(
+      'DELETE FROM coupons WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+
+    res.json({ message: 'Coupon deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting coupon:', error);
+    res.status(500).json({ error: 'Failed to delete coupon', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+// Customer APIs
+router.get('/api/users', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT id, name, email, phone, address, status FROM users WHERE role = ?',
+      ['user']
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.get('/api/users/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [rows] = await connection.query(
+      'SELECT id, name, email, phone, address, status FROM users WHERE id = ? AND role = ?',
+      [req.params.id, 'user']
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+router.put('/api/users/:id/status', authenticateAdmin, async (req, res) => {
+  const { status } = req.body;
+  if (!['Active', 'Blocked'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'delicute',
+    });
+
+    const [result] = await connection.query(
+      'UPDATE users SET status = ? WHERE id = ? AND role = ?',
+      [status, req.params.id, 'user']
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: `User ${status.toLowerCase()} successfully` });
+  } catch (error) {
+    console.error('Error updating user status:', error);
+    res.status(500).json({ error: 'Failed to update user status', details: error.message });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
+  }
+});
+
+// Contact APIs
+router.get('/api/contact', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    const [messages] = await connection.query('SELECT * FROM contacts');
+    res.json(messages);
+  } catch (error) {
+    console.error('Fetch contact messages error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch contact messages', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.post('/api/contact/:id/reply', authenticateAdmin, async (req, res) => {
+  const { subject, message } = req.body;
+  if (!subject || !message) {
+    return res.status(400).json({ error: 'Subject and message are required' });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    const [contacts] = await connection.query('SELECT email FROM contacts WHERE id = ?', [req.params.id]);
+    if (contacts.length === 0) {
+      return res.status(404).json({ error: 'Contact message not found' });
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: contacts[0].email,
+      subject: subject,
+      text: message
+    };
+
+    await transporter.sendMail(mailOptions);
+    await connection.query('UPDATE contacts SET status = ? WHERE id = ?', ['Replied', req.params.id]);
+    res.json({ message: 'Reply sent successfully' });
+  } catch (error) {
+    console.error('Send contact reply error:', error.message);
+    res.status(500).json({ error: 'Failed to send reply', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.delete('/api/contact/:id', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    const [result] = await connection.query('DELETE FROM contacts WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Contact message not found' });
+    }
+
+    res.json({ message: 'Contact message deleted successfully' });
+  } catch (error) {
+    console.error('Delete contact message error:', error.message);
+    res.status(500).json({ error: 'Failed to delete contact message', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Restaurant Status APIs
+router.get('/api/restaurant/status', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    const [status] = await connection.query('SELECT is_open FROM restaurant_status WHERE id = 1');
+    if (status.length === 0) {
+      await connection.query('INSERT INTO restaurant_status (id, is_open) VALUES (1, false)');
+      return res.json({ isOpen: false });
+    }
+
+    res.json({ isOpen: status[0].is_open });
+  } catch (error) {
+    console.error('Fetch restaurant status error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch restaurant status', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+router.put('/api/restaurant/status', authenticateAdmin, async (req, res) => {
+  let connection;
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    const [status] = await connection.query('SELECT is_open FROM restaurant_status WHERE id = 1');
+    const newStatus = !status[0]?.is_open;
+
+    if (status.length === 0) {
+      await connection.query('INSERT INTO restaurant_status (id, is_open) VALUES (1, ?)', [newStatus]);
+    } else {
+      await connection.query('UPDATE restaurant_status SET is_open = ? WHERE id = 1', [newStatus]);
+    }
+
+    res.json({ isOpen: newStatus });
+  } catch (error) {
+    console.error('Update restaurant status error:', error.message);
+    res.status(500).json({ error: 'Failed to update restaurant status', details: error.message });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+module.exports = router;

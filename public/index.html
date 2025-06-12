@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicute - Cloud Kitchen</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://checkout.563e4f5g.js"></script>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: #f0f2f6;
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
             margin: 0;
+            overflow-x: hidden;
         }
         .hero-bg {
             background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
@@ -19,6 +20,7 @@
             background-attachment: fixed;
             position: relative;
             overflow: hidden;
+            min-height: 100vh;
         }
         .slider-container {
             position: relative;
@@ -48,20 +50,22 @@
         }
         .slide-content {
             text-align: center;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 2rem 3rem;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 2rem;
+            border-radius: 16px;
             color: white;
             max-width: 90%;
-            width: 600px;
+            width: 700px;
+            backdrop-filter: blur(8px);
         }
         .slide-content h2 {
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 700;
             margin-bottom: 1rem;
+            letter-spacing: -0.025em;
         }
         .slide-content p {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             margin-bottom: 1.5rem;
         }
         .slide-content a {
@@ -71,6 +75,7 @@
             border-radius: 9999px;
             text-decoration: none;
             transition: background 0.3s, transform 0.2s;
+            font-weight: 600;
         }
         .slide-content a:hover {
             background: #d97706;
@@ -86,13 +91,14 @@
         .dot {
             width: 12px;
             height: 12px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.6);
             border-radius: 50%;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
         .dot.active {
             background: #f59e0b;
+            transform: scale(1.2);
         }
         .modal {
             display: none;
@@ -101,7 +107,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -110,11 +116,11 @@
         .modal-content {
             background: white;
             padding: 24px;
-            border-radius: 12px;
-            max-width: 90%;
-            width: 450px;
+            border-radius: 16px;
+            max-width: 95%;
+            width: 500px;
             position: relative;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             animation: slideIn 0.3s ease-out;
         }
         @keyframes slideIn {
@@ -136,24 +142,24 @@
         .range-slider {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
-            background: #ddd;
+            height: 10px;
+            background: #e5e7eb;
             border-radius: 5px;
             outline: none;
-            margin: 10px 0;
+            margin: 12px 0;
             transition: background 0.2s;
         }
         .range-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             background: #f59e0b;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
         }
         .range-slider:hover {
-            background: #ccc;
+            background: #d1d5db;
         }
         .toast {
             position: fixed;
@@ -165,7 +171,12 @@
             z-index: 2000;
             display: none;
             min-width: 200px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .toast.success {
             background-color: #22c55e;
@@ -175,17 +186,39 @@
         }
         .menu-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease;
         }
         .menu-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        .menu-card img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+        .menu-card img:hover {
+            transform: scale(1.05);
         }
         .pagination-btn {
-            transition: background 0.2s, color 0.2s;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
         }
         .pagination-btn:hover:not(.disabled) {
             background: #f59e0b;
             color: white;
+            transform: translateY(-2px);
         }
         .pagination-btn.disabled {
             cursor: not-allowed;
@@ -193,9 +226,9 @@
         }
         .full-menu-container {
             display: none;
-            background: #f0f2f6;
+            background: #f8fafc;
             min-height: 100vh;
-            padding: 2rem;
+            padding: 2rem 1rem;
         }
         .full-menu-container.active {
             display: block;
@@ -206,6 +239,8 @@
             padding: 12px 24px;
             border-radius: 9999px;
             transition: background 0.3s, transform 0.2s;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
         .btn-primary:hover {
             background: #d97706;
@@ -213,6 +248,10 @@
         }
         .input-field {
             transition: border-color 0.3s, box-shadow 0.3s;
+            padding: 12px;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -221,6 +260,11 @@
         }
         .navbar-menu {
             transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .navbar-menu.active {
+            max-height: 400px;
         }
         .contact-form {
             background: #ffffff;
@@ -231,6 +275,7 @@
         .contact-form label {
             font-weight: 600;
             color: #374151;
+            font-size: 0.875rem;
         }
         .contact-form input, .contact-form textarea {
             border: 1px solid #d1d5db;
@@ -238,6 +283,7 @@
             padding: 12px;
             width: 100%;
             margin-top: 0.5rem;
+            font-size: 0.875rem;
         }
         .contact-form textarea {
             resize: vertical;
@@ -245,7 +291,7 @@
         .cart-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             padding: 1rem;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -255,43 +301,123 @@
             object-fit: cover;
             border-radius: 8px;
         }
-        @media (max-width: 640px) {
-            .modal-content {
-                padding: 16px;
-                width: 95%;
-            }
-            .close-btn {
-                font-size: 20px;
-            }
-            .toast {
-                top: 12px;
-                right: 12px;
-                padding: 10px;
-                min-width: 160px;
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            z-index: 10;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+        .status-open {
+            background-color: #22c55e;
+        }
+        .status-closed {
+            background-color: #ef4444;
+        }
+        .free-delivery {
+            color: #22c55e;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (min-width: 640px) {
+            .menu-card {
+                padding: 2rem;
             }
             .menu-card img {
+                width: 150px;
                 height: 150px;
             }
-            .menu-card {
-                padding: 12px;
+            .slide-content {
+                padding: 3rem 4rem;
+            }
+            .slide-content h2 {
+                font-size: 3rem;
+            }
+            .slide-content p {
+                font-size: 1.5rem;
+            }
+            .slide-content a {
+                padding: 1rem 2rem;
+                font-size: 1.125rem;
+            }
+            .slider-dots {
+                bottom: 30px;
+            }
+            .dot {
+                width: 14px;
+                height: 14px;
+            }
+            .modal-content {
+                padding: 32px;
+                width: 500px;
+            }
+            .close-btn {
+                font-size: 28px;
+            }
+            .toast {
+                top: 20px;
+                right: 20px;
+                padding: 14px 20px;
+                min-width: 250px;
             }
             .btn-primary {
-                padding: 10px 20px;
-                font-size: 0.875rem;
+                padding: 14px 28px;
+                font-size: 1rem;
             }
             .input-field {
-                padding: 10px;
-                font-size: 0.875rem;
-            }
-            .navbar-menu {
-                max-height: 0;
-                overflow: hidden;
-            }
-            .navbar-menu.active {
-                max-height: 300px;
+                padding: 14px;
+                font-size: 1rem;
             }
             .contact-form {
-                padding: 1.5rem;
+                padding: 2.5rem;
+            }
+            .contact-form label {
+                font-size: 1rem;
+            }
+            .contact-form input, .contact-form textarea {
+                padding: 14px;
+                font-size: 1rem;
+            }
+            .cart-item img {
+                width: 100px;
+                height: 100px;
+            }
+            .status-indicator {
+                top: 30px;
+                padding: 16px 32px;
+                font-size: 1.125rem;
+            }
+        }
+        @media (max-width: 639px) {
+            .menu-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .menu-card img {
+                width: 100%;
+                max-width: 200px;
+                height: auto;
+            }
+            .status-indicator {
+                top: 16px;
+                padding: 8px 16px;
+                font-size: 0.875rem;
+                width: 90%;
             }
             .slide-content {
                 padding: 1.5rem;
@@ -306,28 +432,6 @@
                 padding: 0.5rem 1rem;
                 font-size: 0.875rem;
             }
-            .slider-dots {
-                bottom: 15px;
-            }
-            .dot {
-                width: 10px;
-                height: 10px;
-            }
-            .cart-item img {
-                width: 60px;
-                height: 60px;
-            }
-        }
-        @media (min-width: 641px) {
-            .menu-card img {
-                height: 200px;
-            }
-            .slide-content h2 {
-                font-size: 2.5rem;
-            }
-            .slide-content p {
-                font-size: 1.25rem;
-            }
         }
     </style>
 </head>
@@ -336,14 +440,14 @@
     <div id="toast" class="toast"></div>
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
                     <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
                     <div>
-                        <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">DELICUTE</h1>
-                        <p class="text-xs text-gray-500 sm:text-sm">Every bite tells a story</p>
+                        <h1 class="text-xl font-bold text-gray-800">DELICUTE</h1>
+                        <p class="text-xs text-gray-500">Every bite tells a story</p>
                     </div>
                 </div>
                 <div class="flex items-center sm:hidden">
@@ -353,23 +457,23 @@
                         </svg>
                     </button>
                 </div>
-                <div class="hidden sm:flex sm:items-center sm:space-x-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
-                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm">Login</button>
-                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm">Signup</button>
+                <div class="hidden sm:flex sm:items-center sm:space-x-6">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm font-medium">About</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Contact</a>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Login</button>
+                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Signup</button>
                 </div>
             </div>
             <div id="navbarMenu" class="navbar-menu sm:hidden">
-                <div class="flex flex-col space-y-2 px-4 pb-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
-                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Login</button>
-                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Signup</button>
+                <div class="flex flex-col space-y-3 px-4 pb-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm font-medium">About</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Contact</a>
+                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Login</button>
+                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Signup</button>
                 </div>
             </div>
         </div>
@@ -379,67 +483,67 @@
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('loginModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Login</h2>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Login</h2>
             <div id="loginForm">
                 <div>
-                    <label for="loginEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email or Mobile Number</label>
-                    <input type="text" id="loginEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Email or Mobile">
+                    <label for="loginEmail" class="block text-gray-700 font-medium mb-2 text-sm">Email or Mobile Number</label>
+                    <input type="text" id="loginEmail" class="input-field w-full" placeholder="Email or Mobile">
                 </div>
                 <div class="mt-4">
-                    <label for="loginPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Password</label>
-                    <input type="password" id="loginPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Password">
+                    <label for="loginPassword" class="block text-gray-700 font-medium mb-2 text-sm">Password</label>
+                    <input type="password" id="loginPassword" class="input-field w-full" placeholder="Password">
                 </div>
                 <div class="mt-4 text-right">
                     <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline text-sm">Forgot Password?</a>
                 </div>
                 <div class="mt-6">
-                    <button onclick="login()" class="btn-primary w-full text-sm sm:text-base">Login</button>
+                    <button onclick="login()" class="btn-primary w-full">Login</button>
                 </div>
                 <div class="mt-4 text-center text-sm">OR</div>
                 <div class="mt-4">
-                    <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
+                    <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm">
                         <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Login with Google
                     </button>
                 </div>
             </div>
             <div id="forgotPasswordEmail" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Forgot Password</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Forgot Password</h2>
                 <div>
-                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter Email</label>
-                    <input type="email" id="forgotEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-2 text-sm">Enter Email</label>
+                    <input type="email" id="forgotEmail" class="input-field w-full" placeholder="Your Email">
                 </div>
                 <div class="mt-6">
-                    <button onclick="sendOTP()" class="btn-primary w-full text-sm sm:text-base">Send OTP</button>
+                    <button onclick="sendOTP()" class="btn-primary w-full">Send OTP</button>
                 </div>
                 <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
                 </div>
             </div>
             <div id="forgotPasswordOTP" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Verify OTP</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Verify OTP</h2>
                 <div>
-                    <label for="otpInput" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Enter OTP</label>
-                    <input type="text" id="otpInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Enter OTP">
+                    <label for="otpInput" class="block text-gray-700 font-medium mb-2 text-sm">Enter OTP</label>
+                    <input type="text" id="otpInput" class="input-field w-full" placeholder="Enter OTP">
                 </div>
                 <div class="mt-6">
-                    <button onclick="verifyOTP()" class="btn-primary w-full text-sm sm:text-base">Verify OTP</button>
+                    <button onclick="verifyOTP()" class="btn-primary w-full">Verify OTP</button>
                 </div>
                 <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
                 </div>
             </div>
             <div id="forgotPasswordReset" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Reset Password</h2>
+                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Reset Password</h2>
                 <div>
-                    <label for="newPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">New Password</label>
-                    <input type="password" id="newPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="New Password">
+                    <label for="newPassword" class="block text-gray-700 font-medium mb-2 text-sm">New Password</label>
+                    <input type="password" id="newPassword" class="input-field w-full" placeholder="New Password">
                 </div>
                 <div class="mt-4">
-                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Confirm Password">
+                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-2 text-sm">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="input-field w-full" placeholder="Confirm Password">
                 </div>
                 <div class="mt-6">
-                    <button onclick="resetPassword()" class="btn-primary w-full text-sm sm:text-base">Reset Password</button>
+                    <button onclick="resetPassword()" class="btn-primary w-full">Reset Password</button>
                 </div>
                 <div class="mt-4 text-center">
                     <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
@@ -452,33 +556,33 @@
     <div id="signupModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('signupModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Signup</h2>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Signup</h2>
             <div>
-                <label for="signupName" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
-                <input type="text" id="signupName" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Name">
+                <label for="signupName" class="block text-gray-700 font-medium mb-2 text-sm">Name</label>
+                <input type="text" id="signupName" class="input-field w-full" placeholder="Your Name">
             </div>
             <div class="mt-4">
-                <label for="signupEmail" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
-                <input type="email" id="signupEmail" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Email">
+                <label for="signupEmail" class="block text-gray-700 font-medium mb-2 text-sm">Email</label>
+                <input type="email" id="signupEmail" class="input-field w-full" placeholder="Your Email">
             </div>
             <div class="mt-4">
-                <label for="signupPhone" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Phone Number</label>
-                <input type="tel" id="signupPhone" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Your Phone Number">
+                <label for="signupPhone" class="block text-gray-700 font-medium mb-2 text-sm">Phone Number</label>
+                <input type="tel" id="signupPhone" class="input-field w-full" placeholder="Your Phone Number">
             </div>
             <div class="mt-4">
-                <label for="signupPassword" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Create Password</label>
-                <input type="password" id="signupPassword" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Create Password">
+                <label for="signupPassword" class="block text-gray-700 font-medium mb-2 text-sm">Create Password</label>
+                <input type="password" id="signupPassword" class="input-field w-full" placeholder="Create Password">
             </div>
             <div class="mt-4 flex items-center">
                 <input type="checkbox" id="termsAgree" class="mr-2">
-                <label for="termsAgree" class="text-gray-700 text-sm sm:text-base">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
+                <label for="termsAgree" class="text-gray-700 text-sm">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
             </div>
             <div class="mt-6">
-                <button onclick="signup()" class="btn-primary w-full text-sm sm:text-base">Signup</button>
+                <button onclick="signup()" class="btn-primary w-full">Signup</button>
             </div>
             <div class="mt-4 text-center text-sm">OR</div>
             <div class="mt-4">
-                <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm sm:text-base">
+                <button onclick="googleLogin()" class="bg-white border border-gray-300 rounded-full w-full flex items-center justify-center px-4 py-2 text-sm hover:bg-gray-50">
                     <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Signup with Google
                 </button>
             </div>
@@ -492,11 +596,12 @@
     <div id="cartModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('cartModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6 sm:text-2xl">Your Cart</h2>
+            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Your Cart</h2>
             <div id="cartItems" class="mb-6"></div>
             <div class="text-center space-y-4">
-                <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
-                <button onclick="sendToAdminDashboard()" class="btn-primary text-sm sm:text-base">Send to Admin</button>
+                <p class="text-green-600 font-semibold text-sm">Free Delivery on all orders!</p>
+                <button onclick="placeOrder()" class="btn-primary w-full">Place Order</button>
+                <button onclick="sendToAdminDashboard()" class="btn-primary w-full">Send to Admin</button>
             </div>
             <div class="mt-4 text-center">
                 <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
@@ -508,11 +613,12 @@
     <div id="mainContent">
         <!-- Hero Section -->
         <section id="home" class="hero-bg">
+            <div id="restaurantStatus" class="status-indicator"></div>
             <div class="slider-container">
                 <div class="slide" data-index="0">
                     <div class="slide-content">
                         <h2>Welcome to Delicute</h2>
-                        <p>Login to enjoy delicious food!</p>
+                        <p>Login to enjoy delicious food with free delivery!</p>
                         <a href="#" onclick="showModal('loginModal')">Login Now</a>
                     </div>
                 </div>
@@ -540,66 +646,60 @@
 
         <!-- About Section -->
         <section id="about" class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">About Delicute</h2>
-                <p class="text-base text-gray-600 text-center max-w-3xl mx-auto sm:text-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">About Delicute</h2>
+                <p class="text-sm text-gray-600 text-center max-w-3xl mx-auto">
                     Delicute is your go-to cloud kitchen, crafting delicious, wholesome meals with love and care. 
                     We specialize in a variety of cuisines, ensuring every bite is a delightful experience. 
-                    Order online and enjoy restaurant-quality food delivered straight to your door!
+                    Enjoy free delivery on all orders, delivered straight to your door!
                 </p>
             </div>
         </section>
 
         <!-- Menu Section -->
         <section id="menu" class="py-16 bg-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6 sm:text-3xl">Our Menu</h2>
-                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <div class="flex flex-col gap-4 sm:flex-row">
-                        <div class="flex-1">
-                            <input type="text" id="searchInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterMenu()">
-                        </div>
-                        <div class="flex-1">
-                            <select id="categoryFilter" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" onchange="filterMenu()">
-                                <option value="">All Categories</option>
-                            </select>
-                        </div>
-                        <div class="flex-1">
-                            <label for="priceRange" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Our Menu</h2>
+                <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <input type="text" id="searchInput" class="input-field" placeholder="Search menu items..." oninput="filterMenu()">
+                        <select id="categoryFilter" class="input-field" onchange="filterMenu()">
+                            <option value="">All Categories</option>
+                        </select>
+                        <div>
+                            <label for="priceRange" class="block text-gray-700 font-medium mb-2 text-sm">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
                             <input type="range" id="priceRange" min="30" max="999" value="999" class="range-slider" oninput="updatePriceRange()">
                         </div>
                     </div>
                 </div>
-                <div id="menuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+                <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 <div class="text-center mt-8 space-y-4">
-                    <button onclick="showCart()" class="btn-primary text-sm sm:text-base">View Cart & Order</button>
-                    <div>
-                        <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-4 py-2 rounded-full text-sm sm:text-base">View Full Menu</button>
-                    </div>
+                    <button onclick="showCart()" class="btn-primary w-full max-w-sm">View Cart & Order</button>
+                    <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-4 py-2 rounded-full w-full max-w-sm text-sm font-semibold">View Full Menu</button>
                 </div>
             </div>
         </section>
 
         <!-- Contact Section -->
         <section id="contact" class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8 sm:text-3xl">Get in Touch</h2>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Get in Touch</h2>
                 <div class="max-w-lg mx-auto">
                     <div class="contact-form">
                         <div>
-                            <label for="name" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Name</label>
+                            <label for="name" class="block text-gray-700 font-medium mb-2 text-sm">Name</label>
                             <input type="text" id="name" class="input-field" placeholder="Your Name">
                         </div>
                         <div class="mt-6">
-                            <label for="email" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Email</label>
+                            <label for="email" class="block text-gray-700 font-medium mb-2 text-sm">Email</label>
                             <input type="email" id="email" class="input-field" placeholder="Your Email">
                         </div>
                         <div class="mt-6">
-                            <label for="message" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Message</label>
+                            <label for="message" class="block text-gray-700 font-medium mb-2 text-sm">Message</label>
                             <textarea id="message" class="input-field" rows="5" placeholder="Your Message"></textarea>
                         </div>
                         <div class="mt-8">
-                            <button onclick="submitForm()" class="btn-primary w-full text-sm sm:text-base">Send Message</button>
+                            <button onclick="submitForm()" class="btn-primary w-full">Send Message</button>
                         </div>
                     </div>
                 </div>
@@ -607,48 +707,44 @@
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <footer class="bg-gray-800 text-white py-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
                 <div class="flex justify-center items-center space-x-3 mb-4">
                     <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
                     <div>
-                        <h1 class="text-lg font-bold text-white sm:text-xl">DELICUTE</h1>
+                        <h1 class="text-xl font-bold text-white">DELICUTE</h1>
                         <p class="text-sm text-gray-300">Every bite tells a story</p>
                     </div>
                 </div>
-                <p class="text-sm sm:text-base">© 2025 Delicute. All rights reserved.</p>
-                <p class="mt-2 text-sm sm:text-base">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
+                <p class="text-sm">© 2025 Delicute. All rights reserved.</p>
+                <p class="mt-2 text-sm">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
             </div>
         </footer>
     </div>
 
     <!-- Full Menu Page -->
     <div id="fullMenuContainer" class="full-menu-container">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 sm:text-3xl">Full Menu</h2>
-                <button onclick="hideFullMenu()" class="btn-primary text-sm sm:text-base">Back to Home</button>
+                <h2 class="text-2xl font-bold text-gray-800">Full Menu</h2>
+                <button onclick="hideFullMenu()" class="btn-primary text-sm">Back to Home</button>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <div class="flex flex-col gap-4 sm:flex-row">
-                    <div class="flex-1">
-                        <input type="text" id="fullMenuSearchInput" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" placeholder="Search menu items..." oninput="filterFullMenu()">
-                    </div>
-                    <div class="flex-1">
-                        <select id="fullMenuCategoryFilter" class="input-field w-full p-3 border rounded-md text-sm sm:text-base" onchange="filterFullMenu()">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-2 text-sm sm:text-base">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <input type="text" id="fullMenuSearchInput" class="input-field" placeholder="Search menu items..." oninput="filterFullMenu()">
+                    <select id="fullMenuCategoryFilter" class="input-field" onchange="filterFullMenu()">
+                        <option value="">All Categories</option>
+                    </select>
+                    <div>
+                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-2 text-sm">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
                         <input type="range" id="fullMenuPriceRange" min="30" max="999" value="999" class="range-slider" oninput="updateFullMenuPriceRange()">
                     </div>
                 </div>
             </div>
-            <div id="fullMenuItems" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <div id="fullMenuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             <div class="flex justify-center mt-8 space-x-4">
                 <button id="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
-                <span id="pageInfo" class="flex items-center text-gray-700"></span>
+                <span id="pageInfo" class="flex items-center text-gray-700 text-sm"></span>
                 <button id="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="changePage(1)">Next</button>
             </div>
         </div>
@@ -659,7 +755,7 @@
         let menuItemsData = [];
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let currentPage = 1;
-        const itemsPerPage = 9;
+        const itemsPerPage = 10;
         let categories = [];
         let currentSlide = 0;
         let slideInterval;
@@ -849,18 +945,18 @@
         }
 
         function googleLogin() {
-            window.location.href = `${BASE_URL}/api/auth/google`;
+            window.location.href = `${BASE_URL}/api/auth/google?redirect=true`;
         }
 
         function addToCart(item) {
-            if (!item.price) {
-                showToast('No price available for this item.', 'error');
+            if (!item.price || isNaN(item.price)) {
+                showToast('No valid price available for this item.', 'error');
                 return;
             }
             cart.push({
                 id: item._id,
                 name: item.name,
-                price: item.price,
+                price: Number(item.price),
                 image: item.image || 'https://via.placeholder.com/150'
             });
             localStorage.setItem('cart', JSON.stringify(cart));
@@ -870,8 +966,8 @@
         function removeFromCart(index) {
             cart.splice(index, 1);
             localStorage.setItem('cart', JSON.stringify(cart));
-            displayCart();
-            showToast('Item removed from cart.', 'success');
+            showCart();
+            showToast('Item removed from cart successfully.', 'success');
         }
 
         function showCart() {
@@ -888,29 +984,31 @@
         function displayCart() {
             const cartItemsDiv = document.getElementById('cartItems');
             if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">Your cart is empty.</p>';
+                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm text-center">Your cart is empty.</p>';
                 return;
             }
             let total = 0;
             cartItemsDiv.innerHTML = cart.map((item, index) => {
-                total += item.price;
+                const price = Number(item.price) || 0;
+                total += price;
                 return `
-                    <div class="cart-item">
-                        <img src="${item.image}" alt="${item.name}">
-                        <div class="flex-1">
-                            <span class="font-medium">${item.name}</span>
-                            <p class="text-gray-600 text-sm">₹${item.price}</p>
-                        </div>
-                        <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
-                    </div>
-                `;
+                            <div class="cart-item">
+                                <img src="${item.image}" alt="${item.name}">
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-medium text-gray-800">${item.name}</h3>
+                                    <p class="text-gray-600 text-sm">₹${price.toFixed(2)}</p>
+                                </div>
+                                <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                            </div>
+                        `;
             }).join('');
             cartItemsDiv.innerHTML += `
-                <div class="flex justify-between py-3 font-bold text-sm sm:text-base">
-                    <span>Total</span>
-                    <span>₹${total}</span>
-                </div>
-            `;
+                        <div class="flex justify-between items-center py-4 border-t mt-4">
+                            <span class="text-sm font-bold text-gray-800">Total</span>
+                            <span class="text-sm font-bold text-gray-800">₹${total.toFixed(2)}</span>
+                        </div>
+                        <p class="text-green-600 font-medium text-sm text-center mt-2">Free Delivery on Your Order!</p>
+                    `;
         }
 
         async function sendToAdminDashboard() {
@@ -935,8 +1033,10 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Cart sent to admin dashboard!', 'success');
-                    window.location.href = '/admindashboard.html';
+                    showToast('Cart sent to admin dashboard successfully!', 'success');
+                    cart = [];
+                    localStorage.removeItem('cart');
+                    displayCart();
                 } else {
                     showToast(data.error || 'Failed to send cart to admin.', 'error');
                 }
@@ -949,7 +1049,7 @@
         async function placeOrder() {
             const token = localStorage.getItem('token');
             if (!token) {
-                showToast('Please log in to place your order.', 'error');
+                showToast('Please log in to place an order.', 'error');
                 showModal('loginModal');
                 return;
             }
@@ -957,7 +1057,14 @@
                 showToast('Your cart is empty.', 'error');
                 return;
             }
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
+            if (!isOpen) {
+                showToast('Sorry, Delicute is closed now. Please try again when we are open.', 'error');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
             try {
                 const response = await fetch(`${BASE_URL}/api/orders`, {
                     method: 'POST',
@@ -965,55 +1072,65 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ items: cart, total })
+                    body: JSON.stringify({ items: cart, total: total.toFixed(2), deliveryFee: 0 })
                 });
                 const data = await response.json();
-                if (response.ok) {
+                if (response.ok && data.orderId) {
                     const options = {
-                        key: 'rzp_test_1a2b3c4d5e6f7g', // Replace with actual RAZORPAY_KEY_ID
+                        key: 'rzp_test_1a2b3c4d5e6f7g', // Replace with your Razorpay key
                         amount: data.amount,
-                        currency: data.currency,
+                        currency: 'INR',
                         name: 'Delicute',
-                        description: 'Order Payment',
+                        description: 'Order Payment (Free Delivery)',
                         order_id: data.orderId,
                         handler: async function (response) {
-                            const verifyResponse = await fetch(`${BASE_URL}/api/payment/verify`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify({
-                                    orderId: response.razorpay_order_id,
-                                    paymentId: response.razorpay_payment_id,
-                                    signature: response.razorpay_signature
-                                })
-                            });
-                            const verifyData = await verifyResponse.json();
-                            if (verifyResponse.ok) {
-                                showToast('Order placed successfully!', 'success');
-                                cart = [];
-                                localStorage.removeItem('cart');
-                                closeModal('cartModal');
-                                displayCart();
-                            } else {
-                                showToast(verifyData.error || 'Payment verification failed.', 'error');
+                            try {
+                                const verifyResponse = await fetch(`${BASE_URL}/api/payment/verify`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({
+                                        orderId: response.razorpay_order_id,
+                                        paymentId: response.razorpay_payment_id,
+                                        signature: response.razorpay_signature
+                                    })
+                                });
+                                const verifyData = await verifyResponse.json();
+                                if (verifyResponse.ok) {
+                                    showToast('Order placed successfully with free delivery!', 'success');
+                                    cart = [];
+                                    localStorage.removeItem('cart');
+                                    closeModal('cartModal');
+                                    displayCart();
+                                } else {
+                                    showToast(verifyData.error || 'Payment verification failed.', 'error');
+                                }
+                            } catch (error) {
+                                console.error('Payment verification error:', error);
+                                showToast('Failed to verify payment.', 'error');
                             }
                         },
                         prefill: {
-                            name: 'Customer Name',
-                            email: 'customer@example.com',
-                            contact: '9999999999'
+                            name: '',
+                            email: '',
+                            contact: ''
                         },
-                        theme: { color: '#f59e0b' }
+                        theme: {
+                            color: '#f59e0b'
+                        }
                     };
                     const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function (response) {
+                        showToast(`Payment failed: ${response.error.description || 'Unknown error.'}`, 'error');
+                    });
                     rzp.open();
                 } else {
                     showToast(data.error || 'Failed to create order.', 'error');
                 }
             } catch (error) {
-                console.error('Order placement error:', error);
+                console.error('Order creation error:', error);
                 showToast('Failed to place order.', 'error');
             }
         }
@@ -1022,13 +1139,57 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
-            if (name && email && message) {
-                showToast('Thank you for your message!', 'success');
-                document.getElementById('name').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('message').value = '';
-            } else {
+            if (!name || !email || !message) {
                 showToast('Please fill in all fields.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Thank you for your message!', 'success');
+                    document.getElementById('name').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('message').value = '';
+                } else {
+                    showToast(data.error || 'Failed to send message.', 'error');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                showToast('Failed to send message.', 'error');
+            }
+        }
+
+        async function fetchRestaurantStatus() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/status`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                const statusDiv = document.getElementById('restaurantStatus');
+                if (response.ok && typeof data.isOpen === 'boolean') {
+                    localStorage.setItem('restaurantStatus', JSON.stringify({ isOpen: data.isOpen }));
+                    if (data.isOpen) {
+                        statusDiv.innerHTML = 'Our Delicute is Open Now! Enjoy Your Delicious Food, Please <a href="#" onclick="showModal(\'loginModal\')" class="underline hover:text-yellow-300">Login</a>!';
+                        statusDiv.className = 'status-indicator status-open';
+                    } else {
+                        statusDiv.innerHTML = 'Our Delicute is Closed Today. Sorry for the Inconvenience, Thank You for Your Cooperation!';
+                        statusDiv.className = 'status-indicator status-closed';
+                    }
+                } else {
+                    throw new Error('Invalid status data');
+                }
+            } catch (error) {
+                console.error('Error fetching restaurant status:', error);
+                const statusDiv = document.getElementById('restaurantStatus');
+                statusDiv.innerHTML = 'Status Unavailable. Please Try Again Later.';
+                statusDiv.className = 'status-indicator status-closed';
+                localStorage.setItem('restaurantStatus', JSON.stringify({ isOpen: false }));
             }
         }
 
@@ -1036,66 +1197,110 @@
             try {
                 const response = await fetch(`${BASE_URL}/api/menu`);
                 menuItemsData = await response.json();
-                categories = [...new Set(menuItemsData.map(item => item.category))];
+                menuItemsData = menuItemsData.map(item => ({
+                    ...item,
+                    price: Number(item.price) || 0,
+                    image: item.image || 'https://via.placeholder.com/150'
+                }));
+                categories = [...new Set(menuItemsData.map(item => item.category))].sort();
                 populateCategoryFilters();
-                displayMenuItems(menuItemsData.slice(0, 6));
-                displayFullMenuItems(menuItemsData);
+                displayMenuItems();
+                displayFullMenuItems();
             } catch (error) {
                 console.error('Error fetching menu items:', error);
-                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
-                document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
+                document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
             }
         }
 
         function populateCategoryFilters() {
             const categoryFilter = document.getElementById('categoryFilter');
             const fullMenuCategoryFilter = document.getElementById('fullMenuCategoryFilter');
-            const options = '<option value="">All Categories</option>' + 
-                categories.map(category => `<option value="${category}">${category}</option>`).join('');
+            const options = ['<option value="">All Categories</option>'].concat(
+                categories.map(category => `<option value="${category}">${category}</option>`)
+            ).join('');
             categoryFilter.innerHTML = options;
             fullMenuCategoryFilter.innerHTML = options;
         }
 
-        function displayMenuItems(items) {
+        function displayMenuItems() {
             const menuItemsDiv = document.getElementById('menuItems');
-            if (items.length === 0) {
-                menuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
+            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
+            const filteredItems = filterMenuItems();
+            if (filteredItems.length === 0) {
+                menuItemsDiv.innerHTML = '<p class="text-gray-600 text-center text-sm">No items found.</p>';
                 return;
             }
-            menuItemsDiv.innerHTML = items.map(item => `
-                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
-                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
+            menuItemsDiv.innerHTML = filteredItems.slice(0, 6).map(item => `
+                        <div class="menu-card">
+                            <img src="${item.image}" alt="${item.name}">
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
+                                <p class="text-gray-600 text-sm mt-1">${item.description || 'No description available'}</p>
+                                <p class="text-yellow-500 font-bold mt-2 text-base">₹${Number(item.price).toFixed(2)}</p>
+                                <p class="free-delivery">Free Delivery</p>
+                                <button ${isOpen ? `onclick='addToCart(${JSON.stringify(item)})'` : 'disabled'} 
+                                    class="mt-3 btn-primary w-full text-sm ${isOpen ? '' : 'opacity-50 cursor-not-allowed'}">
+                                    ${isOpen ? 'Add to Cart' : 'Restaurant Closed'}
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
         }
 
-        function displayFullMenuItems(items) {
-            const fullMenuItemsDiv = document.getElementById('fullMenuItems');
-            if (items.length === 0) {
-                fullMenuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
+        function displayFullMenuItems() {
+            const fullMenuItems = document.getElementById('fullMenuItems');
+            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
+            const filteredItems = filterFullMenuItems();
+            if (filteredItems.length === 0) {
+                fullMenuItems.innerHTML = '<p class="text-gray-600 text-center text-sm">No items found.</p>';
                 return;
             }
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const paginatedItems = items.slice(start, end);
-            fullMenuItemsDiv.innerHTML = paginatedItems.map(item => `
-                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
-                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
-            updatePagination(items.length);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredItems.slice(startIndex, endIndex);
+            fullMenuItems.innerHTML = paginatedItems.map(item => `
+                        <div class="menu-card">
+                            <img src="${item.image}" alt="${item.name}">
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
+                                <p class="text-gray-600 text-sm mt-1">${item.description || 'No description available'}</p>
+                                <p class="text-yellow-500 font-bold mt-2 text-base">₹${Number(item.price).toFixed(2)}</p>
+                                <p class="free-delivery">Free Delivery</p>
+                                <button ${isOpen ? `onclick='addToCart(${JSON.stringify(item)})'` : 'disabled'} 
+                                    class="mt-3 btn-primary w-full text-sm ${isOpen ? '' : 'opacity-50 cursor-not-allowed'}">
+                                    ${isOpen ? 'Add to Cart' : 'Restaurant Closed'}
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+            updatePagination(filteredItems.length);
+        }
+
+        function filterMenuItems() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            const category = document.getElementById('categoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('priceRange').value);
+            return menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) ||
+                    (item.description || '').toLowerCase().includes(searchQuery);
+                const matchesCategory = !category || item.category === category;
+                const matchesPrice = Number(item.price) <= maxPrice;
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+        }
+
+        function filterFullMenuItems() {
+            const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase().trim();
+            const category = document.getElementById('fullMenuCategoryFilter').value;
+            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange').value);
+            return menuItemsData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) ||
+                    (item.description || '').toLowerCase().includes(searchQuery);
+                const matchesCategory = !category || item.category === category;
+                const matchesPrice = Number(item.price) <= maxPrice;
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
         }
 
         function updatePagination(totalItems) {
@@ -1106,71 +1311,40 @@
         }
 
         function changePage(delta) {
-            const totalPages = Math.ceil(menuItemsData.length / itemsPerPage);
+            const totalPages = Math.ceil(filterFullMenuItems().length / itemsPerPage);
             currentPage = Math.max(1, Math.min(currentPage + delta, totalPages));
-            filterFullMenu();
+            displayFullMenuItems();
         }
 
         function showFullMenu() {
             document.getElementById('mainContent').style.display = 'none';
             document.getElementById('fullMenuContainer').classList.add('active');
             currentPage = 1;
-            filterFullMenu();
+            displayFullMenuItems();
         }
 
         function hideFullMenu() {
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('fullMenuContainer').classList.remove('active');
-            filterMenu();
+            displayMenuItems();
         }
 
         function updatePriceRange() {
             const priceRange = document.getElementById('priceRange').value;
             document.getElementById('priceRangeValue').textContent = `₹30 - ₹${priceRange}`;
-            filterMenu();
+            displayMenuItems();
         }
 
         function updateFullMenuPriceRange() {
             const priceRange = document.getElementById('fullMenuPriceRange').value;
             document.getElementById('fullMenuPriceRangeValue').textContent = `₹30 - ₹${priceRange}`;
-            filterFullMenu();
-        }
-
-        function filterMenu() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            const category = document.getElementById('categoryFilter').value;
-            const maxPrice = parseInt(document.getElementById('priceRange').value);
-
-            const filteredItems = menuItemsData.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
-                const matchesCategory = category ? item.category === category : true;
-                const matchesPrice = item.price <= maxPrice;
-                return matchesSearch && matchesCategory && matchesPrice;
-            });
-
-            displayMenuItems(filteredItems.slice(0, 6));
-        }
-
-        function filterFullMenu() {
-            const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase();
-            const category = document.getElementById('fullMenuCategoryFilter').value;
-            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange').value);
-
-            const filteredItems = menuItemsData.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
-                const matchesCategory = category ? item.category === category : true;
-                const matchesPrice = item.price <= maxPrice;
-                return matchesSearch && matchesCategory && matchesPrice;
-            });
-
-            displayFullMenuItems(filteredItems);
+            displayFullMenuItems();
         }
 
         // Slider Functionality
         function updateSlider() {
             const slides = document.querySelectorAll('.slide');
             const dots = document.querySelectorAll('.dot');
-            
             slides.forEach((slide, index) => {
                 slide.classList.remove('active', 'prev');
                 if (index === currentSlide) {
@@ -1179,7 +1353,6 @@
                     slide.classList.add('prev');
                 }
             });
-
             dots.forEach((dot, index) => {
                 dot.classList.toggle('active', index === currentSlide);
             });
@@ -1197,7 +1370,7 @@
         }
 
         function startSlideInterval() {
-            slideInterval = setInterval(nextSlide, 3000);
+            slideInterval = setInterval(nextSlide, 5000);
         }
 
         function resetSlideInterval() {
@@ -1211,22 +1384,27 @@
             navbarMenu.classList.toggle('active');
         });
 
-        window.onload = () => {
+        // Initialize
+        window.onload = function () {
             const token = localStorage.getItem('token');
             if (token) {
                 window.location.href = '/userdashboard.html';
+                return;
             }
             const urlParams = new URLSearchParams(window.location.search);
             const googleToken = urlParams.get('token');
             if (googleToken) {
                 localStorage.setItem('token', googleToken);
                 window.location.href = '/userdashboard.html';
+                return;
             }
+            fetchRestaurantStatus();
             fetchMenuItems();
             document.querySelector('.slide[data-index="0"]').classList.add('active');
-            document.querySelector('.dot').classList.add('active');
+            document.querySelector('.dot[data-index="0"]').classList.add('active');
             startSlideInterval();
         };
     </script>
 </body>
 </html>
+</xaiArtifactId="e607f40-cb64-4296-a3b2-eb725e069133" title="index.html" contentType="text/html">
