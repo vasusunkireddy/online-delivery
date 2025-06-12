@@ -8,10 +8,16 @@
     <script src="https://checkout.563e4f5g.js"></script>
     <style>
         body {
+<<<<<<< HEAD
             font-family: 'Inter', sans-serif;
             background: #f8fafc;
             margin: 0;
             overflow-x: hidden;
+=======
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f6;
+            margin: 0;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
         }
         .hero-bg {
             background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
@@ -50,22 +56,33 @@
         }
         .slide-content {
             text-align: center;
+<<<<<<< HEAD
             background: rgba(0, 0, 0, 0.65);
             padding: 2rem;
             border-radius: 16px;
+=======
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             color: white;
             max-width: 90%;
             width: 700px;
             backdrop-filter: blur(8px);
         }
         .slide-content h2 {
+<<<<<<< HEAD
             font-size: 2rem;
             font-weight: 700;
+=======
+            font-size: 2.5rem;
+            font-weight: bold;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             margin-bottom: 1rem;
             letter-spacing: -0.025em;
         }
         .slide-content p {
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             margin-bottom: 1.5rem;
         }
         .slide-content a {
@@ -107,7 +124,11 @@
             left: 0;
             width: 100%;
             height: 100%;
+<<<<<<< HEAD
             background: rgba(0, 0, 0, 0.75);
+=======
+            background: rgba(0, 0, 0, 0.7);
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -186,6 +207,7 @@
         }
         .menu-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+<<<<<<< HEAD
             display: flex;
             align-items: center;
             gap: 1.5rem;
@@ -194,6 +216,8 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease;
+=======
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
         }
         .menu-card:hover {
             transform: translateY(-5px);
@@ -291,7 +315,11 @@
         .cart-item {
             display: flex;
             align-items: center;
+<<<<<<< HEAD
             gap: 1.5rem;
+=======
+            gap: 1rem;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             padding: 1rem;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -301,6 +329,7 @@
             object-fit: cover;
             border-radius: 8px;
         }
+<<<<<<< HEAD
         .status-indicator {
             position: absolute;
             top: 20px;
@@ -374,6 +403,27 @@
                 right: 20px;
                 padding: 14px 20px;
                 min-width: 250px;
+=======
+        @media (max-width: 640px) {
+            .modal-content {
+                padding: 16px;
+                width: 95%;
+            }
+            .close-btn {
+                font-size: 20px;
+            }
+            .toast {
+                top: 12px;
+                right: 12px;
+                padding: 10px;
+                min-width: 160px;
+            }
+            .menu-card img {
+                height: 150px;
+            }
+            .menu-card {
+                padding: 12px;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             }
             .btn-primary {
                 padding: 14px 28px;
@@ -432,6 +482,31 @@
                 padding: 0.5rem 1rem;
                 font-size: 0.875rem;
             }
+<<<<<<< HEAD
+=======
+            .slider-dots {
+                bottom: 15px;
+            }
+            .dot {
+                width: 10px;
+                height: 10px;
+            }
+            .cart-item img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        @media (min-width: 641px) {
+            .menu-card img {
+                height: 200px;
+            }
+            .slide-content h2 {
+                font-size: 2.5rem;
+            }
+            .slide-content p {
+                font-size: 1.25rem;
+            }
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
         }
     </style>
 </head>
@@ -457,6 +532,7 @@
                         </svg>
                     </button>
                 </div>
+<<<<<<< HEAD
                 <div class="hidden sm:flex sm:items-center sm:space-x-6">
                     <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Home</a>
                     <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm font-medium">About</a>
@@ -474,6 +550,25 @@
                     <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Contact</a>
                     <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Login</button>
                     <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Signup</button>
+=======
+                <div class="hidden sm:flex sm:items-center sm:space-x-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm">Login</button>
+                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm">Signup</button>
+                </div>
+            </div>
+            <div id="navbarMenu" class="navbar-menu sm:hidden">
+                <div class="flex flex-col space-y-2 px-4 pb-4">
+                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
+                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
+                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Login</button>
+                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Signup</button>
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
                 </div>
             </div>
         </div>
@@ -599,9 +694,14 @@
             <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Your Cart</h2>
             <div id="cartItems" class="mb-6"></div>
             <div class="text-center space-y-4">
+<<<<<<< HEAD
                 <p class="text-green-600 font-semibold text-sm">Free Delivery on all orders!</p>
                 <button onclick="placeOrder()" class="btn-primary w-full">Place Order</button>
                 <button onclick="sendToAdminDashboard()" class="btn-primary w-full">Send to Admin</button>
+=======
+                <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
+                <button onclick="sendToAdminDashboard()" class="btn-primary text-sm sm:text-base">Send to Admin</button>
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             </div>
             <div class="mt-4 text-center">
                 <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
@@ -949,14 +1049,23 @@
         }
 
         function addToCart(item) {
+<<<<<<< HEAD
             if (!item.price || isNaN(item.price)) {
                 showToast('No valid price available for this item.', 'error');
+=======
+            if (!item.price) {
+                showToast('No price available for this item.', 'error');
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
                 return;
             }
             cart.push({
                 id: item._id,
                 name: item.name,
+<<<<<<< HEAD
                 price: Number(item.price),
+=======
+                price: item.price,
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
                 image: item.image || 'https://via.placeholder.com/150'
             });
             localStorage.setItem('cart', JSON.stringify(cart));
@@ -992,6 +1101,7 @@
                 const price = Number(item.price) || 0;
                 total += price;
                 return `
+<<<<<<< HEAD
                             <div class="cart-item">
                                 <img src="${item.image}" alt="${item.name}">
                                 <div class="flex-1">
@@ -1001,6 +1111,17 @@
                                 <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
                             </div>
                         `;
+=======
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="flex-1">
+                            <span class="font-medium">${item.name}</span>
+                            <p class="text-gray-600 text-sm">₹${item.price}</p>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
+                    </div>
+                `;
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             }).join('');
             cartItemsDiv.innerHTML += `
                         <div class="flex justify-between items-center py-4 border-t mt-4">
@@ -1012,6 +1133,42 @@
         }
 
         async function sendToAdminDashboard() {
+<<<<<<< HEAD
+=======
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to send cart to admin.', 'error');
+                showModal('loginModal');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/cart/send-to-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ items: cart })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Cart sent to admin dashboard!', 'success');
+                    window.location.href = '/admindashboard.html';
+                } else {
+                    showToast(data.error || 'Failed to send cart to admin.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending cart to admin:', error);
+                showToast('Failed to send cart to admin.', 'error');
+            }
+        }
+
+        async function placeOrder() {
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please log in to send cart to admin.', 'error');
@@ -1204,12 +1361,21 @@
                 }));
                 categories = [...new Set(menuItemsData.map(item => item.category))].sort();
                 populateCategoryFilters();
+<<<<<<< HEAD
                 displayMenuItems();
                 displayFullMenuItems();
             } catch (error) {
                 console.error('Error fetching menu items:', error);
                 document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
                 document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
+=======
+                displayMenuItems(menuItemsData.slice(0, 6));
+                displayFullMenuItems(menuItemsData);
+            } catch (error) {
+                console.error('Error fetching menu items:', error);
+                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+                document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
             }
         }
 
@@ -1231,6 +1397,7 @@
                 menuItemsDiv.innerHTML = '<p class="text-gray-600 text-center text-sm">No items found.</p>';
                 return;
             }
+<<<<<<< HEAD
             menuItemsDiv.innerHTML = filteredItems.slice(0, 6).map(item => `
                         <div class="menu-card">
                             <img src="${item.image}" alt="${item.name}">
@@ -1301,6 +1468,42 @@
                 const matchesPrice = Number(item.price) <= maxPrice;
                 return matchesSearch && matchesCategory && matchesPrice;
             });
+=======
+            menuItemsDiv.innerHTML = items.map(item => `
+                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
+                    <div class="p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayFullMenuItems(items) {
+            const fullMenuItemsDiv = document.getElementById('fullMenuItems');
+            if (items.length === 0) {
+                fullMenuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
+                return;
+            }
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = items.slice(start, end);
+            fullMenuItemsDiv.innerHTML = paginatedItems.map(item => `
+                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
+                    <div class="p-6">
+                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
+                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
+                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+            updatePagination(items.length);
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
         }
 
         function updatePagination(totalItems) {
@@ -1407,4 +1610,7 @@
     </script>
 </body>
 </html>
+<<<<<<< HEAD
 </xaiArtifactId="e607f40-cb64-4296-a3b2-eb725e069133" title="index.html" contentType="text/html">
+=======
+>>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
