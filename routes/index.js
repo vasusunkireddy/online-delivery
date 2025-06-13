@@ -1,488 +1,325 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const nodemailer = require('nodemailer');
-const { OAuth2Client } = require('google-auth-library');
+const { body, validationResult } = require('express-validator');
+const rateLimit = require('express-rate-limit');
 
-// Google OAuth Client
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+module.exports = (sequelize, User, Cart, MenuItem, RestaurantStatus) => {
+  const { Op } = sequelize;
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+  // Passport Google Strategy
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.SERVER_URL) {
+    console.error('Missing Google OAuth environment variables');
+    throw new Error('GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and SERVER_URL must be defined');
   }
-});
 
-// Middleware to verify JWT
-const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access token required' });
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${process.env.SERVER_URL}/api/auth/google/callback`,
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          let user = await User.findOne({ where: { googleId: profile.id } });
+          if (!user) {
+            user = await User.findOne({ where: { email: profile.emails[0].value } });
+            if (!user) {
+              user = await User.create({
+                googleId: profile.id,
+                name: profile.displayName,
+                email: profile.emails[0].value,
+              });
+            } else {
+              user.googleId = profile.id;
+              await user.save();
+            }
+          }
+          return done(null, user);
+        } catch (error) {
+          return done(error, null);
+        }
+      }
+    )
+  );
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await User.findByPk(id);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  });
+
+  // Email transporter
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  // Rate limiter for sensitive routes
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 requests per window
+    message: { message: 'Too many requests, please try again later' },
+  });
+
+  // Middleware to verify JWT
+  const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Access token required' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (err) return res.status(403).json({ message: 'Invalid or expired token' });
+      req.user = user;
+      next();
+    });
+  };
+
+  // Validation middleware
+  const signupValidation = [
+    body('name').notEmpty().trim().withMessage('Name is required'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('phone').isMobilePhone().withMessage('Valid phone number is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ];
+
+  const loginValidation = [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ];
+
+  const forgotPasswordValidation = [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  ];
+
+  const verifyOtpValidation = [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+  ];
+
+  const resetPasswordValidation = [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ];
+
+  const cartValidation = [
+    body('itemId').notEmpty().withMessage('Item ID is required'),
+    body('name').notEmpty().trim().withMessage('Item name is required'),
+    body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
+    body('image').optional().isURL().withMessage('Valid image URL is required'),
+    body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be a positive integer'),
+  ];
+
+  // Routes
+  router.get('/status', async (req, res, next) => {
+    try {
+      const status = await RestaurantStatus.findOne();
+      if (!status) return res.status(404).json({ message: 'Status not found' });
+      res.json({ status: status.status });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/menu', async (req, res, next) => {
+    try {
+      const menuItems = await MenuItem.findAll();
+      res.json(menuItems);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/signup', authLimiter, signupValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { name, email, phone, password } = req.body;
+    try {
+      let user = await User.findOne({ where: { email } });
+      if (user) return res.status(400).json({ message: 'Email already exists' });
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user = await User.create({ name, email, phone, password: hashedPassword });
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      res.json({ token, message: 'Signup successful' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/login', authLimiter, loginValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { email, password } = req.body;
+    try {
+      const user = await User.findOne({ where: { email } });
+      if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+      if (!user.password) return res.status(400).json({ message: 'Please use Google login' });
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      res.json({ token, message: 'Login successful' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/auth/google', async (req, res, next) => {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'Google credential required' });
+
+    try {
+      // Placeholder for Google token verification
+      const profile = await new Promise((resolve, reject) => {
+        passport.authenticate('google', { session: false }, (err, user) => {
+          if (err) return reject(err);
+          if (!user) return reject(new Error('Google authentication failed'));
+          resolve(user);
+        })({ body: { credential } }, res, next);
+      });
+
+      const token = jwt.sign({ id: profile.id, email: profile.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      res.json({ token, message: 'Google login successful' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/forgot-password', authLimiter, forgotPasswordValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { email } = req.body;
+    try {
+      const user = await User.findOne({ where: { email } });
+      if (!user) return res.status(400).json({ message: 'User not found' });
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetPasswordToken = otp;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      await user.save();
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset OTP',
+        text: `Your OTP for password reset is: ${otp}. It is valid for 1 hour.`,
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.json({ message: 'OTP sent to your email' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/verify-otp', authLimiter, verifyOtpValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { email, otp } = req.body;
+    try {
+      const user = await User.findOne({
+        where: {
+          email,
+          resetPasswordToken: otp,
+          resetPasswordExpires: { [Op.gt]: Date.now() },
+        },
+      });
+      if (!user) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+      res.json({ message: 'OTP verified' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/reset-password', authLimiter, resetPasswordValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { email, newPassword } = req.body;
+    try {
+      const user = await User.findOne({
+        where: {
+          email,
+          resetPasswordExpires: { [Op.gt]: Date.now() },
+        },
+      });
+      if (!user) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+      user.password = await bcrypt.hash(newPassword, 10);
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/cart', authenticateToken, cartValidation, async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    const { itemId, name, price, image, quantity = 1 } = req.body;
+    try {
+      const menuItem = await MenuItem.findByPk(itemId);
+      if (!menuItem) return res.status(400).json({ message: 'Menu item not found' });
+
+      const existingCartItem = await Cart.findOne({ where: { userId: req.user.id, itemId } });
+      if (existingCartItem) {
+        existingCartItem.quantity += quantity;
+        await existingCartItem.save();
+        return res.json({ message: 'Item quantity updated in cart', cartItem: existingCartItem });
+      }
+
+      const cartItem = await Cart.create({
+        userId: req.user.id,
+        itemId,
+        name,
+        price,
+        image,
+        quantity,
+      });
+      res.json({ message: 'Item added to cart', cartItem });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/cart', authenticateToken, async (req, res, next) => {
+    try {
+      const cartItems = await Cart.findAll({ where: { userId: req.user.id } });
+      res.json(cartItems);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Error handling middleware
+  router.use((err, req, res, next) => {
+    console.error('Error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  });
+
+  return router;
 };
-
-// Serve index.html
-router.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-// User Auth APIs
-router.post('/api/auth/signup', async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [existing] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await connection.query(
-      'INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone, hashedPassword, 'user']
-    );
-
-    const token = jwt.sign({ id: result.insertId, email, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ error: 'Failed to sign up' });
-  }
-});
-
-router.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [users] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to log in' });
-  }
-});
-
-router.get('/api/auth/google', (req, res) => {
-  const redirectUrl = `${process.env.CLIENT_URL}/?callback=google`;
-  res.redirect(302, redirectUrl);
-});
-
-router.post('/api/auth/google', async (req, res) => {
-  const { token } = req.body;
-  if (!token) {
-    return res.status(400).json({ error: 'Google token required' });
-  }
-
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-    const payload = ticket.getPayload();
-    const { email, name } = payload;
-
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    let [users] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-    let userId;
-
-    if (users.length === 0) {
-      const [result] = await connection.query(
-        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-        [name, email, null, 'user']
-      );
-      userId = result.insertId;
-    } else {
-      userId = users[0].id;
-    }
-
-    const jwtToken = jwt.sign({ id: userId, email, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token: jwtToken });
-  } catch (error) {
-    console.error('Google auth error:', error);
-    res.status(500).json({ error: 'Failed to authenticate with Google' });
-  }
-});
-
-router.post('/api/auth/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [users] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Email not found' });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    await connection.query(
-      'INSERT INTO password_resets (email, otp, expires_at) VALUES (?, ?, ?)',
-      [email, otp, expiresAt]
-    );
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Delicute Password Reset OTP',
-      text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.json({ message: 'OTP sent to your email' });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
-});
-
-router.post('/api/auth/reset-password', async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ error: 'Email and OTP are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [resets] = await connection.query(
-      'SELECT * FROM password_resets WHERE email = ? AND otp = ? AND expires_at > NOW()',
-      [email, otp]
-    );
-
-    if (resets.length === 0) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
-    }
-
-    if (!newPassword) {
-      return res.json({ message: 'OTP verified' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await connection.query(
-      'UPDATE users SET password = ? WHERE email = ?',
-      [hashedPassword, email]
-    );
-
-    await connection.query('DELETE FROM password_resets WHERE email = ?', [email]);
-    res.json({ message: 'Password reset successfully' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
-  }
-});
-
-// Admin Auth APIs
-router.post('/api/auth/admin/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [users] = await connection.query('SELECT * FROM users WHERE email = ? AND role = ?', [email, 'admin']);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Invalid admin credentials' });
-    }
-
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid admin credentials' });
-    }
-
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Admin login error:', error);
-    res.status(500).json({ error: 'Failed to log in' });
-  }
-});
-
-router.post('/api/auth/admin/signup', async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [existing] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await connection.query(
-      'INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone, hashedPassword, 'admin']
-    );
-
-    const token = jwt.sign({ id: result.insertId, email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
-  } catch (error) {
-    console.error('Admin signup error:', error);
-    res.status(500).json({ error: 'Failed to sign up' });
-  }
-});
-
-router.post('/api/auth/admin/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [users] = await connection.query('SELECT * FROM users WHERE email = ? AND role = ?', [email, 'admin']);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Admin email not found' });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    await connection.query(
-      'INSERT INTO password_resets (email, otp, expires_at) VALUES (?, ?, ?)',
-      [email, otp, expiresAt]
-    );
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Delicute Admin Password Reset OTP',
-      text: `Your OTP for admin password reset is: ${otp}. It is valid for 10 minutes.`
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.json({ message: 'OTP sent to your email' });
-  } catch (error) {
-    console.error('Admin forgot password error:', error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
-});
-
-router.post('/api/auth/admin/reset-password', async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ error: 'Email and OTP are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [resets] = await connection.query(
-      'SELECT * FROM password_resets WHERE email = ? AND otp = ? AND expires_at > NOW()',
-      [email, otp]
-    );
-
-    if (resets.length === 0) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
-    }
-
-    const [users] = await connection.query('SELECT * FROM users WHERE email = ? AND role = ?', [email, 'admin']);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Admin email not found' });
-    }
-
-    if (!newPassword) {
-      return res.json({ message: 'OTP verified' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await connection.query(
-      'UPDATE users SET password = ? WHERE email = ?',
-      [hashedPassword, email]
-    );
-
-    await connection.query('DELETE FROM password_resets WHERE email = ?', [email]);
-    res.json({ message: 'Password reset successfully' });
-  } catch (error) {
-    console.error('Admin reset password error:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
-  }
-});
-
-// Menu APIs
-router.get('/api/menu', async (req, res) => {
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    const [items] = await connection.query('SELECT * FROM menu_items');
-    res.json(items);
-  } catch (error) {
-    console.error('Fetch menu error:', error);
-    res.status(500).json({ error: 'Failed to fetch menu items' });
-  }
-});
-
-// Contact API
-router.post('/api/contact', async (req, res) => {
-  const { name, email, message } = req.body;
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    await connection.query(
-      'INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)',
-      [name, email, message]
-    );
-    res.json({ message: 'Message sent successfully' });
-  } catch (error) {
-    console.error('Contact form error:', error);
-    res.status(500).json({ error: 'Failed to send message' });
-  }
-});
-
-// Cart API
-router.post('/api/cart/send-to-admin', authenticateToken, async (req, res) => {
-  const { items } = req.body;
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Invalid cart data' });
-  }
-
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
-    });
-
-    await connection.query(
-      'INSERT INTO admin_cart (user_id, items) VALUES (?, ?)',
-      [req.user.id, JSON.stringify(items)]
-    );
-    res.json({ message: 'Cart sent to admin successfully' });
-  } catch (error) {
-    console.error('Send cart to admin error:', error);
-    res.status(500).json({ error: 'Failed to send cart to admin' });
-  }
-});
-
-// Status API
-router.get('/api/status', async (req, res) => {
-  const currentHour = new Date().getHours();
-  const isOpen = currentHour >= 9 && currentHour < 22; // Open 9 AM to 10 PM
-  res.json({ isOpen });
-});
-
-// Health check
-router.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
-});
-
-module.exports = router;

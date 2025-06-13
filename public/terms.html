@@ -1,93 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delicute - Terms and Conditions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms and Conditions - Delicate Cloud Kitchen</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e0f7fa 100%);
+      font-family: 'Poppins', sans-serif;
+      color: #2d3748;
+    }
+    .hover-scale {
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    .hover-scale:hover {
+      transform: scale(1.05);
+      color: #4a90e2;
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-800">DELICUTE</h1>
-                        <p class="text-sm text-gray-500">Every bite tells a story</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="index.html#home" class="text-gray-600 hover:text-gray-900">Home</a>
-                    <a href="index.html#loginModal" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900">Login</a>
-                    <a href="index.html#signupModal" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900">Signup</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Terms and Conditions Section -->
-    <section class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Terms and Conditions</h2>
-            <div class="text-lg text-gray-600 max-w-3xl mx-auto">
-                <p class="mb-4">
-                    Welcome to Delicute! By using our website and services, you agree to the following terms and conditions. Please read them carefully.
-                </p>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">1. General</h3>
-                <p class="mb-4">
-                    Delicute is a cloud kitchen providing food delivery services. All orders placed through our website are subject to availability and acceptance by Delicute.
-                </p>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">2. Account Registration</h3>
-                <p class="mb-4">
-                    To place an order, you must register an account with accurate information. You are responsible for maintaining the confidentiality of your account credentials.
-                </p>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">3. Orders and Payments</h3>
-                <p class="mb-4">
-                    All prices are listed in Indian Rupees (INR) and include applicable taxes. Payments must be made through the provided payment methods at the time of ordering.
-                </p>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">4. Refunds and Cancellations</h3>
-                <p class="mb-4">
-                    Orders can be canceled before preparation begins. Refunds are subject to our refund policy, which will be provided upon request.
-                </p>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">5. Privacy</h3>
-                <p class="mb-4">
-                    Your personal information is handled in accordance with our Privacy Policy. We do not share your data with third parties without your consent, except as required by law.
-                </p>
-                <p class="mb-4">
-                    For any questions, contact us at support@delicute.com.
-                </p>
-                <div class="text-center mt-8">
-                    <a href="index.html#signupModal" onclick="showModal('signupModal')" class="text-yellow-500 hover:underline mr-4">Back to Signup</a>
-                    <a href="index.html#loginModal" onclick="showModal('loginModal')" class="text-yellow-500 hover:underline">Back to Login</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="flex justify-center items-center space-x-3 mb-4">
-                <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
-                <div>
-                    <h1 class="text-xl font-bold text-white">DELICUTE</h1>
-                    <p class="text-sm text-gray-300">Every bite tells a story</p>
-                </div>
-            </div>
-            <p>© 2025 Delicute. All rights reserved.</p>
-            <p class="mt-2">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
-        </div>
-    </footer>
-
-    <script>
-        // Note: showModal is defined in index.html, so links will work when navigated from index.html
-    </script>
+<body class="py-10 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-semibold mb-8 text-center" style="font-family: 'Playfair Display', serif;">Terms and Conditions</h1>
+    <p class="text-lg mb-6 leading-relaxed">
+      Welcome to Delicate Cloud Kitchen! By using our services, you agree to the following terms and conditions. Please read them carefully.
+    </p>
+    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">1. General</h2>
+    <p class="text-lg mb-6 leading-relaxed">
+      These terms govern your use of our website and services. We reserve the right to update these terms at any time without prior notice.
+    </p>
+    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">2. Orders and Payments</h2>
+    <p class="text-lg mb-6 leading-relaxed">
+      All orders placed through our website are subject to availability. Payments must be made in full at the time of ordering.
+    </p>
+    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">3. Refunds and Cancellations</h2>
+    <p class="text-lg mb-6 leading-relaxed">
+      Refunds are processed within 5-7 business days for eligible cancellations. Please contact our support team for assistance.
+    </p>
+    <div class="text-center mt-10">
+      <a href="index.html#signupModal" class="text-xl text-gray-800 hover-scale mr-6">Back to Signup</a>
+      <a href="index.html#loginModal" class="text-xl text-gray-800 hover-scale">Back to Login</a>
+    </div>
+  </div>
 </body>
 </html>

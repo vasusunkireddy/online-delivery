@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delicute - Full Menu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f9fcff 0%, #e8f4f8 100%);
+      font-family: 'Poppins', sans-serif;
+      color: #1a2b44;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    .menu-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    .hover-scale {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-scale:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    .search-bar {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+    }
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #1a2b44;
+      width: 100%;
+    }
+    .search-bar input::placeholder {
+      color: #4b5e7a;
+    }
+    .category-filter {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 0.5rem 1rem;
+      color: #1a2b44;
+    }
+    .nav-link {
+      position: relative;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.125rem;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: #2563eb;
+      transition: width 0.3s ease;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    .login-slide {
+      position: relative;
+      overflow: hidden;
+    }
+    .login-slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .login-slide:hover::before {
+      left: 100%;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1a2b44;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .subtext {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      color: #4b5e7a;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #4b5e7a;
+    }
+    .close-btn:hover {
+      color: #2563eb;
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      color: white;
+      font-size: 1rem;
+      z-index: 100;
+      opacity: 0;
+      animation: toastFade 3s ease-in-out forwards;
+    }
+    .toast-success {
+      background: #10b981;
+    }
+    .toast-error {
+      background: #ef4444;
+    }
+    @keyframes toastFade {
+      0% { opacity: 0; transform: translate(-50%, -40%); }
+      10% { opacity: 1; transform: translate(-50%, -50%); }
+      90% { opacity: 1; transform: translate(-50%, -50%); }
+      100% { opacity: 0; transform: translate(-50%, -60%); }
+    }
+    @media (max-width: 640px) {
+      .menu-card {
+        width: 100%;
+      }
+      #menuItems {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+      }
+      .logo img {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+      .subtext {
+        font-size: 0.75rem;
+      }
+      .nav-link {
+        font-size: 0.875rem;
+      }
+      nav .space-x-6 {
+        gap: 0.75rem;
+      }
+      .modal-content {
+        padding: 1.25rem;
+        max-width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="bg-white shadow-lg">
+    <nav class="flex items-center justify-between px-6 py-4">
+      <div class="flex flex-col items-start">
+        <div class="logo flex items-center">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-10 h-10 mr-2">
+          <span style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: #1a2b44;">Delicute</span>
+        </div>
+        <p class="subtext mt-1" style="font-family: 'Poppins', sans-serif; font-size: 0.875rem; color: #4b5e7a;">Every Bite Tells a Story</p>
+      </div>
+      <div class="flex space-x-6">
+        <a href="index.html#about" class="text-gray-800 hover-scale nav-link">About</a>
+        <a href="index.html#menu" class="text-gray-800 hover-scale nav-link">Menu</a>
+        <a href="index.html#contact" class="text-gray-800 hover-scale nav-link">Contact</a>
+        <a href="#" class="text-gray-800 hover-scale nav-link login-slide" onclick="openModal('loginModal')">Login</a>
+        <a href="#" class="text-gray-800 hover-scale nav-link" onclick="openModal('signupModal')">Signup</a>
+      </div>
+    </nav>
+  </header>
+
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('loginModal')">×</span>
+      <h2 class="text-2xl font-semibold mb-6 text-center" style="font-family: 'Playfair Display', serif;">Login</h2>
+      <div id="loginForm">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginEmail">Email or Mobile Number</label>
+          <input type="text" id="loginEmail" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter email or mobile number">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter password">
+        </div>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg mb-4" onclick="loginUser()">Login</button>
+        <p class="text-center text-gray-600 mb-4 text-sm">OR</p>
+        <div id="g_id_onload"
+             data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+        <p class="text-center text-sm"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
+      </div>
+      <div id="forgotPasswordForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your email">
+        </div>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg mb-4" onclick="showOtpForm()">Send OTP</button>
+      </div>
+      <div id="otpForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="otp">Enter OTP</label>
+          <input type="text" id="otp" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter OTP">
+        </div>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg mb-4" onclick="showNewPasswordForm()">Verify OTP</button>
+      </div>
+      <div id="newPasswordForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="newPassword">New Password</label>
+          <input type="password" id="newPassword" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter new password">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Confirm new password">
+        </div>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg mb-4" onclick="showSuccessMessage()">Reset Password</button>
+      </div>
+      <div id="successMessage" class="hidden text-center">
+        <p class="text-green-600 mb-4 text-sm">Password reset successfully!</p>
+        <button class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="signupModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('signupModal')">×</span>
+      <h2 class="text-2xl font-semibold mb-6 text-center" style="font-family: 'Playfair Display', serif;">Signup</h2>
+      <div id="signupForm">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupName">Name</label>
+          <input type="text" id="signupName" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your name">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your email">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPhone">Mobile Number</label>
+          <input type="tel" id="signupPhone" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your mobile number">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPassword">Create Password</label>
+          <input type="password" id="signupPassword" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Create a password">
+        </div>
+        <p class="text-center text-xs mb-4">
+          By signing up, you agree to our <a href="terms.html" target="_blank" class="text-blue-500 hover:underline">Terms and Conditions</a>.
+        </p>
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg mb-4" onclick="signupUser()">Signup</button>
+        <p class="text-center text-gray-600 mb-4 text-sm">OR</p>
+        <div id="g_id_onload"
+             data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="menu" class="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-4xl font-semibold text-center mb-6 text-gray-800" style="font-family: 'Playfair Display', serif;">Full Menu</h2>
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+        <div class="search-bar w-full sm:w-1/2 max-w-md">
+          <svg class="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="menuSearch" placeholder="Search menu..." onkeyup="searchMenu()">
+        </div>
+        <select id="categoryFilter" class="category-filter" onchange="filterCategory()">
+          <option value="">All Categories</option>
+          <option value="starter">Starters</option>
+          <option value="main">Main Dishes</option>
+          <option value="dessert">Desserts</option>
+          <option value="beverage">Beverages</option>
+        </select>
+      </div>
+      <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"></div>
+    </div>
+  </section>
+
+  <footer class="bg-gradient-to-r from-gray-600 to-gray-800 text-white py-8 text-center">
+    <p class="text-lg">© 2025 Delicute. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let allMenuItems = [];
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Render all menu items
+    async function renderMenuItems() {
+      try {
+        const response = await fetch('/api/menu');
+        if (!response.ok) throw new Error('Failed to fetch menu');
+        allMenuItems = await response.json();
+        renderFilteredItems(allMenuItems);
+      } catch (error) {
+        showToast('Failed to load menu. Please try again later.', 'error');
+      }
+    }
+
+    // Search menu
+    function searchMenu() {
+      const query = document.getElementById('menuSearch').value.toLowerCase();
+      const filteredItems = allMenuItems.filter(item => item.name.toLowerCase().includes(query));
+      renderFilteredItems(filteredItems);
+    }
+
+    // Filter by category
+    function filterCategory() {
+      const category = document.getElementById('categoryFilter').value;
+      const filteredItems = category 
+        ? allMenuItems.filter(item => (item.category || 'general').toLowerCase() === category)
+        : allMenuItems;
+      renderFilteredItems(filteredItems);
+    }
+
+    // Render filtered items
+    function renderFilteredItems(items) {
+      const menuContainer = document.getElementById('menuItems');
+      menuContainer.innerHTML = '';
+      items.forEach(item => {
+        const menuItem = `
+          <div class="menu-card p-6 rounded-2xl shadow-lg hover-scale">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-4">
+            <h3 class="text-xl font-semibold mb-2 text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
+            <p class="text-gray-600 mb-4 text-sm">${item.description}</p>
+            <div class="text-gray-500 text-sm mb-2">Category: ${item.category || 'General'}</div>
+            <div class="flex justify-between items-center">
+              <p class="text-blue-600 font-bold text-base">₹${item.price}</p>
+              <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-lg text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
+            </div>
+          </div>
+        `;
+        menuContainer.innerHTML += menuItem;
+      });
+      if (items.length === 0) {
+        menuContainer.innerHTML = '<p class="text-center text-gray-600">No items found.</p>';
+      }
+    }
+
+    // Add to cart
+    async function addToCart(itemId, name, price, image) {
+      if (!checkLogin()) {
+        showToast('Please log in to add items to your cart.', 'error');
+        openModal('loginModal');
+        return;
+      }
+      try {
+        const response = await fetch('/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({ itemId, name, price, image }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showToast(result.message, 'success');
+          window.location.href = 'userdashboard.html';
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to add item to cart', 'error');
+      }
+    }
+
+    // Check login status
+    function checkLogin() {
+      return !!localStorage.getItem('token');
+    }
+
+    // User login
+    async function loginUser() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          localStorage.setItem('token', result.token);
+          showToast(result.message, 'success');
+          closeModal('loginModal');
+          window.location.href = 'userdashboard.html';
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to login', 'error');
+      }
+    }
+
+    // User signup
+    async function signupUser() {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const phone = document.getElementById('signupPhone').value;
+      const password = document.getElementById('signupPassword').value;
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, password }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          localStorage.setItem('token', result.token);
+          showToast(result.message, 'success');
+          closeModal('signupModal');
+          window.location.href = 'userdashboard.html';
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to signup', 'error');
+      }
+    }
+
+    // Google login callback
+    window.handleGoogleLogin = async function(credentialResponse) {
+      try {
+        const response = await fetch('/api/auth/google', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+        } else {
+          const result = await response.json();
+          showToast(result.message || 'Failed to initiate Google login', 'error');
+        }
+      } catch (error) {
+        showToast('Failed to login with Google', 'error');
+      }
+    };
+
+    // Forgot password
+    async function showForgotPassword() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('forgotPasswordForm').classList.remove('hidden');
+    }
+
+    async function showOtpForm() {
+      const email = document.getElementById('forgotEmail').value;
+      try {
+        const response = await fetch('/api/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showToast(result.message, 'success');
+          document.getElementById('forgotPasswordForm').classList.add('hidden');
+          document.getElementById('otpForm').classList.remove('hidden');
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to send OTP', 'error');
+      }
+    }
+
+    async function showNewPasswordForm() {
+      const email = document.getElementById('forgotEmail').value;
+      const otp = document.getElementById('otp').value;
+      try {
+        const response = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showToast(result.message, 'success');
+          document.getElementById('otpForm').classList.add('hidden');
+          document.getElementById('newPasswordForm').classList.remove('hidden');
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to verify OTP', 'error');
+      }
+    }
+
+    async function showSuccessMessage() {
+      const email = document.getElementById('forgotEmail').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+      }
+      try {
+        const response = await fetch('/api/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, newPassword }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showToast(result.message, 'success');
+          document.getElementById('newPasswordForm').classList.add('hidden');
+          document.getElementById('successMessage').classList.remove('hidden');
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('Failed to reset password', 'error');
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'flex';
+      if (modalId === 'loginModal') {
+        resetLoginModal();
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    function resetLoginModal() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('forgotPasswordForm').classList.add('hidden');
+      document.getElementById('otpForm').classList.add('hidden');
+      document.getElementById('newPasswordForm').classList.add('hidden');
+      document.getElementById('successMessage').classList.add('hidden');
+    }
+
+    window.onload = function() {
+      renderMenuItems();
+    };
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        closeModal('loginModal');
+        closeModal('signupModal');
+      }
+    };
+  </script>
+</body>
+</html>

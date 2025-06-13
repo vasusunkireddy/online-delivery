@@ -1,1616 +1,881 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delicute - Cloud Kitchen</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://checkout.563e4f5g.js"></script>
-    <style>
-        body {
-<<<<<<< HEAD
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-            margin: 0;
-            overflow-x: hidden;
-=======
-            font-family: 'Arial', sans-serif;
-            background: #f0f2f6;
-            margin: 0;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-        }
-        .hero-bg {
-            background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            position: relative;
-            overflow: hidden;
-            min-height: 100vh;
-        }
-        .slider-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .slide {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            transform: translateX(100%);
-        }
-        .slide.active {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        .slide.prev {
-            transform: translateX(-100%);
-        }
-        .slide-content {
-            text-align: center;
-<<<<<<< HEAD
-            background: rgba(0, 0, 0, 0.65);
-            padding: 2rem;
-            border-radius: 16px;
-=======
-            background: rgba(0, 0, 0, 0.6);
-            padding: 2rem 3rem;
-            border-radius: 12px;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            color: white;
-            max-width: 90%;
-            width: 700px;
-            backdrop-filter: blur(8px);
-        }
-        .slide-content h2 {
-<<<<<<< HEAD
-            font-size: 2rem;
-            font-weight: 700;
-=======
-            font-size: 2.5rem;
-            font-weight: bold;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            margin-bottom: 1rem;
-            letter-spacing: -0.025em;
-        }
-        .slide-content p {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-        .slide-content a {
-            background: #f59e0b;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
-            text-decoration: none;
-            transition: background 0.3s, transform 0.2s;
-            font-weight: 600;
-        }
-        .slide-content a:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-        }
-        .slider-dots {
-            position: absolute;
-            bottom: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .dot {
-            width: 12px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
-        }
-        .dot.active {
-            background: #f59e0b;
-            transform: scale(1.2);
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-<<<<<<< HEAD
-            background: rgba(0, 0, 0, 0.75);
-=======
-            background: rgba(0, 0, 0, 0.7);
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            overflow-y: auto;
-        }
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            max-width: 95%;
-            width: 500px;
-            position: relative;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .close-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #374151;
-            transition: color 0.2s;
-        }
-        .close-btn:hover {
-            color: #f59e0b;
-        }
-        .range-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 10px;
-            background: #e5e7eb;
-            border-radius: 5px;
-            outline: none;
-            margin: 12px 0;
-            transition: background 0.2s;
-        }
-        .range-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #f59e0b;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-        }
-        .range-slider:hover {
-            background: #d1d5db;
-        }
-        .toast {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: white;
-            z-index: 2000;
-            display: none;
-            min-width: 200px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .toast.success {
-            background-color: #22c55e;
-        }
-        .toast.error {
-            background-color: #ef4444;
-        }
-        .menu-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-<<<<<<< HEAD
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease;
-=======
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-        }
-        .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-        .menu-card img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 12px;
-            transition: transform 0.3s ease;
-        }
-        .menu-card img:hover {
-            transform: scale(1.05);
-        }
-        .pagination-btn {
-            transition: background 0.2s, color 0.2s, transform 0.2s;
-            padding: 10px 20px;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-        }
-        .pagination-btn:hover:not(.disabled) {
-            background: #f59e0b;
-            color: white;
-            transform: translateY(-2px);
-        }
-        .pagination-btn.disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        .full-menu-container {
-            display: none;
-            background: #f8fafc;
-            min-height: 100vh;
-            padding: 2rem 1rem;
-        }
-        .full-menu-container.active {
-            display: block;
-        }
-        .btn-primary {
-            background: #f59e0b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 9999px;
-            transition: background 0.3s, transform 0.2s;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        .btn-primary:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-        }
-        .input-field {
-            transition: border-color 0.3s, box-shadow 0.3s;
-            padding: 12px;
-            font-size: 0.875rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-        }
-        .input-field:focus {
-            border-color: #f59e0b;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-            outline: none;
-        }
-        .navbar-menu {
-            transition: max-height 0.3s ease-in-out;
-            max-height: 0;
-            overflow: hidden;
-        }
-        .navbar-menu.active {
-            max-height: 400px;
-        }
-        .contact-form {
-            background: #ffffff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .contact-form label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.875rem;
-        }
-        .contact-form input, .contact-form textarea {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 12px;
-            width: 100%;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .contact-form textarea {
-            resize: vertical;
-        }
-        .cart-item {
-            display: flex;
-            align-items: center;
-<<<<<<< HEAD
-            gap: 1.5rem;
-=======
-            gap: 1rem;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .cart-item img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-<<<<<<< HEAD
-        .status-indicator {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            z-index: 10;
-            text-align: center;
-            max-width: 90%;
-            width: 500px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.5s ease-out;
-        }
-        .status-open {
-            background-color: #22c55e;
-        }
-        .status-closed {
-            background-color: #ef4444;
-        }
-        .free-delivery {
-            color: #22c55e;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (min-width: 640px) {
-            .menu-card {
-                padding: 2rem;
-            }
-            .menu-card img {
-                width: 150px;
-                height: 150px;
-            }
-            .slide-content {
-                padding: 3rem 4rem;
-            }
-            .slide-content h2 {
-                font-size: 3rem;
-            }
-            .slide-content p {
-                font-size: 1.5rem;
-            }
-            .slide-content a {
-                padding: 1rem 2rem;
-                font-size: 1.125rem;
-            }
-            .slider-dots {
-                bottom: 30px;
-            }
-            .dot {
-                width: 14px;
-                height: 14px;
-            }
-            .modal-content {
-                padding: 32px;
-                width: 500px;
-            }
-            .close-btn {
-                font-size: 28px;
-            }
-            .toast {
-                top: 20px;
-                right: 20px;
-                padding: 14px 20px;
-                min-width: 250px;
-=======
-        @media (max-width: 640px) {
-            .modal-content {
-                padding: 16px;
-                width: 95%;
-            }
-            .close-btn {
-                font-size: 20px;
-            }
-            .toast {
-                top: 12px;
-                right: 12px;
-                padding: 10px;
-                min-width: 160px;
-            }
-            .menu-card img {
-                height: 150px;
-            }
-            .menu-card {
-                padding: 12px;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            }
-            .btn-primary {
-                padding: 14px 28px;
-                font-size: 1rem;
-            }
-            .input-field {
-                padding: 14px;
-                font-size: 1rem;
-            }
-            .contact-form {
-                padding: 2.5rem;
-            }
-            .contact-form label {
-                font-size: 1rem;
-            }
-            .contact-form input, .contact-form textarea {
-                padding: 14px;
-                font-size: 1rem;
-            }
-            .cart-item img {
-                width: 100px;
-                height: 100px;
-            }
-            .status-indicator {
-                top: 30px;
-                padding: 16px 32px;
-                font-size: 1.125rem;
-            }
-        }
-        @media (max-width: 639px) {
-            .menu-card {
-                flex-direction: column;
-                text-align: center;
-            }
-            .menu-card img {
-                width: 100%;
-                max-width: 200px;
-                height: auto;
-            }
-            .status-indicator {
-                top: 16px;
-                padding: 8px 16px;
-                font-size: 0.875rem;
-                width: 90%;
-            }
-            .slide-content {
-                padding: 1.5rem;
-            }
-            .slide-content h2 {
-                font-size: 1.5rem;
-            }
-            .slide-content p {
-                font-size: 1rem;
-            }
-            .slide-content a {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-            }
-<<<<<<< HEAD
-=======
-            .slider-dots {
-                bottom: 15px;
-            }
-            .dot {
-                width: 10px;
-                height: 10px;
-            }
-            .cart-item img {
-                width: 60px;
-                height: 60px;
-            }
-        }
-        @media (min-width: 641px) {
-            .menu-card img {
-                height: 200px;
-            }
-            .slide-content h2 {
-                font-size: 2.5rem;
-            }
-            .slide-content p {
-                font-size: 1.25rem;
-            }
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delicute</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #fef3f9 0%, #e0f4ff 100%);
+      font-family: 'Poppins', sans-serif;
+      color: #1a2b44;
+      overflow-x: hidden;
+      margin: 0;
+      scroll-behavior: smooth;
+    }
+    .cloud-bg {
+      position: relative;
+      background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cloud-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+      z-index: 1;
+    }
+    .hero-content {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 2rem;
+      padding: 5rem 7rem;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: float 6s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      margin: auto;
+      transform: perspective(1000px);
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotateX(0deg); }
+      50% { transform: translateY(-30px) rotateX(2deg); }
+    }
+    .hero-title {
+      animation: sparkle-title 4s infinite;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(59, 130, 246, 0.5);
+      letter-spacing: 2px;
+    }
+    @keyframes sparkle-title {
+      0%, 100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+      50% { text-shadow: 0 0 30px rgba(255, 255, 255, 1), 0 0 40px rgba(59, 130, 246, 0.7); }
+    }
+    .hero-title::after {
+      content: '';
+      display: block;
+      width: 250px;
+      height: 8px;
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      margin: 2rem auto;
+      border-radius: 4px;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 1rem 3rem;
+      border-radius: 9999px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .status-open {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      animation: pulse 2.5s infinite;
+    }
+    .status-closed {
+      background: linear-gradient(135deg, #ef4444, #f87171);
+      color: white;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .free-delivery {
+      font-size: 1.5rem;
+      color: #fef08a;
+      font-weight: 600;
+      opacity: 0;
+      animation: fade-in 2.5s ease-in forwards 1.2s;
+      text-shadow: 0 0 10px rgba(254, 240, 138, 0.7);
+    }
+    @keyframes fade-in {
+      to { opacity: 1; }
+    }
+    .hover-scale {
+      transition: transform 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+    }
+    .hover-scale:hover {
+      transform: scale(1.1);
+      color: #3b82f6;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
+    .nav-link {
+      position: relative;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+      transition: color 0.4s ease;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 3px;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      transition: width 0.4s ease;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .subtext {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      color: #a3bffa;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeIn 1.2s ease forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .menu-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    .menu-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      padding: 3rem;
+      border-radius: 2rem;
+      width: 90%;
+      max-width: 550px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: modalPop 0.5s ease forwards;
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .close-btn {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #4b5e7a;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .close-btn:hover {
+      color: #3b82f6;
+      transform: rotate(90deg);
+    }
+    .login-slide {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #3b82f6, #d946ef);
+      border-radius: 9999px;
+      padding: 0.75rem 2rem;
+      color: white !important;
+    }
+    .login-slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+      transition: left 0.6s ease;
+    }
+    .login-slide:hover::before {
+      left: 100%;
+    }
+    .search-bar {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 9999px;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+    .search-bar:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #1a2b44;
+      width: 100%;
+      font-size: 1.1rem;
+    }
+    .search-bar input::placeholder {
+      color: #6b7280;
+    }
+    .category-filter {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 9999px;
+      padding: 1rem 2rem;
+      color: #1a2b44;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+    .category-filter:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .toast {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      padding: 1.25rem 2.5rem;
+      border-radius: 1rem;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 500;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(-30px);
+      animation: toastSlide 4s ease-in-out forwards;
+    }
+    .toast-success {
+      background: linear-gradient(135deg, #10b981, #34d399);
+    }
+    .toast-error {
+      background: linear-gradient(135deg, #ef4444, #f87171);
+    }
+    .toast::before {
+      content: '';
+      display: inline-block;
+      width: 1.5rem;
+      height: 1.5rem;
+      background-size: cover;
+    }
+    .toast-success::before {
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
+    }
+    .toast-error::before {
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
+    }
+    @keyframes toastSlide {
+      0% { opacity: 0; transform: translateY(-30px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-30px); }
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #d946ef);
+      color: white;
+      padding: 1rem 2.5rem;
+      border-radius: 9999px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    .input-field {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      width: 100%;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .input-field:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    @media (max-width: 640px) {
+      .logo {
+        font-size: 2rem;
+      }
+      .logo img {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+      .subtext {
+        font-size: 0.75rem;
+      }
+      .nav-link {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+      }
+      nav .space-x-6 {
+        gap: 0.75rem;
+      }
+      .hero-content {
+        padding: 3rem 2rem;
+        margin: 1.5rem;
+      }
+      .hero-title {
+        font-size: 3.5rem;
+      }
+      .status-badge {
+        font-size: 1rem;
+        padding: 0.75rem 2rem;
+      }
+      .free-delivery {
+        font-size: 1.2rem;
+      }
+      .hero-content p {
+        font-size: 1rem;
+      }
+      .hero-content a {
+        font-size: 1rem;
+        padding: 0.75rem 2rem;
+      }
+      section h2 {
+        font-size: 2.5rem;
+      }
+      section p {
+        font-size: 1rem;
+      }
+      .menu-card img {
+        height: 12rem;
+      }
+      .menu-card h3 {
+        font-size: 1.25rem;
+      }
+      .menu-card p {
+        font-size: 0.875rem;
+      }
+      .modal-content {
+        padding: 2rem;
+        max-width: 95%;
+      }
+      #menuItems {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .toast {
+        top: 15px;
+        right: 15px;
+        padding: 1rem 2rem;
+        font-size: 0.875rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
-
-    <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-3">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-10">
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-800">DELICUTE</h1>
-                        <p class="text-xs text-gray-500">Every bite tells a story</p>
-                    </div>
-                </div>
-                <div class="flex items-center sm:hidden">
-                    <button id="menuToggle" class="text-gray-600 hover:text-gray-900 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-<<<<<<< HEAD
-                <div class="hidden sm:flex sm:items-center sm:space-x-6">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm font-medium">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Contact</a>
-                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Login</button>
-                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Signup</button>
-                </div>
-            </div>
-            <div id="navbarMenu" class="navbar-menu sm:hidden">
-                <div class="flex flex-col space-y-3 px-4 pb-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm font-medium">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Contact</a>
-                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Login</button>
-                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm font-medium text-left">Signup</button>
-=======
-                <div class="hidden sm:flex sm:items-center sm:space-x-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
-                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm">Login</button>
-                    <button id="signupBtn" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm">Signup</button>
-                </div>
-            </div>
-            <div id="navbarMenu" class="navbar-menu sm:hidden">
-                <div class="flex flex-col space-y-2 px-4 pb-4">
-                    <a href="#home" class="text-gray-600 hover:text-gray-900 text-sm">Home</a>
-                    <a href="#about" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
-                    <a href="#menu" class="text-gray-600 hover:text-gray-900 text-sm">Menu</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
-                    <button id="loginBtnMobile" onclick="showModal('loginModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Login</button>
-                    <button id="signupBtnMobile" onclick="showModal('signupModal')" class="text-gray-600 hover:text-gray-900 text-sm text-left">Signup</button>
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-                </div>
-            </div>
+  <header class="cloud-bg">
+    <nav class="flex items-center justify-between px-8 py-6 bg-gradient-to-r from-gray-900/80 to-gray-700/80 shadow-2xl fixed w-full top-0 z-50 backdrop-blur-lg">
+      <div class="flex flex-col items-start">
+        <div class="logo flex items-center">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-12 h-12 mr-3 rounded-full shadow-lg">
+          <span>Delicute</span>
         </div>
+        <p class="subtext mt-2">Every Bite Tells a Story</p>
+      </div>
+      <div class="flex space-x-6">
+        <a href="#about" class="hover-scale nav-link">About</a>
+        <a href="#menu" class="hover-scale nav-link">Menu</a>
+        <a href="#contact" class="hover-scale nav-link">Contact</a>
+        <a href="#" class="hover-scale nav-link login-slide" onclick="openModal('loginModal')">Login</a>
+        <a href="#" class="hover-scale nav-link login-slide" onclick="openModal('signupModal')">Signup</a>
+      </div>
     </nav>
+    <div class="flex flex-1 items-center justify-center text-center min-h-screen pt-24">
+      <div class="hero-content">
+        <p class="text-2xl font-light text-white mb-6 tracking-wide">Embark on a Culinary Odyssey!</p>
+        <h1 class="hero-title mb-8">Delicute</h1>
+        <div id="restaurantStatus" class="mb-8"></div>
+        <a href="#menu" class="btn-primary">Explore Our Menu</a>
+        <p class="free-delivery mt-6">Free Delivery on All Orders!</p>
+      </div>
+    </div>
+  </header>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('loginModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Login</h2>
-            <div id="loginForm">
-                <div>
-                    <label for="loginEmail" class="block text-gray-700 font-medium mb-2 text-sm">Email or Mobile Number</label>
-                    <input type="text" id="loginEmail" class="input-field w-full" placeholder="Email or Mobile">
-                </div>
-                <div class="mt-4">
-                    <label for="loginPassword" class="block text-gray-700 font-medium mb-2 text-sm">Password</label>
-                    <input type="password" id="loginPassword" class="input-field w-full" placeholder="Password">
-                </div>
-                <div class="mt-4 text-right">
-                    <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline text-sm">Forgot Password?</a>
-                </div>
-                <div class="mt-6">
-                    <button onclick="login()" class="btn-primary w-full">Login</button>
-                </div>
-                <div class="mt-4 text-center text-sm">OR</div>
-                <div class="mt-4">
-                    <button onclick="googleLogin()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full w-full flex items-center justify-center hover:bg-gray-50 text-sm">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Login with Google
-                    </button>
-                </div>
-            </div>
-            <div id="forgotPasswordEmail" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Forgot Password</h2>
-                <div>
-                    <label for="forgotEmail" class="block text-gray-700 font-medium mb-2 text-sm">Enter Email</label>
-                    <input type="email" id="forgotEmail" class="input-field w-full" placeholder="Your Email">
-                </div>
-                <div class="mt-6">
-                    <button onclick="sendOTP()" class="btn-primary w-full">Send OTP</button>
-                </div>
-                <div class="mt-4 text-center">
-                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
-                </div>
-            </div>
-            <div id="forgotPasswordOTP" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Verify OTP</h2>
-                <div>
-                    <label for="otpInput" class="block text-gray-700 font-medium mb-2 text-sm">Enter OTP</label>
-                    <input type="text" id="otpInput" class="input-field w-full" placeholder="Enter OTP">
-                </div>
-                <div class="mt-6">
-                    <button onclick="verifyOTP()" class="btn-primary w-full">Verify OTP</button>
-                </div>
-                <div class="mt-4 text-center">
-                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
-                </div>
-            </div>
-            <div id="forgotPasswordReset" class="hidden">
-                <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Reset Password</h2>
-                <div>
-                    <label for="newPassword" class="block text-gray-700 font-medium mb-2 text-sm">New Password</label>
-                    <input type="password" id="newPassword" class="input-field w-full" placeholder="New Password">
-                </div>
-                <div class="mt-4">
-                    <label for="confirmPassword" class="block text-gray-700 font-medium mb-2 text-sm">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="input-field w-full" placeholder="Confirm Password">
-                </div>
-                <div class="mt-6">
-                    <button onclick="resetPassword()" class="btn-primary w-full">Reset Password</button>
-                </div>
-                <div class="mt-4 text-center">
-                    <a href="#" onclick="backToLogin()" class="text-yellow-500 hover:underline text-sm">Back to Login</a>
-                </div>
-            </div>
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('loginModal')">×</span>
+      <h2 class="text-3xl font-semibold mb-8 text-center" style="font-family: 'Cormorant Garamond', serif;">Login</h2>
+      <div id="loginForm">
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginEmail">Email or Mobile Number</label>
+          <input type="text" id="loginEmail" class="input-field" placeholder="Enter email or mobile number">
         </div>
-    </div>
-
-    <!-- Signup Modal -->
-    <div id="signupModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('signupModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Signup</h2>
-            <div>
-                <label for="signupName" class="block text-gray-700 font-medium mb-2 text-sm">Name</label>
-                <input type="text" id="signupName" class="input-field w-full" placeholder="Your Name">
-            </div>
-            <div class="mt-4">
-                <label for="signupEmail" class="block text-gray-700 font-medium mb-2 text-sm">Email</label>
-                <input type="email" id="signupEmail" class="input-field w-full" placeholder="Your Email">
-            </div>
-            <div class="mt-4">
-                <label for="signupPhone" class="block text-gray-700 font-medium mb-2 text-sm">Phone Number</label>
-                <input type="tel" id="signupPhone" class="input-field w-full" placeholder="Your Phone Number">
-            </div>
-            <div class="mt-4">
-                <label for="signupPassword" class="block text-gray-700 font-medium mb-2 text-sm">Create Password</label>
-                <input type="password" id="signupPassword" class="input-field w-full" placeholder="Create Password">
-            </div>
-            <div class="mt-4 flex items-center">
-                <input type="checkbox" id="termsAgree" class="mr-2">
-                <label for="termsAgree" class="text-gray-700 text-sm">I agree to the <a href="terms.html" target="_blank" class="text-yellow-500 hover:underline">Terms and Conditions</a></label>
-            </div>
-            <div class="mt-6">
-                <button onclick="signup()" class="btn-primary w-full">Signup</button>
-            </div>
-            <div class="mt-4 text-center text-sm">OR</div>
-            <div class="mt-4">
-                <button onclick="googleLogin()" class="bg-white border border-gray-300 rounded-full w-full flex items-center justify-center px-4 py-2 text-sm hover:bg-gray-50">
-                    <img src="https://www.google.com/favicon.ico" alt="Google" class="h-5 mr-2"> Signup with Google
-                </button>
-            </div>
-            <div class="mt-4 text-center">
-                <a href="#" onclick="showModal('loginModal')" class="text-yellow-500 hover:underline text-sm">Already have an account? Login</a>
-            </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
         </div>
-    </div>
-
-    <!-- Cart Modal -->
-    <div id="cartModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('cartModal')">×</span>
-            <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Your Cart</h2>
-            <div id="cartItems" class="mb-6"></div>
-            <div class="text-center space-y-4">
-<<<<<<< HEAD
-                <p class="text-green-600 font-semibold text-sm">Free Delivery on all orders!</p>
-                <button onclick="placeOrder()" class="btn-primary w-full">Place Order</button>
-                <button onclick="sendToAdminDashboard()" class="btn-primary w-full">Send to Admin</button>
-=======
-                <button onclick="placeOrder()" class="btn-primary text-sm sm:text-base">Place Order</button>
-                <button onclick="sendToAdminDashboard()" class="btn-primary text-sm sm:text-base">Send to Admin</button>
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            </div>
-            <div class="mt-4 text-center">
-                <a href="#" onclick="closeModal('cartModal')" class="text-yellow-500 hover:underline text-sm">Close</a>
-            </div>
+        <button class="btn-primary w-full mb-6" onclick="loginUser()">Login</button>
+        <p class="text-center text-gray-600 mb-6 text-sm">OR</p>
+        <div id="g_id_onload"
+             data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
         </div>
-    </div>
-
-    <!-- Main Content -->
-    <div id="mainContent">
-        <!-- Hero Section -->
-        <section id="home" class="hero-bg">
-            <div id="restaurantStatus" class="status-indicator"></div>
-            <div class="slider-container">
-                <div class="slide" data-index="0">
-                    <div class="slide-content">
-                        <h2>Welcome to Delicute</h2>
-                        <p>Login to enjoy delicious food with free delivery!</p>
-                        <a href="#" onclick="showModal('loginModal')">Login Now</a>
-                    </div>
-                </div>
-                <div class="slide" data-index="1">
-                    <div class="slide-content">
-                        <h2>Explore Our Menu</h2>
-                        <p>Discover a variety of delicious dishes crafted just for you.</p>
-                        <a href="#menu">Browse Menu</a>
-                    </div>
-                </div>
-                <div class="slide" data-index="2">
-                    <div class="slide-content">
-                        <h2>About Us</h2>
-                        <p>Learn more about Delicute’s passion for quality food.</p>
-                        <a href="#about">About Us</a>
-                    </div>
-                </div>
-                <div class="slider-dots">
-                    <div class="dot" onclick="goToSlide(0)"></div>
-                    <div class="dot" onclick="goToSlide(1)"></div>
-                    <div class="dot" onclick="goToSlide(2)"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section id="about" class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">About Delicute</h2>
-                <p class="text-sm text-gray-600 text-center max-w-3xl mx-auto">
-                    Delicute is your go-to cloud kitchen, crafting delicious, wholesome meals with love and care. 
-                    We specialize in a variety of cuisines, ensuring every bite is a delightful experience. 
-                    Enjoy free delivery on all orders, delivered straight to your door!
-                </p>
-            </div>
-        </section>
-
-        <!-- Menu Section -->
-        <section id="menu" class="py-16 bg-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Our Menu</h2>
-                <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <input type="text" id="searchInput" class="input-field" placeholder="Search menu items..." oninput="filterMenu()">
-                        <select id="categoryFilter" class="input-field" onchange="filterMenu()">
-                            <option value="">All Categories</option>
-                        </select>
-                        <div>
-                            <label for="priceRange" class="block text-gray-700 font-medium mb-2 text-sm">Price Range: <span id="priceRangeValue">₹30 - ₹999</span></label>
-                            <input type="range" id="priceRange" min="30" max="999" value="999" class="range-slider" oninput="updatePriceRange()">
-                        </div>
-                    </div>
-                </div>
-                <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                <div class="text-center mt-8 space-y-4">
-                    <button onclick="showCart()" class="btn-primary w-full max-w-sm">View Cart & Order</button>
-                    <button onclick="showFullMenu()" class="bg-transparent border border-yellow-500 hover:bg-yellow-500 hover:text-white text-yellow-500 px-4 py-2 rounded-full w-full max-w-sm text-sm font-semibold">View Full Menu</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact Section -->
-        <section id="contact" class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Get in Touch</h2>
-                <div class="max-w-lg mx-auto">
-                    <div class="contact-form">
-                        <div>
-                            <label for="name" class="block text-gray-700 font-medium mb-2 text-sm">Name</label>
-                            <input type="text" id="name" class="input-field" placeholder="Your Name">
-                        </div>
-                        <div class="mt-6">
-                            <label for="email" class="block text-gray-700 font-medium mb-2 text-sm">Email</label>
-                            <input type="email" id="email" class="input-field" placeholder="Your Email">
-                        </div>
-                        <div class="mt-6">
-                            <label for="message" class="block text-gray-700 font-medium mb-2 text-sm">Message</label>
-                            <textarea id="message" class="input-field" rows="5" placeholder="Your Message"></textarea>
-                        </div>
-                        <div class="mt-8">
-                            <button onclick="submitForm()" class="btn-primary w-full">Send Message</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-                <div class="flex justify-center items-center space-x-3 mb-4">
-                    <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
-                    <div>
-                        <h1 class="text-xl font-bold text-white">DELICUTE</h1>
-                        <p class="text-sm text-gray-300">Every bite tells a story</p>
-                    </div>
-                </div>
-                <p class="text-sm">© 2025 Delicute. All rights reserved.</p>
-                <p class="mt-2 text-sm">Follow us on <a href="#" class="text-yellow-400 hover:text-yellow-500">Instagram</a> | <a href="#" class="text-yellow-400 hover:text-yellow-500">Twitter</a></p>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Full Menu Page -->
-    <div id="fullMenuContainer" class="full-menu-container">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">Full Menu</h2>
-                <button onclick="hideFullMenu()" class="btn-primary text-sm">Back to Home</button>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <input type="text" id="fullMenuSearchInput" class="input-field" placeholder="Search menu items..." oninput="filterFullMenu()">
-                    <select id="fullMenuCategoryFilter" class="input-field" onchange="filterFullMenu()">
-                        <option value="">All Categories</option>
-                    </select>
-                    <div>
-                        <label for="fullMenuPriceRange" class="block text-gray-700 font-medium mb-2 text-sm">Price Range: <span id="fullMenuPriceRangeValue">₹30 - ₹999</span></label>
-                        <input type="range" id="fullMenuPriceRange" min="30" max="999" value="999" class="range-slider" oninput="updateFullMenuPriceRange()">
-                    </div>
-                </div>
-            </div>
-            <div id="fullMenuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            <div class="flex justify-center mt-8 space-x-4">
-                <button id="prevPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full disabled" onclick="changePage(-1)">Previous</button>
-                <span id="pageInfo" class="flex items-center text-gray-700 text-sm"></span>
-                <button id="nextPage" class="pagination-btn bg-gray-200 px-4 py-2 rounded-full" onclick="changePage(1)">Next</button>
-            </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+        <p class="text-center text-sm mt-4"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
+      </div>
+      <div id="forgotPasswordForm" class="hidden">
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" class="input-field" placeholder="Enter your email">
         </div>
+        <button class="btn-primary w-full mb-6" onclick="showOtpForm()">Send OTP</button>
+      </div>
+      <div id="otpForm" class="hidden">
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="otp">Enter OTP</label>
+          <input type="text" id="otp" class="input-field" placeholder="Enter OTP">
+        </div>
+        <button class="btn-primary w-full mb-6" onclick="showNewPasswordForm()">Verify OTP</button>
+      </div>
+      <div id="newPasswordForm" class="hidden">
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="newPassword">New Password</label>
+          <input type="password" id="newPassword" class="input-field" placeholder="Enter new password">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm new password">
+        </div>
+        <button class="btn-primary w-full mb-6" onclick="showSuccessMessage()">Reset Password</button>
+      </div>
+      <div id="successMessage" class="hidden text-center">
+        <p class="text-green-600 mb-6 text-sm">Password reset successfully!</p>
+        <button class="btn-primary px-8" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-        let menuItemsData = [];
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        let currentPage = 1;
-        const itemsPerPage = 10;
-        let categories = [];
-        let currentSlide = 0;
-        let slideInterval;
+  <div id="signupModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('signupModal')">×</span>
+      <h2 class="text-3xl font-semibold mb-8 text-center" style="font-family: 'Cormorant Garamond', serif;">Signup</h2>
+      <div id="signupForm">
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupName">Name</label>
+          <input type="text" id="signupName" class="input-field" placeholder="Enter your name">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" class="input-field" placeholder="Enter your email">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPhone">Mobile Number</label>
+          <input type="tel" id="signupPhone" class="input-field" placeholder="Enter your mobile number">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPassword">Create Password</label>
+          <input type="password" id="signupPassword" class="input-field" placeholder="Create a password">
+        </div>
+        <p class="text-center text-xs mb-6">
+          By signing up, you agree to our <a href="terms.html" target="_blank" class="text-blue-500 hover:underline">Terms and Conditions</a>.
+        </p>
+        <button class="btn-primary w-full mb-6" onclick="signupUser()">Signup</button>
+        <p class="text-center text-gray-600 mb-6 text-sm">OR</p>
+        <div id="g_id_onload"
+             data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+      </div>
+    </div>
+  </div>
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+  <section id="about" class="py-24 px-8 fade-in bg-gradient-to-t from-white to-gray-50">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-5xl font-semibold mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">About Us</h2>
+      <p class="text-xl mb-8 leading-relaxed text-gray-600">
+        At Delicute, we weave culinary dreams into reality. Inspired by the ethereal beauty of clouds, our dishes are crafted to be light, flavorful, and unforgettable. Every plate tells a story of passion, precision, and perfection.
+      </p>
+      <p class="text-xl leading-relaxed text-gray-600">
+        Using the finest ingredients and a dash of innovation, we invite you to a dining experience that transcends the ordinary. Savor the magic, and let your senses soar!
+      </p>
+    </div>
+  </section>
+
+  <section id="menu" class="py-24 px-8 bg-gradient-to-b from-gray-50 to-white fade-in">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-5xl font-semibold text-center mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Our Menu</h2>
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-12 gap-6">
+        <div class="search-bar w-full sm:w-1/2 max-w-lg">
+          <svg class="w-6 h-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="menuSearch" placeholder="Search menu..." onkeyup="searchMenu()">
+        </div>
+        <select id="categoryFilter" class="category-filter" onchange="filterCategory()">
+          <option value="">All Categories</option>
+          <option value="starter">Starters</option>
+          <option value="main">Main Dishes</option>
+          <option value="dessert">Desserts</option>
+          <option value="beverage">Beverages</option>
+        </select>
+      </div>
+      <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+      <div class="text-center mt-16">
+        <a href="menu.html" class="btn-primary">View Full Menu</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="py-24 px-8 fade-in bg-gradient-to-t from-gray-50 to-white">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-5xl font-semibold mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Contact Us</h2>
+      <p class="text-xl mb-8 leading-relaxed text-gray-600">Ready to taste the magic? Reach out to us!</p>
+      <p class="text-xl mb-6 text-gray-600"><strong>Email:</strong> hello@delicute.com</p>
+      <p class="text-xl mb-6 text-gray-600"><strong>Phone:</strong> +1 (555) 123-4567</p>
+      <p class="text-xl text-gray-600"><strong>Operating Hours:</strong> Mon-Sun, 10 AM - 10 PM</p>
+    </div>
+  </section>
+
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12 text-center">
+    <p class="text-xl">© 2025 Delicute. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let allMenuItems = [];
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const targetId = link.getAttribute('href').substring(1);
+        if (targetId && targetId !== '#') {
+          e.preventDefault();
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }
+      });
+    });
 
-        function showModal(modalId) {
-            closeModalAll();
-            document.getElementById(modalId).style.display = 'flex';
-        }
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            if (modalId === 'loginModal') backToLogin();
-        }
-
-        function closeModalAll() {
-            document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
-        }
-
-        function showForgotPassword() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordEmail').classList.remove('hidden');
-        }
-
-        function backToLogin() {
-            document.getElementById('forgotPasswordEmail').classList.add('hidden');
-            document.getElementById('forgotPasswordOTP').classList.add('hidden');
-            document.getElementById('forgotPasswordReset').classList.add('hidden');
-            document.getElementById('loginForm').classList.remove('hidden');
-        }
-
-        async function sendOTP() {
-            const email = document.getElementById('forgotEmail').value;
-            if (!email) {
-                showToast('Please enter your email.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(data.message, 'success');
-                    document.getElementById('forgotPasswordEmail').classList.add('hidden');
-                    document.getElementById('forgotPasswordOTP').classList.remove('hidden');
-                } else {
-                    showToast(data.error || 'Failed to send OTP.', 'error');
-                }
-            } catch (error) {
-                console.error('Error sending OTP:', error);
-                showToast('Failed to send OTP.', 'error');
-            }
-        }
-
-        async function verifyOTP() {
-            const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('otpInput').value;
-            if (!otp) {
-                showToast('Please enter the OTP.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp, newPassword: null })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('forgotPasswordOTP').classList.add('hidden');
-                    document.getElementById('forgotPasswordReset').classList.remove('hidden');
-                } else {
-                    showToast(data.error || 'Invalid OTP.', 'error');
-                }
-            } catch (error) {
-                console.error('Error verifying OTP:', error);
-                showToast('Failed to verify OTP.', 'error');
-            }
-        }
-
-        async function resetPassword() {
-            const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('otpInput').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            if (!newPassword || !confirmPassword) {
-                showToast('Please fill in both password fields.', 'error');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                showToast('Passwords do not match.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp, newPassword })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(data.message, 'success');
-                    backToLogin();
-                    closeModal('loginModal');
-                } else {
-                    showToast(data.error || 'Failed to reset password.', 'error');
-                }
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                showToast('Failed to reset password.', 'error');
-            }
-        }
-
-        async function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            if (!email || !password) {
-                showToast('Please enter both email/mobile and password.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    closeModal('loginModal');
-                    showToast('Login successful!', 'success');
-                    window.location.href = '/userdashboard.html';
-                } else {
-                    showToast(data.error || 'Login failed.', 'error');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                showToast('Failed to log in.', 'error');
-            }
-        }
-
-        async function signup() {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const phone = document.getElementById('signupPhone').value;
-            const password = document.getElementById('signupPassword').value;
-            const termsAgreed = document.getElementById('termsAgree').checked;
-            if (!name || !email || !phone || !password) {
-                showToast('Please fill in all fields.', 'error');
-                return;
-            }
-            if (!termsAgreed) {
-                showToast('Please agree to the Terms and Conditions.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    closeModal('signupModal');
-                    showToast('Signup successful!', 'success');
-                    window.location.href = '/userdashboard.html';
-                } else {
-                    showToast(data.error || 'Signup failed.', 'error');
-                }
-            } catch (error) {
-                console.error('Signup error:', error);
-                showToast('Failed to sign up.', 'error');
-            }
-        }
-
-        function googleLogin() {
-            window.location.href = `${BASE_URL}/api/auth/google?redirect=true`;
-        }
-
-        function addToCart(item) {
-<<<<<<< HEAD
-            if (!item.price || isNaN(item.price)) {
-                showToast('No valid price available for this item.', 'error');
-=======
-            if (!item.price) {
-                showToast('No price available for this item.', 'error');
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-                return;
-            }
-            cart.push({
-                id: item._id,
-                name: item.name,
-<<<<<<< HEAD
-                price: Number(item.price),
-=======
-                price: item.price,
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-                image: item.image || 'https://via.placeholder.com/150'
-            });
-            localStorage.setItem('cart', JSON.stringify(cart));
-            showToast(`${item.name} added to cart!`, 'success');
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            showCart();
-            showToast('Item removed from cart successfully.', 'success');
-        }
-
-        function showCart() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please log in to view your cart.', 'error');
-                showModal('loginModal');
-                return;
-            }
-            showModal('cartModal');
-            displayCart();
-        }
-
-        function displayCart() {
-            const cartItemsDiv = document.getElementById('cartItems');
-            if (cart.length === 0) {
-                cartItemsDiv.innerHTML = '<p class="text-gray-600 text-sm text-center">Your cart is empty.</p>';
-                return;
-            }
-            let total = 0;
-            cartItemsDiv.innerHTML = cart.map((item, index) => {
-                const price = Number(item.price) || 0;
-                total += price;
-                return `
-<<<<<<< HEAD
-                            <div class="cart-item">
-                                <img src="${item.image}" alt="${item.name}">
-                                <div class="flex-1">
-                                    <h3 class="text-sm font-medium text-gray-800">${item.name}</h3>
-                                    <p class="text-gray-600 text-sm">₹${price.toFixed(2)}</p>
-                                </div>
-                                <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
-                            </div>
-                        `;
-=======
-                    <div class="cart-item">
-                        <img src="${item.image}" alt="${item.name}">
-                        <div class="flex-1">
-                            <span class="font-medium">${item.name}</span>
-                            <p class="text-gray-600 text-sm">₹${item.price}</p>
-                        </div>
-                        <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 text-xs sm:text-sm">Remove</button>
-                    </div>
-                `;
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            }).join('');
-            cartItemsDiv.innerHTML += `
-                        <div class="flex justify-between items-center py-4 border-t mt-4">
-                            <span class="text-sm font-bold text-gray-800">Total</span>
-                            <span class="text-sm font-bold text-gray-800">₹${total.toFixed(2)}</span>
-                        </div>
-                        <p class="text-green-600 font-medium text-sm text-center mt-2">Free Delivery on Your Order!</p>
-                    `;
-        }
-
-        async function sendToAdminDashboard() {
-<<<<<<< HEAD
-=======
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please log in to send cart to admin.', 'error');
-                showModal('loginModal');
-                return;
-            }
-            if (cart.length === 0) {
-                showToast('Your cart is empty.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/cart/send-to-admin`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ items: cart })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Cart sent to admin dashboard!', 'success');
-                    window.location.href = '/admindashboard.html';
-                } else {
-                    showToast(data.error || 'Failed to send cart to admin.', 'error');
-                }
-            } catch (error) {
-                console.error('Error sending cart to admin:', error);
-                showToast('Failed to send cart to admin.', 'error');
-            }
-        }
-
-        async function placeOrder() {
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please log in to send cart to admin.', 'error');
-                showModal('loginModal');
-                return;
-            }
-            if (cart.length === 0) {
-                showToast('Your cart is empty.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/cart/send-to-admin`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ items: cart })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Cart sent to admin dashboard successfully!', 'success');
-                    cart = [];
-                    localStorage.removeItem('cart');
-                    displayCart();
-                } else {
-                    showToast(data.error || 'Failed to send cart to admin.', 'error');
-                }
-            } catch (error) {
-                console.error('Error sending cart to admin:', error);
-                showToast('Failed to send cart to admin.', 'error');
-            }
-        }
-
-        async function placeOrder() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please log in to place an order.', 'error');
-                showModal('loginModal');
-                return;
-            }
-            if (cart.length === 0) {
-                showToast('Your cart is empty.', 'error');
-                return;
-            }
-
-            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
-            if (!isOpen) {
-                showToast('Sorry, Delicute is closed now. Please try again when we are open.', 'error');
-                return;
-            }
-
-            const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-            try {
-                const response = await fetch(`${BASE_URL}/api/orders`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ items: cart, total: total.toFixed(2), deliveryFee: 0 })
-                });
-                const data = await response.json();
-                if (response.ok && data.orderId) {
-                    const options = {
-                        key: 'rzp_test_1a2b3c4d5e6f7g', // Replace with your Razorpay key
-                        amount: data.amount,
-                        currency: 'INR',
-                        name: 'Delicute',
-                        description: 'Order Payment (Free Delivery)',
-                        order_id: data.orderId,
-                        handler: async function (response) {
-                            try {
-                                const verifyResponse = await fetch(`${BASE_URL}/api/payment/verify`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({
-                                        orderId: response.razorpay_order_id,
-                                        paymentId: response.razorpay_payment_id,
-                                        signature: response.razorpay_signature
-                                    })
-                                });
-                                const verifyData = await verifyResponse.json();
-                                if (verifyResponse.ok) {
-                                    showToast('Order placed successfully with free delivery!', 'success');
-                                    cart = [];
-                                    localStorage.removeItem('cart');
-                                    closeModal('cartModal');
-                                    displayCart();
-                                } else {
-                                    showToast(verifyData.error || 'Payment verification failed.', 'error');
-                                }
-                            } catch (error) {
-                                console.error('Payment verification error:', error);
-                                showToast('Failed to verify payment.', 'error');
-                            }
-                        },
-                        prefill: {
-                            name: '',
-                            email: '',
-                            contact: ''
-                        },
-                        theme: {
-                            color: '#f59e0b'
-                        }
-                    };
-                    const rzp = new Razorpay(options);
-                    rzp.on('payment.failed', function (response) {
-                        showToast(`Payment failed: ${response.error.description || 'Unknown error.'}`, 'error');
-                    });
-                    rzp.open();
-                } else {
-                    showToast(data.error || 'Failed to create order.', 'error');
-                }
-            } catch (error) {
-                console.error('Order creation error:', error);
-                showToast('Failed to place order.', 'error');
-            }
-        }
-
-        async function submitForm() {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
-            if (!name || !email || !message) {
-                showToast('Please fill in all fields.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/contact`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, message })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('Thank you for your message!', 'success');
-                    document.getElementById('name').value = '';
-                    document.getElementById('email').value = '';
-                    document.getElementById('message').value = '';
-                } else {
-                    showToast(data.error || 'Failed to send message.', 'error');
-                }
-            } catch (error) {
-                console.error('Contact form error:', error);
-                showToast('Failed to send message.', 'error');
-            }
-        }
-
-        async function fetchRestaurantStatus() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/status`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-                const statusDiv = document.getElementById('restaurantStatus');
-                if (response.ok && typeof data.isOpen === 'boolean') {
-                    localStorage.setItem('restaurantStatus', JSON.stringify({ isOpen: data.isOpen }));
-                    if (data.isOpen) {
-                        statusDiv.innerHTML = 'Our Delicute is Open Now! Enjoy Your Delicious Food, Please <a href="#" onclick="showModal(\'loginModal\')" class="underline hover:text-yellow-300">Login</a>!';
-                        statusDiv.className = 'status-indicator status-open';
-                    } else {
-                        statusDiv.innerHTML = 'Our Delicute is Closed Today. Sorry for the Inconvenience, Thank You for Your Cooperation!';
-                        statusDiv.className = 'status-indicator status-closed';
-                    }
-                } else {
-                    throw new Error('Invalid status data');
-                }
-            } catch (error) {
-                console.error('Error fetching restaurant status:', error);
-                const statusDiv = document.getElementById('restaurantStatus');
-                statusDiv.innerHTML = 'Status Unavailable. Please Try Again Later.';
-                statusDiv.className = 'status-indicator status-closed';
-                localStorage.setItem('restaurantStatus', JSON.stringify({ isOpen: false }));
-            }
-        }
-
-        async function fetchMenuItems() {
-            try {
-                const response = await fetch(`${BASE_URL}/api/menu`);
-                menuItemsData = await response.json();
-                menuItemsData = menuItemsData.map(item => ({
-                    ...item,
-                    price: Number(item.price) || 0,
-                    image: item.image || 'https://via.placeholder.com/150'
-                }));
-                categories = [...new Set(menuItemsData.map(item => item.category))].sort();
-                populateCategoryFilters();
-<<<<<<< HEAD
-                displayMenuItems();
-                displayFullMenuItems();
-            } catch (error) {
-                console.error('Error fetching menu items:', error);
-                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
-                document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load menu items.</p>';
-=======
-                displayMenuItems(menuItemsData.slice(0, 6));
-                displayFullMenuItems(menuItemsData);
-            } catch (error) {
-                console.error('Error fetching menu items:', error);
-                document.getElementById('menuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
-                document.getElementById('fullMenuItems').innerHTML = '<p class="text-red-500 text-sm sm:text-base">Failed to load menu items.</p>';
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-            }
-        }
-
-        function populateCategoryFilters() {
-            const categoryFilter = document.getElementById('categoryFilter');
-            const fullMenuCategoryFilter = document.getElementById('fullMenuCategoryFilter');
-            const options = ['<option value="">All Categories</option>'].concat(
-                categories.map(category => `<option value="${category}">${category}</option>`)
-            ).join('');
-            categoryFilter.innerHTML = options;
-            fullMenuCategoryFilter.innerHTML = options;
-        }
-
-        function displayMenuItems() {
-            const menuItemsDiv = document.getElementById('menuItems');
-            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
-            const filteredItems = filterMenuItems();
-            if (filteredItems.length === 0) {
-                menuItemsDiv.innerHTML = '<p class="text-gray-600 text-center text-sm">No items found.</p>';
-                return;
-            }
-<<<<<<< HEAD
-            menuItemsDiv.innerHTML = filteredItems.slice(0, 6).map(item => `
-                        <div class="menu-card">
-                            <img src="${item.image}" alt="${item.name}">
-                            <div class="flex-1">
-                                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-                                <p class="text-gray-600 text-sm mt-1">${item.description || 'No description available'}</p>
-                                <p class="text-yellow-500 font-bold mt-2 text-base">₹${Number(item.price).toFixed(2)}</p>
-                                <p class="free-delivery">Free Delivery</p>
-                                <button ${isOpen ? `onclick='addToCart(${JSON.stringify(item)})'` : 'disabled'} 
-                                    class="mt-3 btn-primary w-full text-sm ${isOpen ? '' : 'opacity-50 cursor-not-allowed'}">
-                                    ${isOpen ? 'Add to Cart' : 'Restaurant Closed'}
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-        }
-
-        function displayFullMenuItems() {
-            const fullMenuItems = document.getElementById('fullMenuItems');
-            const isOpen = JSON.parse(localStorage.getItem('restaurantStatus') || '{}').isOpen;
-            const filteredItems = filterFullMenuItems();
-            if (filteredItems.length === 0) {
-                fullMenuItems.innerHTML = '<p class="text-gray-600 text-center text-sm">No items found.</p>';
-                return;
-            }
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedItems = filteredItems.slice(startIndex, endIndex);
-            fullMenuItems.innerHTML = paginatedItems.map(item => `
-                        <div class="menu-card">
-                            <img src="${item.image}" alt="${item.name}">
-                            <div class="flex-1">
-                                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-                                <p class="text-gray-600 text-sm mt-1">${item.description || 'No description available'}</p>
-                                <p class="text-yellow-500 font-bold mt-2 text-base">₹${Number(item.price).toFixed(2)}</p>
-                                <p class="free-delivery">Free Delivery</p>
-                                <button ${isOpen ? `onclick='addToCart(${JSON.stringify(item)})'` : 'disabled'} 
-                                    class="mt-3 btn-primary w-full text-sm ${isOpen ? '' : 'opacity-50 cursor-not-allowed'}">
-                                    ${isOpen ? 'Add to Cart' : 'Restaurant Closed'}
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-            updatePagination(filteredItems.length);
-        }
-
-        function filterMenuItems() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
-            const category = document.getElementById('categoryFilter').value;
-            const maxPrice = parseInt(document.getElementById('priceRange').value);
-            return menuItemsData.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery) ||
-                    (item.description || '').toLowerCase().includes(searchQuery);
-                const matchesCategory = !category || item.category === category;
-                const matchesPrice = Number(item.price) <= maxPrice;
-                return matchesSearch && matchesCategory && matchesPrice;
-            });
-        }
-
-        function filterFullMenuItems() {
-            const searchQuery = document.getElementById('fullMenuSearchInput').value.toLowerCase().trim();
-            const category = document.getElementById('fullMenuCategoryFilter').value;
-            const maxPrice = parseInt(document.getElementById('fullMenuPriceRange').value);
-            return menuItemsData.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery) ||
-                    (item.description || '').toLowerCase().includes(searchQuery);
-                const matchesCategory = !category || item.category === category;
-                const matchesPrice = Number(item.price) <= maxPrice;
-                return matchesSearch && matchesCategory && matchesPrice;
-            });
-=======
-            menuItemsDiv.innerHTML = items.map(item => `
-                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
-                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function displayFullMenuItems(items) {
-            const fullMenuItemsDiv = document.getElementById('fullMenuItems');
-            if (items.length === 0) {
-                fullMenuItemsDiv.innerHTML = '<p class="text-gray-600 text-sm sm:text-base">No items found.</p>';
-                return;
-            }
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const paginatedItems = items.slice(start, end);
-            fullMenuItemsDiv.innerHTML = paginatedItems.map(item => `
-                <div class="menu-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full object-cover">
-                    <div class="p-6">
-                        <h3 class="text-base font-semibold text-gray-800 sm:text-lg">${item.name}</h3>
-                        <p class="text-gray-600 text-sm mt-2 sm:text-base">${item.description || 'No description available'}</p>
-                        <p class="text-yellow-500 font-bold mt-2 text-sm sm:text-base">₹${item.price}</p>
-                        <button onclick='addToCart(${JSON.stringify(item)})' class="mt-3 btn-primary w-full text-sm sm:text-base">Add to Cart</button>
-                    </div>
-                </div>
-            `).join('');
-            updatePagination(items.length);
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
-        }
-
-        function updatePagination(totalItems) {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-            document.getElementById('prevPage').classList.toggle('disabled', currentPage === 1);
-            document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages);
-        }
-
-        function changePage(delta) {
-            const totalPages = Math.ceil(filterFullMenuItems().length / itemsPerPage);
-            currentPage = Math.max(1, Math.min(currentPage + delta, totalPages));
-            displayFullMenuItems();
-        }
-
-        function showFullMenu() {
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('fullMenuContainer').classList.add('active');
-            currentPage = 1;
-            displayFullMenuItems();
-        }
-
-        function hideFullMenu() {
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('fullMenuContainer').classList.remove('active');
-            displayMenuItems();
-        }
-
-        function updatePriceRange() {
-            const priceRange = document.getElementById('priceRange').value;
-            document.getElementById('priceRangeValue').textContent = `₹30 - ₹${priceRange}`;
-            displayMenuItems();
-        }
-
-        function updateFullMenuPriceRange() {
-            const priceRange = document.getElementById('fullMenuPriceRange').value;
-            document.getElementById('fullMenuPriceRangeValue').textContent = `₹30 - ₹${priceRange}`;
-            displayFullMenuItems();
-        }
-
-        // Slider Functionality
-        function updateSlider() {
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.dot');
-            slides.forEach((slide, index) => {
-                slide.classList.remove('active', 'prev');
-                if (index === currentSlide) {
-                    slide.classList.add('active');
-                } else if (index === (currentSlide - 1 + slides.length) % slides.length) {
-                    slide.classList.add('prev');
-                }
-            });
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
-            });
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % document.querySelectorAll('.slide').length;
-            updateSlider();
-        }
-
-        function goToSlide(index) {
-            currentSlide = index;
-            updateSlider();
-            resetSlideInterval();
-        }
-
-        function startSlideInterval() {
-            slideInterval = setInterval(nextSlide, 5000);
-        }
-
-        function resetSlideInterval() {
-            clearInterval(slideInterval);
-            startSlideInterval();
-        }
-
-        // Navbar Toggle
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            const navbarMenu = document.getElementById('navbarMenu');
-            navbarMenu.classList.toggle('active');
+    // Render menu items dynamically (mock data for now)
+    async function renderMenuItems() {
+      try {
+        // Mock API response since actual backend isn't provided
+        allMenuItems = [
+          { id: '1', name: 'Cloud Soufflé', description: 'A light, fluffy dessert.', price: 250, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb', category: 'dessert' },
+          { id: '2', name: 'Sky Risotto', description: 'Creamy and flavorful.', price: 350, image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371', category: 'main' },
+          { id: '3', name: 'Star Bruschetta', description: 'Fresh and zesty.', price: 150, image: 'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659', category: 'starter' },
+          { id: '4', name: 'Moonlit Mojito', description: 'Refreshing and cool.', price: 100, image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec', category: 'beverage' },
+          { id: '5', name: 'Velvet Cake', description: 'Rich and decadent.', price: 200, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587', category: 'dessert' },
+          { id: '6', name: 'Aurora Pasta', description: 'Vibrant and savory.', price: 300, image: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce', category: 'main' },
+        ];
+        const menuContainer = document.getElementById('menuItems');
+        menuContainer.innerHTML = '';
+        const itemsToShow = allMenuItems.slice(0, Math.max(6, allMenuItems.length));
+        itemsToShow.forEach(item => {
+          const menuItem = `
+            <div class="menu-card p-8 rounded-2xl">
+              <img src="${item.image}" alt="${item.name}" class="w-full h-56 object-cover rounded-lg mb-6 shadow-md">
+              <h3 class="text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
+              <p class="text-gray-600 mb-4 text-sm">${item.description}</p>
+              <div class="text-gray-500 text-sm mb-3">Category: ${item.category || 'General'}</div>
+              <div class="flex justify-between items-center">
+                <p class="text-blue-600 font-bold text-lg">₹${item.price}</p>
+                <button class="btn-primary py-2 px-6 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
+              </div>
+            </div>
+          `;
+          menuContainer.innerHTML += menuItem;
         });
+      } catch (error) {
+        showToast('Failed to load menu. Please try again later.', 'error');
+      }
+    }
 
-        // Initialize
-        window.onload = function () {
-            const token = localStorage.getItem('token');
-            if (token) {
-                window.location.href = '/userdashboard.html';
-                return;
-            }
-            const urlParams = new URLSearchParams(window.location.search);
-            const googleToken = urlParams.get('token');
-            if (googleToken) {
-                localStorage.setItem('token', googleToken);
-                window.location.href = '/userdashboard.html';
-                return;
-            }
-            fetchRestaurantStatus();
-            fetchMenuItems();
-            document.querySelector('.slide[data-index="0"]').classList.add('active');
-            document.querySelector('.dot[data-index="0"]').classList.add('active');
-            startSlideInterval();
-        };
-    </script>
+    // Search menu
+    function searchMenu() {
+      const query = document.getElementById('menuSearch').value.toLowerCase();
+      const filteredItems = allMenuItems.filter(item => item.name.toLowerCase().includes(query)).slice(0, 6);
+      renderFilteredItems(filteredItems);
+    }
+
+    // Filter by category
+    function filterCategory() {
+      const category = document.getElementById('categoryFilter').value;
+      const filteredItems = category 
+        ? allMenuItems.filter(item => (item.category || 'general').toLowerCase() === category).slice(0, 6)
+        : allMenuItems.slice(0, 6);
+      renderFilteredItems(filteredItems);
+    }
+
+    // Render filtered menu items
+    function renderFilteredItems(items) {
+      const menuContainer = document.getElementById('menuItems');
+      menuContainer.innerHTML = '';
+      items.forEach(item => {
+        const menuItem = `
+          <div class="menu-card p-8 rounded-2xl">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-56 object-cover rounded-lg mb-6 shadow-md">
+            <h3 class="text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
+            <p class="text-gray-600 mb-4 text-sm">${item.description}</p>
+            <div class="text-gray-500 text-sm mb-3">Category: ${item.category || 'General'}</div>
+            <div class="flex justify-between items-center">
+              <p class="text-blue-600 font-bold text-lg">₹${item.price}</p>
+              <button class="btn-primary py-2 px-6 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
+            </div>
+          </div>
+        `;
+        menuContainer.innerHTML += menuItem;
+      });
+      if (items.length === 0) {
+        menuContainer.innerHTML = '<p class="text-center text-gray-600">No items found.</p>';
+      }
+    }
+
+    // Check restaurant status
+    async function checkRestaurantStatus() {
+      try {
+        // Mock status since actual API isn't provided
+        const status = 'open';
+        const statusElement = document.getElementById('restaurantStatus');
+        statusElement.innerHTML = status === 'open'
+          ? `<span class="status-badge status-open">Delicute is Open Now, Make Your Day Delicious! <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Please Login</a></span>`
+          : `<span class="status-badge status-closed">Sorry, Our Delicute is Closed Today! <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Please Login</a></span>`;
+      } catch (error) {
+        showToast('Failed to load restaurant status.', 'error');
+        document.getElementById('restaurantStatus').innerHTML = '<span class="status-badge status-closed">Status Unavailable</span>';
+      }
+    }
+
+    // Check login status
+    function checkLogin() {
+      return !!localStorage.getItem('token');
+    }
+
+    // Add to cart
+    async function addToCart(itemId, name, price, image) {
+      if (!checkLogin()) {
+        showToast('Please log in to add items to your cart.', 'error');
+        openModal('loginModal');
+        return;
+      }
+      try {
+        // Mock cart addition since actual API isn't provided
+        showToast(`${name} added to cart!`, 'success');
+      } catch (error) {
+        showToast('Failed to add item to cart', 'error');
+      }
+    }
+
+    // User login
+    async function loginUser() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      try {
+        // Mock login since actual API isn't provided
+        const result = { token: 'mock-token', message: 'Logged in successfully!' };
+        localStorage.setItem('token', result.token);
+        showToast(result.message, 'success');
+        closeModal('loginModal');
+        window.location.href = 'userdashboard.html';
+      } catch (error) {
+        showToast('Failed to login', 'error');
+      }
+    }
+
+    // User signup
+    async function signupUser() {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const phone = document.getElementById('signupPhone').value;
+      const password = document.getElementById('signupPassword').value;
+      if (!name || !email || !phone || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      try {
+        // Mock signup since actual API isn't provided
+        const result = { token: 'mock-token', message: 'Signed up successfully!' };
+        localStorage.setItem('token', result.token);
+        showToast(result.message, 'success');
+        closeModal('signupModal');
+        window.location.href = 'userdashboard.html';
+      } catch (error) {
+        showToast('Failed to signup', 'error');
+      }
+    }
+
+    // Google login callback
+    window.handleGoogleLogin = async function(credentialResponse) {
+      try {
+        // Mock Google login since actual API isn't provided
+        const result = { token: 'mock-google-token', message: 'Logged in with Google!' };
+        localStorage.setItem('token', result.token);
+        showToast(result.message, 'success');
+        window.location.href = 'userdashboard.html';
+      } catch (error) {
+        showToast('Failed to login with Google', 'error');
+      }
+    };
+
+    // Forgot password
+    async function showForgotPassword() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('forgotPasswordForm').classList.remove('hidden');
+    }
+
+    async function showOtpForm() {
+      const email = document.getElementById('forgotEmail').value;
+      if (!email) {
+        showToast('Please enter your email', 'error');
+        return;
+      }
+      try {
+        // Mock OTP send
+        showToast('OTP sent to your email!', 'success');
+        document.getElementById('forgotPasswordForm').classList.add('hidden');
+        document.getElementById('otpForm').classList.remove('hidden');
+      } catch (error) {
+        showToast('Failed to send OTP', 'error');
+      }
+    }
+
+    async function showNewPasswordForm() {
+      const email = document.getElementById('forgotEmail').value;
+      const otp = document.getElementById('otp').value;
+      if (!otp) {
+        showToast('Please enter the OTP', 'error');
+        return;
+      }
+      try {
+        // Mock OTP verification
+        showToast('OTP verified!', 'success');
+        document.getElementById('otpForm').classList.add('hidden');
+        document.getElementById('newPasswordForm').classList.remove('hidden');
+      } catch (error) {
+        showToast('Failed to verify OTP', 'error');
+      }
+    }
+
+    async function showSuccessMessage() {
+      const email = document.getElementById('forgotEmail').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (!newPassword || !confirmPassword) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+      }
+      try {
+        // Mock password reset
+        showToast('Password reset successfully!', 'success');
+        document.getElementById('newPasswordForm').classList.add('hidden');
+        document.getElementById('successMessage').classList.remove('hidden');
+      } catch (error) {
+        showToast('Failed to reset password', 'error');
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'flex';
+      if (modalId === 'loginModal') {
+        resetLoginModal();
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    function resetLoginModal() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('forgotPasswordForm').classList.add('hidden');
+      document.getElementById('otpForm').classList.add('hidden');
+      document.getElementById('newPasswordForm').classList.add('hidden');
+      document.getElementById('successMessage').classList.add('hidden');
+    }
+
+    window.onload = function() {
+      checkRestaurantStatus();
+      renderMenuItems();
+    };
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        closeModal('loginModal');
+        closeModal('signupModal');
+      }
+    };
+  </script>
 </body>
 </html>
-<<<<<<< HEAD
-</xaiArtifactId="e607f40-cb64-4296-a3b2-eb725e069133" title="index.html" contentType="text/html">
-=======
->>>>>>> cb012eab1291e632c5fb7e02506a098c75266316
