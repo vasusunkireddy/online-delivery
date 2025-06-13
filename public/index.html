@@ -12,7 +12,6 @@
       background: linear-gradient(135deg, #fef3f9 0%, #e0f4ff 100%);
       font-family: 'Poppins', sans-serif;
       color: #1a2b44;
-      overflow-x: hidden;
       margin: 0;
       scroll-behavior: smooth;
     }
@@ -31,154 +30,97 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+      background: rgba(0, 0, 0, 0.3);
       z-index: 1;
     }
     .hero-content {
       background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 2rem;
-      padding: 5rem 7rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       text-align: center;
-      animation: float 6s ease-in-out infinite;
       position: relative;
       z-index: 2;
-      max-width: 800px;
-      margin: auto;
-      transform: perspective(1000px);
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotateX(0deg); }
-      50% { transform: translateY(-30px) rotateX(2deg); }
+      max-width: 700px;
+      margin: 0.5rem auto;
     }
     .hero-title {
-      animation: sparkle-title 4s infinite;
       font-family: 'Cormorant Garamond', serif;
-      font-size: 5rem;
+      font-size: 3rem;
       font-weight: 700;
       color: #ffffff;
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(59, 130, 246, 0.5);
-      letter-spacing: 2px;
-    }
-    @keyframes sparkle-title {
-      0%, 100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
-      50% { text-shadow: 0 0 30px rgba(255, 255, 255, 1), 0 0 40px rgba(59, 130, 246, 0.7); }
+      letter-spacing: 1px;
     }
     .hero-title::after {
       content: '';
       display: block;
-      width: 250px;
-      height: 8px;
+      width: 150px;
+      height: 4px;
       background: linear-gradient(to right, #3b82f6, #d946ef);
-      margin: 2rem auto;
-      border-radius: 4px;
-      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+      margin: 1rem auto;
+      border-radius: 2px;
     }
     .status-badge {
       display: inline-block;
-      padding: 1rem 3rem;
+      padding: 0.5rem 1.5rem;
       border-radius: 9999px;
-      font-size: 1.5rem;
+      font-size: 1rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      transition: transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     .status-open {
       background: linear-gradient(135deg, #10b981, #34d399);
       color: white;
-      animation: pulse 2.5s infinite;
     }
     .status-closed {
       background: linear-gradient(135deg, #ef4444, #f87171);
       color: white;
     }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
     .free-delivery {
-      font-size: 1.5rem;
+      font-size: 1rem;
       color: #fef08a;
       font-weight: 600;
-      opacity: 0;
-      animation: fade-in 2.5s ease-in forwards 1.2s;
-      text-shadow: 0 0 10px rgba(254, 240, 138, 0.7);
-    }
-    @keyframes fade-in {
-      to { opacity: 1; }
-    }
-    .hover-scale {
-      transition: transform 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
-    }
-    .hover-scale:hover {
-      transform: scale(1.1);
-      color: #3b82f6;
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      margin-top: 1rem;
     }
     .nav-link {
-      position: relative;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.25rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
       color: #ffffff;
-      padding: 0.75rem 1.5rem;
-      transition: color 0.4s ease;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      padding: 0.5rem 1rem;
+      transition: color 0.3s ease;
     }
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 3px;
-      bottom: 0;
-      left: 0;
-      background: linear-gradient(to right, #3b82f6, #d946ef);
-      transition: width 0.4s ease;
-    }
-    .nav-link:hover::after {
-      width: 100%;
+    .nav-link:hover {
+      color: #3b82f6;
     }
     .logo {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.75rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: #ffffff;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
     .subtext {
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.875rem;
+      font-size: 0.65rem;
       color: #a3bffa;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     }
     .fade-in {
       opacity: 0;
-      transform: translateY(30px);
-      animation: fadeIn 1.2s ease forwards;
+      transform: translateY(20px);
+      animation: fadeIn 1s ease forwards;
     }
     @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      to { opacity: 1; transform: translateY(0); }
     }
     .menu-card {
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 1.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 0.75rem;
       overflow: hidden;
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(-5px);
     }
     .modal {
       display: none;
@@ -187,74 +129,42 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      backdrop-filter: blur(5px);
     }
     .modal-content {
       background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(20px);
-      padding: 3rem;
-      border-radius: 2rem;
+      padding: 1.5rem;
+      border-radius: 1rem;
       width: 90%;
-      max-width: 550px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-      position: relative;
-      animation: modalPop 0.5s ease forwards;
-    }
-    @keyframes modalPop {
-      from { transform: scale(0.8); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     .close-btn {
       position: absolute;
-      top: 1.25rem;
-      right: 1.25rem;
-      font-size: 2rem;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 1.25rem;
       cursor: pointer;
       color: #4b5e7a;
-      transition: color 0.3s ease, transform 0.3s ease;
     }
     .close-btn:hover {
       color: #3b82f6;
-      transform: rotate(90deg);
     }
     .login-slide {
-      position: relative;
-      overflow: hidden;
       background: linear-gradient(135deg, #3b82f6, #d946ef);
       border-radius: 9999px;
-      padding: 0.75rem 2rem;
-      color: white !important;
-    }
-    .login-slide::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-      transition: left 0.6s ease;
-    }
-    .login-slide:hover::before {
-      left: 100%;
+      padding: 0.5rem 1.25rem;
+      color: white;
     }
     .search-bar {
       background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 9999px;
-      padding: 1rem 2rem;
+      padding: 0.5rem 1rem;
       display: flex;
       align-items: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
-    }
-    .search-bar:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
     .search-bar input {
       background: transparent;
@@ -262,42 +172,27 @@
       outline: none;
       color: #1a2b44;
       width: 100%;
-      font-size: 1.1rem;
+      font-size: 0.9rem;
     }
     .search-bar input::placeholder {
       color: #6b7280;
     }
     .category-filter {
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 9999px;
-      padding: 1rem 2rem;
-      color: #1a2b44;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
-    }
-    .category-filter:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
     }
     .toast {
       position: fixed;
-      top: 30px;
-      right: 30px;
-      padding: 1.25rem 2.5rem;
-      border-radius: 1rem;
+      top: 15px;
+      right: 15px;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
       color: white;
-      font-size: 1.1rem;
-      font-weight: 500;
+      font-size: 0.9rem;
       z-index: 2000;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-      opacity: 0;
-      transform: translateY(-30px);
-      animation: toastSlide 4s ease-in-out forwards;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      animation: toastSlide 3s ease-in-out forwards;
     }
     .toast-success {
       background: linear-gradient(135deg, #10b981, #34d399);
@@ -308,9 +203,10 @@
     .toast::before {
       content: '';
       display: inline-block;
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 1rem;
+      height: 1rem;
       background-size: cover;
+      margin-right: 0.5rem;
     }
     .toast-success::before {
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
@@ -319,135 +215,178 @@
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
     }
     @keyframes toastSlide {
-      0% { opacity: 0; transform: translateY(-30px); }
+      0% { opacity: 0; transform: translateY(-20px); }
       10% { opacity: 1; transform: translateY(0); }
       90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 0; transform: translateY(-20px); }
     }
     .btn-primary {
       background: linear-gradient(135deg, #3b82f6, #d946ef);
       color: white;
-      padding: 1rem 2.5rem;
+      padding: 0.5rem 1.5rem;
       border-radius: 9999px;
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
     }
     .btn-primary:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
     }
     .input-field {
       background: rgba(255, 255, 255, 0.5);
       border: 1px solid rgba(0, 0, 0, 0.1);
-      border-radius: 0.75rem;
-      padding: 1rem;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
       width: 100%;
-      font-size: 1rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      font-size: 0.9rem;
     }
     .input-field:focus {
       border-color: #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+      outline: none;
+    }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      z-index: 100;
+    }
+    .hamburger span {
+      width: 20px;
+      height: 2px;
+      background: #ffffff;
+      margin: 2px 0;
+      transition: all 0.3s ease;
+    }
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 60%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 3rem 1.5rem;
+      z-index: 99;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    .mobile-menu.active {
+      transform: translateX(0);
+    }
+    .mobile-menu a {
+      color: #ffffff;
+      font-size: 1.25rem;
+      margin: 0.75rem 0;
+      text-align: left;
     }
     @media (max-width: 640px) {
-      .logo {
-        font-size: 2rem;
+      .hamburger {
+        display: flex;
       }
-      .logo img {
-        width: 2.5rem;
-        height: 2.5rem;
+      .desktop-nav {
+        display: none;
       }
-      .subtext {
-        font-size: 0.75rem;
-      }
-      .nav-link {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-      }
-      nav .space-x-6 {
-        gap: 0.75rem;
+      .mobile-menu {
+        display: flex;
       }
       .hero-content {
-        padding: 3rem 2rem;
-        margin: 1.5rem;
+        padding: 1.5rem 1rem;
+        margin: 0.5rem;
       }
       .hero-title {
-        font-size: 3.5rem;
+        font-size: 2rem;
+      }
+      .hero-title::after {
+        width: 100px;
+        height: 3px;
       }
       .status-badge {
-        font-size: 1rem;
-        padding: 0.75rem 2rem;
+        font-size: 0.8rem;
+        padding: 0.4rem 1rem;
       }
       .free-delivery {
-        font-size: 1.2rem;
+        font-size: 0.9rem;
       }
-      .hero-content p {
-        font-size: 1rem;
+      .logo {
+        font-size: 1.5rem;
       }
-      .hero-content a {
-        font-size: 1rem;
-        padding: 0.75rem 2rem;
+      .logo img {
+        width: 1.5rem;
+        height: 1.5rem;
       }
-      section h2 {
-        font-size: 2.5rem;
-      }
-      section p {
-        font-size: 1rem;
+      .subtext {
+        font-size: 0.6rem;
       }
       .menu-card img {
-        height: 12rem;
+        height: 8rem;
       }
       .menu-card h3 {
-        font-size: 1.25rem;
+        font-size: 1rem;
       }
       .menu-card p {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
       }
       .modal-content {
-        padding: 2rem;
+        padding: 1rem;
         max-width: 95%;
       }
       #menuItems {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
+        gap: 0.75rem;
       }
       .toast {
-        top: 15px;
-        right: 15px;
-        padding: 1rem 2rem;
-        font-size: 0.875rem;
+        top: 10px;
+        right: 10px;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+    }
+    @media (min-width: 641px) {
+      .mobile-menu {
+        display: none !important;
       }
     }
   </style>
 </head>
 <body>
   <header class="cloud-bg">
-    <nav class="flex items-center justify-between px-8 py-6 bg-gradient-to-r from-gray-900/80 to-gray-700/80 shadow-2xl fixed w-full top-0 z-50 backdrop-blur-lg">
+    <nav class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-900/80 to-gray-700/80 fixed w-full top-0 z-50 backdrop-blur-sm">
       <div class="flex flex-col items-start">
         <div class="logo flex items-center">
-          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-12 h-12 mr-3 rounded-full shadow-lg">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
           <span>Delicute</span>
         </div>
-        <p class="subtext mt-2">Every Bite Tells a Story</p>
+        <p class="subtext mt-1">Every Bite Tells a Story</p>
       </div>
-      <div class="flex space-x-6">
-        <a href="#about" class="hover-scale nav-link">About</a>
-        <a href="#menu" class="hover-scale nav-link">Menu</a>
-        <a href="#contact" class="hover-scale nav-link">Contact</a>
-        <a href="#" class="hover-scale nav-link login-slide" onclick="openModal('loginModal')">Login</a>
-        <a href="#" class="hover-scale nav-link login-slide" onclick="openModal('signupModal')">Signup</a>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="desktop-nav flex space-x-2">
+        <a href="#home" class="nav-link">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#menu" class="nav-link">Menu</a>
+        <a href="#contact" class="nav-link">Contact</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('loginModal')">Login</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('signupModal')">Signup</a>
+      </div>
+      <div class="mobile-menu">
+        <a href="#home" class="nav-link" onclick="toggleMobileMenu()">Home</a>
+        <a href="#about" class="nav-link" onclick="toggleMobileMenu()">About</a>
+        <a href="#menu" class="nav-link" onclick="toggleMobileMenu()">Menu</a>
+        <a href="#contact" class="nav-link" onclick="toggleMobileMenu()">Contact</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('loginModal'); toggleMobileMenu()">Login</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('signupModal'); toggleMobileMenu()">Signup</a>
       </div>
     </nav>
-    <div class="flex flex-1 items-center justify-center text-center min-h-screen pt-24">
+    <div id="home" class="flex flex-1 items-center justify-center text-center min-h-screen pt-16">
       <div class="hero-content">
-        <p class="text-2xl font-light text-white mb-6 tracking-wide">Embark on a Culinary Odyssey!</p>
-        <h1 class="hero-title mb-8">Delicute</h1>
-        <div id="restaurantStatus" class="mb-8"></div>
+        <p class="text-lg font-light text-white mb-3">Embark on a Culinary Odyssey!</p>
+        <h1 class="hero-title mb-4">Delicute</h1>
+        <div id="restaurantStatus" class="mb-4"></div>
         <a href="#menu" class="btn-primary">Explore Our Menu</a>
-        <p class="free-delivery mt-6">Free Delivery on All Orders!</p>
+        <p class="free-delivery">Free Delivery on All Orders!</p>
       </div>
     </div>
   </header>
@@ -455,54 +394,54 @@
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('loginModal')">×</span>
-      <h2 class="text-3xl font-semibold mb-8 text-center" style="font-family: 'Cormorant Garamond', serif;">Login</h2>
+      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Login</h2>
       <div id="loginForm">
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="loginEmail">Email or Mobile Number</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="loginEmail">Email or Mobile Number</label>
           <input type="text" id="loginEmail" class="input-field" placeholder="Enter email or mobile number">
         </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="loginPassword">Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="loginPassword">Password</label>
           <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
         </div>
-        <button class="btn-primary w-full mb-6" onclick="loginUser()">Login</button>
-        <p class="text-center text-gray-600 mb-6 text-sm">OR</p>
+        <button class="btn-primary w-full mb-3" onclick="loginUser()">Login</button>
+        <p class="text-center text-gray-600 mb-3 text-sm">OR</p>
         <div id="g_id_onload"
              data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
              data-callback="handleGoogleLogin"
              data-auto_prompt="false">
         </div>
         <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
-        <p class="text-center text-sm mt-4"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
+        <p class="text-center text-sm mt-2"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
       </div>
       <div id="forgotPasswordForm" class="hidden">
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="forgotEmail">Email</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="forgotEmail">Email</label>
           <input type="email" id="forgotEmail" class="input-field" placeholder="Enter your email">
         </div>
-        <button class="btn-primary w-full mb-6" onclick="showOtpForm()">Send OTP</button>
+        <button class="btn-primary w-full mb-3" onclick="sendOtp()">Send OTP</button>
       </div>
       <div id="otpForm" class="hidden">
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="otp">Enter OTP</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="otp">Enter OTP</label>
           <input type="text" id="otp" class="input-field" placeholder="Enter OTP">
         </div>
-        <button class="btn-primary w-full mb-6" onclick="showNewPasswordForm()">Verify OTP</button>
+        <button class="btn-primary w-full mb-3" onclick="verifyOtp()">Verify OTP</button>
       </div>
       <div id="newPasswordForm" class="hidden">
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="newPassword">New Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="newPassword">New Password</label>
           <input type="password" id="newPassword" class="input-field" placeholder="Enter new password">
         </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="confirmPassword">Confirm Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="confirmPassword">Confirm Password</label>
           <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm new password">
         </div>
-        <button class="btn-primary w-full mb-6" onclick="showSuccessMessage()">Reset Password</button>
+        <button class="btn-primary w-full mb-3" onclick="resetPassword()">Reset Password</button>
       </div>
       <div id="successMessage" class="hidden text-center">
-        <p class="text-green-600 mb-6 text-sm">Password reset successfully!</p>
-        <button class="btn-primary px-8" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
+        <p class="text-green-600 mb-3 text-sm">Password reset successfully!</p>
+        <button class="btn-primary px-4" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
       </div>
     </div>
   </div>
@@ -510,29 +449,29 @@
   <div id="signupModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('signupModal')">×</span>
-      <h2 class="text-3xl font-semibold mb-8 text-center" style="font-family: 'Cormorant Garamond', serif;">Signup</h2>
+      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Signup</h2>
       <div id="signupForm">
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupName">Name</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="signupName">Name</label>
           <input type="text" id="signupName" class="input-field" placeholder="Enter your name">
         </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupEmail">Email</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="signupEmail">Email</label>
           <input type="email" id="signupEmail" class="input-field" placeholder="Enter your email">
         </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupPhone">Mobile Number</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="signupPhone">Mobile Number</label>
           <input type="tel" id="signupPhone" class="input-field" placeholder="Enter your mobile number">
         </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupPassword">Create Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="signupPassword">Create Password</label>
           <input type="password" id="signupPassword" class="input-field" placeholder="Create a password">
         </div>
-        <p class="text-center text-xs mb-6">
+        <p class="text-center text-xs mb-3">
           By signing up, you agree to our <a href="terms.html" target="_blank" class="text-blue-500 hover:underline">Terms and Conditions</a>.
         </p>
-        <button class="btn-primary w-full mb-6" onclick="signupUser()">Signup</button>
-        <p class="text-center text-gray-600 mb-6 text-sm">OR</p>
+        <button class="btn-primary w-full mb-3" onclick="signupUser()">Signup</button>
+        <p class="text-center text-gray-600 mb-3 text-sm">OR</p>
         <div id="g_id_onload"
              data-client_id="1019406651586-rgl91utq3nn9ohudbrt15o74el8eq75j.apps.googleusercontent.com"
              data-callback="handleGoogleLogin"
@@ -543,29 +482,29 @@
     </div>
   </div>
 
-  <section id="about" class="py-24 px-8 fade-in bg-gradient-to-t from-white to-gray-50">
-    <div class="max-w-6xl mx-auto text-center">
-      <h2 class="text-5xl font-semibold mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">About Us</h2>
-      <p class="text-xl mb-8 leading-relaxed text-gray-600">
-        At Delicute, we weave culinary dreams into reality. Inspired by the ethereal beauty of clouds, our dishes are crafted to be light, flavorful, and unforgettable. Every plate tells a story of passion, precision, and perfection.
+  <section id="about" class="py-16 px-4 fade-in bg-gradient-to-t from-white to-gray-50">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-semibold mb-6 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">About Us</h2>
+      <p class="text-base mb-4 leading-relaxed text-gray-600">
+        At Delicute, we craft culinary experiences that are light, flavorful, and unforgettable, inspired by the beauty of clouds.
       </p>
-      <p class="text-xl leading-relaxed text-gray-600">
-        Using the finest ingredients and a dash of innovation, we invite you to a dining experience that transcends the ordinary. Savor the magic, and let your senses soar!
+      <p class="text-base leading-relaxed text-gray-600">
+        With the finest ingredients and innovative techniques, we invite you to savor a dining experience that elevates the senses.
       </p>
     </div>
   </section>
 
-  <section id="menu" class="py-24 px-8 bg-gradient-to-b from-gray-50 to-white fade-in">
-    <div class="max-w-7xl mx-auto">
-      <h2 class="text-5xl font-semibold text-center mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Our Menu</h2>
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-12 gap-6">
-        <div class="search-bar w-full sm:w-1/2 max-w-lg">
-          <svg class="w-6 h-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <section id="menu" class="py-16 px-4 bg-gradient-to-b from-gray-50 to-white fade-in">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-semibold text-center mb-6 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Our Menu</h2>
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-3">
+        <div class="search-bar w-full sm:w-1/2 max-w-sm">
+          <svg class="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           <input type="text" id="menuSearch" placeholder="Search menu..." onkeyup="searchMenu()">
         </div>
-        <select id="categoryFilter" class="category-filter" onchange="filterCategory()">
+        <select id="categoryFilter" class="category-filter w-full sm:w-auto" onchange="filterCategory()">
           <option value="">All Categories</option>
           <option value="starter">Starters</option>
           <option value="main">Main Dishes</option>
@@ -573,29 +512,109 @@
           <option value="beverage">Beverages</option>
         </select>
       </div>
-      <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"></div>
-      <div class="text-center mt-16">
+      <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div class="text-center mt-8">
         <a href="menu.html" class="btn-primary">View Full Menu</a>
       </div>
     </div>
   </section>
 
-  <section id="contact" class="py-24 px-8 fade-in bg-gradient-to-t from-gray-50 to-white">
-    <div class="max-w-6xl mx-auto text-center">
-      <h2 class="text-5xl font-semibold mb-10 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Contact Us</h2>
-      <p class="text-xl mb-8 leading-relaxed text-gray-600">Ready to taste the magic? Reach out to us!</p>
-      <p class="text-xl mb-6 text-gray-600"><strong>Email:</strong> hello@delicute.com</p>
-      <p class="text-xl mb-6 text-gray-600"><strong>Phone:</strong> +1 (555) 123-4567</p>
-      <p class="text-xl text-gray-600"><strong>Operating Hours:</strong> Mon-Sun, 10 AM - 10 PM</p>
+  <section id="contact" class="py-16 px-4 fade-in bg-gradient-to-t from-gray-50 to-white">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-semibold mb-6 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">Contact Us</h2>
+      <p class="text-base mb-4 leading-relaxed text-gray-600">Ready to taste the magic? Reach out to us!</p>
+      <p class="text-base mb-3 text-gray-600"><strong>Email:</strong> hello@delicute.com</p>
+      <p class="text-base mb-3 text-gray-600"><strong>Phone:</strong> +1 (555) 123-4567</p>
+      <p class="text-base text-gray-600"><strong>Operating Hours:</strong> Mon-Sun, 10 AM - 10 PM</p>
     </div>
   </section>
 
-  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12 text-center">
-    <p class="text-xl">© 2025 Delicute. All rights reserved.</p>
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-8 text-center">
+    <p class="text-base">© 2025 Delicute. All rights reserved.</p>
   </footer>
 
   <script>
+    const API_BASE_URL = 'http://localhost:3000';
     let allMenuItems = [];
+
+    // Mock user database for credential validation
+    const mockUsers = [
+      { email: 'test@example.com', password: 'password123', name: 'Test User', phone: '1234567890' }
+    ];
+
+    // Utility function for API requests (mocked for demo)
+    async function handleFetch(url, options) {
+      try {
+        if (url === '/api/menu') {
+          return [
+            { id: '1', name: 'Cloud Soufflé', description: 'A light, fluffy dessert.', price: 250, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb', category: 'dessert' },
+            { id: '2', name: 'Sky Risotto', description: 'Creamy and flavorful.', price: 350, image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371', category: 'main' },
+            { id: '3', name: 'Star Bruschetta', description: 'Fresh and zesty.', price: 150, image: 'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659', category: 'starter' },
+            { id: '4', name: 'Moonlit Mojito', description: 'Refreshing and cool.', price: 100, image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec', category: 'beverage' },
+            { id: '5', name: 'Velvet Cake', description: 'Rich and decadent.', price: 200, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587', category: 'dessert' },
+            { id: '6', name: 'Aurora Pasta', description: 'Vibrant and savory.', price: 300, image: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce', category: 'main' },
+          ];
+        }
+        if (url === '/api/login') {
+          const { email, password } = JSON.parse(options.body);
+          const user = mockUsers.find(u => (u.email === email || u.phone === email) && u.password === password);
+          if (!user) {
+            throw new Error('Invalid email/mobile or password');
+          }
+          return { token: 'mock-token-' + email, user };
+        }
+        if (url === '/api/signup') {
+          const { email, phone } = JSON.parse(options.body);
+          if (mockUsers.find(u => u.email === email || u.phone === phone)) {
+            throw new Error('Email or mobile number already exists');
+          }
+          mockUsers.push(JSON.parse(options.body));
+          return { token: 'mock-token-' + email };
+        }
+        if (url === '/api/forgot-password') {
+          const { email } = JSON.parse(options.body);
+          if (!mockUsers.find(u => u.email === email)) {
+            throw new Error('Email not found');
+          }
+          return { message: 'OTP sent' };
+        }
+        if (url === '/api/verify-otp') {
+          return { message: 'OTP verified' };
+        }
+        if (url === '/api/reset-password') {
+          const { email, newPassword } = JSON.parse(options.body);
+          const user = mockUsers.find(u => u.email === email);
+          if (!user) {
+            throw new Error('Email not found');
+          }
+          user.password = newPassword;
+          return { message: 'Password reset successfully' };
+        }
+        if (url === '/api/cart/add') {
+          return { message: 'Item added to cart' };
+        }
+        throw new Error('Unknown API endpoint');
+      } catch (error) {
+        console.error(`Fetch error for ${url}:`, error);
+        showToast(error.message || 'An error occurred', 'error');
+        throw error;
+      }
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+      const mobileMenu = document.querySelector('.mobile-menu');
+      mobileMenu.classList.toggle('active');
+    }
 
     // Smooth scroll for navigation links
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -605,46 +624,50 @@
           e.preventDefault();
           const targetElement = document.getElementById(targetId);
           if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            targetElement.scrollIntoView({ behavior: 'smooth' });
           }
         }
       });
     });
 
-    // Toast notification
-    function showToast(message, type = 'success') {
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      toast.innerHTML = `<span>${message}</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
+    // Check restaurant status based on current time (10 AM - 10 PM IST)
+    function checkRestaurantStatus() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const statusElement = document.getElementById('restaurantStatus');
+      const isOpen = currentHour >= 10 && currentHour < 22;
+      statusElement.innerHTML = isOpen
+        ? `<span class="status-badge status-open">Open Now <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`
+        : `<span class="status-badge status-closed">Closed Now <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`;
     }
 
-    // Render menu items dynamically (mock data for now)
+    // Check login status
+    function checkLogin() {
+      const token = localStorage.getItem('token');
+      return !!token;
+    }
+
+    // Load menu items
     async function renderMenuItems() {
       try {
-        // Mock API response since actual backend isn't provided
-        allMenuItems = [
-          { id: '1', name: 'Cloud Soufflé', description: 'A light, fluffy dessert.', price: 250, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb', category: 'dessert' },
-          { id: '2', name: 'Sky Risotto', description: 'Creamy and flavorful.', price: 350, image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371', category: 'main' },
-          { id: '3', name: 'Star Bruschetta', description: 'Fresh and zesty.', price: 150, image: 'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659', category: 'starter' },
-          { id: '4', name: 'Moonlit Mojito', description: 'Refreshing and cool.', price: 100, image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec', category: 'beverage' },
-          { id: '5', name: 'Velvet Cake', description: 'Rich and decadent.', price: 200, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587', category: 'dessert' },
-          { id: '6', name: 'Aurora Pasta', description: 'Vibrant and savory.', price: 300, image: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce', category: 'main' },
-        ];
+        const menuItems = await handleFetch('/api/menu', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        allMenuItems = menuItems;
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = '';
-        const itemsToShow = allMenuItems.slice(0, Math.max(6, allMenuItems.length));
+        const itemsToShow = allMenuItems.slice(0, 6);
         itemsToShow.forEach(item => {
           const menuItem = `
-            <div class="menu-card p-8 rounded-2xl">
-              <img src="${item.image}" alt="${item.name}" class="w-full h-56 object-cover rounded-lg mb-6 shadow-md">
-              <h3 class="text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
-              <p class="text-gray-600 mb-4 text-sm">${item.description}</p>
-              <div class="text-gray-500 text-sm mb-3">Category: ${item.category || 'General'}</div>
+            <div class="menu-card p-4">
+              <img src="${item.image}" alt="${item.name}" class="w-full h-40 object-cover rounded-md mb-3">
+              <h3 class="text-lg font-semibold mb-2 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
+              <p class="text-gray-600 mb-2 text-sm">${item.description}</p>
+              <div class="text-gray-500 text-sm mb-2">Category: ${item.category || 'General'}</div>
               <div class="flex justify-between items-center">
-                <p class="text-blue-600 font-bold text-lg">₹${item.price}</p>
-                <button class="btn-primary py-2 px-6 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
+                <p class="text-blue-600 font-bold text-sm">₹${item.price}</p>
+                <button class="btn-primary py-1 px-3 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
               </div>
             </div>
           `;
@@ -665,7 +688,7 @@
     // Filter by category
     function filterCategory() {
       const category = document.getElementById('categoryFilter').value;
-      const filteredItems = category 
+      const filteredItems = category
         ? allMenuItems.filter(item => (item.category || 'general').toLowerCase() === category).slice(0, 6)
         : allMenuItems.slice(0, 6);
       renderFilteredItems(filteredItems);
@@ -677,42 +700,22 @@
       menuContainer.innerHTML = '';
       items.forEach(item => {
         const menuItem = `
-          <div class="menu-card p-8 rounded-2xl">
-            <img src="${item.image}" alt="${item.name}" class="w-full h-56 object-cover rounded-lg mb-6 shadow-md">
-            <h3 class="text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
-            <p class="text-gray-600 mb-4 text-sm">${item.description}</p>
-            <div class="text-gray-500 text-sm mb-3">Category: ${item.category || 'General'}</div>
+          <div class="menu-card p-4">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-40 object-cover rounded-md mb-3">
+            <h3 class="text-lg font-semibold mb-2 text-gray-800" style="font-family: 'Cormorant Garamond', serif;">${item.name}</h3>
+            <p class="text-gray-600 mb-2 text-sm">${item.description}</p>
+            <div class="text-gray-500 text-sm mb-2">Category: ${item.category || 'General'}</div>
             <div class="flex justify-between items-center">
-              <p class="text-blue-600 font-bold text-lg">₹${item.price}</p>
-              <button class="btn-primary py-2 px-6 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
+              <p class="text-blue-600 font-bold text-sm">₹${item.price}</p>
+              <button class="btn-primary py-1 px-3 text-sm" onclick="addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image}')">Add to Cart</button>
             </div>
           </div>
         `;
         menuContainer.innerHTML += menuItem;
       });
       if (items.length === 0) {
-        menuContainer.innerHTML = '<p class="text-center text-gray-600">No items found.</p>';
+        menuContainer.innerHTML = '<p class="text-center text-gray-600 text-sm">No items found.</p>';
       }
-    }
-
-    // Check restaurant status
-    async function checkRestaurantStatus() {
-      try {
-        // Mock status since actual API isn't provided
-        const status = 'open';
-        const statusElement = document.getElementById('restaurantStatus');
-        statusElement.innerHTML = status === 'open'
-          ? `<span class="status-badge status-open">Delicute is Open Now, Make Your Day Delicious! <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Please Login</a></span>`
-          : `<span class="status-badge status-closed">Sorry, Our Delicute is Closed Today! <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Please Login</a></span>`;
-      } catch (error) {
-        showToast('Failed to load restaurant status.', 'error');
-        document.getElementById('restaurantStatus').innerHTML = '<span class="status-badge status-closed">Status Unavailable</span>';
-      }
-    }
-
-    // Check login status
-    function checkLogin() {
-      return !!localStorage.getItem('token');
     }
 
     // Add to cart
@@ -723,14 +726,22 @@
         return;
       }
       try {
-        // Mock cart addition since actual API isn't provided
+        const token = localStorage.getItem('token');
+        await handleFetch('/api/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ itemId, quantity: 1 }),
+        });
         showToast(`${name} added to cart!`, 'success');
       } catch (error) {
         showToast('Failed to add item to cart', 'error');
       }
     }
 
-    // User login
+    // User login with credential validation
     async function loginUser() {
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
@@ -739,14 +750,17 @@
         return;
       }
       try {
-        // Mock login since actual API isn't provided
-        const result = { token: 'mock-token', message: 'Logged in successfully!' };
-        localStorage.setItem('token', result.token);
-        showToast(result.message, 'success');
+        const { token, user } = await handleFetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        localStorage.setItem('token', token);
+        showToast(`Welcome, ${user.name}!`, 'success');
         closeModal('loginModal');
-        window.location.href = 'userdashboard.html';
+        setTimeout(() => window.location.href = '/userdashboard', 1000);
       } catch (error) {
-        showToast('Failed to login', 'error');
+        showToast(error.message || 'Failed to login', 'error');
       }
     }
 
@@ -760,54 +774,69 @@
         showToast('Please fill in all fields', 'error');
         return;
       }
+      if (!/^\d{10}$/.test(phone)) {
+        showToast('Please enter a valid 10-digit mobile number', 'error');
+        return;
+      }
       try {
-        // Mock signup since actual API isn't provided
-        const result = { token: 'mock-token', message: 'Signed up successfully!' };
-        localStorage.setItem('token', result.token);
-        showToast(result.message, 'success');
+        const { token } = await handleFetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, password }),
+        });
+        localStorage.setItem('token', token);
+        showToast('Signed up successfully!', 'success');
         closeModal('signupModal');
-        window.location.href = 'userdashboard.html';
+        setTimeout(() => window.location.href = '/userdashboard', 1000);
       } catch (error) {
-        showToast('Failed to signup', 'error');
+        showToast(error.message || 'Failed to signup', 'error');
       }
     }
 
     // Google login callback
     window.handleGoogleLogin = async function(credentialResponse) {
       try {
-        // Mock Google login since actual API isn't provided
-        const result = { token: 'mock-google-token', message: 'Logged in with Google!' };
-        localStorage.setItem('token', result.token);
-        showToast(result.message, 'success');
-        window.location.href = 'userdashboard.html';
+        const { credential } = credentialResponse;
+        const { token } = await handleFetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential }),
+        });
+        localStorage.setItem('token', token);
+        showToast('Logged in with Google!', 'success');
+        setTimeout(() => window.location.href = '/userdashboard', 1000);
       } catch (error) {
         showToast('Failed to login with Google', 'error');
       }
     };
 
-    // Forgot password
+    // Forgot password flow
     async function showForgotPassword() {
       document.getElementById('loginForm').classList.add('hidden');
       document.getElementById('forgotPasswordForm').classList.remove('hidden');
     }
 
-    async function showOtpForm() {
+    async function sendOtp() {
       const email = document.getElementById('forgotEmail').value;
       if (!email) {
         showToast('Please enter your email', 'error');
         return;
       }
       try {
-        // Mock OTP send
+        await handleFetch('/api/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
         showToast('OTP sent to your email!', 'success');
         document.getElementById('forgotPasswordForm').classList.add('hidden');
         document.getElementById('otpForm').classList.remove('hidden');
       } catch (error) {
-        showToast('Failed to send OTP', 'error');
+        showToast(error.message || 'Failed to send OTP', 'error');
       }
     }
 
-    async function showNewPasswordForm() {
+    async function verifyOtp() {
       const email = document.getElementById('forgotEmail').value;
       const otp = document.getElementById('otp').value;
       if (!otp) {
@@ -815,16 +844,20 @@
         return;
       }
       try {
-        // Mock OTP verification
+        await handleFetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp }),
+        });
         showToast('OTP verified!', 'success');
         document.getElementById('otpForm').classList.add('hidden');
         document.getElementById('newPasswordForm').classList.remove('hidden');
       } catch (error) {
-        showToast('Failed to verify OTP', 'error');
+        showToast(error.message || 'Failed to verify OTP', 'error');
       }
     }
 
-    async function showSuccessMessage() {
+    async function resetPassword() {
       const email = document.getElementById('forgotEmail').value;
       const newPassword = document.getElementById('newPassword').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
@@ -837,15 +870,20 @@
         return;
       }
       try {
-        // Mock password reset
+        await handleFetch('/api/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, newPassword }),
+        });
         showToast('Password reset successfully!', 'success');
         document.getElementById('newPasswordForm').classList.add('hidden');
         document.getElementById('successMessage').classList.remove('hidden');
       } catch (error) {
-        showToast('Failed to reset password', 'error');
+        showToast(error.message || 'Failed to reset password', 'error');
       }
     }
 
+    // Modal handling
     function openModal(modalId) {
       document.getElementById(modalId).style.display = 'flex';
       if (modalId === 'loginModal') {
@@ -855,6 +893,9 @@
 
     function closeModal(modalId) {
       document.getElementById(modalId).style.display = 'none';
+      if (modalId === 'loginModal') {
+        resetLoginModal();
+      }
     }
 
     function resetLoginModal() {
@@ -863,6 +904,12 @@
       document.getElementById('otpForm').classList.add('hidden');
       document.getElementById('newPasswordForm').classList.add('hidden');
       document.getElementById('successMessage').classList.add('hidden');
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('forgotEmail').value = '';
+      document.getElementById('otp').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
     }
 
     window.onload = function() {

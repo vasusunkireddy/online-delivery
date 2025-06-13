@@ -48,7 +48,7 @@
       position: relative;
       z-index: 2;
       max-width: 1280px;
-      margin: 2rem auto; /* Increased spacing */
+      margin: 2rem auto;
       padding: 1.5rem;
     }
 
@@ -65,7 +65,7 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      margin: 1rem; /* Increased margin */
+      margin: 1rem;
     }
 
     .logo {
@@ -758,7 +758,7 @@
       orders: [],
       user: null,
       appliedCoupon: null,
-      API_BASE_URL: 'https://your-api-base-url.com', // Replace with your API
+      API_BASE_URL: 'http://localhost:3000',
       token: localStorage.getItem('token'),
     };
 
@@ -787,22 +787,31 @@
 
       fetchWithAuth: async (url, options = {}) => {
         try {
+          if (!state.token) {
+            throw new Error('No token found');
+          }
+          console.log(`Fetching ${url}, Token: ${state.token}`); // Debug: Log token
           const headers = {
             'Authorization': `Bearer ${state.token}`,
             'Content-Type': 'application/json',
             ...options.headers,
           };
           const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
+          console.log(`Response status for ${url}: ${response.status}`); // Debug: Log response status
           if (response.status === 401) {
             utils.showToast('Session expired. Please log in.', 'error');
             localStorage.removeItem('token');
-            setTimeout(() => window.location.href = 'index.html', 2000);
+            state.token = null;
+            setTimeout(() => window.location.href = '/index.html', 2000);
             throw new Error('Unauthorized');
           }
-          if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-          return response.json();
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+          return await response.json();
         } catch (error) {
-          console.error(`Fetch error: ${url}`, error);
+          console.error(`Fetch error: ${url}`, error.message);
           throw error;
         }
       },
@@ -849,16 +858,20 @@
       checkAuth: () => {
         if (!state.token) {
           utils.showToast('Please log in to access the dashboard', 'error');
-          setTimeout(() => window.location.href = 'index.html', 2000);
+          setTimeout(() => window.location.href = '/index.html', 2000);
+          return false;
         }
+        return true;
       },
 
       loadProfile: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.user = await utils.fetchWithAuth('/api/profile');
+          console.log('Profile loaded:', state.user); // Debug: Log user profile
           document.getElementById('userName').textContent = state.user.name || 'User';
           document.getElementById('profileName').value = state.user.name || '';
-          document.getElementById('profileMobile').value = state.user.mobile || '';
+          document.getElementById('profileMobile').value = state.user.phone || '';
           document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
         } catch (error) {
           utils.showToast('Failed to load profile', 'error');
@@ -880,18 +893,22 @@
           });
           if (!response.ok) throw new Error(await response.text());
           state.user = await response.json();
+          console.log('Profile updated:', state.user); // Debug: Log updated profile
           document.getElementById('userName').textContent = state.user.name;
           document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
           utils.showToast('Profile updated!', 'success');
           ui.closeModal('profileModal');
         } catch (error) {
+          console.error('Update profile error:', error);
           utils.showToast('Failed to update profile', 'error');
         }
       },
 
       loadAddresses: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.addresses = await utils.fetchWithAuth('/api/addresses');
+          console.log('Addresses loaded:', state.addresses); // Debug: Log addresses
           const addressSelect = document.getElementById('cartAddressSelect');
           const addressList = document.getElementById('addressList');
           addressSelect.innerHTML = '<option value="">Select Address</option>';
@@ -907,6 +924,7 @@
             `;
           });
         } catch (error) {
+          console.error('Load addresses error:', error);
           utils.showToast('Failed to load addresses', 'error');
         }
       },
@@ -931,6 +949,7 @@
           });
           data.loadAddresses();
         } catch (error) {
+          console.error('Add address error:', error);
           utils.showToast('Failed to add address', 'error');
         }
       },
@@ -941,15 +960,19 @@
           utils.showToast('Address deleted!', 'success');
           data.loadAddresses();
         } catch (error) {
+          console.error('Delete address error:', error);
           utils.showToast('Failed to delete address', 'error');
         }
       },
 
       loadMenu: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.menuItems = await utils.fetchWithAuth('/api/menu');
+          console.log('Menu loaded:', state.menuItems); // Debug: Log menu items
           data.renderMenu();
         } catch (error) {
+          console.error('Load menu error:', error);
           utils.showToast('Failed to load menu', 'error');
         }
       },
@@ -991,8 +1014,10 @@
       },
 
       loadCoupons: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.coupons = await utils.fetchWithAuth('/api/coupons');
+          console.log('Coupons loaded:', state.coupons); // Debug: Log coupons
           const couponsList = document.getElementById('couponsList');
           couponsList.innerHTML = '';
           state.coupons.forEach(coupon => {
@@ -1006,16 +1031,20 @@
             `;
           });
         } catch (error) {
+          console.error('Load coupons error:', error);
           utils.showToast('Failed to load coupons', 'error');
         }
       },
 
       loadFavorites: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.favorites = await utils.fetchWithAuth('/api/favorites');
+          console.log('Favorites loaded:', state.favorites); // Debug: Log favorites
           data.renderFavorites();
           data.renderMenu();
         } catch (error) {
+          console.error('Load favorites error:', error);
           utils.showToast('Failed to load favorites', 'error');
         }
       },
@@ -1053,6 +1082,7 @@
           utils.showToast(`${name} added to favorites!`, 'success');
           data.loadFavorites();
         } catch (error) {
+          console.error('Add to favorites error:', error);
           utils.showToast('Failed to add favorite', 'error');
         }
       },
@@ -1063,15 +1093,19 @@
           utils.showToast('Removed from favorites!', 'success');
           data.loadFavorites();
         } catch (error) {
+          console.error('Remove from favorites error:', error);
           utils.showToast('Failed to remove favorite', 'error');
         }
       },
 
       loadCart: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.cart = await utils.fetchWithAuth('/api/cart');
+          console.log('Cart loaded:', state.cart); // Debug: Log cart
           data.renderCart();
         } catch (error) {
+          console.error('Load cart error:', error);
           utils.showToast('Failed to load cart', 'error');
         }
       },
@@ -1111,13 +1145,14 @@
 
       addToCart: async (id, name, price, image) => {
         try {
-          await utils.fetchWithAuth('/api/cart', {
+          await utils.fetchWithAuth('/api/cart/add', {
             method: 'POST',
-            body: JSON.stringify({ id, name, price, image, quantity: 1 }),
+            body: JSON.stringify({ itemId: id, quantity: 1 }),
           });
           utils.showToast(`${name} added to cart!`, 'success');
           data.loadCart();
         } catch (error) {
+          console.error('Add to cart error:', error);
           utils.showToast('Failed to add to cart', 'error');
         }
       },
@@ -1133,6 +1168,7 @@
             utils.showToast('Quantity updated!', 'success');
             data.loadCart();
           } catch (error) {
+            console.error('Update quantity error:', error);
             utils.showToast('Failed to update quantity', 'error');
           }
         }
@@ -1144,21 +1180,35 @@
           utils.showToast('Item removed from cart!', 'success');
           data.loadCart();
         } catch (error) {
+          console.error('Remove from cart error:', error);
           utils.showToast('Failed to remove item', 'error');
         }
       },
 
-      applyCoupon: async (code, discount) => {
-        if (!code) code = document.getElementById('couponCode').value;
+      applyCoupon: async () => {
+        const code = document.getElementById('couponCode').value;
         if (!code) return utils.showToast('Enter a coupon code', 'error');
         try {
-          const coupon = discount ? { code, discount } : await utils.fetchWithAuth(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
+          const coupon = await utils.fetchWithAuth(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
           state.appliedCoupon = { code: coupon.code, discount: coupon.discount };
           document.getElementById('couponCode').value = coupon.code;
           utils.showToast(`Coupon ${coupon.code} applied!`, 'success');
           data.renderCart();
         } catch (error) {
+          console.error('Apply coupon error:', error);
           utils.showToast('Invalid coupon code', 'error');
+        }
+      },
+
+      applyCouponFromList: async (code, discount) => {
+        try {
+          state.appliedCoupon = { code, discount };
+          document.getElementById('couponCode').value = code;
+          utils.showToast(`Coupon ${code} applied!`, 'success');
+          data.renderCart();
+        } catch (error) {
+          console.error('Apply coupon from list error:', error);
+          utils.showToast('Failed to apply coupon', 'error');
         }
       },
 
@@ -1186,21 +1236,24 @@
           data.loadOrderHistory();
           ui.closeModal('cartModal');
         } catch (error) {
+          console.error('Place order error:', error);
           utils.showToast('Failed to place order', 'error');
         }
       },
 
       loadOrderHistory: async () => {
+        if (!data.checkAuth()) return;
         try {
           state.orders = await utils.fetchWithAuth('/api/orders');
+          console.log('Order history loaded:', state.orders); // Debug: Log orders
           const orderHistory = document.getElementById('orderHistory');
           orderHistory.innerHTML = '';
           state.orders.forEach(order => {
             orderHistory.innerHTML += `
               <div class="order-card">
                 <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-                <p class="text-gray-600 text-sm">Date: ${order.date}</p>
-                <p class="text-gray-600 text-sm">Items: ${order.items.join(', ')}</p>
+                <p class="text-gray-600 text-sm">Date: ${new Date(order.createdAt).toLocaleString()}</p>
+                <p class="text-gray-600 text-sm">Items: ${order.items.map(item => item.name).join(', ')}</p>
                 <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
                 <p class="text-gray-600 text-sm">Delivery: Free</p>
                 <p class="text-gray-600 text-sm">Status: ${order.status}</p>
@@ -1210,6 +1263,7 @@
           });
           document.getElementById('totalOrders').textContent = state.orders.length;
         } catch (error) {
+          console.error('Load order history error:', error);
           utils.showToast('Failed to load order history', 'error');
         }
       },
@@ -1220,14 +1274,16 @@
           utils.showToast(`Order #${id} status: ${updatedOrder.status}`, 'success');
           data.loadOrderHistory();
         } catch (error) {
+          console.error('Track order error:', error);
           utils.showToast('Failed to track order', 'error');
         }
       },
 
       logout: () => {
         localStorage.removeItem('token');
+        state.token = null;
         utils.showToast('Logged out!', 'success');
-        window.location.href = 'index.html';
+        setTimeout(() => window.location.href = '/index.html', 1000);
       },
     };
 
@@ -1247,16 +1303,18 @@
     const debounceSearch = utils.debounce(data.searchMenu, 300);
 
     window.onload = () => {
-      console.log('Dashboard loaded');
+      console.log('Dashboard loaded, Token:', state.token); // Debug: Log initial token
       data.checkAuth();
       ui.loadDarkMode();
-      data.loadProfile();
-      data.loadMenu();
-      data.loadCoupons();
-      data.loadFavorites();
-      data.loadCart();
-      data.loadAddresses();
-      data.loadOrderHistory();
+      if (state.token) {
+        data.loadProfile();
+        data.loadMenu();
+        data.loadCoupons();
+        data.loadFavorites();
+        data.loadCart();
+        data.loadAddresses();
+        data.loadOrderHistory();
+      }
       eventListeners.setup();
     };
   </script>
