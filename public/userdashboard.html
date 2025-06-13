@@ -749,388 +749,371 @@
   </footer>
 
   <script>
-    const state = {
-      cart: [],
-      addresses: [],
-      favorites: [],
-      menuItems: [],
-      coupons: [],
-      orders: [],
-      user: null,
-      appliedCoupon: null,
-      API_BASE_URL: 'http://localhost:3000',
-      token: localStorage.getItem('token'),
-    };
+const state = {
+    cart: [],
+    addresses: [],
+    favorites: [],
+    menuItems: [],
+    coupons: [],
+    orders: [],
+    user: null,
+    appliedCoupon: null,
+    API_BASE_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://delicute.onrender.com',
+    token: localStorage.getItem('token'),
+};
 
-    const utils = {
-      debounce: (func, delay) => {
+const utils = {
+    debounce: (func, delay) => {
         let timeout;
         return (...args) => {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => func(...args), delay);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), delay);
         };
-      },
+    },
 
-      showToast: (message, type = 'success') => {
-        console.log(`Toast: ${message} (${type})`);
+    showToast: (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.innerHTML = `<span>${message}</span>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3500);
-      },
+    },
 
-      scrollToSection: (sectionId) => {
+    scrollToSection: (sectionId) => {
         const section = document.getElementById(sectionId);
         section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      },
+    },
 
-      fetchWithAuth: async (url, options = {}) => {
+    fetchWithAuth: async (url, options = {}) => {
         try {
-          if (!state.token) {
-            throw new Error('No token found');
-          }
-          console.log(`Fetching ${url}, Token: ${state.token}`); // Debug: Log token
-          const headers = {
-            'Authorization': `Bearer ${state.token}`,
-            'Content-Type': 'application/json',
-            ...options.headers,
-          };
-          const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
-          console.log(`Response status for ${url}: ${response.status}`); // Debug: Log response status
-          if (response.status === 401) {
-            utils.showToast('Session expired. Please log in.', 'error');
-            localStorage.removeItem('token');
-            state.token = null;
-            setTimeout(() => window.location.href = '/index.html', 2000);
-            throw new Error('Unauthorized');
-          }
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-          }
-          return await response.json();
+            if (!state.token) throw new Error('No token found');
+            const headers = {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
+            const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
+            if (response.status === 401) {
+                utils.showToast('Session expired. Please log in.', 'error');
+                localStorage.removeItem('token');
+                state.token = null;
+                setTimeout(() => window.location.href = '/index.html', 2000);
+                throw new Error('Unauthorized');
+            }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
         } catch (error) {
-          console.error(`Fetch error: ${url}`, error.message);
-          throw error;
+            throw error;
         }
-      },
-    };
+    },
 
-    const ui = {
-      toggleNav: () => {
+    validateMobile: (mobile) => {
+        return /^\d{10}$/.test(mobile);
+    },
+};
+
+const ui = {
+    toggleNav: () => {
         const navLinks = document.getElementById('navLinks');
         const hamburger = document.getElementById('hamburger');
         navLinks.classList.toggle('active');
         hamburger.classList.toggle('active');
-      },
+    },
 
-      toggleDropdown: () => {
+    toggleDropdown: () => {
         document.getElementById('profileDropdown').classList.toggle('show');
-      },
+    },
 
-      openModal: (modalId) => {
+    openModal: (modalId) => {
         document.getElementById(modalId).style.display = 'flex';
         if (modalId === 'favoritesModal') data.loadFavorites();
         else if (modalId === 'cartModal') {
-          data.loadCart();
-          data.loadAddresses();
+            data.loadCart();
+            data.loadAddresses();
         }
         ui.toggleDropdown();
-      },
+    },
 
-      closeModal: (modalId) => {
+    closeModal: (modalId) => {
         document.getElementById(modalId).style.display = 'none';
-      },
+    },
 
-      toggleDarkMode: () => {
+    toggleDarkMode: () => {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         utils.showToast(`Switched to ${document.body.classList.contains('dark-mode') ? 'Dark' : 'Light'} Mode`, 'success');
-      },
+    },
 
-      loadDarkMode: () => {
+    loadDarkMode: () => {
         if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
-      },
-    };
+    },
+};
 
-    const data = {
-      checkAuth: () => {
+const data = {
+    checkAuth: () => {
         if (!state.token) {
-          utils.showToast('Please log in to access the dashboard', 'error');
-          setTimeout(() => window.location.href = '/index.html', 2000);
-          return false;
+            utils.showToast('Please log in to access the dashboard', 'error');
+            setTimeout(() => window.location.href = '/index.html', 2000);
+            return false;
         }
         return true;
-      },
+    },
 
-      loadProfile: async () => {
+    loadProfile: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.user = await utils.fetchWithAuth('/api/profile');
-          console.log('Profile loaded:', state.user); // Debug: Log user profile
-          document.getElementById('userName').textContent = state.user.name || 'User';
-          document.getElementById('profileName').value = state.user.name || '';
-          document.getElementById('profileMobile').value = state.user.phone || '';
-          document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
+            state.user = await utils.fetchWithAuth('/api/profile');
+            document.getElementById('userName').textContent = state.user.name || 'User';
+            document.getElementById('profileName').value = state.user.name || '';
+            document.getElementById('profileMobile').value = state.user.phone || '';
+            document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
         } catch (error) {
-          utils.showToast('Failed to load profile', 'error');
+            utils.showToast(error.message || 'Failed to load profile', 'error');
         }
-      },
+    },
 
-      updateProfile: async () => {
-        const name = document.getElementById('profileName').value;
-        const image = document.getElementById('profileImage').files[0];
-        if (!name) return utils.showToast('Please enter your name', 'error');
+    updateProfile: async () => {
+        const name = document.getElementById('profileName').value.trim();
+        const imageInput = document.getElementById('profileImage').files[0];
+        if (!name) return utils.showToast('Name is required', 'error');
         try {
-          const formData = new FormData();
-          formData.append('name', name);
-          if (image) formData.append('image', image);
-          const response = await fetch(`${state.API_BASE_URL}/api/profile`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${state.token}` },
-            body: formData,
-          });
-          if (!response.ok) throw new Error(await response.text());
-          state.user = await response.json();
-          console.log('Profile updated:', state.user); // Debug: Log updated profile
-          document.getElementById('userName').textContent = state.user.name;
-          document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
-          utils.showToast('Profile updated!', 'success');
-          ui.closeModal('profileModal');
+            const body = { name };
+            if (imageInput) {
+                // For demo, use a placeholder URL; in production, upload to a service
+                body.image = `https://via.placeholder.com/150?text=${encodeURIComponent(name)}`;
+            }
+            state.user = await utils.fetchWithAuth('/api/profile', {
+                method: 'PUT',
+                body: JSON.stringify(body),
+            });
+            document.getElementById('userName').textContent = state.user.name;
+            document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
+            utils.showToast('Profile updated!', 'success');
+            ui.closeModal('profileModal');
         } catch (error) {
-          console.error('Update profile error:', error);
-          utils.showToast('Failed to update profile', 'error');
+            utils.showToast(error.message || 'Failed to update profile', 'error');
         }
-      },
+    },
 
-      loadAddresses: async () => {
+    loadAddresses: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.addresses = await utils.fetchWithAuth('/api/addresses');
-          console.log('Addresses loaded:', state.addresses); // Debug: Log addresses
-          const addressSelect = document.getElementById('cartAddressSelect');
-          const addressList = document.getElementById('addressList');
-          addressSelect.innerHTML = '<option value="">Select Address</option>';
-          addressList.innerHTML = '';
-          state.addresses.forEach(addr => {
-            const addressString = `${addr.fullName}, ${addr.houseNo}, ${addr.location}${addr.landmark ? `, ${addr.landmark}` : ''}, Mobile: ${addr.mobile}`;
-            addressSelect.innerHTML += `<option value="${addr.id}">${addressString}</option>`;
-            addressList.innerHTML += `
-              <div class="order-card flex justify-between items-center">
-                <p class="text-gray-600 text-sm">${addressString}</p>
-                <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress('${addr.id}')">Delete</button>
-              </div>
-            `;
-          });
+            state.addresses = await utils.fetchWithAuth('/api/addresses');
+            const addressSelect = document.getElementById('cartAddressSelect');
+            const addressList = document.getElementById('addressList');
+            addressSelect.innerHTML = '<option value="">Select Address</option>';
+            addressList.innerHTML = '';
+            state.addresses.forEach(addr => {
+                const addressString = `${addr.fullName}, ${addr.houseNo}, ${addr.location}${addr.landmark ? `, ${addr.landmark}` : ''}, Mobile: ${addr.mobile}`;
+                addressSelect.innerHTML += `<option value="${addr.id}">${addressString}</option>`;
+                addressList.innerHTML += `
+                    <div class="order-card flex justify-between items-center">
+                        <p class="text-gray-600 text-sm">${addressString}</p>
+                        <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress('${addr.id}')">Delete</button>
+                    </div>
+                `;
+            });
         } catch (error) {
-          console.error('Load addresses error:', error);
-          utils.showToast('Failed to load addresses', 'error');
+            utils.showToast(error.message || 'Failed to load addresses', 'error');
         }
-      },
+    },
 
-      addAddress: async () => {
-        const fullName = document.getElementById('addressFullName').value;
-        const mobile = document.getElementById('addressMobile').value;
-        const houseNo = document.getElementById('addressHouseNo').value;
-        const location = document.getElementById('addressLocation').value;
-        const landmark = document.getElementById('addressLandmark').value;
+    addAddress: async () => {
+        const fullName = document.getElementById('addressFullName').value.trim();
+        const mobile = document.getElementById('addressMobile').value.trim();
+        const houseNo = document.getElementById('addressHouseNo').value.trim();
+        const location = document.getElementById('addressLocation').value.trim();
+        const landmark = document.getElementById('addressLandmark').value.trim();
         if (!fullName || !mobile || !houseNo || !location) {
-          return utils.showToast('Please fill all required fields', 'error');
+            return utils.showToast('Please fill all required fields', 'error');
+        }
+        if (!utils.validateMobile(mobile)) {
+            return utils.showToast('Valid mobile number is required', 'error');
         }
         try {
-          await utils.fetchWithAuth('/api/addresses', {
-            method: 'POST',
-            body: JSON.stringify({ fullName, mobile, houseNo, location, landmark }),
-          });
-          utils.showToast('Address added!', 'success');
-          ['addressFullName', 'addressMobile', 'addressHouseNo', 'addressLocation', 'addressLandmark'].forEach(id => {
-            document.getElementById(id).value = '';
-          });
-          data.loadAddresses();
+            await utils.fetchWithAuth('/api/addresses', {
+                method: 'POST',
+                body: JSON.stringify({ fullName, mobile, houseNo, location, landmark }),
+            });
+            utils.showToast('Address added!', 'success');
+            ['addressFullName', 'addressMobile', 'addressHouseNo', 'addressLocation', 'addressLandmark'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            data.loadAddresses();
         } catch (error) {
-          console.error('Add address error:', error);
-          utils.showToast('Failed to add address', 'error');
+            utils.showToast(error.message || 'Failed to add address', 'error');
         }
-      },
+    },
 
-      deleteAddress: async (id) => {
+    deleteAddress: async (id) => {
         try {
-          await utils.fetchWithAuth(`/api/addresses/${id}`, { method: 'DELETE' });
-          utils.showToast('Address deleted!', 'success');
-          data.loadAddresses();
+            await utils.fetchWithAuth(`/api/addresses/${id}`, { method: 'DELETE' });
+            utils.showToast('Address deleted!', 'success');
+            data.loadAddresses();
         } catch (error) {
-          console.error('Delete address error:', error);
-          utils.showToast('Failed to delete address', 'error');
+            utils.showToast(error.message || 'Failed to delete address', 'error');
         }
-      },
+    },
 
-      loadMenu: async () => {
+    loadMenu: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.menuItems = await utils.fetchWithAuth('/api/menu');
-          console.log('Menu loaded:', state.menuItems); // Debug: Log menu items
-          data.renderMenu();
+            state.menuItems = await utils.fetchWithAuth('/api/menu');
+            data.renderMenu();
         } catch (error) {
-          console.error('Load menu error:', error);
-          utils.showToast('Failed to load menu', 'error');
+            utils.showToast(error.message || 'Failed to load menu', 'error');
         }
-      },
+    },
 
-      renderMenu: (items = state.menuItems) => {
+    renderMenu: (items = state.menuItems) => {
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = '';
         items.forEach(item => {
-          const isFavorite = state.favorites.some(fav => fav.id === item.id);
-          menuContainer.innerHTML += `
-            <div class="menu-card">
-              <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2">
-              <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
-              <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
-              <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
-              <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}</p>
-              <div class="flex justify-between items-center gap-2">
-                <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image || 'https://via.placeholder.com/150'}')">Add to Cart</button>
-                <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${item.image || 'https://via.placeholder.com/150'}')`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
-              </div>
-            </div>
-          `;
+            const isFavorite = state.favorites.some(fav => fav.itemId === item.id);
+            menuContainer.innerHTML += `
+                <div class="menu-card">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2">
+                    <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
+                    <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
+                    <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
+                    <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}</p>
+                    <div class="flex justify-between items-center gap-2">
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image || 'https://via.placeholder.com/150'}')">Add to Cart</button>
+                        <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${item.image || 'https://via.placeholder.com/150'}')`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
+                    </div>
+                </div>
+            `;
         });
         if (items.length === 0) {
-          menuContainer.innerHTML = '<p class="text-center text-gray-600 text-sm">No items found.</p>';
+            menuContainer.innerHTML = '<p class="text-center text-gray-600 text-sm">No items found.</p>';
         }
-      },
+    },
 
-      searchMenu: () => {
+    searchMenu: () => {
         const query = document.getElementById('menuSearch').value.toLowerCase();
         const filteredItems = state.menuItems.filter(item => item.name.toLowerCase().includes(query));
         data.renderMenu(filteredItems);
-      },
+    },
 
-      filterCategory: () => {
+    filterCategory: () => {
         const category = document.getElementById('categoryFilter').value;
         const filteredItems = category ? state.menuItems.filter(item => item.category === category) : state.menuItems;
         data.renderMenu(filteredItems);
-      },
+    },
 
-      loadCoupons: async () => {
+    loadCoupons: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.coupons = await utils.fetchWithAuth('/api/coupons');
-          console.log('Coupons loaded:', state.coupons); // Debug: Log coupons
-          const couponsList = document.getElementById('couponsList');
-          couponsList.innerHTML = '';
-          state.coupons.forEach(coupon => {
-            couponsList.innerHTML += `
-              <div class="coupon-card">
-                <img src="${coupon.image || 'https://via.placeholder.com/150'}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2">
-                <h3 class="text-base font-semibold text-gray-800">${coupon.code}</h3>
-                <p class="text-gray-600 text-sm mb-2">${coupon.discount}% OFF</p>
-                <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCoupon('${coupon.code}', ${coupon.discount})">Apply Coupon</button>
-              </div>
-            `;
-          });
+            state.coupons = await utils.fetchWithAuth('/api/coupons');
+            const couponsList = document.getElementById('couponsList');
+            couponsList.innerHTML = '';
+            state.coupons.forEach(coupon => {
+                couponsList.innerHTML += `
+                    <div class="coupon-card">
+                        <img src="${coupon.image || 'https://via.placeholder.com/150'}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2">
+                        <h3 class="text-base font-semibold text-gray-800">${coupon.code}</h3>
+                        <p class="text-gray-600 text-sm mb-2">${coupon.discount}% OFF</p>
+                        <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCouponFromList('${coupon.code}', ${coupon.discount})">Apply Coupon</button>
+                    </div>
+                `;
+            });
         } catch (error) {
-          console.error('Load coupons error:', error);
-          utils.showToast('Failed to load coupons', 'error');
+            utils.showToast(error.message || 'Failed to load coupons', 'error');
         }
-      },
+    },
 
-      loadFavorites: async () => {
+    loadFavorites: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.favorites = await utils.fetchWithAuth('/api/favorites');
-          console.log('Favorites loaded:', state.favorites); // Debug: Log favorites
-          data.renderFavorites();
-          data.renderMenu();
+            state.favorites = await utils.fetchWithAuth('/api/favorites');
+            data.renderFavorites();
+            data.renderMenu();
         } catch (error) {
-          console.error('Load favorites error:', error);
-          utils.showToast('Failed to load favorites', 'error');
+            utils.showToast(error.message || 'Failed to load favorites', 'error');
         }
-      },
+    },
 
-      renderFavorites: () => {
+    renderFavorites: () => {
         const favoritesList = document.getElementById('favoritesList');
         const favoritesModalList = document.getElementById('favoritesModalList');
         favoritesList.innerHTML = '';
         favoritesModalList.innerHTML = '';
         state.favorites.forEach(item => {
-          const cardHTML = `
-            <div class="favorite-card flex items-center gap-2">
-              <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
-              <div class="flex-1">
-                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-              </div>
-              <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites('${item.id}')">Remove</button>
-            </div>
-          `;
-          favoritesList.innerHTML += cardHTML;
-          favoritesModalList.innerHTML += cardHTML;
+            const cardHTML = `
+                <div class="favorite-card flex items-center gap-2">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
+                    </div>
+                    <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites('${item.itemId}')">Remove</button>
+                </div>
+            `;
+            favoritesList.innerHTML += cardHTML;
+            favoritesModalList.innerHTML += cardHTML;
         });
         if (state.favorites.length === 0) {
-          favoritesList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
-          favoritesModalList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
+            favoritesList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
+            favoritesModalList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
         }
-      },
+    },
 
-      addToFavorites: async (id, name, image) => {
+    addToFavorites: async (id, name, image) => {
         try {
-          await utils.fetchWithAuth('/api/favorites', {
-            method: 'POST',
-            body: JSON.stringify({ id, name, image }),
-          });
-          utils.showToast(`${name} added to favorites!`, 'success');
-          data.loadFavorites();
+            await utils.fetchWithAuth('/api/favorites', {
+                method: 'POST',
+                body: JSON.stringify({ id, name, image }),
+            });
+            utils.showToast(`${name} added to favorites!`, 'success');
+            data.loadFavorites();
         } catch (error) {
-          console.error('Add to favorites error:', error);
-          utils.showToast('Failed to add favorite', 'error');
+            utils.showToast(error.message || 'Failed to add favorite', 'error');
         }
-      },
+    },
 
-      removeFromFavorites: async (id) => {
+    removeFromFavorites: async (id) => {
         try {
-          await utils.fetchWithAuth(`/api/favorites/${id}`, { method: 'DELETE' });
-          utils.showToast('Removed from favorites!', 'success');
-          data.loadFavorites();
+            await utils.fetchWithAuth(`/api/favorites/${id}`, { method: 'DELETE' });
+            utils.showToast('Removed from favorites!', 'success');
+            data.loadFavorites();
         } catch (error) {
-          console.error('Remove from favorites error:', error);
-          utils.showToast('Failed to remove favorite', 'error');
+            utils.showToast(error.message || 'Failed to remove favorite', 'error');
         }
-      },
+    },
 
-      loadCart: async () => {
+    loadCart: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.cart = await utils.fetchWithAuth('/api/cart');
-          console.log('Cart loaded:', state.cart); // Debug: Log cart
-          data.renderCart();
+            state.cart = await utils.fetchWithAuth('/api/cart');
+            data.renderCart();
         } catch (error) {
-          console.error('Load cart error:', error);
-          utils.showToast('Failed to load cart', 'error');
+            utils.showToast(error.message || 'Failed to load cart', 'error');
         }
-      },
+    },
 
-      renderCart: () => {
+    renderCart: () => {
         const cartItems = document.getElementById('cartItems');
         cartItems.innerHTML = '';
         let originalTotal = 0;
         state.cart.forEach(item => {
-          originalTotal += item.price * item.quantity;
-          cartItems.innerHTML += `
-            <div class="order-card flex items-center gap-2 mb-2">
-              <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
-              <div class="flex-1">
-                <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-                <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
-                <div class="flex items-center gap-2 mt-2">
-                  <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', -1)">-</button>
-                  <span class="text-sm">${item.quantity}</span>
-                  <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', 1)">+</button>
+            originalTotal += item.price * item.quantity;
+            cartItems.innerHTML += `
+                <div class="order-card flex items-center gap-2 mb-2">
+                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
+                        <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <button class="btn-quantity" onclick="data.updateQuantity('${item.itemId}', -1)">-</button>
+                            <span class="text-sm">${item.quantity}</span>
+                            <button class="btn-quantity" onclick="data.updateQuantity('${item.itemId}', 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart('${item.itemId}')">Remove</button>
                 </div>
-              </div>
-              <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart('${item.id}')">Remove</button>
-            </div>
-          `;
+            `;
         });
         const discount = state.appliedCoupon ? (originalTotal * state.appliedCoupon.discount) / 100 : 0;
         const finalTotal = originalTotal - discount;
@@ -1139,174 +1122,164 @@
         document.getElementById('cartDelivery').textContent = '0.00';
         document.getElementById('cartFinalTotal').textContent = finalTotal.toFixed(2);
         if (state.cart.length === 0) {
-          cartItems.innerHTML = '<p class="text-center text-gray-600 text-sm">Your cart is empty.</p>';
+            cartItems.innerHTML = '<p class="text-center text-gray-600 text-sm">Your cart is empty.</p>';
         }
-      },
+    },
 
-      addToCart: async (id, name, price, image) => {
+    addToCart: async (id, name, price, image) => {
         try {
-          await utils.fetchWithAuth('/api/cart/add', {
-            method: 'POST',
-            body: JSON.stringify({ itemId: id, quantity: 1 }),
-          });
-          utils.showToast(`${name} added to cart!`, 'success');
-          data.loadCart();
-        } catch (error) {
-          console.error('Add to cart error:', error);
-          utils.showToast('Failed to add to cart', 'error');
-        }
-      },
-
-      updateQuantity: async (id, change) => {
-        const item = state.cart.find(item => item.id === id);
-        if (item && item.quantity + change >= 1) {
-          try {
-            await utils.fetchWithAuth(`/api/cart/${id}`, {
-              method: 'PUT',
-              body: JSON.stringify({ quantity: item.quantity + change }),
+            await utils.fetchWithAuth('/api/cart', {
+                method: 'POST',
+                body: JSON.stringify({ id, name, price, image, quantity: 1 }),
             });
-            utils.showToast('Quantity updated!', 'success');
+            utils.showToast(`${name} added to cart!`, 'success');
             data.loadCart();
-          } catch (error) {
-            console.error('Update quantity error:', error);
-            utils.showToast('Failed to update quantity', 'error');
-          }
-        }
-      },
-
-      removeFromCart: async (id) => {
-        try {
-          await utils.fetchWithAuth(`/api/cart/${id}`, { method: 'DELETE' });
-          utils.showToast('Item removed from cart!', 'success');
-          data.loadCart();
         } catch (error) {
-          console.error('Remove from cart error:', error);
-          utils.showToast('Failed to remove item', 'error');
+            utils.showToast(error.message || 'Failed to add to cart', 'error');
         }
-      },
+    },
 
-      applyCoupon: async () => {
-        const code = document.getElementById('couponCode').value;
+    updateQuantity: async (itemId, change) => {
+        const item = state.cart.find(item => item.itemId === itemId);
+        if (item && item.quantity + change >= 1) {
+            try {
+                await utils.fetchWithAuth(`/api/cart/${itemId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: item.quantity + change }),
+                });
+                utils.showToast('Quantity updated!', 'success');
+                data.loadCart();
+            } catch (error) {
+                utils.showToast(error.message || 'Failed to update quantity', 'error');
+            }
+        }
+    },
+
+    removeFromCart: async (itemId) => {
+        try {
+            await utils.fetchWithAuth(`/api/cart/${itemId}`, { method: 'DELETE' });
+            utils.showToast('Item removed from cart!', 'success');
+            data.loadCart();
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to remove item', 'error');
+        }
+    },
+
+    applyCoupon: async () => {
+        const code = document.getElementById('couponCode').value.trim();
         if (!code) return utils.showToast('Enter a coupon code', 'error');
         try {
-          const coupon = await utils.fetchWithAuth(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
-          state.appliedCoupon = { code: coupon.code, discount: coupon.discount };
-          document.getElementById('couponCode').value = coupon.code;
-          utils.showToast(`Coupon ${coupon.code} applied!`, 'success');
-          data.renderCart();
+            const coupon = await utils.fetchWithAuth(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
+            state.appliedCoupon = { code: coupon.code, discount: coupon.discount };
+            document.getElementById('couponCode').value = coupon.code;
+            utils.showToast(`Coupon ${coupon.code} applied!`, 'success');
+            data.renderCart();
         } catch (error) {
-          console.error('Apply coupon error:', error);
-          utils.showToast('Invalid coupon code', 'error');
+            utils.showToast(error.message || 'Failed to validate coupon', 'error');
         }
-      },
+    },
 
-      applyCouponFromList: async (code, discount) => {
+    applyCouponFromList: async (code, discount) => {
         try {
-          state.appliedCoupon = { code, discount };
-          document.getElementById('couponCode').value = code;
-          utils.showToast(`Coupon ${code} applied!`, 'success');
-          data.renderCart();
+            state.appliedCoupon = { code, discount };
+            document.getElementById('couponCode').value = code;
+            utils.showToast(`Coupon ${code} applied!`, 'success');
+            data.renderCart();
         } catch (error) {
-          console.error('Apply coupon from list error:', error);
-          utils.showToast('Failed to apply coupon', 'error');
+            utils.showToast(error.message || 'Failed to apply coupon', 'error');
         }
-      },
+    },
 
-      placeOrder: async (method) => {
+    placeOrder: async (method) => {
         const selectedAddress = document.getElementById('cartAddressSelect').value;
         if (!selectedAddress) return utils.showToast('Select an address', 'error');
         if (state.cart.length === 0) return utils.showToast('Cart is empty', 'error');
         try {
-          const orderData = {
-            addressId: selectedAddress,
-            items: state.cart,
-            couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
-            paymentMethod: method,
-            deliveryCost: 0,
-          };
-          await utils.fetchWithAuth('/api/orders', {
-            method: 'POST',
-            body: JSON.stringify(orderData),
-          });
-          utils.showToast('Order placed successfully!', 'success');
-          state.cart = [];
-          state.appliedCoupon = null;
-          document.getElementById('couponCode').value = '';
-          data.renderCart();
-          data.loadOrderHistory();
-          ui.closeModal('cartModal');
+            const orderData = {
+                addressId: parseInt(selectedAddress),
+                items: state.cart,
+                couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
+                paymentMethod: method,
+                deliveryCost: 0,
+            };
+            await utils.fetchWithAuth('/api/orders', {
+                method: 'POST',
+                body: JSON.stringify(orderData),
+            });
+            utils.showToast('Order placed successfully!', 'success');
+            state.cart = [];
+            state.appliedCoupon = null;
+            document.getElementById('couponCode').value = '';
+            data.renderCart();
+            data.loadOrderHistory();
+            ui.closeModal('cartModal');
         } catch (error) {
-          console.error('Place order error:', error);
-          utils.showToast('Failed to place order', 'error');
+            utils.showToast(error.message || 'Failed to place order', 'error');
         }
-      },
+    },
 
-      loadOrderHistory: async () => {
+    loadOrderHistory: async () => {
         if (!data.checkAuth()) return;
         try {
-          state.orders = await utils.fetchWithAuth('/api/orders');
-          console.log('Order history loaded:', state.orders); // Debug: Log orders
-          const orderHistory = document.getElementById('orderHistory');
-          orderHistory.innerHTML = '';
-          state.orders.forEach(order => {
-            orderHistory.innerHTML += `
-              <div class="order-card">
-                <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-                <p class="text-gray-600 text-sm">Date: ${new Date(order.createdAt).toLocaleString()}</p>
-                <p class="text-gray-600 text-sm">Items: ${order.items.map(item => item.name).join(', ')}</p>
-                <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
-                <p class="text-gray-600 text-sm">Delivery: Free</p>
-                <p class="text-gray-600 text-sm">Status: ${order.status}</p>
-                <button class="btn-primary mt-2 text-sm py-1 px-3" onclick="data.trackOrder('${order.id}')">Track Order</button>
-              </div>
-            `;
-          });
-          document.getElementById('totalOrders').textContent = state.orders.length;
+            state.orders = await utils.fetchWithAuth('/api/orders');
+            const orderHistory = document.getElementById('orderHistory');
+            orderHistory.innerHTML = '';
+            state.orders.forEach(order => {
+                orderHistory.innerHTML += `
+                    <div class="order-card">
+                        <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
+                        <p class="text-gray-600 text-sm">Date: ${order.date}</p>
+                        <p class="text-gray-600 text-sm">Items: ${order.items.join(', ')}</p>
+                        <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
+                        <p class="text-gray-600 text-sm">Delivery: ${order.delivery}</p>
+                        <p class="text-gray-600 text-sm">Status: ${order.status}</p>
+                        <button class="btn-primary mt-2 text-sm py-1 px-3" onclick="data.trackOrder('${order.id}')">Track Order</button>
+                    </div>
+                `;
+            });
+            document.getElementById('totalOrders').textContent = state.orders.length;
         } catch (error) {
-          console.error('Load order history error:', error);
-          utils.showToast('Failed to load order history', 'error');
+            utils.showToast(error.message || 'Failed to load order history', 'error');
         }
-      },
+    },
 
-      trackOrder: async (id) => {
+    trackOrder: async (id) => {
         try {
-          const updatedOrder = await utils.fetchWithAuth(`/api/orders/${id}/track`, { method: 'PUT' });
-          utils.showToast(`Order #${id} status: ${updatedOrder.status}`, 'success');
-          data.loadOrderHistory();
+            const updatedOrder = await utils.fetchWithAuth(`/api/orders/${id}/track`, { method: 'PUT' });
+            utils.showToast(`Order #${id} status: ${updatedOrder.status}`, 'success');
+            data.loadOrderHistory();
         } catch (error) {
-          console.error('Track order error:', error);
-          utils.showToast('Failed to track order', 'error');
+            utils.showToast(error.message || 'Failed to track order', 'error');
         }
-      },
+    },
 
-      logout: () => {
+    logout: () => {
         localStorage.removeItem('token');
         state.token = null;
         utils.showToast('Logged out!', 'success');
         setTimeout(() => window.location.href = '/index.html', 1000);
-      },
-    };
+    },
+};
 
-    const eventListeners = {
-      setup: () => {
+const eventListeners = {
+    setup: () => {
         window.onclick = (event) => {
-          if (!event.target.matches('.profile-img') && !event.target.closest('.dropdown-menu')) {
-            document.querySelectorAll('.dropdown-menu.show').forEach(dropdown => dropdown.classList.remove('show'));
-          }
-          if (event.target.classList.contains('modal')) {
-            ['profileModal', 'addressModal', 'favoritesModal', 'cartModal'].forEach(ui.closeModal);
-          }
+            if (!event.target.matches('.profile-img') && !event.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(dropdown => dropdown.classList.remove('show'));
+            }
+            if (event.target.classList.contains('modal')) {
+                ['profileModal', 'addressModal', 'favoritesModal', 'cartModal'].forEach(ui.closeModal);
+            }
         };
-      },
-    };
+    },
+};
 
-    const debounceSearch = utils.debounce(data.searchMenu, 300);
+const debounceSearch = utils.debounce(data.searchMenu, 300);
 
-    window.onload = () => {
-      console.log('Dashboard loaded, Token:', state.token); // Debug: Log initial token
-      data.checkAuth();
-      ui.loadDarkMode();
-      if (state.token) {
+window.onload = () => {
+    data.checkAuth();
+    ui.loadDarkMode();
+    if (state.token) {
         data.loadProfile();
         data.loadMenu();
         data.loadCoupons();
@@ -1314,9 +1287,9 @@
         data.loadCart();
         data.loadAddresses();
         data.loadOrderHistory();
-      }
-      eventListeners.setup();
-    };
-  </script>
+    }
+    eventListeners.setup();
+};
+</script>
 </body>
 </html>

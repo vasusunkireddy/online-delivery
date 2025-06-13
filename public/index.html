@@ -154,9 +154,9 @@
       color: #3b82f6;
     }
     .login-slide {
-      background: linear-gradient(135deg, #3b82f6, #d946ef);
-      border-radius: 9999px;
-      padding: 0.5rem 1.25rem;
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
       color: white;
     }
     .search-bar {
@@ -167,7 +167,7 @@
       align-items: center;
     }
     .search-bar input {
-      background: transparent;
+      background: none;
       border: none;
       outline: none;
       color: #1a2b44;
@@ -186,19 +186,19 @@
       position: fixed;
       top: 15px;
       right: 15px;
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       color: white;
       font-size: 0.9rem;
       z-index: 2000;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       animation: toastSlide 3s ease-in-out forwards;
     }
     .toast-success {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(to right, #10b981, #34d399);
     }
     .toast-error {
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(to right, #ef4444, #f87171);
     }
     .toast::before {
       content: '';
@@ -212,7 +212,7 @@
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
     }
     .toast-error::before {
-      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24 stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
     }
     @keyframes toastSlide {
       0% { opacity: 0; transform: translateY(-20px); }
@@ -221,22 +221,22 @@
       100% { opacity: 0; transform: translateY(-20px); }
     }
     .btn-primary {
-      background: linear-gradient(135deg, #3b82f6, #d946ef);
+      background: linear-gradient(to right, #3b82f6, #d946ef);
       color: white;
-      padding: 0.5rem 1.5rem;
-      border-radius: 9999px;
+      padding: 0.6rem 1.5rem;
+      border-radius: 4px;
       font-size: 0.9rem;
-      font-weight: 600;
-      transition: transform 0.3s ease;
+      font-weight: bold;
+      transition: transform 0.2s ease;
     }
     .btn-primary:hover {
       transform: translateY(-2px);
     }
     .input-field {
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      border-radius: 0.5rem;
-      padding: 0.5rem;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 3px;
+      padding: 0.75rem;
       width: 100%;
       font-size: 0.9rem;
     }
@@ -244,17 +244,18 @@
       border-color: #3b82f6;
       outline: none;
     }
-    .hamburger {
+    .hamburger-menu {
       display: none;
       flex-direction: column;
       cursor: pointer;
-      z-index: 100;
+      z-index: 2;
     }
     .hamburger span {
-      width: 20px;
-      height: 2px;
+      width: 24px;
+      height: 3px;
       background: #ffffff;
       margin: 2px 0;
+      border-radius: 1px;
       transition: all 0.3s ease;
     }
     .mobile-menu {
@@ -263,22 +264,26 @@
       position: fixed;
       top: 0;
       right: 0;
-      width: 60%;
+      width: 80%;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
-      padding: 3rem 1.5rem;
-      z-index: 99;
+      background: rgba(0,0,0,0.95);
+      padding: 4rem 2rem;
+      z-index: 3;
       transform: translateX(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.4s ease;
     }
     .mobile-menu.active {
       transform: translateX(0);
     }
     .mobile-menu a {
       color: #ffffff;
-      font-size: 1.25rem;
-      margin: 0.75rem 0;
+      font-size: 1.2rem;
+      margin: 1rem 0;
       text-align: left;
+      transition: color 0.2s ease;
+    }
+    .mobile-menu a:hover {
+      color: #3b82f6;
     }
     @media (max-width: 640px) {
       .hamburger {
@@ -344,6 +349,9 @@
     @media (min-width: 641px) {
       .mobile-menu {
         display: none !important;
+      }
+      .hamburger {
+        display: none;
       }
     }
   </style>
@@ -534,74 +542,29 @@
   </footer>
 
   <script>
-    const API_BASE_URL = 'http://localhost:3000';
+    const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
     let allMenuItems = [];
 
-    // Mock user database for credential validation
-    const mockUsers = [
-      { email: 'test@example.com', password: 'password123', name: 'Test User', phone: '1234567890' }
-    ];
-
-    // Utility function for API requests (mocked for demo)
     async function handleFetch(url, options) {
       try {
-        if (url === '/api/menu') {
-          return [
-            { id: '1', name: 'Cloud Soufflé', description: 'A light, fluffy dessert.', price: 250, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb', category: 'dessert' },
-            { id: '2', name: 'Sky Risotto', description: 'Creamy and flavorful.', price: 350, image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371', category: 'main' },
-            { id: '3', name: 'Star Bruschetta', description: 'Fresh and zesty.', price: 150, image: 'https://images.unsplash.com/photo-1594041680534-e8c8cdebd659', category: 'starter' },
-            { id: '4', name: 'Moonlit Mojito', description: 'Refreshing and cool.', price: 100, image: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec', category: 'beverage' },
-            { id: '5', name: 'Velvet Cake', description: 'Rich and decadent.', price: 200, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587', category: 'dessert' },
-            { id: '6', name: 'Aurora Pasta', description: 'Vibrant and savory.', price: 300, image: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce', category: 'main' },
-          ];
+        const response = await fetch(`${baseUrl}${url}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Unknown API error');
         }
-        if (url === '/api/login') {
-          const { email, password } = JSON.parse(options.body);
-          const user = mockUsers.find(u => (u.email === email || u.phone === email) && u.password === password);
-          if (!user) {
-            throw new Error('Invalid email/mobile or password');
-          }
-          return { token: 'mock-token-' + email, user };
-        }
-        if (url === '/api/signup') {
-          const { email, phone } = JSON.parse(options.body);
-          if (mockUsers.find(u => u.email === email || u.phone === phone)) {
-            throw new Error('Email or mobile number already exists');
-          }
-          mockUsers.push(JSON.parse(options.body));
-          return { token: 'mock-token-' + email };
-        }
-        if (url === '/api/forgot-password') {
-          const { email } = JSON.parse(options.body);
-          if (!mockUsers.find(u => u.email === email)) {
-            throw new Error('Email not found');
-          }
-          return { message: 'OTP sent' };
-        }
-        if (url === '/api/verify-otp') {
-          return { message: 'OTP verified' };
-        }
-        if (url === '/api/reset-password') {
-          const { email, newPassword } = JSON.parse(options.body);
-          const user = mockUsers.find(u => u.email === email);
-          if (!user) {
-            throw new Error('Email not found');
-          }
-          user.password = newPassword;
-          return { message: 'Password reset successfully' };
-        }
-        if (url === '/api/cart/add') {
-          return { message: 'Item added to cart' };
-        }
-        throw new Error('Unknown API endpoint');
+        return await response.json();
       } catch (error) {
-        console.error(`Fetch error for ${url}:`, error);
-        showToast(error.message || 'An error occurred', 'error');
+        console.error(`Fetch error for ${url}:`, error.message);
         throw error;
       }
     }
 
-    // Toast notification
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
@@ -610,13 +573,11 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
-    // Toggle mobile menu
     function toggleMobileMenu() {
       const mobileMenu = document.querySelector('.mobile-menu');
       mobileMenu.classList.toggle('active');
     }
 
-    // Smooth scroll for navigation links
     document.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', (e) => {
         const targetId = link.getAttribute('href').substring(1);
@@ -630,30 +591,26 @@
       });
     });
 
-    // Check restaurant status based on current time (10 AM - 10 PM IST)
-    function checkRestaurantStatus() {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const statusElement = document.getElementById('restaurantStatus');
-      const isOpen = currentHour >= 10 && currentHour < 22;
-      statusElement.innerHTML = isOpen
-        ? `<span class="status-badge status-open">Open Now <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`
-        : `<span class="status-badge status-closed">Closed Now <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`;
+    async function checkRestaurantStatus() {
+      try {
+        const { status } = await handleFetch('/api/status', { method: 'GET' });
+        const statusElement = document.getElementById('restaurantStatus');
+        statusElement.innerHTML = status === 'open'
+          ? `<span class="status-badge status-open"> Our Delicute is Open Now, Enjoy your Delicious food. <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`
+          : `<span class="status-badge status-closed"> Our Delicute is Closed Nowm Sorry for inconvience. <a href="#" class="text-yellow-300 hover:underline" onclick="openModal('loginModal')">Login</a></span>`;
+      } catch (error) {
+        showToast('Failed to fetch restaurant status', 'error');
+      }
     }
 
-    // Check login status
     function checkLogin() {
       const token = localStorage.getItem('token');
       return !!token;
     }
 
-    // Load menu items
     async function renderMenuItems() {
       try {
-        const menuItems = await handleFetch('/api/menu', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const menuItems = await handleFetch('/api/menu', { method: 'GET' });
         allMenuItems = menuItems;
         const menuContainer = document.getElementById('menuItems');
         menuContainer.innerHTML = '';
@@ -674,18 +631,16 @@
           menuContainer.innerHTML += menuItem;
         });
       } catch (error) {
-        showToast('Failed to load menu. Please try again later.', 'error');
+        showToast('Failed to load menu', 'error');
       }
     }
 
-    // Search menu
     function searchMenu() {
       const query = document.getElementById('menuSearch').value.toLowerCase();
       const filteredItems = allMenuItems.filter(item => item.name.toLowerCase().includes(query)).slice(0, 6);
       renderFilteredItems(filteredItems);
     }
 
-    // Filter by category
     function filterCategory() {
       const category = document.getElementById('categoryFilter').value;
       const filteredItems = category
@@ -694,7 +649,6 @@
       renderFilteredItems(filteredItems);
     }
 
-    // Render filtered menu items
     function renderFilteredItems(items) {
       const menuContainer = document.getElementById('menuItems');
       menuContainer.innerHTML = '';
@@ -718,30 +672,25 @@
       }
     }
 
-    // Add to cart
     async function addToCart(itemId, name, price, image) {
       if (!checkLogin()) {
-        showToast('Please log in to add items to your cart.', 'error');
+        showToast('Please log in to add items to your cart', 'error');
         openModal('loginModal');
         return;
       }
       try {
         const token = localStorage.getItem('token');
-        await handleFetch('/api/cart/add', {
+        const data = await handleFetch('/api/cart/add', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ itemId, quantity: 1 }),
         });
         showToast(`${name} added to cart!`, 'success');
       } catch (error) {
-        showToast('Failed to add item to cart', 'error');
+        showToast(error.message || 'Failed to add item to cart', 'error');
       }
     }
 
-    // User login with credential validation
     async function loginUser() {
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
@@ -752,19 +701,18 @@
       try {
         const { token, user } = await handleFetch('/api/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         showToast(`Welcome, ${user.name}!`, 'success');
         closeModal('loginModal');
-        setTimeout(() => window.location.href = '/userdashboard', 1000);
+        setTimeout(() => window.location.href = '/userdashboard.html', 1000);
       } catch (error) {
         showToast(error.message || 'Failed to login', 'error');
       }
     }
 
-    // User signup
     async function signupUser() {
       const name = document.getElementById('signupName').value;
       const email = document.getElementById('signupEmail').value;
@@ -779,38 +727,36 @@
         return;
       }
       try {
-        const { token } = await handleFetch('/api/signup', {
+        const { token, user } = await handleFetch('/api/signup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone, password }),
         });
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         showToast('Signed up successfully!', 'success');
         closeModal('signupModal');
-        setTimeout(() => window.location.href = '/userdashboard', 1000);
+        setTimeout(() => window.location.href = '/userdashboard.html', 1000);
       } catch (error) {
         showToast(error.message || 'Failed to signup', 'error');
       }
     }
 
-    // Google login callback
     window.handleGoogleLogin = async function(credentialResponse) {
       try {
         const { credential } = credentialResponse;
-        const { token } = await handleFetch('/api/auth/google', {
+        const { token, user } = await handleFetch('/api/auth/google', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credential }),
         });
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         showToast('Logged in with Google!', 'success');
-        setTimeout(() => window.location.href = '/userdashboard', 1000);
+        setTimeout(() => window.location.href = '/userdashboard.html', 1000);
       } catch (error) {
-        showToast('Failed to login with Google', 'error');
+        showToast(error.message || 'Failed to login with Google', 'error');
       }
     };
 
-    // Forgot password flow
     async function showForgotPassword() {
       document.getElementById('loginForm').classList.add('hidden');
       document.getElementById('forgotPasswordForm').classList.remove('hidden');
@@ -823,12 +769,11 @@
         return;
       }
       try {
-        await handleFetch('/api/forgot-password', {
+        const data = await handleFetch('/api/forgot-password', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
-        showToast('OTP sent to your email!', 'success');
+        showToast(data.message, 'success');
         document.getElementById('forgotPasswordForm').classList.add('hidden');
         document.getElementById('otpForm').classList.remove('hidden');
       } catch (error) {
@@ -844,12 +789,11 @@
         return;
       }
       try {
-        await handleFetch('/api/verify-otp', {
+        const data = await handleFetch('/api/verify-otp', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, otp }),
         });
-        showToast('OTP verified!', 'success');
+        showToast(data.message, 'success');
         document.getElementById('otpForm').classList.add('hidden');
         document.getElementById('newPasswordForm').classList.remove('hidden');
       } catch (error) {
@@ -870,12 +814,11 @@
         return;
       }
       try {
-        await handleFetch('/api/reset-password', {
+        const data = await handleFetch('/api/reset-password', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, newPassword }),
+          body: JSON.stringify({ email, newPassword, confirmPassword }),
         });
-        showToast('Password reset successfully!', 'success');
+        showToast(data.message, 'success');
         document.getElementById('newPasswordForm').classList.add('hidden');
         document.getElementById('successMessage').classList.remove('hidden');
       } catch (error) {
@@ -883,7 +826,6 @@
       }
     }
 
-    // Modal handling
     function openModal(modalId) {
       document.getElementById(modalId).style.display = 'flex';
       if (modalId === 'loginModal') {
