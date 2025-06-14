@@ -32,7 +32,7 @@
 
     .dashboard-bg {
       position: relative;
-      background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      background: url('https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -619,9 +619,9 @@
       </div>
 
       <div class="hero-section">
-        <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-white" style="font-family: 'Playfair Display', serif;">Welcome, <span id="userName">User</span>!</h2>
-        <p class="text-base md:text-lg text-white mb-2">Total Orders: <span id="totalOrders">0</span></p>
-        <p class="text-base md:text-lg text-white mb-3">Savor Delicute’s Culinary Magic!</p>
+        <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-black" style="font-family: 'Playfair Display', serif;">Welcome, <span id="userName">User</span>!</h2>
+        <p class="text-base md:text-lg text-black mb-2">Total Orders: <span id="totalOrders">0</span></p>
+        <p class="text-base md:text-lg text-black mb-3">"EVERY BITE TELLS A STORY!</p>
         <button class="btn-primary" onclick="utils.scrollToSection('menuSection')">Explore Menu</button>
       </div>
 
@@ -681,7 +681,7 @@
           <input type="tel" id="profileMobile" class="input-field bg-gray-100" readonly>
         </div>
         <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image (JPEG/PNG only)</label>
+          <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image (JPEG/PNG, max 2MB)</label>
           <input type="file" id="profileImage" accept="image/jpeg,image/png" class="input-field">
         </div>
         <button class="btn-primary w-full" onclick="data.updateProfile()">Save Changes</button>
@@ -789,6 +789,14 @@ const state = {
     token: localStorage.getItem('token'),
 };
 
+// Utility function to sanitize image URLs
+const sanitizeImageUrl = (url) => {
+  if (!url || url.includes('via.placeholder.com') || url === 'null') {
+    return '/Uploads/default-menu.png';
+  }
+  return url;
+};
+
 const utils = {
     debounce: (func, delay) => {
         let timeout;
@@ -818,9 +826,7 @@ const utils = {
                 'Authorization': `Bearer ${state.token}`,
                 ...options.headers,
             };
-            if (options.body instanceof FormData) {
-                delete headers['Content-Type'];
-            } else {
+            if (!(options.body instanceof FormData)) {
                 headers['Content-Type'] = 'application/json';
             }
             const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
@@ -863,11 +869,18 @@ const utils = {
         }
         const formData = new FormData();
         formData.append('image', file);
-        const response = await utils.fetchWithAuth('/api/upload', {
-            method: 'POST',
-            body: formData,
-        });
-        return response.url;
+        try {
+            const response = await utils.fetchWithAuth('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.url) {
+                throw new Error('Image upload failed: No URL returned');
+            }
+            return response.url;
+        } catch (error) {
+            throw new Error(error.message || 'Image upload failed');
+        }
     },
 };
 
@@ -937,7 +950,7 @@ const data = {
             document.getElementById('profileName').value = state.user.name || '';
             document.getElementById('profileEmail').value = state.user.email || '';
             document.getElementById('profileMobile').value = state.user.phone || '';
-            document.getElementById('profileImg').src = state.user.image || '/Uploads/default-profile.png';
+            document.getElementById('profileImg').src = sanitizeImageUrl(state.user.image);
         } catch (error) {
             utils.showToast(error.message || 'Failed to load profile', 'error');
         }
@@ -947,21 +960,26 @@ const data = {
         const name = document.getElementById('profileName').value.trim();
         const email = document.getElementById('profileEmail').value.trim();
         const imageInput = document.getElementById('profileImage').files[0];
-        if (!name || !email) return utils.showToast('Name and Email are required', 'error');
-        if (!utils.validateEmail(email)) return utils.showToast('Invalid email format', 'error');
+        if (!name || !email) {
+            return utils.showToast('Name and Email are required', 'error');
+        }
+        if (!utils.validateEmail(email)) {
+            return utils.showToast('Invalid email format', 'error');
+        }
         try {
             const body = { name, email };
             if (imageInput) {
-                body.image = await utils.uploadImage(imageInput);
+                const imageUrl = await utils.uploadImage(imageInput);
+                body.image = imageUrl;
             }
             state.user = await utils.fetchWithAuth('/api/profile', {
                 method: 'PUT',
                 body: JSON.stringify(body),
             });
             document.getElementById('userName').textContent = state.user.name;
-            document.getElementById('profileImg').src = state.user.image || '/Uploads/default-profile.png';
-            document.getElementById('profileImage').value = ''; // Clear file input
-            utils.showToast('Profile updated!', 'success');
+            document.getElementById('profileImg').src = sanitizeImageUrl(state.user.image);
+            document.getElementById('profileImage').value = '';
+            utils.showToast('Profile updated successfully!', 'success');
             ui.closeModal('profileModal');
         } catch (error) {
             utils.showToast(error.message || 'Failed to update profile', 'error');
@@ -1060,14 +1078,14 @@ const data = {
             const isFavorite = state.favorites.some(fav => fav.itemId === item.id);
             menuContainer.innerHTML += `
                 <div class="menu-card">
-                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2">
+                    <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2" onerror="this.src='/Uploads/default-menu.png'">
                     <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
                     <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
                     <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
                     <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}</p>
                     <div class="flex justify-between items-center gap-2">
-                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image || '/Uploads/default-menu.png'}')">Add to Cart</button>
-                        <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${item.image || '/Uploads/default-menu.png'}')`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
+                        <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${sanitizeImageUrl(item.image)}', ${item.price})`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
                     </div>
                 </div>
             `;
@@ -1098,7 +1116,7 @@ const data = {
             state.coupons.forEach(coupon => {
                 couponsList.innerHTML += `
                     <div class="coupon-card">
-                        <img src="${coupon.image || '/Uploads/default-coupon.png'}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2">
+                        <img src="${sanitizeImageUrl(coupon.image)}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2" onerror="this.src='/Uploads/default-coupon.png'">
                         <h3 class="text-base font-semibold text-gray-800">${coupon.code}</h3>
                         <p class="text-gray-600 text-sm mb-2">${coupon.discount}% OFF</p>
                         <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCouponFromList('${coupon.code}', ${coupon.discount})">Apply Coupon</button>
@@ -1129,12 +1147,13 @@ const data = {
         state.favorites.forEach(item => {
             const cardHTML = `
                 <div class="favorite-card flex items-center gap-2">
-                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='/Uploads/default-menu.png'">
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
+                        <p class="text-gray-600 text-sm">₹${item.price || 0}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.itemId}', '${item.name}', ${item.price || 0}, '${item.image || '/Uploads/default-menu.png'}')">Add to Cart</button>
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.itemId}', '${item.name}', ${item.price || 0}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
                         <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites('${item.itemId}')">Remove</button>
                     </div>
                 </div>
@@ -1148,11 +1167,11 @@ const data = {
         }
     },
 
-    addToFavorites: async (id, name, image) => {
+    addToFavorites: async (id, name, image, price) => {
         try {
             await utils.fetchWithAuth('/api/favorites', {
                 method: 'POST',
-                body: JSON.stringify({ itemId: id, name, image }),
+                body: JSON.stringify({ itemId: id, name, image, price }),
             });
             utils.showToast(`${name} added to favorites!`, 'success');
             data.loadFavorites();
@@ -1189,7 +1208,7 @@ const data = {
             originalTotal += item.price * item.quantity;
             cartItems.innerHTML += `
                 <div class="order-card flex items-center gap-2 mb-2">
-                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='/Uploads/default-menu.png'">
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
                         <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
@@ -1223,6 +1242,7 @@ const data = {
                 image,
                 quantity: 1
             };
+            console.log('Adding to cart:', cartItem); // Debug log
             await utils.fetchWithAuth('/api/cart', {
                 method: 'POST',
                 body: JSON.stringify(cartItem),
@@ -1230,23 +1250,28 @@ const data = {
             utils.showToast(`${name} added to cart!`, 'success');
             data.loadCart();
         } catch (error) {
+            console.error('Add to cart error:', error.message);
             utils.showToast(error.message || 'Failed to add to cart', 'error');
         }
     },
 
     updateQuantity: async (itemId, change) => {
         const item = state.cart.find(item => item.itemId === itemId);
-        if (item && item.quantity + change >= 1) {
-            try {
-                await utils.fetchWithAuth(`/api/cart/${itemId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ quantity: item.quantity + change }),
-                });
-                utils.showToast('Quantity updated!', 'success');
-                data.loadCart();
-            } catch (error) {
-                utils.showToast(error.message || 'Failed to update quantity', 'error');
-            }
+        if (!item) {
+            return utils.showToast('Item not found in cart', 'error');
+        }
+        if (item.quantity + change < 1) {
+            return utils.showToast('Quantity cannot be less than 1', 'error');
+        }
+        try {
+            await utils.fetchWithAuth(`/api/cart/${itemId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ quantity: item.quantity + change }),
+            });
+            utils.showToast('Quantity updated!', 'success');
+            data.loadCart();
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to update quantity', 'error');
         }
     },
 
@@ -1338,7 +1363,7 @@ const data = {
                 <div class="order-card">
                     <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
                     <p class="text-gray-600 text-sm">Date: ${order.date}</p>
-                    <p class="text-gray-600 text-sm">Items: ${order.items.join(', ')}</p>
+                    <p class="text-gray-600 text-sm">Items: ${order.items.map(item => item.name).join(', ')}</p>
                     <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
                     <p class="text-gray-600 text-sm">Delivery: ${order.delivery}</p>
                     <p class="text-gray-600 text-sm">Status: ${order.status}</p>
@@ -1395,7 +1420,7 @@ const data = {
 
     trackOrder: async (id) => {
         try {
-            const updatedOrder = await utils.fetchWithAuth(`/api/orders/${id}/track`, { method: 'PUT' });
+            const updatedOrder = await utils.fetchWithAuth(`/api/orders/${id}/track`, { method: 'GET' });
             utils.showToast(`Order #${id} status: ${updatedOrder.status}`, 'success');
             data.loadOrderHistory();
         } catch (error) {

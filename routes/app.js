@@ -103,17 +103,7 @@ const orderValidation = [
   body('items.*.price').isFloat({ min: 0 }).withMessage('Valid price is required'),
   body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be a positive integer'),
   body('items.*.image').optional().isString().withMessage('Valid image path is required'),
-  body('couponCode')
-    .optional()
-    .isString()
-    .trim()
-    .custom((value) => {
-      if (value === null || value === undefined) {
-        throw new Error('Coupon code cannot be null or undefined');
-      }
-      return true;
-    })
-    .withMessage('Valid coupon code is required if provided'),
+  body('couponCode').optional().isString().trim(),
   body('paymentMethod').isIn(['cod', 'online']).withMessage('Invalid payment method'),
   body('deliveryCost').isFloat({ min: 0 }).withMessage('Valid delivery cost is required'),
 ];
@@ -630,22 +620,17 @@ module.exports = (User, Cart, MenuItem, RestaurantStatus, Address, Favorite, Cou
    */
   router.delete('/api/cart/:itemId', authenticateJWT, async (req, res) => {
     try {
-      const itemId = parseInt(req.params.itemId);
-      if (isNaN(itemId)) {
-        return res.status(400).json({ message: 'Invalid item ID' });
-      }
       const cartItem = await Cart.findOne({
-        where: { itemId, userId: req.userId },
+        where: { itemId: req.params.itemId, userId: req.userId },
       });
       if (!cartItem) {
-        console.log(`Cart item not found for user ${req.userId}, itemId ${itemId}`);
         return res.status(404).json({ message: 'Cart item not found' });
       }
       await cartItem.destroy();
       res.status(200).json({ message: 'Item removed from cart' });
     } catch (error) {
       console.error(`Delete cart item error for user ${req.userId}, item ${req.params.itemId}:`, error.message);
-      res.status(500).json({ message: 'Failed to remove item from cart' });
+      res.status(500).json({ message: 'Failed to remove item' });
     }
   });
 
@@ -654,71 +639,100 @@ module.exports = (User, Cart, MenuItem, RestaurantStatus, Address, Favorite, Cou
    * @desc Place a new order
    * @access Private
    */
-  router.post('/api/orders', authenticateJWT, orderValidation, async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('Order validation errors:', errors.array());
-      return res.status(400).json({ message: errors.array()[0].msg });
+  // Place Order
+router.post('/orders', authenticateJWT, orderValidation, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log('Order validation errors:', errors.array());
+    return res.status(400).json({ message: errors.array()[0].msg });
+  }
+  const { addressId, items, couponCode, paymentMethod, deliveryCost } = req.body;
+  console.log('Order request payload:', req.body);
+  try {
+    // Validate addressId is a number and exists
+    if (!Number.isInteger(parseInt(addressId))) {
+      return res.status(400).json({ message: 'Invalid address ID' });
     }
-    const { addressId, items, couponCode, paymentMethod, deliveryCost } = req.body;
-    console.log('Order request payload:', req.body);
-    try {
-      // Validate addressId
-      if (!Number.isInteger(parseInt(addressId))) {
-        return res.status(400).json({ message: 'Invalid address ID' });
-      }
-      const address = await Address.findOne({ where: { id: addressId, userId: req.userId } });
-      if (!address) {
-        return res.status(404).json({ message: 'Address not found or does not belong to user' });
-      }
-      // Validate menu items
-      for (const item of items) {
-        const menuItem = await MenuItem.findByPk(item.itemId);
-        if (!menuItem) {
-          return res.status(404).json({ message: `Menu item ${item.itemId} not found` });
-        }
-      }
-      // Calculate total and discount
-      let total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      let discount = 0;
-      if (couponCode) {
-        const coupon = await Coupon.findOne({ where: { code: couponCode } });
-        if (!coupon) {
-          return res.status(404).json({ message: 'Invalid coupon code' });
-        }
-        discount = (total * coupon.discount) / 100;
-      }
-      total = Math.max(0, total - discount + (deliveryCost || 0));
-      // Create order
-      const order = await Order.create({
-        userId: req.userId,
-        addressId,
-        items: items.map(item => ({
-          ...item,
-          image: item.image || '/Uploads/default-menu.png',
-        })),
-        total,
-        couponCode: couponCode || null,
-        paymentMethod,
-        deliveryCost: deliveryCost || 0,
-        status: 'pending',
-      });
-      // Clear cart
-      await Cart.destroy({ where: { userId: req.userId } });
-      console.log(`Order placed: ${order.id}`);
-      res.status(201).json({
-        _id: order.id,
-        items: order.items,
-        total: parseFloat(order.total),
-        deliveryCost: parseFloat(order.deliveryCost),
-        status: order.status,
-        address: { _id: address.id, ...address.toJSON() },
-      });
-    } catch (error) {
-      console.error(`Place order error for user ${req.userId}:`, error.message);
-      res.status(500).json({ message: 'Failed to place order' });
+    const address = await Address.findOne({ where: { id: addressId, userId: req.userId } });
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found or does not belong to user' });
     }
-  });
+    for (const item of items) {
+      const menuItem = await MenuItem.findByPk(item.itemId);
+      if (!menuItem) {
+        return res.status(404).json({ message: `Menu item ${item.itemId} not found` });
+      }
+    }
+    let total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    let discount = 0;
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ where: { code: couponCode } });
+      if (!coupon) {
+        return res.status(404).json({ message: 'Invalid coupon code' });
+      }
+      discount = (total * coupon.discount) / 100;
+    }
+    total = Math.max(0, total - discount + (deliveryCost || 0));
+    const order = await Order.create({
+      userId: req.userId,
+      addressId,
+      items: items.map(item => ({
+        ...item,
+        image: item.image || '/Uploads/default-menu.png',
+      })),
+      total,
+      couponCode,
+      paymentMethod,
+      deliveryCost: deliveryCost || 0,
+      status: 'pending',
+      // Remove date field if not in schema, rely on createdAt
+    });
+    await Cart.destroy({ where: { userId: req.userId } });
+    console.log(`Order placed: ${order.id}`);
+    res.status(201).json({
+      _id: order.id,
+      items: order.items,
+      total: parseFloat(order.total),
+      deliveryCost: parseFloat(order.deliveryCost),
+      status: order.status,
+      address: { _id: address.id, ...address.toJSON() },
+    });
+  } catch (error) {
+    console.error(`Place order error for user ${req.userId}:`, error.message);
+    res.status(500).json({ message: 'Failed to place order' });
+  }
+});
+
+// Get Orders
+router.get('/orders', authenticateJWT, async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      where: { userId: req.userId },
+      include: [
+        { model: Address, attributes: ['id', 'fullName', 'mobile', 'houseNo', 'location', 'landmark'] },
+      ],
+      order: [['createdAt', 'DESC']], // Use createdAt instead of date
+    });
+    const formattedOrders = orders.map(order => ({
+      _id: order.id,
+      date: order.createdAt ? order.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Use createdAt
+      items: order.items.map(item => ({
+        ...item,
+        image: item.image || '/Uploads/default-menu.png',
+      })),
+      itemNames: order.items.map(item => item.name).join(', '),
+      total: parseFloat(order.total) || 0,
+      deliveryCost: parseFloat(order.deliveryCost) || 0,
+      status: order.status || 'pending',
+      cancelReason: order.cancelReason || '',
+      address: order.Address ? { _id: order.Address.id, ...order.Address.toJSON() } : null,
+    }));
+    res.status(200).json(formattedOrders);
+  } catch (error) {
+    console.error(`Get orders error for user ${req.userId}:`, error.message);
+    res.status(500).json({ message: 'Failed to fetch orders' });
+  }
+});
 
   /**
    * @route GET /api/orders
@@ -748,8 +762,8 @@ module.exports = (User, Cart, MenuItem, RestaurantStatus, Address, Favorite, Cou
         total: parseFloat(order.total) || 0,
         status: order.status || 'pending',
         deliveryCost: parseFloat(order.deliveryCost) || 0,
-        cancelReason: order.cancelReason || null,
-        address: order.Address ? { _id: order.Address.id, ...order.Address.toJSON() } : null,
+        cancelReason: order.cancelReason || '',
+        address: order.Address || null,
       }));
       res.status(200).json(formattedOrders);
     } catch (error) {
