@@ -33,11 +33,7 @@ const sequelize = new Sequelize(
 
 // Models
 const User = sequelize.define('User', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   name: { type: Sequelize.STRING, allowNull: false },
   email: { type: Sequelize.STRING, unique: true, allowNull: false },
   phone: { type: Sequelize.STRING, unique: true, allowNull: true },
@@ -49,11 +45,7 @@ const User = sequelize.define('User', {
 });
 
 const Cart = sequelize.define('Cart', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   userId: {
     type: Sequelize.INTEGER,
     references: { model: 'Users', key: 'id' },
@@ -64,15 +56,10 @@ const Cart = sequelize.define('Cart', {
   price: { type: Sequelize.FLOAT, allowNull: false },
   image: { type: Sequelize.STRING },
   quantity: { type: Sequelize.INTEGER, defaultValue: 1, allowNull: false },
-}, {
-  indexes: [{ unique: false, fields: ['userId'], name: 'cart_userId_idx' }],
 });
 
 const MenuItem = sequelize.define('MenuItem', {
-  id: {
-    type: Sequelize.STRING,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.STRING, primaryKey: true },
   name: { type: Sequelize.STRING, allowNull: false },
   price: { type: Sequelize.FLOAT, allowNull: false },
   image: { type: Sequelize.STRING },
@@ -81,11 +68,7 @@ const MenuItem = sequelize.define('MenuItem', {
 });
 
 const RestaurantStatus = sequelize.define('RestaurantStatus', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   status: {
     type: Sequelize.ENUM('open', 'closed'),
     defaultValue: 'open',
@@ -94,11 +77,7 @@ const RestaurantStatus = sequelize.define('RestaurantStatus', {
 });
 
 const Address = sequelize.define('Address', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   userId: {
     type: Sequelize.INTEGER,
     references: { model: 'Users', key: 'id' },
@@ -109,16 +88,10 @@ const Address = sequelize.define('Address', {
   houseNo: { type: Sequelize.STRING, allowNull: false },
   location: { type: Sequelize.STRING, allowNull: false },
   landmark: { type: Sequelize.STRING },
-}, {
-  indexes: [{ unique: false, fields: ['userId'], name: 'address_userId_idx' }],
 });
 
 const Favorite = sequelize.define('Favorite', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   userId: {
     type: Sequelize.INTEGER,
     references: { model: 'Users', key: 'id' },
@@ -132,22 +105,14 @@ const Favorite = sequelize.define('Favorite', {
 });
 
 const Coupon = sequelize.define('Coupon', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   code: { type: Sequelize.STRING, unique: true, allowNull: false },
   discount: { type: Sequelize.FLOAT, allowNull: false },
   image: { type: Sequelize.STRING },
 });
 
 const Order = sequelize.define('Order', {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+  id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
   userId: {
     type: Sequelize.INTEGER,
     references: { model: 'Users', key: 'id' },
@@ -168,11 +133,6 @@ const Order = sequelize.define('Order', {
     defaultValue: 'pending',
     allowNull: false,
   },
-}, {
-  indexes: [
-    { unique: false, fields: ['userId'], name: 'order_userId_idx' },
-    { unique: false, fields: ['addressId'], name: 'order_addressId_idx' },
-  ],
 });
 
 // Associations
@@ -185,17 +145,6 @@ Favorite.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Order, { foreignKey: 'userId', onDelete: 'CASCADE' });
 Order.belongsTo(User, { foreignKey: 'userId' });
 Order.belongsTo(Address, { foreignKey: 'addressId' });
-
-// Sync database
-async function syncDatabase() {
-  try {
-    await sequelize.sync({ alter: true });
-    await initializeDefaults();
-  } catch (err) {
-    console.error('Error syncing database:', err.message);
-    process.exit(1);
-  }
-}
 
 // Initialize default data
 async function initializeDefaults() {
@@ -268,9 +217,10 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     await sequelize.authenticate();
-    console.log('Database connected successfully');
-    await syncDatabase();
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    console.log('✅Database connected successfully');
+    await initializeDefaults();
+    console.log('Default data initialized');
+    app.listen(PORT, () => console.log(`🚀Server running on http://localhost:${PORT}`));
   } catch (error) {
     console.error('Error starting server:', error.message);
     process.exit(1);

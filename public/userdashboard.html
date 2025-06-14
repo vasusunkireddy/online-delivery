@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="noindex, nofollow">
   <title>Delicute - User Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -594,13 +596,12 @@
           <span>Delicute</span>
         </div>
         <div class="flex items-center gap-4">
-          <div class="nav-links" id="navLinks">
-            <span class="nav-link" onclick="scrollToSection('dashboard-content')">Home</span>
-            <span class="nav-link" onclick="scrollToSection('orders')">Orders</span>
-          </div>
+          <div class="nav-links" id="navLinks"></div>
           <div class="profile-dropdown">
-            <img src="https://via.placeholder.com/48" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
+            <img src="/Uploads/default-profile.png" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
             <div class="dropdown-menu" id="profileDropdown">
+              <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')">Home</div>
+              <div class="dropdown-item" onclick="utils.scrollToSection('orders')">Orders</div>
               <div class="dropdown-item" onclick="ui.openModal('profileModal')">Edit Profile</div>
               <div class="dropdown-item" onclick="ui.openModal('addressModal')">Manage Addresses</div>
               <div class="dropdown-item" onclick="ui.openModal('favoritesModal')">Favorites</div>
@@ -621,7 +622,7 @@
         <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-white" style="font-family: 'Playfair Display', serif;">Welcome, <span id="userName">User</span>!</h2>
         <p class="text-base md:text-lg text-white mb-2">Total Orders: <span id="totalOrders">0</span></p>
         <p class="text-base md:text-lg text-white mb-3">Savor Delicute’s Culinary Magic!</p>
-        <button class="btn-primary" onclick="scrollToSection('menuSection')">Explore Menu</button>
+        <button class="btn-primary" onclick="utils.scrollToSection('menuSection')">Explore Menu</button>
       </div>
 
       <div class="card" id="menuSection">
@@ -655,7 +656,10 @@
       </div>
 
       <div class="card" id="orders">
-        <h2 class="text-xl md:text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Playfair Display', serif;">Order History</h2>
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xl md:text-2xl font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">Order History</h2>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearOrderHistory()">Clear History</button>
+        </div>
         <div id="orderHistory"></div>
       </div>
     </div>
@@ -665,16 +669,20 @@
         <span class="close-btn" onclick="ui.closeModal('profileModal')">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name</label>
-          <input type="text" id="profileName" class="input-field" placeholder="Enter your name">
+          <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name *</label>
+          <input type="text" id="profileName" class="input-field" placeholder="Enter your name" required>
         </div>
         <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="profileMobile">Mobile Number</label>
+          <label class="block text-gray-700 mb-1 text-sm" for="profileEmail">Email *</label>
+          <input type="email" id="profileEmail" class="input-field" placeholder="Enter your email" required>
+        </div>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-sm" for="profileMobile">Mobile Number *</label>
           <input type="tel" id="profileMobile" class="input-field bg-gray-100" readonly>
         </div>
         <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image</label>
-          <input type="file" id="profileImage" accept="image/*" class="input-field">
+          <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image (JPEG/PNG only)</label>
+          <input type="file" id="profileImage" accept="image/jpeg,image/png" class="input-field">
         </div>
         <button class="btn-primary w-full" onclick="data.updateProfile()">Save Changes</button>
       </div>
@@ -685,28 +693,31 @@
         <span class="close-btn" onclick="ui.closeModal('addressModal')">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Manage Addresses</h2>
         <div id="addressList" class="mb-3"></div>
-        <h3 class="text-lg font-semibold mb-2 text-gray-800">Add New Address</h3>
-        <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="addressFullName">Full Name</label>
-          <input type="text" id="addressFullName" class="input-field" placeholder="Enter full name">
-        </div>
-        <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="addressMobile">Mobile Number</label>
-          <input type="tel" id="addressMobile" class="input-field" placeholder="Enter mobile number">
-        </div>
-        <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="addressHouseNo">House/Flat No.</label>
-          <input type="text" id="addressHouseNo" class="input-field" placeholder="Enter house/flat no.">
-        </div>
-        <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="addressLocation">Location/Street</label>
-          <input type="text" id="addressLocation" class="input-field" placeholder="Enter location/street">
-        </div>
-        <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="addressLandmark">Landmark (Optional)</label>
-          <input type="text" id="addressLandmark" class="input-field" placeholder="Enter landmark">
-        </div>
-        <button class="btn-primary w-full" onclick="data.addAddress()">Add Address</button>
+        <h3 class="text-lg font-semibold mb-2 text-gray-800" id="addressFormTitle">Add New Address</h3>
+        <form id="addressForm">
+          <input type="hidden" id="addressId">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="addressFullName">Full Name *</label>
+            <input type="text" id="addressFullName" class="input-field" placeholder="Enter full name" required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="addressMobile">Mobile Number *</label>
+            <input type="tel" id="addressMobile" class="input-field" placeholder="Enter mobile number" required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="addressHouseNo">House/Flat No. *</label>
+            <input type="text" id="addressHouseNo" class="input-field" placeholder="Enter house/flat no." required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="addressLocation">Location/Street *</label>
+            <input type="text" id="addressLocation" class="input-field" placeholder="Enter location/street" required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="addressLandmark">Landmark (Optional)</label>
+            <input type="text" id="addressLandmark" class="input-field" placeholder="Enter landmark">
+          </div>
+          <button type="submit" class="btn-primary w-full" id="addressSubmitBtn">Add Address</button>
+        </form>
       </div>
     </div>
 
@@ -738,8 +749,24 @@
         <p class="text-green-600 mb-1 text-sm">Discount: ₹<span id="cartDiscount">0</span></p>
         <p class="text-green-600 mb-1 text-sm">Delivery: ₹<span id="cartDelivery">0</span> (Free Delivery)</p>
         <p class="text-lg font-bold text-gray-800 mb-3">Final Total: ₹<span id="cartFinalTotal">0</span></p>
-        <p class="text-gray-600 mb-3 text-sm text-center">All UPI payments will be available soon. Thank you.</p>
+        <p class="text-red-600 mb-3 text-sm text-center">Note: All UPI payments will be available soon. Thank you.</p>
         <button class="btn-primary w-full" onclick="data.placeOrder('cod')">Place Order (COD)</button>
+      </div>
+    </div>
+
+    <div id="cancelOrderModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="ui.closeModal('cancelOrderModal')">×</span>
+        <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Cancel Order</h2>
+        <p class="text-gray-600 mb-3">Please provide a reason for cancellation:</p>
+        <form id="cancelOrderForm">
+          <input type="hidden" id="cancelOrderId">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm" for="cancelReason">Reason *</label>
+            <textarea id="cancelReason" class="input-field" rows="4" placeholder="Enter reason for cancellation" required></textarea>
+          </div>
+          <button type="submit" class="btn-primary w-full">Submit Cancellation</button>
+        </form>
       </div>
     </div>
   </div>
@@ -789,9 +816,13 @@ const utils = {
             if (!state.token) throw new Error('No token found');
             const headers = {
                 'Authorization': `Bearer ${state.token}`,
-                'Content-Type': 'application/json',
                 ...options.headers,
             };
+            if (options.body instanceof FormData) {
+                delete headers['Content-Type'];
+            } else {
+                headers['Content-Type'] = 'application/json';
+            }
             const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
             if (response.status === 401) {
                 utils.showToast('Session expired. Please log in.', 'error');
@@ -801,17 +832,42 @@ const utils = {
                 throw new Error('Unauthorized');
             }
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || `HTTP ${response.status}`);
             }
-            return await response.json();
+            return await response.json().catch(() => ({}));
         } catch (error) {
+            console.error('Fetch error:', error);
             throw error;
         }
     },
 
     validateMobile: (mobile) => {
         return /^\d{10}$/.test(mobile);
+    },
+
+    validateEmail: (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    },
+
+    validateImage: (file) => {
+        if (!file) return false;
+        const validTypes = ['image/jpeg', 'image/png'];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        return validTypes.includes(file.type) && file.size <= maxSize;
+    },
+
+    uploadImage: async (file) => {
+        if (!utils.validateImage(file)) {
+            throw new Error('Please upload a valid JPEG or PNG image (max 2MB)');
+        }
+        const formData = new FormData();
+        formData.append('image', file);
+        const response = await utils.fetchWithAuth('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+        return response.url;
     },
 };
 
@@ -850,6 +906,17 @@ const ui = {
     loadDarkMode: () => {
         if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
     },
+
+    populateAddressForm: (address = {}) => {
+        document.getElementById('addressId').value = address.id || '';
+        document.getElementById('addressFullName').value = address.fullName || '';
+        document.getElementById('addressMobile').value = address.mobile || '';
+        document.getElementById('addressHouseNo').value = address.houseNo || '';
+        document.getElementById('addressLocation').value = address.location || '';
+        document.getElementById('addressLandmark').value = address.landmark || '';
+        document.getElementById('addressFormTitle').textContent = address.id ? 'Edit Address' : 'Add New Address';
+        document.getElementById('addressSubmitBtn').textContent = address.id ? 'Update Address' : 'Add Address';
+    },
 };
 
 const data = {
@@ -868,8 +935,9 @@ const data = {
             state.user = await utils.fetchWithAuth('/api/profile');
             document.getElementById('userName').textContent = state.user.name || 'User';
             document.getElementById('profileName').value = state.user.name || '';
+            document.getElementById('profileEmail').value = state.user.email || '';
             document.getElementById('profileMobile').value = state.user.phone || '';
-            document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
+            document.getElementById('profileImg').src = state.user.image || '/Uploads/default-profile.png';
         } catch (error) {
             utils.showToast(error.message || 'Failed to load profile', 'error');
         }
@@ -877,20 +945,22 @@ const data = {
 
     updateProfile: async () => {
         const name = document.getElementById('profileName').value.trim();
+        const email = document.getElementById('profileEmail').value.trim();
         const imageInput = document.getElementById('profileImage').files[0];
-        if (!name) return utils.showToast('Name is required', 'error');
+        if (!name || !email) return utils.showToast('Name and Email are required', 'error');
+        if (!utils.validateEmail(email)) return utils.showToast('Invalid email format', 'error');
         try {
-            const body = { name };
+            const body = { name, email };
             if (imageInput) {
-                // For demo, use a placeholder URL; in production, upload to a service
-                body.image = `https://via.placeholder.com/150?text=${encodeURIComponent(name)}`;
+                body.image = await utils.uploadImage(imageInput);
             }
             state.user = await utils.fetchWithAuth('/api/profile', {
                 method: 'PUT',
                 body: JSON.stringify(body),
             });
             document.getElementById('userName').textContent = state.user.name;
-            document.getElementById('profileImg').src = state.user.image || 'https://via.placeholder.com/48';
+            document.getElementById('profileImg').src = state.user.image || '/Uploads/default-profile.png';
+            document.getElementById('profileImage').value = ''; // Clear file input
             utils.showToast('Profile updated!', 'success');
             ui.closeModal('profileModal');
         } catch (error) {
@@ -912,7 +982,10 @@ const data = {
                 addressList.innerHTML += `
                     <div class="order-card flex justify-between items-center">
                         <p class="text-gray-600 text-sm">${addressString}</p>
-                        <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress('${addr.id}')">Delete</button>
+                        <div class="flex gap-2">
+                            <button class="btn-primary text-sm py-1 px-3" onclick="data.editAddress('${addr.id}')">Edit</button>
+                            <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress('${addr.id}')">Delete</button>
+                        </div>
                     </div>
                 `;
             });
@@ -921,7 +994,9 @@ const data = {
         }
     },
 
-    addAddress: async () => {
+    addOrUpdateAddress: async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('addressId').value;
         const fullName = document.getElementById('addressFullName').value.trim();
         const mobile = document.getElementById('addressMobile').value.trim();
         const houseNo = document.getElementById('addressHouseNo').value.trim();
@@ -934,17 +1009,27 @@ const data = {
             return utils.showToast('Valid mobile number is required', 'error');
         }
         try {
-            await utils.fetchWithAuth('/api/addresses', {
-                method: 'POST',
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/addresses/${id}` : '/api/addresses';
+            await utils.fetchWithAuth(url, {
+                method,
                 body: JSON.stringify({ fullName, mobile, houseNo, location, landmark }),
             });
-            utils.showToast('Address added!', 'success');
-            ['addressFullName', 'addressMobile', 'addressHouseNo', 'addressLocation', 'addressLandmark'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
+            utils.showToast(id ? 'Address updated!' : 'Address added!', 'success');
+            document.getElementById('addressForm').reset();
+            ui.populateAddressForm();
             data.loadAddresses();
         } catch (error) {
-            utils.showToast(error.message || 'Failed to add address', 'error');
+            utils.showToast(error.message || `Failed to ${id ? 'update' : 'add'} address`, 'error');
+        }
+    },
+
+    editAddress: async (id) => {
+        try {
+            const address = await utils.fetchWithAuth(`/api/addresses/${id}`);
+            ui.populateAddressForm(address);
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to load address', 'error');
         }
     },
 
@@ -975,14 +1060,14 @@ const data = {
             const isFavorite = state.favorites.some(fav => fav.itemId === item.id);
             menuContainer.innerHTML += `
                 <div class="menu-card">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2">
+                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2">
                     <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
                     <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
                     <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
                     <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}</p>
                     <div class="flex justify-between items-center gap-2">
-                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image || 'https://via.placeholder.com/150'}')">Add to Cart</button>
-                        <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${item.image || 'https://via.placeholder.com/150'}')`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${item.image || '/Uploads/default-menu.png'}')">Add to Cart</button>
+                        <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${item.image || '/Uploads/default-menu.png'}')`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
                     </div>
                 </div>
             `;
@@ -1013,7 +1098,7 @@ const data = {
             state.coupons.forEach(coupon => {
                 couponsList.innerHTML += `
                     <div class="coupon-card">
-                        <img src="${coupon.image || 'https://via.placeholder.com/150'}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2">
+                        <img src="${coupon.image || '/Uploads/default-coupon.png'}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2">
                         <h3 class="text-base font-semibold text-gray-800">${coupon.code}</h3>
                         <p class="text-gray-600 text-sm mb-2">${coupon.discount}% OFF</p>
                         <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCouponFromList('${coupon.code}', ${coupon.discount})">Apply Coupon</button>
@@ -1044,11 +1129,14 @@ const data = {
         state.favorites.forEach(item => {
             const cardHTML = `
                 <div class="favorite-card flex items-center gap-2">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
                     </div>
-                    <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites('${item.itemId}')">Remove</button>
+                    <div class="flex gap-2">
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.itemId}', '${item.name}', ${item.price || 0}, '${item.image || '/Uploads/default-menu.png'}')">Add to Cart</button>
+                        <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites('${item.itemId}')">Remove</button>
+                    </div>
                 </div>
             `;
             favoritesList.innerHTML += cardHTML;
@@ -1064,7 +1152,7 @@ const data = {
         try {
             await utils.fetchWithAuth('/api/favorites', {
                 method: 'POST',
-                body: JSON.stringify({ id, name, image }),
+                body: JSON.stringify({ itemId: id, name, image }),
             });
             utils.showToast(`${name} added to favorites!`, 'success');
             data.loadFavorites();
@@ -1101,7 +1189,7 @@ const data = {
             originalTotal += item.price * item.quantity;
             cartItems.innerHTML += `
                 <div class="order-card flex items-center gap-2 mb-2">
-                    <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${item.image || '/Uploads/default-menu.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
                         <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
@@ -1128,9 +1216,16 @@ const data = {
 
     addToCart: async (id, name, price, image) => {
         try {
+            const cartItem = {
+                itemId: id,
+                name,
+                price: parseFloat(price),
+                image,
+                quantity: 1
+            };
             await utils.fetchWithAuth('/api/cart', {
                 method: 'POST',
-                body: JSON.stringify({ id, name, price, image, quantity: 1 }),
+                body: JSON.stringify(cartItem),
             });
             utils.showToast(`${name} added to cart!`, 'success');
             data.loadCart();
@@ -1197,7 +1292,13 @@ const data = {
         try {
             const orderData = {
                 addressId: parseInt(selectedAddress),
-                items: state.cart,
+                items: state.cart.map(item => ({
+                    itemId: item.itemId,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.image
+                })),
                 couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
                 paymentMethod: method,
                 deliveryCost: 0,
@@ -1222,24 +1323,73 @@ const data = {
         if (!data.checkAuth()) return;
         try {
             state.orders = await utils.fetchWithAuth('/api/orders');
-            const orderHistory = document.getElementById('orderHistory');
-            orderHistory.innerHTML = '';
-            state.orders.forEach(order => {
-                orderHistory.innerHTML += `
-                    <div class="order-card">
-                        <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-                        <p class="text-gray-600 text-sm">Date: ${order.date}</p>
-                        <p class="text-gray-600 text-sm">Items: ${order.items.join(', ')}</p>
-                        <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
-                        <p class="text-gray-600 text-sm">Delivery: ${order.delivery}</p>
-                        <p class="text-gray-600 text-sm">Status: ${order.status}</p>
-                        <button class="btn-primary mt-2 text-sm py-1 px-3" onclick="data.trackOrder('${order.id}')">Track Order</button>
-                    </div>
-                `;
-            });
-            document.getElementById('totalOrders').textContent = state.orders.length;
+            data.renderOrderHistory();
         } catch (error) {
             utils.showToast(error.message || 'Failed to load order history', 'error');
+        }
+    },
+
+    renderOrderHistory: () => {
+        const orderHistory = document.getElementById('orderHistory');
+        orderHistory.innerHTML = '';
+        state.orders.forEach(order => {
+            const canCancel = ['pending', 'confirmed'].includes(order.status.toLowerCase());
+            orderHistory.innerHTML += `
+                <div class="order-card">
+                    <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
+                    <p class="text-gray-600 text-sm">Date: ${order.date}</p>
+                    <p class="text-gray-600 text-sm">Items: ${order.items.join(', ')}</p>
+                    <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
+                    <p class="text-gray-600 text-sm">Delivery: ${order.delivery}</p>
+                    <p class="text-gray-600 text-sm">Status: ${order.status}</p>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn-primary text-sm py-1 px-3" onclick="data.trackOrder('${order.id}')">Track Order</button>
+                        ${canCancel ? `<button class="btn-secondary text-sm py-1 px-3" onclick="data.openCancelOrderModal('${order.id}')">Cancel Order</button>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('totalOrders').textContent = state.orders.length;
+        if (state.orders.length === 0) {
+            orderHistory.innerHTML = '<p class="text-center text-gray-600 text-sm">No orders found.</p>';
+        }
+    },
+
+    clearOrderHistory: async () => {
+        if (!data.checkAuth()) return;
+        if (!confirm('Are you sure you want to clear your order history? This action cannot be undone.')) return;
+        try {
+            await utils.fetchWithAuth('/api/orders/clear', { method: 'DELETE' });
+            state.orders = [];
+            data.renderOrderHistory();
+            utils.showToast('Order history cleared!', 'success');
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to clear order history', 'error');
+        }
+    },
+
+    openCancelOrderModal: (orderId) => {
+        document.getElementById('cancelOrderId').value = orderId;
+        document.getElementById('cancelReason').value = '';
+        ui.openModal('cancelOrderModal');
+    },
+
+    cancelOrder: async (e) => {
+        e.preventDefault();
+        const orderId = document.getElementById('cancelOrderId').value;
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) return utils.showToast('Please provide a reason', 'error');
+        try {
+            await utils.fetchWithAuth(`/api/orders/${orderId}/cancel`, {
+                method: 'PUT',
+                body: JSON.stringify({ reason }),
+            });
+            utils.showToast('Order cancelled successfully!', 'success');
+            document.getElementById('cancelOrderForm').reset();
+            ui.closeModal('cancelOrderModal');
+            data.loadOrderHistory();
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to cancel order', 'error');
         }
     },
 
@@ -1268,9 +1418,18 @@ const eventListeners = {
                 document.querySelectorAll('.dropdown-menu.show').forEach(dropdown => dropdown.classList.remove('show'));
             }
             if (event.target.classList.contains('modal')) {
-                ['profileModal', 'addressModal', 'favoritesModal', 'cartModal'].forEach(ui.closeModal);
+                ['profileModal', 'addressModal', 'favoritesModal', 'cartModal', 'cancelOrderModal'].forEach(ui.closeModal);
             }
         };
+        document.getElementById('addressForm').addEventListener('submit', data.addOrUpdateAddress);
+        document.getElementById('cancelOrderForm').addEventListener('submit', data.cancelOrder);
+        document.getElementById('profileImage').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && !utils.validateImage(file)) {
+                utils.showToast('Please select a valid JPEG or PNG image (max 2MB)', 'error');
+                e.target.value = '';
+            }
+        });
     },
 };
 
