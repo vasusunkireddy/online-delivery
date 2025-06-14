@@ -1,4 +1,3 @@
-<xaiArtifact artifact_id="47aa30d6-5af2-4fac-838c-c87f281520ed" artifact_version_id="47ee87bd-7887-46b4-a838-6fa0f6320a56" title="index.html" contentType="text/html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,7 +174,7 @@
     .toast-error {
       background: linear-gradient(to right, #ef4444, #f87171);
     }
-    .toast::before {
+    .toast:before {
       content: '';
       display: inline-block;
       width: 1.25rem;
@@ -183,11 +182,11 @@
       background-size: cover;
       margin-right: 0.75rem;
     }
-    .toast-success::before {
-      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
+    .toast-success:before {
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
     }
-    .toast-error::before {
-      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
+    .toast-error:before {
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
     }
     @keyframes toastSlide {
       0% { opacity: 0; transform: translateY(-30px); }
@@ -556,12 +555,17 @@
               <th>Customer</th>
               <th>Items</th>
               <th>Total</th>
+              <th>Delivery Cost</th>
+              <th>Coupon</th>
+              <th>Payment</th>
+              <th>Address</th>
+              <th>Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="orderTableBody">
-            <tr><td colspan="6" class="loading-state">Loading orders...</td></tr>
+            <tr><td colspan="11" class="loading-state">Loading orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -643,8 +647,9 @@
     const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
     const token = localStorage.getItem('adminToken');
 
-    // Utility function for API requests with error handling
-    async function handleFetch(url, options = {}) {
+    // Utility function for API requests with retry
+    async function handleFetch(url, options = {}, retryCount = 1) {
+      console.log(`Fetching URL: ${baseUrl}${url}`); // Debug full URL
       try {
         const response = await fetch(`${baseUrl}${url}`, {
           ...options,
@@ -680,7 +685,12 @@
         return await response.json();
       } catch (error) {
         console.error(`Fetch error for ${url}:`, error);
-        showToast(error.message, 'error');
+        if (retryCount > 0) {
+          console.log(`Retrying ${url} (${retryCount} retries left)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+          return handleFetch(url, options, retryCount - 1);
+        }
+        showToast(`${error.message}. Check console for details.`, 'error');
         throw error;
       }
     }
@@ -771,7 +781,7 @@
       if (image) formData.append('image', image);
 
       try {
-        const url = id ? `/api/admin/menu/${id}` : '/api/admin/menu';
+        const url = id ? `/api/admin/dashboard/menu/${id}` : '/api/admin/dashboard/menu';
         const method = id ? 'PUT' : 'POST';
         await handleFetch(url, {
           method,
@@ -806,11 +816,11 @@
       if (image) formData.append('image', image);
 
       try {
-        const url = id ? `/api/admin/coupons/${id}` : '/api/admin/coupons';
+        const url = id ? `/api/admin/dashboard/coupons/${id}` : '/api/admin/dashboard/coupons';
         const method = id ? 'PUT' : 'POST';
         await handleFetch(url, {
           method,
-          body: formData,
+          body: FormData,
           credentials: 'include',
         });
         showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
@@ -825,7 +835,7 @@
     async function deleteMenuItem(id) {
       if (!confirm('Are you sure you want to delete this menu item?')) return;
       try {
-        await handleFetch(`/api/admin/menu/${id}`, { method: 'DELETE' });
+        await handleFetch(`/api/admin/dashboard/menu/${id}`, { method: 'DELETE' });
         showToast('Menu item deleted!', 'success');
         loadMenuItems();
       } catch (error) {
@@ -837,7 +847,7 @@
     async function deleteCoupon(id) {
       if (!confirm('Are you sure you want to delete this coupon?')) return;
       try {
-        await handleFetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
+        await handleFetch(`/api/admin/dashboard/coupons/${id}`, { method: 'DELETE' });
         showToast('Coupon deleted!', 'success');
         loadCoupons();
       } catch (error) {
@@ -849,7 +859,7 @@
     async function toggleCustomerStatus(id, currentStatus) {
       const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
       try {
-        await handleFetch(`/api/admin/customers/${id}/status`, {
+        await handleFetch(`/api/admin/dashboard/customers/${id}/status`, {
           method: 'PUT',
           body: JSON.stringify({ status: newStatus }),
         });
@@ -863,7 +873,7 @@
     // Update order status
     async function updateOrderStatus(id, status) {
       try {
-        await handleFetch(`/api/admin/orders/${id}`, {
+        await handleFetch(`/api/admin/dashboard/orders/${id}`, {
           method: 'PUT',
           body: JSON.stringify({ status }),
         });
@@ -879,7 +889,7 @@
       const tbody = document.getElementById('menuTableBody');
       tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
       try {
-        const items = await handleFetch('/api/menu');
+        const items = await handleFetch('/api/admin/dashboard/menu');
         if (!items || items.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
           return;
@@ -889,7 +899,7 @@
             <td>${item.id}</td>
             <td><img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="menu-image"></td>
             <td>${item.name}</td>
-            <td>$${item.price.toFixed(2)}</td>
+            <td>$${parseFloat(item.price).toFixed(2)}</td>
             <td>${item.category}</td>
             <td>${item.description || '-'}</td>
             <td>
@@ -908,7 +918,7 @@
       const tbody = document.getElementById('couponTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
       try {
-        const coupons = await handleFetch('/api/admin/coupons');
+        const coupons = await handleFetch('/api/admin/dashboard/coupons');
         if (!coupons || coupons.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
           return;
@@ -918,7 +928,7 @@
             <td>${coupon.id}</td>
             <td><img src="${coupon.image || 'https://via.placeholder.com/50'}" alt="${coupon.code}" class="coupon-image"></td>
             <td>${coupon.code}</td>
-            <td>${coupon.discount}%</td>
+            <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
             <td>${coupon.description || '-'}</td>
             <td>
               <button class="btn-primary mr-2" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
@@ -936,7 +946,7 @@
       const tbody = document.getElementById('customerTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
       try {
-        const customers = await handleFetch('/api/admin/customers');
+        const customers = await handleFetch('/api/admin/dashboard/customers');
         if (!customers || customers.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
           return;
@@ -963,19 +973,24 @@
     // Load orders
     async function loadOrders() {
       const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading orders...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="loading-state">Loading orders...</td></tr>';
       try {
-        const orders = await handleFetch('/api/admin/orders');
+        const orders = await handleFetch('/api/admin/dashboard/orders');
         if (!orders || orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No orders found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No orders found.</td></tr>';
           return;
         }
         tbody.innerHTML = orders.map(order => `
           <tr>
             <td>${order.id}</td>
-            <td>${order.User.name}</td>
+            <td>${order.user?.name || 'Unknown'}</td>
             <td>${order.items.map(item => `${item.name} (x${item.quantity})`).join(', ') || '-'}</td>
-            <td>$${order.total.toFixed(2)}</td>
+            <td>$${parseFloat(order.total).toFixed(2)}</td>
+            <td>$${parseFloat(order.delivery || 0).toFixed(2)}</td>
+            <td>${order.couponCode || '-'}</td>
+            <td>${order.paymentMethod || 'COD'}</td>
+            <td>${order.address ? `${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? ', ' + order.address.landmark : ''}, ${order.address.mobile}` : '-'}</td>
+            <td>${new Date(order.date).toLocaleString()}</td>
             <td>
               <select onchange="updateOrderStatus(${order.id}, this.value)">
                 <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -989,7 +1004,7 @@
           </tr>
         `).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load orders. Check console for details.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Failed to load orders. Check console for details.</td></tr>';
       }
     }
 

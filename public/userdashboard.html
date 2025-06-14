@@ -78,6 +78,11 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
     }
 
     .nav-links {
@@ -374,6 +379,24 @@
       max-width: 600px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       animation: modalPop 0.3s ease forwards;
+      position: relative;
+    }
+
+    .profile-modal-content {
+      padding: 3rem;
+      max-width: 500px;
+      border-radius: 1.5rem;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 240, 245, 0.98));
+    }
+
+    .profile-modal-content img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 1rem;
+      display: block;
+      border: 3px solid #a855f7;
     }
 
     @keyframes modalPop {
@@ -420,6 +443,10 @@
     .dark-mode .card, .dark-mode .modal-content, .dark-mode .dropdown-menu, .dark-mode .order-card, .dark-mode .menu-card, .dark-mode .favorite-card, .dark-mode .coupon-card {
       background: var(--card-bg-dark);
       color: var(--text-light);
+    }
+
+    .dark-mode .profile-modal-content {
+      background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.95));
     }
 
     .dark-mode .input-field {
@@ -563,6 +590,15 @@
         border-radius: 0.75rem;
       }
 
+      .profile-modal-content {
+        padding: 1.5rem;
+      }
+
+      .profile-modal-content img {
+        width: 80px;
+        height: 80px;
+      }
+
       .modal-content h2 {
         font-size: 1.25rem;
       }
@@ -592,7 +628,7 @@
     <div class="dashboard-content" id="dashboard-content">
       <div class="header">
         <div class="logo">
-          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 rounded-full">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-10 h-10 rounded-full border-2 border-white">
           <span>Delicute</span>
         </div>
         <div class="flex items-center gap-4">
@@ -665,8 +701,9 @@
     </div>
 
     <div id="profileModal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content profile-modal-content">
         <span class="close-btn" onclick="ui.closeModal('profileModal')">×</span>
+        <img src="/Uploads/default-profile.png" alt="Profile Image" id="profileModalImg">
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name *</label>
@@ -789,7 +826,6 @@ const state = {
     token: localStorage.getItem('token'),
 };
 
-// Utility function to sanitize image URLs
 const sanitizeImageUrl = (url) => {
   if (!url || url.includes('via.placeholder.com') || url === 'null') {
     return '/Uploads/default-menu.png';
@@ -903,6 +939,9 @@ const ui = {
             data.loadCart();
             data.loadAddresses();
         }
+        else if (modalId === 'profileModal') {
+            data.loadProfileImage();
+        }
         ui.toggleDropdown();
     },
 
@@ -930,6 +969,10 @@ const ui = {
         document.getElementById('addressFormTitle').textContent = address.id ? 'Edit Address' : 'Add New Address';
         document.getElementById('addressSubmitBtn').textContent = address.id ? 'Update Address' : 'Add Address';
     },
+
+    loadProfileImage: () => {
+        document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user?.image || '/Uploads/default-profile.png');
+    },
 };
 
 const data = {
@@ -951,6 +994,7 @@ const data = {
             document.getElementById('profileEmail').value = state.user.email || '';
             document.getElementById('profileMobile').value = state.user.phone || '';
             document.getElementById('profileImg').src = sanitizeImageUrl(state.user.image);
+            document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user.image);
         } catch (error) {
             utils.showToast(error.message || 'Failed to load profile', 'error');
         }
@@ -978,6 +1022,7 @@ const data = {
             });
             document.getElementById('userName').textContent = state.user.name;
             document.getElementById('profileImg').src = sanitizeImageUrl(state.user.image);
+            document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user.image);
             document.getElementById('profileImage').value = '';
             utils.showToast('Profile updated successfully!', 'success');
             ui.closeModal('profileModal');
@@ -1213,12 +1258,12 @@ const data = {
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
                         <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
                         <div class="flex items-center gap-2 mt-2">
-                            <button class="btn-quantity" onclick="data.updateQuantity('${item.itemId}', -1)">-</button>
+                            <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', -1)">-</button>
                             <span class="text-sm">${item.quantity}</span>
-                            <button class="btn-quantity" onclick="data.updateQuantity('${item.itemId}', 1)">+</button>
+                            <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', 1)">+</button>
                         </div>
                     </div>
-                    <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart('${item.itemId}')">Remove</button>
+                    <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart('${item.id}')">Remove</button>
                 </div>
             `;
         });
@@ -1242,8 +1287,7 @@ const data = {
                 image,
                 quantity: 1
             };
-            console.log('Adding to cart:', cartItem); // Debug log
-            await utils.fetchWithAuth('/api/cart', {
+            const response = await utils.fetchWithAuth('/api/cart', {
                 method: 'POST',
                 body: JSON.stringify(cartItem),
             });
@@ -1255,8 +1299,8 @@ const data = {
         }
     },
 
-    updateQuantity: async (itemId, change) => {
-        const item = state.cart.find(item => item.itemId === itemId);
+    updateQuantity: async (id, change) => {
+        const item = state.cart.find(item => item.id === id);
         if (!item) {
             return utils.showToast('Item not found in cart', 'error');
         }
@@ -1264,7 +1308,7 @@ const data = {
             return utils.showToast('Quantity cannot be less than 1', 'error');
         }
         try {
-            await utils.fetchWithAuth(`/api/cart/${itemId}`, {
+            await utils.fetchWithAuth(`/api/cart/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify({ quantity: item.quantity + change }),
             });
@@ -1275,9 +1319,9 @@ const data = {
         }
     },
 
-    removeFromCart: async (itemId) => {
+    removeFromCart: async (id) => {
         try {
-            await utils.fetchWithAuth(`/api/cart/${itemId}`, { method: 'DELETE' });
+            await utils.fetchWithAuth(`/api/cart/${id}`, { method: 'DELETE' });
             utils.showToast('Item removed from cart!', 'success');
             data.loadCart();
         } catch (error) {
@@ -1327,8 +1371,11 @@ const data = {
                 couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
                 paymentMethod: method,
                 deliveryCost: 0,
+                total: parseFloat(document.getElementById('cartFinalTotal').textContent),
+                status: 'pending',
+                date: new Date().toISOString(),
             };
-            await utils.fetchWithAuth('/api/orders', {
+            const response = await utils.fetchWithAuth('/api/orders', {
                 method: 'POST',
                 body: JSON.stringify(orderData),
             });
