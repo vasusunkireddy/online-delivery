@@ -1,400 +1,631 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delicute - Admin Login & Signup</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-image: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .auth-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 2.5rem;
-            max-width: 450px;
-            width: 90%;
-            backdrop-filter: blur(5px);
-        }
-        .input-field {
-            transition: all 0.3s ease;
-        }
-        .input-field:focus {
-            border-color: #f59e0b;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
-            outline: none;
-        }
-        .auth-btn {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .auth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        }
-        .auth-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s ease, height 0.4s ease;
-        }
-        .auth-btn:hover::after {
-            width: 200px;
-            height: 200px;
-        }
-        .toggle-link {
-            transition: color 0.3s ease;
-        }
-        .toggle-link:hover {
-            color: #b45309;
-        }
-        .form-section {
-            transition: all 0.5s ease;
-        }
-        .form-section.hidden {
-            display: none;
-        }
-        /* Toast Notification Styles */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            min-width: 300px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            opacity: 0;
-            transition: all 0.3s ease-in-out;
-            z-index: 1000;
-        }
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        .toast.success {
-            background-color: #10b981; /* Green for success */
-        }
-        .toast.error {
-            background-color: #ef4444; /* Red for error */
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delicute Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #fef3f9 0%, #e0f4ff 100%);
+      font-family: 'Poppins', sans-serif;
+      color: #1a2b44;
+      margin: 0;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+    .cloud-bg {
+      position: relative;
+      background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cloud-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+      z-index: 1;
+    }
+    .hero-content {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      max-width: 750px;
+      margin: 1rem auto;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 1.5px;
+      margin-bottom: 1rem;
+    }
+    .hero-title::after {
+      content: '';
+      display: block;
+      width: 180px;
+      height: 5px;
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      margin: 1.25rem auto;
+      border-radius: 3px;
+    }
+    .nav-link {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      transition: all 0.3s ease;
+      border-radius: 0.5rem;
+    }
+    .nav-link:hover {
+      color: #fef08a;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+    }
+    .logo img {
+      width: 2.5rem;
+      height: 2.5rem;
+      margin-right: 0.75rem;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .subtext {
+      font-size: 0.75rem;
+      color: #d1d5db;
+      letter-spacing: 0.5px;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: rgba(255, 255, 255, 0.98);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #4b5e7a;
+      transition: color 0.2s ease;
+    }
+    .close-btn:hover {
+      color: #3b82f6;
+    }
+    .login-slide {
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      color: white;
+      font-weight: 600;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      color: white;
+      font-size: 1rem;
+      z-index: 2000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      animation: toastSlide 3.5s ease-in-out forwards;
+    }
+    .toast-success {
+      background: linear-gradient(to right, #10b981, #34d399);
+    }
+    .toast-error {
+      background: linear-gradient(to right, #ef4444, #f87171);
+    }
+    .toast::before {
+      content: '';
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      background-size: cover;
+      margin-right: 0.75rem;
+    }
+    .toast-success::before {
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
+    }
+    .toast-error::before {
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
+    }
+    @keyframes toastSlide {
+      0% { opacity: 0; transform: translateY(-30px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-30px); }
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #3b82f6, #d946ef);
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .input-field {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 0.5rem;
+      padding: 0.85rem;
+      width: 100%;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    .input-field:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+      outline: none;
+    }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      z-index: 50;
+      padding: 0.5rem;
+    }
+    .hamburger span {
+      width: 28px;
+      height: 4px;
+      background: #ffffff;
+      margin: 3px 0;
+      border-radius: 2px;
+      transition: all 0.4s ease;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(8px, -8px);
+    }
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background: linear-gradient(to bottom, #1f2937, #111827);
+      padding: 5rem 2rem;
+      z-index: 40;
+      transform: translateX(100%);
+      transition: transform 0.4s ease;
+    }
+    .mobile-menu.active {
+      transform: translateX(0);
+    }
+    .mobile-menu a {
+      color: #ffffff;
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin: 1.25rem 0;
+      text-align: left;
+      transition: all 0.3s ease;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+    .mobile-menu a:hover {
+      color: #fef08a;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    @media (max-width: 640px) {
+      .hamburger {
+        display: flex;
+      }
+      .desktop-nav {
+        display: none;
+      }
+      .mobile-menu {
+        display: flex;
+      }
+      .hero-content {
+        padding: 2rem 1.25rem;
+        margin: 0.75rem;
+      }
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      .hero-title::after {
+        width: 120px;
+        height: 4px;
+      }
+      .logo {
+        font-size: 1.75rem;
+      }
+      .logo img {
+        width: 2rem;
+        height: 2rem;
+      }
+      .subtext {
+        font-size: 0.65rem;
+      }
+      .modal-content {
+        padding: 1.5rem;
+        max-width: 95%;
+      }
+      .toast {
+        top: 15px;
+        right: 15px;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+      }
+    }
+    @media (min-width: 641px) {
+      .mobile-menu {
+        display: none !important;
+      }
+      .hamburger {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Toast Container -->
-    <div id="toastContainer"></div>
-
-    <!-- Admin Auth Section -->
-    <div class="auth-container">
-        <div class="flex justify-center items-center space-x-3 mb-6">
-            <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="h-12">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">DELICUTE</h1>
-                <p class="text-sm text-gray-500">Admin Portal</p>
-            </div>
+  <header class="cloud-bg">
+    <nav class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-gray-900/90 to-gray-700/90 fixed w-full top-0 z-50 backdrop-blur-md">
+      <div class="flex flex-col items-start">
+        <div class="logo">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
+          <span>Delicute Admin</span>
         </div>
-
-        <!-- Login Form -->
-        <div id="adminLoginForm" class="form-section">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Admin Login</h2>
-            <div>
-                <label for="adminEmail" class="block text-gray-700 font-medium mb-1">Email</label>
-                <input type="email" id="adminEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Admin Email">
-            </div>
-            <div class="mt-4">
-                <label for="adminPassword" class="block text-gray-700 font-medium mb-1">Password</label>
-                <input type="password" id="adminPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Password">
-            </div>
-            <div class="mt-4 text-right">
-                <a href="#" onclick="showForgotPassword()" class="text-yellow-500 hover:underline toggle-link">Forgot Password?</a>
-            </div>
-            <div class="mt-6">
-                <button onclick="adminLogin()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Login</button>
-            </div>
-            <div class="mt-4 text-center">
-                <p class="text-gray-600 text-sm">
-                    Don't have an account? 
-                    <a href="#" onclick="showSignup()" class="text-yellow-500 hover:underline toggle-link font-medium">Signup</a>
-                </p>
-            </div>
+        <p class="subtext mt-1">Manage Your Culinary Experience</p>
+      </div>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="desktop-nav flex items-center space-x-3">
+        <a href="#" class="nav-link login-slide" onclick="openModal('loginModal')">Admin Login</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('signupModal')">Admin Signup</a>
+      </div>
+      <div class="mobile-menu">
+        <a href="#" class="nav-link login-slide" onclick="openModal('loginModal'); toggleMobileMenu()">Admin Login</a>
+        <a href="#" class="nav-link login-slide" onclick="openModal('signupModal'); toggleMobileMenu()">Admin Signup</a>
+      </div>
+    </nav>
+    <div class="flex flex-1 items-center justify-center text-center min-h-screen pt-20">
+      <div class="hero-content">
+        <p class="text-lg font-light text-white mb-4">Welcome to Delicute Admin Portal</p>
+        <h1 class="hero-title">Admin Panel</h1>
+        <p class="text-white text-base mb-6">Manage your restaurant with ease and elegance.</p>
+        <div class="flex justify-center gap-4">
+          <button class="btn-primary" onclick="openModal('loginModal')">Login</button>
+          <button class="btn-primary" onclick="openModal('signupModal')">Signup</button>
         </div>
-
-        <!-- Signup Form -->
-        <div id="adminSignupForm" class="form-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Admin Signup</h2>
-            <div>
-                <label for="signupName" class="block text-gray-700 font-medium mb-1">Name</label>
-                <input type="text" id="signupName" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Full Name">
-            </div>
-            <div class="mt-4">
-                <label for="signupEmail" class="block text-gray-700 font-medium mb-1">Email</label>
-                <input type="email" id="signupEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Email">
-            </div>
-            <div class="mt-4">
-                <label for="signupPhone" class="block text-gray-700 font-medium mb-1">Phone Number</label>
-                <input type="tel" id="signupPhone" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Phone Number">
-            </div>
-            <div class="mt-4">
-                <label for="signupPassword" class="block text-gray-700 font-medium mb-1">Password</label>
-                <input type="password" id="signupPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Create Password">
-            </div>
-            <div class="mt-6">
-                <button onclick="adminSignup()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Signup</button>
-            </div>
-            <div class="mt-4 text-center">
-                <p class="text-gray-600 text-sm">
-                    Already have an account? 
-                    <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link font-medium">Login</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- Forgot Password Step 1: Enter Email -->
-        <div id="forgotPasswordEmail" class="form-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Forgot Password</h2>
-            <div>
-                <label for="forgotEmail" class="block text-gray-700 font-medium mb-1">Enter Email</label>
-                <input type="email" id="forgotEmail" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Your Email">
-            </div>
-            <div class="mt-6">
-                <button onclick="sendAdminOTP()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Send OTP</button>
-            </div>
-            <div class="mt-4 text-center">
-                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
-            </div>
-        </div>
-
-        <!-- Forgot Password Step 2: Enter OTP -->
-        <div id="forgotPasswordOTP" class="form-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Verify OTP</h2>
-            <div>
-                <label for="otpInput" class="block text-gray-700 font-medium mb-1">Enter OTP</label>
-                <input type="text" id="otpInput" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Enter OTP">
-            </div>
-            <div class="mt-6">
-                <button onclick="verifyAdminOTP()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Verify OTP</button>
-            </div>
-            <div class="mt-4 text-center">
-                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
-            </div>
-        </div>
-
-        <!-- Forgot Password Step 3: Reset Password -->
-        <div id="forgotPasswordReset" class="form-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Reset Password</h2>
-            <div>
-                <label for="newPassword" class="block text-gray-700 font-medium mb-1">New Password</label>
-                <input type="password" id="newPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="New Password">
-            </div>
-            <div class="mt-4">
-                <label for="confirmPassword" class="block text-gray-700 font-medium mb-1">Confirm Password</label>
-                <input type="password" id="confirmPassword" class="input-field w-full p-2 mt-1 border rounded-md focus:ring focus:ring-yellow-200" placeholder="Confirm Password">
-            </div>
-            <div class="mt-6">
-                <button onclick="resetAdminPassword()" class="auth-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full w-full font-medium">Reset Password</button>
-            </div>
-            <div class="mt-4 text-center">
-                <a href="#" onclick="showLogin()" class="text-yellow-500 hover:underline toggle-link">Back to Login</a>
-            </div>
-        </div>
+      </div>
     </div>
+  </header>
 
-    <script>
-        const BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('loginModal')">×</span>
+      <h2 class="text-2xl font-semibold mb-5 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Login</h2>
+      <div id="loginForm">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" class="input-field" placeholder="Enter admin email">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
+        </div>
+        <button class="btn-primary w-full mb-4" onclick="loginAdmin()">Login</button>
+        <p class="text-center text-sm mt-3"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
+      </div>
+      <div id="forgotPasswordForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" class="input-field" placeholder="Enter your email">
+        </div>
+        <button class="btn-primary w-full mb-4" onclick="sendOtp()">Send OTP</button>
+      </div>
+      <div id="otpForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="otp">Enter OTP</label>
+          <input type="text" id="otp" class="input-field" placeholder="Enter OTP">
+        </div>
+        <button class="btn-primary w-full mb-4" onclick="verifyOtp()">Verify OTP</button>
+      </div>
+      <div id="newPasswordForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="newPassword">New Password</label>
+          <input type="password" id="newPassword" class="input-field" placeholder="Enter new password">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm new password">
+        </div>
+        <button class="btn-primary w-full mb-4" onclick="resetPassword()">Reset Password</button>
+      </div>
+      <div id="successMessage" class="hidden text-center">
+        <p class="text-green-600 mb-4 text-sm">Password reset successfully!</p>
+        <button class="btn-primary px-5" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
+      </div>
+    </div>
+  </div>
 
-        // Toast Notification Function
-        function showToast(message, type = 'success') {
-            const toastContainer = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            toastContainer.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+  <div id="signupModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('signupModal')">×</span>
+      <h2 class="text-2xl font-semibold mb-5 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Signup</h2>
+      <div id="signupForm">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupName">Name</label>
+          <input type="text" id="signupName" class="input-field" placeholder="Enter your name">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" class="input-field" placeholder="Enter your email">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPhone">Mobile Number</label>
+          <input type="tel" id="signupPhone" class="input-field" placeholder="Enter your mobile number">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 text-sm" for="signupPassword">Create Password</label>
+          <input type="password" id="signupPassword" class="input-field" placeholder="Create a password">
+        </div>
+        <p class="text-center text-xs mb-4">
+          By signing up, you agree to our <a href="terms.html" target="_blank" class="text-blue-500 hover:underline">Terms and Conditions</a>.
+        </p>
+        <button class="btn-primary w-full mb-4" onclick="signupAdmin()">Signup</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-10 text-center">
+    <p class="text-lg">© 2025 Delicute. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+
+    async function handleFetch(url, options) {
+      try {
+        const response = await fetch(`${baseUrl}${url}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Unknown API error');
         }
+        return await response.json();
+      } catch (error) {
+        console.error(`Fetch error for ${url}:`, error.message);
+        throw error;
+      }
+    }
 
-        function showLogin() {
-            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
-            document.getElementById('adminLoginForm').classList.remove('hidden');
-        }
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
 
-        function showSignup() {
-            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
-            document.getElementById('adminSignupForm').classList.remove('hidden');
-        }
+    function toggleMobileMenu() {
+      const mobileMenu = document.querySelector('.mobile-menu');
+      const hamburger = document.querySelector('.hamburger');
+      mobileMenu.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    }
 
-        function showForgotPassword() {
-            document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
-            document.getElementById('forgotPasswordEmail').classList.remove('hidden');
-        }
+    async function loginAdmin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      try {
+        const { token, user } = await handleFetch('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminUser', JSON.stringify(user));
+        showToast(`Welcome, ${user.name}!`, 'success');
+        closeModal('loginModal');
+        setTimeout(() => window.location.href = '/admindashboard.html', 1000);
+      } catch (error) {
+        showToast(error.message || 'Failed to login', 'error');
+      }
+    }
 
-        async function adminLogin() {
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPassword').value;
-            if (!email || !password) {
-                showToast('Please enter both email and password.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('adminToken', data.token);
-                    showToast('Admin login successful!', 'success');
-                    setTimeout(() => window.location.assign('/admindashboard.html'), 1000);
-                } else {
-                    showToast(data.error || 'Admin login failed.', 'error');
-                }
-            } catch (error) {
-                showToast('Failed to log in. Please try again.', 'error');
-            }
-        }
+    async function signupAdmin() {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const phone = document.getElementById('signupPhone').value;
+      const password = document.getElementById('signupPassword').value;
+      if (!name || !email || !phone || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      if (!/^\d{10}$/.test(phone)) {
+        showToast('Please enter a valid 10-digit mobile number', 'error');
+        return;
+      }
+      try {
+        const { token, user } = await handleFetch('/api/admin/signup', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, phone, password }),
+        });
+        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminUser', JSON.stringify(user));
+        showToast('Signed up successfully!', 'success');
+        closeModal('signupModal');
+        setTimeout(() => window.location.href = '/admindashboard.html', 1000);
+      } catch (error) {
+        showToast(error.message || 'Failed to signup', 'error');
+      }
+    }
 
-        async function adminSignup() {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const phone = document.getElementById('signupPhone').value;
-            const password = document.getElementById('signupPassword').value;
-            if (!name || !email || !phone || !password) {
-                showToast('Please fill in all fields.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone, password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('adminToken', data.token);
-                    showToast('Admin signup successful!', 'success');
-                    setTimeout(() => window.location.assign('/admindashboard.html'), 1000);
-                } else {
-                    showToast(data.error || 'Admin signup failed.', 'error');
-                }
-            } catch (error) {
-                showToast('Failed to sign up. Please try again.', 'error');
-            }
-        }
+    async function showForgotPassword() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('forgotPasswordForm').classList.remove('hidden');
+    }
 
-        async function sendAdminOTP() {
-            const email = document.getElementById('forgotEmail').value;
-            if (!email) {
-                showToast('Please enter your email.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/forgot-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(data.message, 'success');
-                    document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
-                    document.getElementById('forgotPasswordOTP').classList.remove('hidden');
-                } else {
-                    showToast(data.error || 'Failed to send OTP.', 'error');
-                }
-            } catch (error) {
-                showToast('Failed to send OTP. Please try again.', 'error');
-            }
-        }
+    async function sendOtp() {
+      const email = document.getElementById('forgotEmail').value;
+      if (!email) {
+        showToast('Please enter your email', 'error');
+        return;
+      }
+      try {
+        const data = await handleFetch('/api/admin/forgot-password', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        });
+        showToast(data.message, 'success');
+        document.getElementById('forgotPasswordForm').classList.add('hidden');
+        document.getElementById('otpForm').classList.remove('hidden');
+      } catch (error) {
+        showToast(error.message || 'Failed to send OTP', 'error');
+      }
+    }
 
-        async function verifyAdminOTP() {
-            const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('otpInput').value;
-            if (!otp) {
-                showToast('Please enter the OTP.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp, newPassword: null })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('OTP verified successfully!', 'success');
-                    document.querySelectorAll('.form-section').forEach(section => section.classList.add('hidden'));
-                    document.getElementById('forgotPasswordReset').classList.remove('hidden');
-                } else {
-                    showToast(data.error || 'Invalid OTP.', 'error');
-                }
-            } catch (error) {
-                showToast('Failed to verify OTP. Please try again.', 'error');
-            }
-        }
+    async function verifyOtp() {
+      const email = document.getElementById('forgotEmail').value;
+      const otp = document.getElementById('otp').value;
+      if (!otp) {
+        showToast('Please enter the OTP', 'error');
+        return;
+      }
+      try {
+        const data = await handleFetch('/api/admin/verify-otp', {
+          method: 'POST',
+          body: JSON.stringify({ email, otp }),
+        });
+        showToast(data.message, 'success');
+        document.getElementById('otpForm').classList.add('hidden');
+        document.getElementById('newPasswordForm').classList.remove('hidden');
+      } catch (error) {
+        showToast(error.message || 'Failed to verify OTP', 'error');
+      }
+    }
 
-        async function resetAdminPassword() {
-            const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('otpInput').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            if (!newPassword || !confirmPassword) {
-                showToast('Please fill in both password fields.', 'error');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                showToast('Passwords do not match.', 'error');
-                return;
-            }
-            try {
-                const response = await fetch(`${BASE_URL}/api/auth/admin/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp, newPassword })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    showToast(data.message, 'success');
-                    setTimeout(() => showLogin(), 1000);
-                } else {
-                    showToast(data.error || 'Failed to reset password.', 'error');
-                }
-            } catch (error) {
-                showToast('Failed to reset password. Please try again.', 'error');
-            }
-        }
+    async function resetPassword() {
+      const email = document.getElementById('forgotEmail').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (!newPassword || !confirmPassword) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+      }
+      try {
+        const data = await handleFetch('/api/admin/reset-password', {
+          method: 'POST',
+          body: JSON.stringify({ email, newPassword, confirmPassword }),
+        });
+        showToast(data.message, 'success');
+        document.getElementById('newPasswordForm').classList.add('hidden');
+        document.getElementById('successMessage').classList.remove('hidden');
+      } catch (error) {
+        showToast(error.message || 'Failed to reset password', 'error');
+      }
+    }
 
-        window.onload = () => {
-            const adminToken = localStorage.getItem('adminToken');
-            // Only redirect to dashboard if not on /admin.html
-            if (adminToken && window.location.pathname !== '/admin.html' && window.location.pathname !== '/admin') {
-                window.location.assign('/admindashboard.html');
-            } else {
-                showLogin();
-            }
-        };
-    </script>
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'flex';
+      if (modalId === 'loginModal') {
+        resetLoginModal();
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+      if (modalId === 'loginModal') {
+        resetLoginModal();
+      }
+    }
+
+    function resetLoginModal() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('forgotPasswordForm').classList.add('hidden');
+      document.getElementById('otpForm').classList.add('hidden');
+      document.getElementById('newPasswordForm').classList.add('hidden');
+      document.getElementById('successMessage').classList.add('hidden');
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('forgotEmail').value = '';
+      document.getElementById('otp').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        closeModal('loginModal');
+        closeModal('signupModal');
+      }
+    };
+  </script>
 </body>
 </html>
