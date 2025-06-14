@@ -55,14 +55,19 @@ function authenticateUser(req, res, next) {
   });
 }
 
+// Serve static files from Uploads directory
+router.use('/Uploads', express.static(path.join(__dirname, '../Uploads')));
+
 // Image upload endpoint
 router.post('/upload', authenticateUser, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
-    res.json({ url: `/Uploads/${req.file.filename}` });
+    const imageUrl = `/Uploads/${req.file.filename}`;
+    console.log('Image uploaded:', imageUrl); // Debug log
+    res.json({ url: imageUrl });
   } catch (error) {
-    console.error('Error uploading image:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
+    console.error('Error uploading image:', error.message);
+    res.status(500).json({ error: 'Failed to upload image', details: error.message });
   }
 });
 
@@ -71,10 +76,14 @@ router.get('/profile', authenticateUser, async (req, res) => {
   try {
     const [users] = await pool.query('SELECT id, name, email, phone, image FROM users WHERE id = ?', [req.user.id]);
     if (users.length === 0) return res.status(404).json({ error: 'User not found' });
-    res.json(users[0]);
+    const user = users[0];
+    // Set default image if none exists
+    user.image = user.image || '/Uploads/default-profile.png';
+    console.log('Profile fetched:', { id: user.id, image: user.image }); // Debug log
+    res.json(user);
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+    console.error('Error fetching profile:', error.message);
+    res.status(500).json({ error: 'Failed to fetch profile', details: error.message });
   }
 });
 
@@ -84,16 +93,25 @@ router.put('/profile', authenticateUser, async (req, res) => {
   if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
 
   try {
+    // Check if user has an existing image
+    const [existingUser] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
+    if (!image && !existingUser[0].image) {
+      return res.status(400).json({ error: 'Profile image is mandatory' });
+    }
+
+    const imageToSave = image || existingUser[0].image || '/Uploads/default-profile.png';
     const [result] = await pool.query(
       'UPDATE users SET name = ?, email = ?, image = ? WHERE id = ?',
-      [name, email, image || null, req.user.id]
+      [name, email, imageToSave, req.user.id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+
     const [updatedUser] = await pool.query('SELECT id, name, email, phone, image FROM users WHERE id = ?', [req.user.id]);
+    console.log('Profile updated:', { id: updatedUser[0].id, image: updatedUser[0].image }); // Debug log
     res.json(updatedUser[0]);
   } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error('Error updating profile:', error.message);
+    res.status(500).json({ error: 'Failed to update profile', details: error.message });
   }
 });
 
@@ -110,8 +128,8 @@ router.get('/addresses', authenticateUser, async (req, res) => {
       landmark: addr.landmark
     })));
   } catch (error) {
-    console.error('Error fetching addresses:', error);
-    res.status(500).json({ error: 'Failed to fetch addresses' });
+    console.error('Error fetching addresses:', error.message);
+    res.status(500).json({ error: 'Failed to fetch addresses', details: error.message });
   }
 });
 
@@ -130,8 +148,8 @@ router.get('/addresses/:id', authenticateUser, async (req, res) => {
       landmark: addr.landmark
     });
   } catch (error) {
-    console.error('Error fetching address:', error);
-    res.status(500).json({ error: 'Failed to fetch address' });
+    console.error('Error fetching address:', error.message);
+    res.status(500).json({ error: 'Failed to fetch address', details: error.message });
   }
 });
 
@@ -150,10 +168,11 @@ router.post('/addresses', authenticateUser, async (req, res) => {
       'INSERT INTO addresses (user_id, full_name, mobile, house_no, location, landmark) VALUES (?, ?, ?, ?, ?, ?)',
       [req.user.id, fullName, mobile, houseNo, location, landmark || null]
     );
+    console.log('Address added for user:', req.user.id); // Debug log
     res.json({ message: 'Address added successfully' });
   } catch (error) {
-    console.error('Error adding address:', error);
-    res.status(500).json({ error: 'Failed to add address' });
+    console.error('Error adding address:', error.message);
+    res.status(500).json({ error: 'Failed to add address', details: error.message });
   }
 });
 
@@ -173,10 +192,11 @@ router.put('/addresses/:id', authenticateUser, async (req, res) => {
       [fullName, mobile, houseNo, location, landmark || null, req.params.id, req.user.id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Address not found' });
+    console.log('Address updated:', req.params.id); // Debug log
     res.json({ message: 'Address updated successfully' });
   } catch (error) {
-    console.error('Error updating address:', error);
-    res.status(500).json({ error: 'Failed to update address' });
+    console.error('Error updating address:', error.message);
+    res.status(500).json({ error: 'Failed to update address', details: error.message });
   }
 });
 
@@ -185,10 +205,11 @@ router.delete('/addresses/:id', authenticateUser, async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM addresses WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Address not found' });
+    console.log('Address deleted:', req.params.id); // Debug log
     res.json({ message: 'Address deleted successfully' });
   } catch (error) {
-    console.error('Error deleting address:', error);
-    res.status(500).json({ error: 'Failed to delete address' });
+    console.error('Error deleting address:', error.message);
+    res.status(500).json({ error: 'Failed to delete address', details: error.message });
   }
 });
 
@@ -198,8 +219,8 @@ router.get('/favorites', authenticateUser, async (req, res) => {
     const [favorites] = await pool.query('SELECT id, item_id AS itemId, name, image, price FROM favorites WHERE user_id = ?', [req.user.id]);
     res.json(favorites);
   } catch (error) {
-    console.error('Error fetching favorites:', error);
-    res.status(500).json({ error: 'Failed to fetch favorites' });
+    console.error('Error fetching favorites:', error.message);
+    res.status(500).json({ error: 'Failed to fetch favorites', details: error.message });
   }
 });
 
@@ -218,10 +239,11 @@ router.post('/favorites', authenticateUser, async (req, res) => {
       'INSERT INTO favorites (user_id, item_id, name, image, price) VALUES (?, ?, ?, ?, ?)',
       [req.user.id, itemId, name, image || null, parseFloat(price)]
     );
+    console.log('Favorite added:', { userId: req.user.id, itemId }); // Debug log
     res.json({ message: 'Added to favorites successfully' });
   } catch (error) {
-    console.error('Error adding favorite:', error);
-    res.status(500).json({ error: 'Failed to add favorite' });
+    console.error('Error adding favorite:', error.message);
+    res.status(500).json({ error: 'Failed to add favorite', details: error.message });
   }
 });
 
@@ -230,10 +252,11 @@ router.delete('/favorites/:itemId', authenticateUser, async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM favorites WHERE user_id = ? AND item_id = ?', [req.user.id, req.params.itemId]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Favorite not found' });
+    console.log('Favorite deleted:', req.params.itemId); // Debug log
     res.json({ message: 'Removed from favorites successfully' });
   } catch (error) {
-    console.error('Error deleting favorite:', error);
-    res.status(500).json({ error: 'Failed to remove favorite' });
+    console.error('Error deleting favorite:', error.message);
+    res.status(500).json({ error: 'Failed to remove favorite', details: error.message });
   }
 });
 
@@ -241,10 +264,11 @@ router.delete('/favorites/:itemId', authenticateUser, async (req, res) => {
 router.get('/cart', authenticateUser, async (req, res) => {
   try {
     const [cartItems] = await pool.query('SELECT id, item_id AS itemId, name, price, image, quantity FROM cart WHERE user_id = ?', [req.user.id]);
+    console.log('Cart fetched for user:', { userId: req.user.id, items: cartItems.length }); // Debug log
     res.json(cartItems);
   } catch (error) {
-    console.error('Error fetching cart:', error);
-    res.status(500).json({ error: 'Failed to fetch cart' });
+    console.error('Error fetching cart:', error.message);
+    res.status(500).json({ error: 'Failed to fetch cart', details: error.message });
   }
 });
 
@@ -265,30 +289,49 @@ router.post('/cart', authenticateUser, async (req, res) => {
         [req.user.id, itemId, name, parseFloat(price), image || null, quantity]
       );
     }
+    console.log('Item added to cart:', { userId: req.user.id, itemId }); // Debug log
     res.json({ message: 'Added to cart successfully' });
   } catch (error) {
-    console.error('Error adding to cart:', error);
-    res.status(500).json({ error: 'Failed to add to cart' });
+    console.error('Error adding to cart:', error.message);
+    res.status(500).json({ error: 'Failed to add to cart', details: error.message });
   }
 });
 
 // Update cart quantity
 router.put('/cart/:itemId', authenticateUser, async (req, res) => {
   const { quantity } = req.body;
+  const itemId = req.params.itemId;
   if (!quantity || quantity < 1) {
     return res.status(400).json({ error: 'Valid quantity is required' });
   }
 
   try {
+    // Check if item exists in cart
+    const [existing] = await pool.query('SELECT id FROM cart WHERE user_id = ? AND item_id = ?', [req.user.id, itemId]);
+    if (existing.length === 0) {
+      console.log('Cart item not found:', { userId: req.user.id, itemId }); // Debug log
+      return res.status(404).json({ error: 'Cart item not found', details: `Item ID ${itemId} not found for user` });
+    }
+
     const [result] = await pool.query(
       'UPDATE cart SET quantity = ? WHERE user_id = ? AND item_id = ?',
-      [quantity, req.user.id, req.params.itemId]
+      [quantity, req.user.id, itemId]
     );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Cart item not found' });
-    res.json({ message: 'Cart updated successfully' });
+    if (result.affectedRows === 0) {
+      console.log('No rows updated for cart item:', { userId: req.user.id, itemId }); // Debug log
+      return res.status(404).json({ error: 'Cart item not found', details: `Failed to update item ID ${itemId}` });
+    }
+
+    // Fetch updated cart item
+    const [updatedItems] = await pool.query(
+      'SELECT id, item_id AS itemId, name, price, image, quantity FROM cart WHERE user_id = ? AND item_id = ?',
+      [req.user.id, itemId]
+    );
+    console.log('Cart updated:', { userId: req.user.id, itemId, quantity }); // Debug log
+    res.json({ message: 'Cart updated successfully', item: updatedItems[0] });
   } catch (error) {
-    console.error('Error updating cart:', error);
-    res.status(500).json({ error: 'Failed to update cart' });
+    console.error('Error updating cart:', error.message);
+    res.status(500).json({ error: 'Failed to update cart', details: error.message });
   }
 });
 
@@ -296,11 +339,15 @@ router.put('/cart/:itemId', authenticateUser, async (req, res) => {
 router.delete('/cart/:itemId', authenticateUser, async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM cart WHERE user_id = ? AND item_id = ?', [req.user.id, req.params.itemId]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Cart item not found' });
+    if (result.affectedRows === 0) {
+      console.log('Cart item not found for deletion:', req.params.itemId); // Debug log
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    console.log('Item removed from cart:', req.params.itemId); // Debug log
     res.json({ message: 'Removed from cart successfully' });
   } catch (error) {
-    console.error('Error deleting from cart:', error);
-    res.status(500).json({ error: 'Failed to remove from cart' });
+    console.error('Error deleting from cart:', error.message);
+    res.status(500).json({ error: 'Failed to remove from cart', details: error.message });
   }
 });
 
@@ -312,10 +359,11 @@ router.get('/coupons/validate', authenticateUser, async (req, res) => {
   try {
     const [coupons] = await pool.query('SELECT id, code, discount FROM coupons WHERE code = ?', [code]);
     if (coupons.length === 0) return res.status(404).json({ error: 'Invalid coupon code' });
+    console.log('Coupon validated:', code); // Debug log
     res.json(coupons[0]);
   } catch (error) {
-    console.error('Error validating coupon:', error);
-    res.status(500).json({ error: 'Failed to validate coupon' });
+    console.error('Error validating coupon:', error.message);
+    res.status(500).json({ error: 'Failed to validate coupon', details: error.message });
   }
 });
 
@@ -325,8 +373,8 @@ router.get('/coupons', authenticateUser, async (req, res) => {
     const [coupons] = await pool.query('SELECT id, code, discount, image FROM coupons');
     res.json(coupons);
   } catch (error) {
-    console.error('Error fetching coupons:', error);
-    res.status(500).json({ error: 'Failed to fetch coupons' });
+    console.error('Error fetching coupons:', error.message);
+    res.status(500).json({ error: 'Failed to fetch coupons', details: error.message });
   }
 });
 
@@ -380,6 +428,7 @@ router.post('/orders', authenticateUser, async (req, res) => {
       await connection.query('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
 
       await connection.commit();
+      console.log('Order placed:', { orderId, userId: req.user.id }); // Debug log
       res.json({ message: 'Order placed successfully', orderId });
     } catch (error) {
       await connection.rollback();
@@ -388,8 +437,8 @@ router.post('/orders', authenticateUser, async (req, res) => {
       connection.release();
     }
   } catch (error) {
-    console.error('Error placing order:', error);
-    res.status(500).json({ error: error.message || 'Failed to place order' });
+    console.error('Error placing order:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to place order', details: error.message });
   }
 });
 
@@ -433,8 +482,8 @@ router.get('/orders', authenticateUser, async (req, res) => {
       }
     })));
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    console.error('Error fetching orders:', error.message);
+    res.status(500).json({ error: 'Failed to fetch orders', details: error.message });
   }
 });
 
@@ -443,10 +492,11 @@ router.get('/orders/:id/track', authenticateUser, async (req, res) => {
   try {
     const [orders] = await pool.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (orders.length === 0) return res.status(404).json({ error: 'Order not found' });
+    console.log('Order tracked:', { orderId: req.params.id, status: orders[0].status }); // Debug log
     res.json(orders[0]);
   } catch (error) {
-    console.error('Error tracking order:', error);
-    res.status(500).json({ error: 'Failed to track order' });
+    console.error('Error tracking order:', error.message);
+    res.status(500).json({ error: 'Failed to track order', details: error.message });
   }
 });
 
@@ -463,10 +513,11 @@ router.put('/orders/:id/cancel', authenticateUser, async (req, res) => {
     }
 
     await pool.query('UPDATE orders SET status = ? WHERE id = ?', ['cancelled', req.params.id]);
+    console.log('Order cancelled:', req.params.id); // Debug log
     res.json({ message: 'Order cancelled successfully' });
   } catch (error) {
-    console.error('Error cancelling order:', error);
-    res.status(500).json({ error: 'Failed to cancel order' });
+    console.error('Error cancelling order:', error.message);
+    res.status(500).json({ error: 'Failed to cancel order', details: error.message });
   }
 });
 
@@ -474,10 +525,11 @@ router.put('/orders/:id/cancel', authenticateUser, async (req, res) => {
 router.delete('/orders/clear', authenticateUser, async (req, res) => {
   try {
     await pool.query('DELETE FROM orders WHERE user_id = ?', [req.user.id]);
+    console.log('Order history cleared for user:', req.user.id); // Debug log
     res.json({ message: 'Order history cleared successfully' });
   } catch (error) {
-    console.error('Error clearing order history:', error);
-    res.status(500).json({ error: 'Failed to clear order history' });
+    console.error('Error clearing order history:', error.message);
+    res.status(500).json({ error: 'Failed to clear order history', details: error.message });
   }
 });
 
