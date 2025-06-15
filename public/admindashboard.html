@@ -18,17 +18,17 @@
     .hero-section {
       position: relative;
       background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-      min-height: 60vh;
+      min-height: 70vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       color: white;
-      padding: 4rem 2rem;
+      padding: 5rem 2rem;
       margin-bottom: 3rem;
-      border-radius: 1rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     }
     .hero-section::before {
       content: '';
@@ -37,49 +37,50 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
       z-index: 1;
-      border-radius: 1rem;
+      border-radius: 1.5rem;
     }
     .hero-content {
       position: relative;
       z-index: 2;
+      max-width: 800px;
     }
     .hero-section h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 4rem;
+      font-size: 4.5rem;
       margin-bottom: 1.5rem;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
     }
     .hero-section p {
-      font-size: 1.3rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
+      font-size: 1.4rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.95;
     }
     .dashboard-content {
       background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(12px);
       border-radius: 1.5rem;
-      padding: 3rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      max-width: 1400px;
+      padding: 3.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      max-width: 1500px;
       margin: 2rem auto;
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
     .section-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 700;
       color: #1e293b;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       text-align: center;
       position: relative;
     }
     .section-title::after {
       content: '';
       display: block;
-      width: 150px;
-      height: 5px;
+      width: 180px;
+      height: 6px;
       background: linear-gradient(to right, #a855f7, #f43f5e);
       margin: 1rem auto;
       border-radius: 3px;
@@ -100,15 +101,15 @@
     }
     .logo {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #ffffff;
       display: flex;
       align-items: center;
     }
     .logo img {
-      width: 3rem;
-      height: 3rem;
+      width: 3.5rem;
+      height: 3.5rem;
       margin-right: 1rem;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.4);
@@ -118,9 +119,9 @@
       transform: scale(1.1);
     }
     .subtext {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: #d1d5db;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.8px;
     }
     .modal {
       display: none;
@@ -129,18 +130,18 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.8);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
     .modal-content {
       background: rgba(255, 255, 255, 0.98);
-      padding: 2.5rem;
+      padding: 3rem;
       border-radius: 1.5rem;
       width: 90%;
-      max-width: 600px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      max-width: 700px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       position: relative;
       animation: slideIn 0.3s ease;
     }
@@ -148,7 +149,7 @@
       position: absolute;
       top: 1rem;
       right: 1rem;
-      font-size: 1.8rem;
+      font-size: 2rem;
       cursor: pointer;
       color: #475569;
       transition: color 0.2s ease;
@@ -186,7 +187,7 @@
       background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
     }
     .toast-error:before {
-      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3E%3C/svg%3E');
     }
     @keyframes toastSlide {
       0% { opacity: 0; transform: translateY(-30px); }
@@ -224,7 +225,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     .btn-toggle {
-      background: linear-gradient(to right, #6b7280, #9ca3af);
+      background: linear-gradient(to right, #10b981, #34d399);
       color: white;
       padding: 0.5rem 1rem;
       border-radius: 0.5rem;
@@ -280,7 +281,7 @@
       top: 0;
       right: 0;
       width: 80%;
-      max-width: 300px;
+      max-width: 320px;
       height: 100vh;
       background: linear-gradient(to bottom, #1f2937, #111827);
       padding: 5rem 2rem;
@@ -306,7 +307,7 @@
       background: rgba(255, 255, 255, 0.1);
     }
     .table-container {
-      max-height: 400px;
+      max-height: 450px;
       overflow-y: auto;
       border-radius: 0.75rem;
       border: 1px solid rgba(0, 0, 0, 0.1);
@@ -343,7 +344,7 @@
     .hero-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 1.5rem;
       justify-content: center;
     }
     .empty-state {
@@ -366,6 +367,33 @@
       50% { opacity: 1; }
       100% { opacity: 0.6; }
     }
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    .status-indicator {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: #ef4444;
+      transition: background 0.3s ease;
+    }
+    .status-indicator.open {
+      background: #10b981;
+    }
+    .order-details {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      margin-top: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
     @media (max-width: 640px) {
       .hamburger {
         display: flex;
@@ -378,34 +406,34 @@
       }
       .dashboard-content {
         padding: 2rem;
-        margin: 2rem 1rem;
+        margin: 1.5rem 1rem;
       }
       .hero-section {
-        min-height: 50vh;
-        padding: 2rem;
+        min-height: 60vh;
+        padding: 3rem 1.5rem;
       }
       .hero-section h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
       }
       .hero-section p {
-        font-size: 1rem;
+        font-size: 1.1rem;
       }
       .section-title {
-        font-size: 2rem;
+        font-size: 2.2rem;
       }
       .section-title::after {
-        width: 120px;
+        width: 140px;
         height: 4px;
       }
       .logo {
-        font-size: 1.8rem;
+        font-size: 2rem;
       }
       .logo img {
-        width: 2.5rem;
-        height: 2.5rem;
+        width: 3rem;
+        height: 3rem;
       }
       .subtext {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
       }
       .modal-content {
         padding: 2rem;
@@ -418,7 +446,7 @@
         font-size: 0.9rem;
       }
       .table-container {
-        max-height: 300px;
+        max-height: 350px;
       }
       th, td {
         padding: 0.75rem;
@@ -427,6 +455,9 @@
       .menu-image, .coupon-image {
         width: 40px;
         height: 40px;
+      }
+      .hero-buttons {
+        gap: 1rem;
       }
     }
     @media (min-width: 641px) {
@@ -444,7 +475,7 @@
     <nav class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-gray-900/90 to-gray-700/90 fixed w-full top-0 z-50 backdrop-blur-md">
       <div class="flex flex-col items-start">
         <div class="logo">
-          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-10 h-10 mr-2 rounded-full">
           <span>Delicute Admin</span>
         </div>
         <p class="subtext mt-1">Craft Your Culinary Experience</p>
@@ -454,10 +485,22 @@
         <span></span>
         <span></span>
       </div>
-      <div class="desktop-nav flex items-center space-x-4">
+      <div class="desktop-nav flex items-center space-x-6">
+        <div class="status-toggle">
+          <span class="text-white font-semibold">Restaurant: </span>
+          <span id="statusText" class="text-white">Closed</span>
+          <span id="statusIndicator" class="status-indicator"></span>
+          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle Status</button>
+        </div>
         <a href="#" class="nav-link" onclick="logout()">Logout</a>
       </div>
       <div class="mobile-menu">
+        <div class="status-toggle mb-4">
+          <span class="text-white font-semibold">Restaurant: </span>
+          <span id="mobileStatusText" class="text-white">Closed</span>
+          <span id="mobileStatusIndicator" class="status-indicator"></span>
+          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle Status</button>
+        </div>
         <a href="#" class="nav-link" onclick="logout(); toggleMobileMenu()">Logout</a>
       </div>
     </nav>
@@ -467,7 +510,7 @@
     <section class="hero-section">
       <div class="hero-content">
         <h1>Delicute Admin Dashboard</h1>
-        <p>Manage your restaurant with elegance and efficiency.</p>
+        <p>Manage your restaurant with elegance and efficiency. Control menu, coupons, customers, and orders seamlessly.</p>
         <div class="hero-buttons">
           <button class="btn-primary" onclick="openModal('addMenuModal')">Add Menu Item</button>
           <button class="btn-primary" onclick="openModal('addCouponModal')">Add Coupon</button>
@@ -477,7 +520,6 @@
       </div>
     </section>
 
-    <!-- Menu Items Section -->
     <section class="mb-12">
       <h2 class="section-title">Menu Items</h2>
       <div class="table-container">
@@ -487,7 +529,7 @@
               <th>ID</th>
               <th>Image</th>
               <th>Name</th>
-              <th>Price</th>
+              <th>Price (₹)</th>
               <th>Category</th>
               <th>Description</th>
               <th>Actions</th>
@@ -500,7 +542,6 @@
       </div>
     </section>
 
-    <!-- Coupons Section -->
     <section class="mb-12">
       <h2 class="section-title">Coupons</h2>
       <div class="table-container">
@@ -522,7 +563,6 @@
       </div>
     </section>
 
-    <!-- Customers Section -->
     <section class="mb-12">
       <h2 class="section-title">Customers</h2>
       <div class="table-container">
@@ -544,7 +584,6 @@
       </div>
     </section>
 
-    <!-- Orders Section -->
     <section>
       <h2 class="section-title">Orders</h2>
       <div class="table-container">
@@ -553,26 +592,22 @@
             <tr>
               <th>ID</th>
               <th>Customer</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Delivery Cost</th>
-              <th>Coupon</th>
-              <th>Payment</th>
               <th>Address</th>
-              <th>Date</th>
+              <th>Items</th>
+              <th>Total (₹)</th>
+              <th>Payment Status</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="orderTableBody">
-            <tr><td colspan="11" class="loading-state">Loading orders...</td></tr>
+            <tr><td colspan="8" class="loading-state">Loading orders...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 
-  <!-- Add/Edit Menu Item Modal -->
   <div id="addMenuModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('addMenuModal')">×</span>
@@ -583,7 +618,7 @@
           <input type="text" id="menuName" class="input-field" placeholder="Enter item name">
         </div>
         <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="menuPrice">Price</label>
+          <label class="block text-gray-700 mb-2 text-sm" for="menuPrice">Price (₹)</label>
           <input type="number" id="menuPrice" class="input-field" placeholder="Enter price" step="0.01">
         </div>
         <div class="mb-4">
@@ -610,7 +645,6 @@
     </div>
   </div>
 
-  <!-- Add/Edit Coupon Modal -->
   <div id="addCouponModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('addCouponModal')">×</span>
@@ -638,64 +672,114 @@
     </div>
   </div>
 
+  <div id="orderDetailsModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('orderDetailsModal')">×</span>
+      <h2 class="text-2xl font-semibold mb-5 text-center" style="font-family: 'Cormorant Garamond', serif;">Order Details</h2>
+      <div id="orderDetailsContent" class="order-details">
+        <p>Loading order details...</p>
+      </div>
+    </div>
+  </div>
+
   <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12 text-center">
     <p class="text-lg font-semibold">© 2025 Delicute. Crafted with Culinary Passion.</p>
   </footer>
 
   <script>
-    // Base URL for API requests
     const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-    const token = localStorage.getItem('adminToken');
+    const apiPrefix = '/api/admin/dashboard';
+    const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIu+0H0v0iRpkjQJIYTw+73v+w0TBNF6vW5Wq9U+MAyDw+E4Go3mAZhOp5vVajUHwDRNAHAcB5xzHMcFAoF4PB4Oh8P+ACGEkFIKz/N8+wDAMAy+73sUBAE3Gg0IAoFA4L0IYRiGYRiGYRg0TfM8z/O8V6/Xi8Vi3gdgmibG4/GMMIaGYdi2bdt+vV6v1+v1Wq1WK4QQQgjhcDgcDocLIdR13/c9z/Mcx3EcB0EQBEHAMAxCiO/7Pp7nOQAQQgih1Wp1Op1Op9Pp9Ho9Ho/H4/E4nU6n0+n0f38B6C0Vv8TjN54AAAAASUVORK5CYII=';
+    let sessionValid = false;
+    let sessionExpiredShown = false;
 
-    // Utility function for API requests with retry
-    async function handleFetch(url, options = {}, retryCount = 1) {
-      console.log(`Fetching URL: ${baseUrl}${url}`); // Debug full URL
+    async function checkSession() {
+      if (sessionValid) return true;
       try {
+        const token = localStorage.getItem('adminToken');
+        console.log(`Checking session, token: ${token ? 'Present' : 'Missing'}`);
+        if (!token) {
+          throw new Error('No token in localStorage');
+        }
+        const response = await fetch(`${baseUrl}${apiPrefix}/check-session`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Session check failed: ${errorData.error || response.statusText}`);
+        }
+        sessionValid = true;
+        console.log('Session valid');
+        return true;
+      } catch (error) {
+        console.error('Session check error:', error.message);
+        if (!sessionExpiredShown) {
+          showToast('Session expired. Please log in again.', 'error');
+          sessionExpiredShown = true;
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          setTimeout(() => window.location.href = '/admin', 1000);
+        }
+        return false;
+      }
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    async function handleFetch(url, options = {}) {
+      console.log(`Fetching URL: ${baseUrl}${url}`);
+      if (!(await checkSession())) {
+        throw new Error('Session check failed');
+      }
+      try {
+        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${baseUrl}${url}`, {
           ...options,
           headers: {
             ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
-            Authorization: `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
             ...options.headers,
           },
-          credentials: 'include',
+          signal: AbortSignal.timeout(30000),
         });
         if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          let errorMessage = 'API error';
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            errorMessage = data.error || data.message || errorMessage;
-          } else {
-            const text = await response.text();
-            errorMessage = text.includes('<!DOCTYPE') ? 'Unexpected HTML response' : text || errorMessage;
-          }
+          const errorData = await response.json();
           if (response.status === 401) {
-            showToast('Session expired. Please log in again.', 'error');
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
-            setTimeout(() => window.location.href = '/admin.html', 1000);
+            if (!sessionExpiredShown) {
+              showToast('Session expired. Please log in again.', 'error');
+              sessionExpiredShown = true;
+              localStorage.removeItem('adminToken');
+              localStorage.removeItem('adminUser');
+              setTimeout(() => window.location.href = '/admin', 1000);
+            }
           } else if (response.status === 404) {
-            errorMessage = `API endpoint not found: ${url}`;
+            throw new Error(`API endpoint not found: ${url}`);
           } else if (response.status === 413) {
-            errorMessage = 'File too large. Please upload a smaller image.';
+            throw new Error('File too large. Please upload an image under 5MB.');
           }
-          throw new Error(`HTTP ${response.status}: ${errorMessage}`);
+          throw new Error(errorData.error || `HTTP ${response.status}: API error`);
         }
         return await response.json();
       } catch (error) {
-        console.error(`Fetch error for ${url}:`, error);
-        if (retryCount > 0) {
-          console.log(`Retrying ${url} (${retryCount} retries left)...`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
-          return handleFetch(url, options, retryCount - 1);
+        console.error(`Fetch error for ${url}:`, error.message);
+        if (!sessionExpiredShown || error.message.includes('404') || error.message.includes('File too large')) {
+          showToast(`${error.message}. Check console for details.`, 'error');
         }
-        showToast(`${error.message}. Check console for details.`, 'error');
         throw error;
       }
     }
 
-    // Show toast notification
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
@@ -704,7 +788,6 @@
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // Toggle mobile menu
     function toggleMobileMenu() {
       const mobileMenu = document.querySelector('.mobile-menu');
       const hamburger = document.querySelector('.hamburger');
@@ -712,13 +795,11 @@
       hamburger.classList.toggle('active');
     }
 
-    // Scroll to section
     function scrollToSection(tableId) {
       const section = document.getElementById(tableId).closest('section');
       section.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Open modal
     function openModal(modalId, data = {}) {
       const modal = document.getElementById(modalId);
       modal.style.display = 'flex';
@@ -740,7 +821,6 @@
       }
     }
 
-    // Close modal
     function closeModal(modalId) {
       document.getElementById(modalId).style.display = 'none';
       if (modalId === 'addMenuModal') {
@@ -759,7 +839,6 @@
       }
     }
 
-    // Save menu item
     async function saveMenuItem() {
       const id = document.getElementById('menuId').value;
       const name = document.getElementById('menuName').value;
@@ -773,21 +852,29 @@
         return;
       }
 
+      if (image) {
+        if (!['image/jpeg', 'image/png'].includes(image.type)) {
+          showToast('Only JPEG or PNG images are allowed', 'error');
+          return;
+        }
+        if (image.size > 5 * 1024 * 1024) {
+          showToast('Image size must be under 5MB', 'error');
+          return;
+        }
+        console.log(`uploading menu image: ${image.name}, size: ${(image.size / 1024).toFixed(2)}KB`);
+      }
+
       const formData = new FormData();
       formData.append('name', name);
       formData.append('price', price);
       formData.append('category', category);
-      formData.append('description', description);
+      formData.append('description', description || '');
       if (image) formData.append('image', image);
 
       try {
-        const url = id ? `/api/admin/dashboard/menu/${id}` : '/api/admin/dashboard/menu';
+        const url = id ? `${apiPrefix}/menu/${id}` : `${apiPrefix}/menu`;
         const method = id ? 'PUT' : 'POST';
-        await handleFetch(url, {
-          method,
-          body: formData,
-          credentials: 'include',
-        });
+        await handleFetch(url, { method, body: formData });
         showToast(id ? 'Menu item updated!' : 'Menu item added!', 'success');
         closeModal('addMenuModal');
         loadMenuItems();
@@ -796,7 +883,6 @@
       }
     }
 
-    // Save coupon
     async function saveCoupon() {
       const id = document.getElementById('couponId').value;
       const code = document.getElementById('couponCode').value;
@@ -809,20 +895,28 @@
         return;
       }
 
+      if (image) {
+        if (!['image/jpeg', 'image/png'].includes(image.type)) {
+          showToast('Only JPEG or PNG images are allowed', 'error');
+          return;
+        }
+        if (image.size > 5 * 1024 * 1024) {
+          showToast('Image size must be under 5MB', 'error');
+          return;
+        }
+        console.log(`uploading coupon image: ${image.name}, size: ${(image.size / 1024).toFixed(2)}KB`);
+      }
+
       const formData = new FormData();
       formData.append('code', code);
       formData.append('discount', discount);
-      formData.append('description', description);
+      formData.append('description', description || '');
       if (image) formData.append('image', image);
 
       try {
-        const url = id ? `/api/admin/dashboard/coupons/${id}` : '/api/admin/dashboard/coupons';
+        const url = id ? `${apiPrefix}/coupons/${id}` : `${apiPrefix}/coupons`;
         const method = id ? 'PUT' : 'POST';
-        await handleFetch(url, {
-          method,
-          body: FormData,
-          credentials: 'include',
-        });
+        await handleFetch(url, { method, body: formData });
         showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
         closeModal('addCouponModal');
         loadCoupons();
@@ -831,11 +925,10 @@
       }
     }
 
-    // Delete menu item
     async function deleteMenuItem(id) {
       if (!confirm('Are you sure you want to delete this menu item?')) return;
       try {
-        await handleFetch(`/api/admin/dashboard/menu/${id}`, { method: 'DELETE' });
+        await handleFetch(`${apiPrefix}/menu/${id}`, { method: 'DELETE' });
         showToast('Menu item deleted!', 'success');
         loadMenuItems();
       } catch (error) {
@@ -843,11 +936,10 @@
       }
     }
 
-    // Delete coupon
     async function deleteCoupon(id) {
       if (!confirm('Are you sure you want to delete this coupon?')) return;
       try {
-        await handleFetch(`/api/admin/dashboard/coupons/${id}`, { method: 'DELETE' });
+        await handleFetch(`${apiPrefix}/coupons/${id}`, { method: 'DELETE' });
         showToast('Coupon deleted!', 'success');
         loadCoupons();
       } catch (error) {
@@ -855,11 +947,10 @@
       }
     }
 
-    // Toggle customer status
     async function toggleCustomerStatus(id, currentStatus) {
       const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
       try {
-        await handleFetch(`/api/admin/dashboard/customers/${id}/status`, {
+        await handleFetch(`${apiPrefix}/customers/${id}/status`, {
           method: 'PUT',
           body: JSON.stringify({ status: newStatus }),
         });
@@ -870,12 +961,43 @@
       }
     }
 
-    // Update order status
+    const debouncedToggleRestaurantStatus = debounce(async () => {
+      try {
+        const response = await handleFetch(`${apiPrefix}/restaurant/status`, {
+          method: 'PUT',
+        });
+        updateStatusDisplay(response.status);
+        showToast(`Restaurant is now ${response.status}!`, 'success');
+      } catch (error) {
+        // Error handled in handleFetch
+      }
+    }, 500);
+
+    function toggleRestaurantStatus() {
+      debouncedToggleRestaurantStatus();
+    }
+
+    function updateStatusDisplay(status) {
+      const statusText = document.getElementById('statusText');
+      const mobileStatusText = document.getElementById('mobileStatusText');
+      const statusIndicator = document.getElementById('statusIndicator');
+      const mobileStatusIndicator = document.getElementById('mobileStatusIndicator');
+      const isOpen = status === 'open';
+      statusText.textContent = isOpen ? 'Open' : 'Closed';
+      mobileStatusText.textContent = isOpen ? 'Open' : 'Closed';
+      statusIndicator.classList.toggle('open', isOpen);
+      mobileStatusIndicator.classList.toggle('open', isOpen);
+    }
+
     async function updateOrderStatus(id, status) {
       try {
-        await handleFetch(`/api/admin/dashboard/orders/${id}`, {
+        const updateData = { status };
+        if (status === 'delivered') {
+          updateData.paymentStatus = 'paid';
+        }
+        await handleFetch(`${apiPrefix}/orders/${id}`, {
           method: 'PUT',
-          body: JSON.stringify({ status }),
+          body: JSON.stringify(updateData),
         });
         showToast('Order status updated!', 'success');
         loadOrders();
@@ -884,152 +1006,236 @@
       }
     }
 
-    // Load menu items
+    async function viewOrderDetails(id) {
+      try {
+        const order = await handleFetch(`${apiPrefix}/orders/${id}`);
+        const content = document.getElementById('orderDetailsContent');
+        const address = order.address
+          ? [
+              order.address.fullName || '',
+              order.address.houseNo || '',
+              order.address.location || '',
+              order.address.landmark || '',
+              order.address.mobile || '',
+            ].filter((part) => part.trim()).join(', ')
+          : 'No address';
+        const items = order.items && order.items.length > 0
+          ? order.items.map(
+              (item) => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`
+            ).join('')
+          : '<li>No items</li>';
+        content.innerHTML = `
+          <p><strong>Order ID:</strong> ${order.id}</p>
+          <p><strong>Customer:</strong> ${order.user?.name || 'Unknown'} (${order.user?.email || '-'})</p>
+          <p><strong>Contact:</strong> ${order.address?.mobile || '-'}</p>
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Items:</strong></p>
+          <ul class="list-disc ml-5">${items}</ul>
+          <p><strong>Delivery Cost:</strong> ₹${parseFloat(order.delivery || 0).toFixed(2)}</p>
+          <p><strong>Coupon:</strong> ${order.couponCode || '-'}</p>
+          <p><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
+          <p><strong>Payment Method:</strong> ${order.paymentMethod || 'COD'}</p>
+          <p><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</p>
+          <p><strong>Status:</strong> ${order.status || 'Pending'}</p>
+          <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : '-'}</p>
+        `;
+        openModal('orderDetailsModal');
+      } catch (error) {
+        showToast('Failed to load order details.', 'error');
+      }
+    }
+
     async function loadMenuItems() {
       const tbody = document.getElementById('menuTableBody');
       tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
       try {
-        const items = await handleFetch('/api/admin/dashboard/menu');
+        const items = await handleFetch(`${apiPrefix}/menu`);
+        console.log('Menu items loaded:', items);
         if (!items || items.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
           return;
         }
-        tbody.innerHTML = items.map(item => `
-          <tr>
-            <td>${item.id}</td>
-            <td><img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="menu-image"></td>
-            <td>${item.name}</td>
-            <td>$${parseFloat(item.price).toFixed(2)}</td>
-            <td>${item.category}</td>
-            <td>${item.description || '-'}</td>
-            <td>
-              <button class="btn-primary mr-2" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = items.map(
+          (item) => {
+            const imagePath = item.image ? `/uploads/${item.image}` : placeholderImage;
+            console.log(`Menu item ${item.id} image path: ${imagePath}`);
+            return `
+              <tr>
+                <td>${item.id}</td>
+                <td><img src="${imagePath}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
+                <td>${item.name}</td>
+                <td>₹${parseFloat(item.price).toFixed(2)}</td>
+                <td>${item.category}</td>
+                <td>${item.description || '-'}</td>
+                <td>
+                  <button class="btn-primary mr-2" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
+                  <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
+                </td>
+              </tr>
+            `;
+          }
+        ).join('');
       } catch (error) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items. Check console for details.</td></tr>';
       }
     }
 
-    // Load coupons
     async function loadCoupons() {
       const tbody = document.getElementById('couponTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
       try {
-        const coupons = await handleFetch('/api/admin/dashboard/coupons');
+        const coupons = await handleFetch(`${apiPrefix}/coupons`);
+        console.log('Coupons loaded:', coupons);
         if (!coupons || coupons.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
           return;
         }
-        tbody.innerHTML = coupons.map(coupon => `
-          <tr>
-            <td>${coupon.id}</td>
-            <td><img src="${coupon.image || 'https://via.placeholder.com/50'}" alt="${coupon.code}" class="coupon-image"></td>
-            <td>${coupon.code}</td>
-            <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
-            <td>${coupon.description || '-'}</td>
-            <td>
-              <button class="btn-primary mr-2" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = coupons.map(
+          (coupon) => {
+            const imagePath = coupon.image ? `/uploads/${coupon.image}` : placeholderImage;
+            console.log(`Coupon ${coupon.id} image path: ${imagePath}`);
+            return `
+              <tr>
+                <td>${coupon.id}</td>
+                <td><img src="${imagePath}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
+                <td>${coupon.code}</td>
+                <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
+                <td>${coupon.description || '-'}</td>
+                <td>
+                  <button class="btn-primary mr-2" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
+                  <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
+                </td>
+              </tr>
+            `;
+          }
+        ).join('');
       } catch (error) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load coupons. Check console for details.</td></tr>';
       }
     }
 
-    // Load customers
     async function loadCustomers() {
       const tbody = document.getElementById('customerTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
       try {
-        const customers = await handleFetch('/api/admin/dashboard/customers');
+        const customers = await handleFetch(`${apiPrefix}/customers`);
         if (!customers || customers.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
           return;
         }
-        tbody.innerHTML = customers.map(customer => `
-          <tr>
-            <td>${customer.id}</td>
-            <td>${customer.name}</td>
-            <td>${customer.email}</td>
-            <td>${customer.phone || '-'}</td>
-            <td>${customer.status}</td>
-            <td>
-              <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
-                ${customer.status === 'active' ? 'Block' : 'Unblock'}
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = customers.map(
+          (customer) => `
+            <tr>
+              <td>${customer.id}</td>
+              <td>${customer.name}</td>
+              <td>${customer.email}</td>
+              <td>${customer.phone || '-'}</td>
+              <td>${customer.status}</td>
+              <td>
+                <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
+                  ${customer.status === 'active' ? 'Block' : 'Unblock'}
+                </button>
+              </td>
+            </tr>
+          `
+        ).join('');
       } catch (error) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load customers. Check console for details.</td></tr>';
       }
     }
 
-    // Load orders
     async function loadOrders() {
       const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="11" class="loading-state">Loading orders...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-state">Loading orders...</td></tr>';
       try {
-        const orders = await handleFetch('/api/admin/dashboard/orders');
+        const orders = await handleFetch(`${apiPrefix}/orders`);
         if (!orders || orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No orders found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No orders found.</td></tr>';
           return;
         }
-        tbody.innerHTML = orders.map(order => `
-          <tr>
-            <td>${order.id}</td>
-            <td>${order.user?.name || 'Unknown'}</td>
-            <td>${order.items.map(item => `${item.name} (x${item.quantity})`).join(', ') || '-'}</td>
-            <td>$${parseFloat(order.total).toFixed(2)}</td>
-            <td>$${parseFloat(order.delivery || 0).toFixed(2)}</td>
-            <td>${order.couponCode || '-'}</td>
-            <td>${order.paymentMethod || 'COD'}</td>
-            <td>${order.address ? `${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? ', ' + order.address.landmark : ''}, ${order.address.mobile}` : '-'}</td>
-            <td>${new Date(order.date).toLocaleString()}</td>
-            <td>
-              <select onchange="updateOrderStatus(${order.id}, this.value)">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </td>
-            <td>-</td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = orders.map((order) => {
+          const itemsDisplay = order.items && order.items.length > 0
+            ? order.items.map((item) => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
+            : 'No items';
+          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
+            ? `₹${parseFloat(order.total).toFixed(2)}`
+            : '₹0.00';
+          const addressDisplay = order.address
+            ? [
+                order.address.fullName || '',
+                order.address.houseNo || '',
+                order.address.location || '',
+                order.address.landmark || '',
+              ].filter((part) => part.trim()).join(', ')
+            : 'No address';
+          return `
+            <tr>
+              <td>${order.id}</td>
+              <td>${order.user?.name || 'Unknown'}</td>
+              <td>${addressDisplay}</td>
+              <td>${itemsDisplay}</td>
+              <td>${totalDisplay}</td>
+              <td>${order.paymentStatus || 'Pending'}</td>
+              <td>
+                <select onchange="updateOrderStatus(${order.id}, this.value)">
+                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                  <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              </td>
+              <td>
+                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Failed to load orders. Check console for details.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load orders. Check console for details.</td></tr>';
       }
     }
 
-    // Logout
-    function logout() {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
-      window.location.href = '/admin.html';
-    }
-
-    // Initialize dashboard
-    async function init() {
-      if (!token) {
-        showToast('Please log in to access the dashboard.', 'error');
-        setTimeout(() => window.location.href = '/admin.html', 1000);
-        return;
-      }
+    async function loadRestaurantStatus() {
       try {
-        await Promise.all([loadMenuItems(), loadCoupons(), loadCustomers(), loadOrders()]);
+        const response = await handleFetch(`${apiPrefix}/restaurant/status`);
+        updateStatusDisplay(response.status);
       } catch (error) {
-        console.error('Initialization error:', error);
+        // Error handled in handleFetch
       }
     }
 
-    // Start dashboard
+    async function logout() {
+      try {
+        await handleFetch(`${apiPrefix}/logout`, { method: 'POST' });
+        showToast('Logged out successfully!', 'success');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin';
+      } catch (error) {
+        showToast('Logout failed. Redirecting...', 'error');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin';
+      }
+    }
+
+    async function init() {
+      try {
+        if (!(await checkSession())) return;
+        await Promise.all([
+          loadMenuItems(),
+          loadCoupons(),
+          loadCustomers(),
+          loadOrders(),
+          loadRestaurantStatus(),
+        ]);
+      } catch (error) {
+        console.error('Initialization error:', error.message);
+        // Error handled in checkSession
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>

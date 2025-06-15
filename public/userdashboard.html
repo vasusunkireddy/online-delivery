@@ -231,6 +231,13 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
+    .btn-primary:disabled {
+      background: var(--secondary-gradient);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     .btn-secondary {
       background: var(--secondary-gradient);
       color: #ffffff;
@@ -260,7 +267,13 @@
       transition: background 0.3s ease;
     }
 
-    .btn-quantity:hover {
+    .btn-quantity:disabled {
+      background: rgba(255, 255, 255, 0.2);
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-quantity:hover:not(:disabled) {
       background: rgba(168, 85, 247, 0.3);
     }
 
@@ -277,6 +290,14 @@
     .input-field:focus {
       border-color: #a855f7;
       outline: none;
+    }
+
+    .input-field.valid {
+      border-color: #10b981;
+    }
+
+    .input-field.invalid {
+      border-color: #ef4444;
     }
 
     .search-bar {
@@ -431,6 +452,22 @@
       transform: translateY(-3px);
     }
 
+    .order-card.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
     .dark-mode {
       background: linear-gradient(135deg, #1e293b, #374151);
       color: var(--text-light);
@@ -455,6 +492,14 @@
       border-color: rgba(255, 255, 255, 0.2);
     }
 
+    .dark-mode .input-field.valid {
+      border-color: #34d399;
+    }
+
+    .dark-mode .input-field.invalid {
+      border-color: #f87171;
+    }
+
     .dark-mode .search-bar, .dark-mode .category-filter {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.2);
@@ -474,8 +519,17 @@
       color: var(--text-light);
     }
 
-    .dark-mode .btn-quantity:hover {
+    .dark-mode .btn-quantity:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: #6b7280;
+    }
+
+    .dark-mode .btn-quantity:hover:not(:disabled) {
       background: rgba(168, 85, 247, 0.2);
+    }
+
+    .dark-mode .error-message {
+      color: #f87171;
     }
 
     @media (max-width: 640px) {
@@ -634,7 +688,7 @@
         <div class="flex items-center gap-4">
           <div class="nav-links" id="navLinks"></div>
           <div class="profile-dropdown">
-            <img src="/Uploads/default-profile.png" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
+            <img src="/uploads/default-profile.png" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
             <div class="dropdown-menu" id="profileDropdown">
               <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')">Home</div>
               <div class="dropdown-item" onclick="utils.scrollToSection('orders')">Orders</div>
@@ -703,7 +757,7 @@
     <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
         <span class="close-btn" onclick="ui.closeModal('profileModal')">×</span>
-        <img src="/Uploads/default-profile.png" alt="Profile Image" id="profileModalImg">
+        <img src="/uploads/default-profile.png" alt="Profile Image" id="profileModalImg">
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name *</label>
@@ -771,23 +825,31 @@
         <span class="close-btn" onclick="ui.closeModal('cartModal')">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Your Cart</h2>
         <div id="cartItems" class="mb-3"></div>
+        <div class="flex justify-between items-center mb-3">
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()">Clear Cart</button>
+        </div>
         <div class="mb-3">
-          <label class="block text-gray-700 mb-1 text-sm" for="cartAddressSelect">Select Address</label>
-          <select id="cartAddressSelect" class="input-field"></select>
+          <label class="block text-gray-700 mb-1 text-sm" for="cartAddressSelect">Select Address *</label>
+          <select id="cartAddressSelect" class="input-field" required>
+            <option value="">Select Address</option>
+          </select>
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="couponCode">Apply Coupon</label>
           <div class="flex gap-2">
-            <input type="text" id="couponCode" class="input-field" placeholder="Enter coupon code">
+            <input type="text" id="couponCode" class="input-field" placeholder="Enter coupon code" oninput="data.validateCouponInput()">
             <button class="btn-primary px-4" onclick="data.applyCoupon()">Apply</button>
           </div>
+          <p class="error-message" id="couponError"></p>
         </div>
-        <p class="text-gray-600 mb-1 text-sm">Total: ₹<span id="cartOriginalTotal">0</span></p>
-        <p class="text-green-600 mb-1 text-sm">Discount: ₹<span id="cartDiscount">0</span></p>
-        <p class="text-green-600 mb-1 text-sm">Delivery: ₹<span id="cartDelivery">0</span> (Free Delivery)</p>
-        <p class="text-lg font-bold text-gray-800 mb-3">Final Total: ₹<span id="cartFinalTotal">0</span></p>
+        <div class="mb-3">
+          <p class="text-gray-600 mb-1 text-sm">Subtotal: ₹<span id="cartOriginalTotal">0</span></p>
+          <p class="text-green-600 mb-1 text-sm">Discount: ₹<span id="cartDiscount">0</span></p>
+          <p class="text-green-600 mb-1 text-sm">Delivery: ₹<span id="cartDelivery">0</span> (Free Delivery)</p>
+          <p class="text-lg font-bold text-gray-800 mb-3">Final Total: ₹<span id="cartFinalTotal">0</span></p>
+        </div>
         <p class="text-red-600 mb-3 text-sm text-center">Note: All UPI payments will be available soon. Thank you.</p>
-        <button class="btn-primary w-full" onclick="data.placeOrder('cod')">Place Order (COD)</button>
+        <button class="btn-primary w-full" id="placeOrderBtn" onclick="data.placeOrder('cod')">Place Order (COD)</button>
       </div>
     </div>
 
@@ -812,7 +874,7 @@
     <p class="text-sm">© 2025 Delicute. All rights reserved.</p>
   </footer>
 
-  <script>
+ <script>
 const state = {
     cart: [],
     addresses: [],
@@ -822,13 +884,13 @@ const state = {
     orders: [],
     user: null,
     appliedCoupon: null,
+    cartUpdating: false,
     API_BASE_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://delicute.onrender.com',
-    token: localStorage.getItem('token'),
 };
 
 const sanitizeImageUrl = (url) => {
   if (!url || url.includes('via.placeholder.com') || url === 'null') {
-    return '/Uploads/default-menu.png';
+    return '/uploads/default-profile.png';
   }
   return url;
 };
@@ -857,19 +919,19 @@ const utils = {
 
     fetchWithAuth: async (url, options = {}) => {
         try {
-            if (!state.token) throw new Error('No token found');
             const headers = {
-                'Authorization': `Bearer ${state.token}`,
                 ...options.headers,
             };
             if (!(options.body instanceof FormData)) {
                 headers['Content-Type'] = 'application/json';
             }
-            const response = await fetch(`${state.API_BASE_URL}${url}`, { ...options, headers });
+            const response = await fetch(`${state.API_BASE_URL}${url}`, {
+                ...options,
+                headers,
+                credentials: 'include', // Include cookies for session
+            });
             if (response.status === 401) {
                 utils.showToast('Session expired. Please log in.', 'error');
-                localStorage.removeItem('token');
-                state.token = null;
                 setTimeout(() => window.location.href = '/index.html', 2000);
                 throw new Error('Unauthorized');
             }
@@ -906,7 +968,7 @@ const utils = {
         const formData = new FormData();
         formData.append('image', file);
         try {
-            const response = await utils.fetchWithAuth('/api/upload', {
+            const response = await utils.fetchWithAuth('/api/user/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -923,7 +985,7 @@ const utils = {
 const ui = {
     toggleNav: () => {
         const navLinks = document.getElementById('navLinks');
-        const hamburger = document.getElementById('hamburger');
+        const hamburger = document.getElementById('hamburger Olmsted');
         navLinks.classList.toggle('active');
         hamburger.classList.toggle('active');
     },
@@ -947,6 +1009,10 @@ const ui = {
 
     closeModal: (modalId) => {
         document.getElementById(modalId).style.display = 'none';
+        if (modalId === 'cartModal') {
+            document.getElementById('couponCode').classList.remove('valid', 'invalid');
+            document.getElementById('couponError').classList.remove('show');
+        }
     },
 
     toggleDarkMode: () => {
@@ -956,7 +1022,9 @@ const ui = {
     },
 
     loadDarkMode: () => {
-        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark')
+
+        document.body.classList.add('dark-mode');
     },
 
     populateAddressForm: (address = {}) => {
@@ -971,24 +1039,31 @@ const ui = {
     },
 
     loadProfileImage: () => {
-        document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user?.image || '/Uploads/default-profile.png');
+        document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user?.image || '/uploads/default-profile.png');
+    },
+
+    toggleCartLoading: (isLoading) => {
+        state.cartUpdating = isLoading;
+        const cartItems = document.getElementById('cartItems');
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+        if (isLoading) {
+            cartItems.classList.add('loading');
+            placeOrderBtn.disabled = true;
+        } else {
+            cartItems.classList.remove('loading');
+            placeOrderBtn.disabled = false;
+        }
     },
 };
 
 const data = {
     checkAuth: () => {
-        if (!state.token) {
-            utils.showToast('Please log in to access the dashboard', 'error');
-            setTimeout(() => window.location.href = '/index.html', 2000);
-            return false;
-        }
-        return true;
+        return true; // Session is handled by the backend
     },
 
     loadProfile: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.user = await utils.fetchWithAuth('/api/profile');
+            state.user = await utils.fetchWithAuth('/api/user/profile');
             document.getElementById('userName').textContent = state.user.name || 'User';
             document.getElementById('profileName').value = state.user.name || '';
             document.getElementById('profileEmail').value = state.user.email || '';
@@ -997,6 +1072,7 @@ const data = {
             document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user.image);
         } catch (error) {
             utils.showToast(error.message || 'Failed to load profile', 'error');
+            setTimeout(() => window.location.href = '/index.html', 2000);
         }
     },
 
@@ -1016,7 +1092,7 @@ const data = {
                 const imageUrl = await utils.uploadImage(imageInput);
                 body.image = imageUrl;
             }
-            state.user = await utils.fetchWithAuth('/api/profile', {
+            state.user = await utils.fetchWithAuth('/api/user/profile', {
                 method: 'PUT',
                 body: JSON.stringify(body),
             });
@@ -1032,9 +1108,8 @@ const data = {
     },
 
     loadAddresses: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.addresses = await utils.fetchWithAuth('/api/addresses');
+            state.addresses = await utils.fetchWithAuth('/api/user/addresses');
             const addressSelect = document.getElementById('cartAddressSelect');
             const addressList = document.getElementById('addressList');
             addressSelect.innerHTML = '<option value="">Select Address</option>';
@@ -1073,7 +1148,7 @@ const data = {
         }
         try {
             const method = id ? 'PUT' : 'POST';
-            const url = id ? `/api/addresses/${id}` : '/api/addresses';
+            const url = id ? `/api/user/addresses/${id}` : '/api/user/addresses';
             await utils.fetchWithAuth(url, {
                 method,
                 body: JSON.stringify({ fullName, mobile, houseNo, location, landmark }),
@@ -1089,7 +1164,7 @@ const data = {
 
     editAddress: async (id) => {
         try {
-            const address = await utils.fetchWithAuth(`/api/addresses/${id}`);
+            const address = await utils.fetchWithAuth(`/api/user/addresses/${id}`);
             ui.populateAddressForm(address);
         } catch (error) {
             utils.showToast(error.message || 'Failed to load address', 'error');
@@ -1097,8 +1172,9 @@ const data = {
     },
 
     deleteAddress: async (id) => {
+        if (!confirm('Are you sure you want to delete this address?')) return;
         try {
-            await utils.fetchWithAuth(`/api/addresses/${id}`, { method: 'DELETE' });
+            await utils.fetchWithAuth(`/api/user/addresses/${id}`, { method: 'DELETE' });
             utils.showToast('Address deleted!', 'success');
             data.loadAddresses();
         } catch (error) {
@@ -1107,9 +1183,8 @@ const data = {
     },
 
     loadMenu: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.menuItems = await utils.fetchWithAuth('/api/menu');
+            state.menuItems = await utils.fetchWithAuth('/api/user/menu');
             data.renderMenu();
         } catch (error) {
             utils.showToast(error.message || 'Failed to load menu', 'error');
@@ -1127,9 +1202,9 @@ const data = {
                     <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
                     <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
                     <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
-                    <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}</p>
+                    <p class="text-purple-600 font-bold text-base mb-2">₹${item.price}${item.stock ? ` <span class="text-gray-500 text-sm">(Only ${item.stock} left)</span>` : ''}</p>
                     <div class="flex justify-between items-center gap-2">
-                        <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
+                        <button class="btn-primary text-sm py-1 px-3" ${item.stock === 0 ? 'disabled' : ''} onclick="data.addToCart('${item.id}', '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
                         <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites('${item.id}')` : `data.addToFavorites('${item.id}', '${item.name}', '${sanitizeImageUrl(item.image)}', ${item.price})`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
                     </div>
                 </div>
@@ -1153,9 +1228,8 @@ const data = {
     },
 
     loadCoupons: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.coupons = await utils.fetchWithAuth('/api/coupons');
+            state.coupons = await utils.fetchWithAuth('/api/user/coupons');
             const couponsList = document.getElementById('couponsList');
             couponsList.innerHTML = '';
             state.coupons.forEach(coupon => {
@@ -1174,9 +1248,8 @@ const data = {
     },
 
     loadFavorites: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.favorites = await utils.fetchWithAuth('/api/favorites');
+            state.favorites = await utils.fetchWithAuth('/api/user/favorites');
             data.renderFavorites();
             data.renderMenu();
         } catch (error) {
@@ -1214,7 +1287,7 @@ const data = {
 
     addToFavorites: async (id, name, image, price) => {
         try {
-            await utils.fetchWithAuth('/api/favorites', {
+            await utils.fetchWithAuth('/api/user/favorites', {
                 method: 'POST',
                 body: JSON.stringify({ itemId: id, name, image, price }),
             });
@@ -1227,7 +1300,7 @@ const data = {
 
     removeFromFavorites: async (id) => {
         try {
-            await utils.fetchWithAuth(`/api/favorites/${id}`, { method: 'DELETE' });
+            await utils.fetchWithAuth(`/api/user/favorites/${id}`, { method: 'DELETE' });
             utils.showToast('Removed from favorites!', 'success');
             data.loadFavorites();
         } catch (error) {
@@ -1236,12 +1309,14 @@ const data = {
     },
 
     loadCart: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.cart = await utils.fetchWithAuth('/api/cart');
+            ui.toggleCartLoading(true);
+            state.cart = await utils.fetchWithAuth('/api/user/cart');
             data.renderCart();
         } catch (error) {
             utils.showToast(error.message || 'Failed to load cart', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
@@ -1251,16 +1326,19 @@ const data = {
         let originalTotal = 0;
         state.cart.forEach(item => {
             originalTotal += item.price * item.quantity;
+            const menuItem = state.menuItems.find(menu => menu.id === item.itemId);
+            const stock = menuItem?.stock || Infinity;
             cartItems.innerHTML += `
                 <div class="order-card flex items-center gap-2 mb-2">
                     <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='/Uploads/default-menu.png'">
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-                        <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}</p>
+                        <p class="text-gray-600 text-sm">₹${item.price} x ${item.quantity}${stock < Infinity ? ` (Max ${stock})` : ''}</p>
+                        <p class="error-message" id="error-${item.id}"></p>
                         <div class="flex items-center gap-2 mt-2">
-                            <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', -1)">-</button>
+                            <button class="btn-quantity" ${item.quantity <= 1 ? 'disabled' : ''} onclick="data.updateQuantity('${item.id}', -1)">-</button>
                             <span class="text-sm">${item.quantity}</span>
-                            <button class="btn-quantity" onclick="data.updateQuantity('${item.id}', 1)">+</button>
+                            <button class="btn-quantity" ${item.quantity >= stock ? 'disabled' : ''} onclick="data.updateQuantity('${item.id}', 1)">+</button>
                         </div>
                     </div>
                     <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart('${item.id}')">Remove</button>
@@ -1279,86 +1357,195 @@ const data = {
     },
 
     addToCart: async (id, name, price, image) => {
+        if (state.cartUpdating) return;
         try {
-            const cartItem = {
-                itemId: id,
-                name,
-                price: parseFloat(price),
-                image,
-                quantity: 1
-            };
-            const response = await utils.fetchWithAuth('/api/cart', {
-                method: 'POST',
-                body: JSON.stringify(cartItem),
-            });
+            ui.toggleCartLoading(true);
+            const menuItem = await utils.fetchWithAuth(`/api/user/menu/${id}`);
+            if (!menuItem || menuItem.stock === 0) {
+                throw new Error(`${name} is out of stock`);
+            }
+            const existingItem = state.cart.find(item => item.itemId === id);
+            if (existingItem) {
+                if (existingItem.quantity >= menuItem.stock) {
+                    throw new Error(`Cannot add more ${name}. Only ${menuItem.stock} available.`);
+                }
+                await utils.fetchWithAuth(`/api/user/cart/${existingItem.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: existingItem.quantity + 1 }),
+                });
+            } else {
+                await utils.fetchWithAuth('/api/user/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        itemId: id,
+                        name,
+                        price: parseFloat(price),
+                        image,
+                        quantity: 1,
+                    }),
+                });
+            }
             utils.showToast(`${name} added to cart!`, 'success');
             data.loadCart();
         } catch (error) {
-            console.error('Add to cart error:', error.message);
             utils.showToast(error.message || 'Failed to add to cart', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
     updateQuantity: async (id, change) => {
+        if (state.cartUpdating) return;
         const item = state.cart.find(item => item.id === id);
         if (!item) {
             return utils.showToast('Item not found in cart', 'error');
         }
-        if (item.quantity + change < 1) {
-            return utils.showToast('Quantity cannot be less than 1', 'error');
+        const newQuantity = item.quantity + change;
+        if (newQuantity < 1) {
+            return;
         }
         try {
-            await utils.fetchWithAuth(`/api/cart/${id}`, {
+            ui.toggleCartLoading(true);
+            const menuItem = state.menuItems.find(menu => menu.id === item.itemId);
+            const stock = menuItem?.stock || Infinity;
+            if (newQuantity > stock) {
+                document.getElementById(`error-${id}`).textContent = `Only ${stock} available`;
+                document.getElementById(`error-${id}`).classList.add('show');
+                setTimeout(() => {
+                    document.getElementById(`error-${id}`).classList.remove('show');
+                }, 3000);
+                return;
+            }
+            await utils.fetchWithAuth(`/api/user/cart/${id}`, {
                 method: 'PUT',
-                body: JSON.stringify({ quantity: item.quantity + change }),
+                body: JSON.stringify({ quantity: newQuantity }),
             });
             utils.showToast('Quantity updated!', 'success');
             data.loadCart();
         } catch (error) {
             utils.showToast(error.message || 'Failed to update quantity', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
     removeFromCart: async (id) => {
+        if (state.cartUpdating) return;
+        if (!confirm('Are you sure you want to remove this item from the cart?')) return;
         try {
-            await utils.fetchWithAuth(`/api/cart/${id}`, { method: 'DELETE' });
+            ui.toggleCartLoading(true);
+            await utils.fetchWithAuth(`/api/user/cart/${id}`, { method: 'DELETE' });
             utils.showToast('Item removed from cart!', 'success');
             data.loadCart();
         } catch (error) {
             utils.showToast(error.message || 'Failed to remove item', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
+        }
+    },
+
+    clearCart: async () => {
+        if (state.cartUpdating) return;
+        if (!confirm('Are you sure you want to clear your cart? This cannot be undone.')) return;
+        try {
+            ui.toggleCartLoading(true);
+            await utils.fetchWithAuth('/api/user/cart/clear', { method: 'DELETE' });
+            state.cart = [];
+            state.appliedCoupon = null;
+            document.getElementById('couponCode').value = '';
+            document.getElementById('couponCode').classList.remove('valid', 'invalid');
+            document.getElementById('couponError').classList.remove('show');
+            utils.showToast('Cart cleared!', 'success');
+            data.renderCart();
+        } catch (error) {
+            utils.showToast(error.message || 'Failed to clear cart', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
+        }
+    },
+
+    validateCouponInput: () => {
+        const input = document.getElementById('couponCode');
+        const error = document.getElementById('couponError');
+        const code = input.value.trim();
+        if (code && state.coupons.some(coupon => coupon.code === code)) {
+            input.classList.add('valid');
+            input.classList.remove('invalid');
+            error.classList.remove('show');
+        } else if (code) {
+            input.classList.add('invalid');
+            input.classList.remove('valid');
+            error.textContent = 'Invalid coupon code';
+            error.classList.add('show');
+        } else {
+            input.classList.remove('valid', 'invalid');
+            error.classList.remove('show');
         }
     },
 
     applyCoupon: async () => {
+        if (state.cartUpdating) return;
         const code = document.getElementById('couponCode').value.trim();
-        if (!code) return utils.showToast('Enter a coupon code', 'error');
+        if (!code) {
+            document.getElementById('couponError').textContent = 'Enter a coupon code';
+            document.getElementById('couponError').classList.add('show');
+            document.getElementById('couponCode').classList.add('invalid');
+            return;
+        }
         try {
-            const coupon = await utils.fetchWithAuth(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
+            ui.toggleCartLoading(true);
+            const coupon = await utils.fetchWithAuth(`/api/user/coupons/validate?code=${encodeURIComponent(code)}`);
             state.appliedCoupon = { code: coupon.code, discount: coupon.discount };
             document.getElementById('couponCode').value = coupon.code;
+            document.getElementById('couponCode').classList.add('valid');
+            document.getElementById('couponCode').classList.remove('invalid');
+            document.getElementById('couponError').classList.remove('show');
             utils.showToast(`Coupon ${coupon.code} applied!`, 'success');
             data.renderCart();
         } catch (error) {
+            document.getElementById('couponError').textContent = error.message || 'Failed to validate coupon';
+            document.getElementById('couponError').classList.add('show');
+            document.getElementById('couponCode').classList.add('invalid');
+            document.getElementById('couponCode').classList.remove('valid');
             utils.showToast(error.message || 'Failed to validate coupon', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
     applyCouponFromList: async (code, discount) => {
+        if (state.cartUpdating) return;
         try {
+            ui.toggleCartLoading(true);
             state.appliedCoupon = { code, discount };
             document.getElementById('couponCode').value = code;
+            document.getElementById('couponCode').classList.add('valid');
+            document.getElementById('couponCode').classList.remove('invalid');
+            document.getElementById('couponError').classList.remove('show');
             utils.showToast(`Coupon ${code} applied!`, 'success');
             data.renderCart();
         } catch (error) {
             utils.showToast(error.message || 'Failed to apply coupon', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
     placeOrder: async (method) => {
+        if (state.cartUpdating) return;
         const selectedAddress = document.getElementById('cartAddressSelect').value;
-        if (!selectedAddress) return utils.showToast('Select an address', 'error');
-        if (state.cart.length === 0) return utils.showToast('Cart is empty', 'error');
+        if (!selectedAddress) {
+            utils.showToast('Please select an address', 'error');
+            document.getElementById('cartAddressSelect').classList.add('invalid');
+            return;
+        }
+        if (state.cart.length === 0) {
+            utils.showToast('Your cart is empty', 'error');
+            return;
+        }
+        if (!confirm('Are you sure you want to place this order?')) return;
         try {
+            ui.toggleCartLoading(true);
             const orderData = {
                 addressId: parseInt(selectedAddress),
                 items: state.cart.map(item => ({
@@ -1366,7 +1553,7 @@ const data = {
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
-                    image: item.image
+                    image: item.image,
                 })),
                 couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
                 paymentMethod: method,
@@ -1375,7 +1562,7 @@ const data = {
                 status: 'pending',
                 date: new Date().toISOString(),
             };
-            const response = await utils.fetchWithAuth('/api/orders', {
+            const response = await utils.fetchWithAuth('/api/user/orders', {
                 method: 'POST',
                 body: JSON.stringify(orderData),
             });
@@ -1383,18 +1570,21 @@ const data = {
             state.cart = [];
             state.appliedCoupon = null;
             document.getElementById('couponCode').value = '';
+            document.getElementById('couponCode').classList.remove('valid', 'invalid');
+            document.getElementById('couponError').classList.remove('show');
             data.renderCart();
             data.loadOrderHistory();
             ui.closeModal('cartModal');
         } catch (error) {
             utils.showToast(error.message || 'Failed to place order', 'error');
+        } finally {
+            ui.toggleCartLoading(false);
         }
     },
 
     loadOrderHistory: async () => {
-        if (!data.checkAuth()) return;
         try {
-            state.orders = await utils.fetchWithAuth('/api/orders');
+            state.orders = await utils.fetchWithAuth('/api/user/orders');
             data.renderOrderHistory();
         } catch (error) {
             utils.showToast(error.message || 'Failed to load order history', 'error');
@@ -1428,10 +1618,9 @@ const data = {
     },
 
     clearOrderHistory: async () => {
-        if (!data.checkAuth()) return;
         if (!confirm('Are you sure you want to clear your order history? This action cannot be undone.')) return;
         try {
-            await utils.fetchWithAuth('/api/orders/clear', { method: 'DELETE' });
+            await utils.fetchWithAuth('/api/user/orders/clear', { method: 'DELETE' });
             state.orders = [];
             data.renderOrderHistory();
             utils.showToast('Order history cleared!', 'success');
@@ -1452,7 +1641,7 @@ const data = {
         const reason = document.getElementById('cancelReason').value.trim();
         if (!reason) return utils.showToast('Please provide a reason', 'error');
         try {
-            await utils.fetchWithAuth(`/api/orders/${orderId}/cancel`, {
+            await utils.fetchWithAuth(`/api/user/orders/${orderId}/cancel`, {
                 method: 'PUT',
                 body: JSON.stringify({ reason }),
             });
@@ -1467,7 +1656,7 @@ const data = {
 
     trackOrder: async (id) => {
         try {
-            const updatedOrder = await utils.fetchWithAuth(`/api/orders/${id}/track`, { method: 'GET' });
+            const updatedOrder = await utils.fetchWithAuth(`/api/user/orders/${id}/track`);
             utils.showToast(`Order #${id} status: ${updatedOrder.status}`, 'success');
             data.loadOrderHistory();
         } catch (error) {
@@ -1476,8 +1665,6 @@ const data = {
     },
 
     logout: () => {
-        localStorage.removeItem('token');
-        state.token = null;
         utils.showToast('Logged out!', 'success');
         setTimeout(() => window.location.href = '/index.html', 1000);
     },
@@ -1508,17 +1695,14 @@ const eventListeners = {
 const debounceSearch = utils.debounce(data.searchMenu, 300);
 
 window.onload = () => {
-    data.checkAuth();
     ui.loadDarkMode();
-    if (state.token) {
-        data.loadProfile();
-        data.loadMenu();
-        data.loadCoupons();
-        data.loadFavorites();
-        data.loadCart();
-        data.loadAddresses();
-        data.loadOrderHistory();
-    }
+    data.loadProfile();
+    data.loadMenu();
+    data.loadCoupons();
+    data.loadFavorites();
+    data.loadCart();
+    data.loadAddresses();
+    data.loadOrderHistory();
     eventListeners.setup();
 };
 </script>
