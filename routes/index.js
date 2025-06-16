@@ -1,185 +1,225 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
+const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
-const sendgridTransport = require('nodemailer-sendgrid-transport');
+const dotenv = require('dotenv');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+dotenv.config();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Email transporter setup
-const transporter = nodemailer.createTransport(sendgridTransport({
+// Database connection
+async function getConnection() {
+  return await mysql.createConnection({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+  });
+}
+
+// Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
   auth: {
-    api_key: process.env.SENDGRID_API_KEY
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
-}));
+});
 
-// Middleware to verify user session
-const verifyUser = (req, res, next) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Unauthorized: Please log in' });
-  }
-  next();
-};
+// Middleware to verify JWT
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) return res.status(401).json({ error: 'Access denied' });
+  
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+}
 
-// Get restaurant status
+// Restaurant status
 router.get('/status', async (req, res) => {
   try {
-    const pool = req.app.get('dbPool');
-    const [rows] = await pool.query('SELECT status FROM restaurant_status ORDER BY updated_at DESC LIMIT 1');
+    const connection = await getConnection();
+    const [rows] = await connection.execute('SELECT status FROM restaurant_status WHERE id = 1');
+    await connection.end();
     res.json({ status: rows[0].status });
   } catch (error) {
-    console.error('Error fetching status:', error.message);
     res.status(500).json({ error: 'Failed to fetch restaurant status' });
   }
 });
 
-// Get menu items
+// Menu items
 router.get('/menu', async (req, res) => {
   try {
-    const pool = req.app.get('dbPool');
-    const [rows] = await pool.query('SELECT id, name, description, price, image, category FROM menu_items');
+    const connection = await getConnection();
+    const [rows] = await connection.execute('SELECT * FROM menu_items');
+    await connection.end();
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching menu:', error.message);
-    res.status(500).json({ error: 'Failed to fetch menu' });
+    res.status(500).json({ error: 'Failed to fetch menu items' });
   }
 });
 
-// User login
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-  try {
-    const pool = req.app.get('dbPool');
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ? OR phone = ?', [email, email]);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-    req.session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-  } catch (error) {
-    console.error('Login error:', error.message);
-    res.status(500).json({ error: 'Failed to login' });
-  }
-});
-
-// User signup
+// Signup
 router.post('/signup', async (req, res) => {
   const { name, email, phone, password } = req.body;
+  
   if (!name || !email || !phone || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
+
   if (!/^\d{10}$/.test(phone)) {
     return res.status(400).json({ error: 'Invalid phone number' });
   }
+
   try {
-    const pool = req.app.get('dbPool');
-    const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ? OR phone = ?', [email, phone]);
-    if (existingUsers.length > 0) {
+    const connection = await getConnection();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const [existingUser] = await connection.execute(
+      'SELECT * FROM users WHERE email = ? OR phone = ?',
+      [email, phone]
+    );
+
+    if (existingUser.length > 0) {
+      await connection.end();
       return res.status(400).json({ error: 'Email or phone already exists' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await pool.query(
-      'INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone, hashedPassword, 'user']
+
+    const [result] = await connection.execute(
+      'INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)',
+      [name, email, phone, hashedPassword]
     );
-    const user = { id: result.insertId, name, email, role: 'user' };
-    req.session.user = user;
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token, user });
+
+    const token = jwt.sign({ id: result.insertId, email }, process.env.JWT_SECRET, {
+      expiresIn: '1d'
+    });
+
+    await connection.end();
+    res.json({ 
+      token, 
+      user: { id: result.insertId, name, email, phone }
+    });
   } catch (error) {
-    console.error('Signup error:', error.message);
-    res.status(500).json({ error: 'Failed to signup' });
+    res.status(500).json({ error: 'Signup failed' });
   }
 });
 
-// Google login
-router.post('/auth/google', async (req, res) => {
-  const { credential } = req.body;
+// Login
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
   try {
-    const ticket = await googleClient.verifyIdToken({
+    const connection = await getConnection();
+    const [rows] = await connection.execute(
+      'SELECT * FROM users WHERE email = ? OR phone = ?',
+      [email, email]
+    );
+
+    if (rows.length === 0) {
+      await connection.end();
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      await connection.end();
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: '1d'
+    });
+
+    await connection.end();
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Google Login
+router.post('/auth/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-    const payload = ticket.getPayload();
-    const { sub: google_id, name, email } = payload;
-    const pool = req.app.get('dbPool');
-    let [users] = await pool.query('SELECT * FROM users WHERE google_id = ? OR email = ?', [google_id, email]);
-    let user;
-    if (users.length === 0) {
-      const [result] = await pool.query(
-        'INSERT INTO users (name, email, google_id, role) VALUES (?, ?, ?, ?)',
-        [name, email, google_id, 'user']
+
+    const { name, email } = ticket.getPayload();
+    const connection = await getConnection();
+    
+    let [user] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
+    
+    if (user.length === 0) {
+      const [result] = await connection.execute(
+        'INSERT INTO users (name, email) VALUES (?, ?)',
+        [name, email]
       );
-      user = { id: result.insertId, name, email, role: 'user' };
-    } else {
-      user = users[0];
+      user = [{ id: result.insertId, name, email }];
     }
-    req.session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+
+    const token = jwt.sign({ id: user[0].id, email }, process.env.JWT_SECRET, {
+      expiresIn: '1d'
+    });
+
+    await connection.end();
+    res.json({ token, user: { id: user[0].id, name, email } });
   } catch (error) {
-    console.error('Google login error:', error.message);
-    res.status(500).json({ error: 'Failed to login with Google' });
+    res.status(500).json({ error: 'Google authentication failed' });
   }
 });
 
-// Add to cart
-router.post('/cart/add', verifyUser, async (req, res) => {
-  const { itemId, quantity } = req.body;
-  if (!itemId || !quantity) {
-    return res.status(400).json({ error: 'Item ID and quantity are required' });
-  }
-  try {
-    const pool = req.app.get('dbPool');
-    const userId = req.session.user.id;
-    const [existing] = await pool.query('SELECT * FROM cart WHERE user_id = ? AND item_id = ?', [userId, itemId]);
-    if (existing.length > 0) {
-      await pool.query('UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND item_id = ?', [quantity, userId, itemId]);
-    } else {
-      await pool.query('INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, ?)', [userId, itemId, quantity]);
-    }
-    res.json({ message: 'Item added to cart' });
-  } catch (error) {
-    console.error('Add to cart error:', error.message);
-    res.status(500).json({ error: 'Failed to add item to cart' });
-  }
-});
-
-// Forgot password - send OTP
+// Forgot Password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
+  
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });
   }
+
   try {
-    const pool = req.app.get('dbPool');
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'User not found' });
+    const connection = await getConnection();
+    const [user] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (user.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'User not found' });
     }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await pool.query('INSERT INTO otps (email, otp, expires_at) VALUES (?, ?, ?)', [email, otp, expiresAt]);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    await connection.execute(
+      'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)',
+      [email, otp, expiresAt]
+    );
+
     await transporter.sendMail({
+      from: process.env.EMAIL_USER,
       to: email,
-      from: process.env.SENDGRID_FROM_EMAIL,
-      subject: 'Password Reset OTP',
-      text: `Your OTP for password reset is ${otp}. It is valid for 10 minutes.`
+      subject: 'Password Reset OTP - Delicute',
+      html: `<p>Your OTP for password reset is: <strong>${otp}</strong></p><p>This OTP is valid for 10 minutes.</p>`
     });
+
+    await connection.end();
     res.json({ message: 'OTP sent to your email' });
   } catch (error) {
-    console.error('Forgot password error:', error.message);
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 });
@@ -187,40 +227,100 @@ router.post('/forgot-password', async (req, res) => {
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
+
   if (!email || !otp) {
     return res.status(400).json({ error: 'Email and OTP are required' });
   }
+
   try {
-    const pool = req.app.get('dbPool');
-    const [otps] = await pool.query('SELECT * FROM otps WHERE email = ? AND otp = ? AND expires_at > NOW()', [email, otp]);
-    if (otps.length === 0) {
+    const connection = await getConnection();
+    const [tokens] = await connection.execute(
+      'SELECT * FROM password_reset_tokens WHERE email = ? AND token = ? AND expires_at > NOW()',
+      [email, otp]
+    );
+
+    if (tokens.length === 0) {
+      await connection.end();
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
-    await pool.query('DELETE FROM otps WHERE email = ?', [email]);
+
+    await connection.execute(
+      'DELETE FROM password_reset_tokens WHERE email = ? AND token = ?',
+      [email, otp]
+    );
+
+    await connection.end();
     res.json({ message: 'OTP verified successfully' });
   } catch (error) {
-    console.error('Verify OTP error:', error.message);
     res.status(500).json({ error: 'Failed to verify OTP' });
   }
 });
 
-// Reset password
+// Reset Password
 router.post('/reset-password', async (req, res) => {
   const { email, newPassword, confirmPassword } = req.body;
+
   if (!email || !newPassword || !confirmPassword) {
     return res.status(400).json({ error: 'All fields are required' });
   }
+
   if (newPassword !== confirmPassword) {
     return res.status(400).json({ error: 'Passwords do not match' });
   }
+
   try {
-    const pool = req.app.get('dbPool');
+    const connection = await getConnection();
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await pool.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+    const [result] = await connection.execute(
+      'UPDATE users SET password = ? WHERE email = ?',
+      [hashedPassword, email]
+    );
+
+    if (result.affectedRows === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await connection.end();
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
-    console.error('Reset password error:', error.message);
     res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// Add to Cart
+router.post('/cart/add', authenticateToken, async (req, res) => {
+  const { itemId, quantity } = req.body;
+  const userId = req.user.id;
+
+  if (!itemId || !quantity) {
+    return res.status(400).json({ error: 'Item ID and quantity are required' });
+  }
+
+  try {
+    const connection = await getConnection();
+    const [existingItem] = await connection.execute(
+      'SELECT * FROM cart WHERE user_id = ? AND item_id = ?',
+      [userId, itemId]
+    );
+
+    if (existingItem.length > 0) {
+      await connection.execute(
+        'UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND item_id = ?',
+        [quantity, userId, itemId]
+      );
+    } else {
+      await connection.execute(
+        'INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, ?)',
+        [userId, itemId, quantity]
+      );
+    }
+
+    await connection.end();
+    res.json({ message: 'Item added to cart' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add item to cart' });
   }
 });
 

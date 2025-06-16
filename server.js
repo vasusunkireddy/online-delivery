@@ -1,308 +1,250 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const session = require('express-session');
+const fileUpload = require('express-fileupload');
+const { OAuth2Client } = require('google-auth-library');
+const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const path = require('path');
-const session = require('express-session');
-const MySQLStore = require('express-mysql-session')(session);
-const fileupload = require('express-fileupload');
 
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-
+dotenv.config();
 const app = express();
 
-// Validate environment variables
-const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'SESSION_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-if (missingEnvVars.length > 0) {
-  console.error(`❌ Missing environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
-}
-
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : ['http://localhost:3000', 'https://delicute.onrender.com'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use(fileupload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  abortOnLimit: true,
-  createParentPath: true,
-}));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 🔁 Fix casing: /Uploads → /uploads
-app.use((req, res, next) => {
-  if (req.url.startsWith('/Uploads/')) {
-    return res.redirect(301, req.url.replace('/Uploads/', '/uploads/'));
-  }
-  next();
-});
-
-// 🔁 Fix trailing slashes: /uploads/file.png/ → /uploads/file.png
-app.use((req, res, next) => {
-  if (req.path.startsWith('/uploads/') && req.path.endsWith('/')) {
-    return res.redirect(301, req.path.replace(/\/+$/, ''));
-  }
-  next();
-});
-
-// Static upload serving
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  setHeaders: (res) => {
-    res.set('Cache-Control', 'public, max-age=31536000');
-  },
-  index: false,
-}));
-
-// 404 handler for missing upload files
-app.use('/uploads/*', (req, res) => {
-  console.warn(`❌ 404: File not found: ${req.originalUrl}`);
-  res.status(404).json({ error: 'File not found' });
-});
-
-// Trust proxy for production
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
-
-// Session store
-const sessionStore = new MySQLStore({
+// Database connection pool
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT) || 3306,
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  createDatabaseTable: true,
-  clearExpired: true,
-  checkExpirationInterval: 15 * 60 * 1000,
-  expiration: 24 * 60 * 60 * 1000,
-  schema: {
-    tableName: 'sessions',
-    columnNames: {
-      session_id: 'session_id',
-      expires: 'expires',
-      data: 'data',
-    },
-  },
-}, null, (error) => {
-  if (error) {
-    console.error('❌ Failed to initialize session store:', error.message);
-    process.exit(1);
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+// Middleware
+app.use(fileUpload());
+app.use(express.json());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
-  console.log('✅ Session store initialized');
-});
+}));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));
 
-sessionStore.on('error', (error) => {
-  console.error('❌ Session store runtime error:', error.message);
-});
-
-// Session middleware
-app.use((req, res, next) => {
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: sessionStore,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000,
-    },
-  })(req, res, (err) => {
-    if (err) {
-      console.error(`❌ Session middleware error for ${req.method} ${req.originalUrl}:`, err.message);
-      return res.status(500).json({ error: 'Session initialization failed' });
-    }
-    if (!req.session) {
-      req.session = {};
-      console.warn(`⚠️ Session not initialized for ${req.method} ${req.originalUrl}, using fallback`);
-    }
-    next();
-  });
-});
-
-// Middleware to attach user to request
-const setUserMiddleware = (req, res, next) => {
-  if (req.session.user) {
-    req.user = req.session.user;
-    console.log(`Set req.user: ${req.user.email} (${req.user.role})`);
-  } else {
-    req.user = null;
-  }
-  next();
+const formatDateForMySQL = (date) => {
+  if (!date) return new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const d = new Date(date);
+  if (isNaN(d.getTime())) throw new Error('Invalid date format');
+  return d.toISOString().slice(0, 19).replace('T', ' ');
 };
 
-// Auth check
-const isAuthenticated = (req, res, next) => {
-  if (!req.session.user) {
-    console.log(`Unauthorized access to ${req.originalUrl}`);
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-  next();
-};
-
-// Session debug logger
-app.use((req, res, next) => {
-  const userInfo = req.session.user
-    ? `${req.session.user.email} (${req.session.user.role})`
-    : 'None';
-  console.log(`Request: ${req.method} ${req.originalUrl}, SessionID: ${req.sessionID || 'None'}, User: ${userInfo}, req.user: ${req.user ? req.user.email : 'None'}`);
-  next();
-});
-
-// DB pool
 async function initializeDatabase() {
+  const connection = await pool.getConnection();
   try {
-    const pool = await mysql.createPool({
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT) || 3306,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      charset: 'utf8mb4',
-    });
-    await pool.getConnection();
-    console.log('✅ Database connected successfully');
-    pool.on('error', (error) => {
-      console.error('❌ Database pool error:', error.message);
-    });
-    return pool;
+    console.log('Connected to database');
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        phone VARCHAR(15) UNIQUE,
+        password VARCHAR(255),
+        image VARCHAR(255),
+        isAdmin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS menu_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        image VARCHAR(255),
+        category VARCHAR(100),
+        stock INT DEFAULT 100,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS cart (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        item_id INT,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        image VARCHAR(255),
+        quantity INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS addresses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        full_name VARCHAR(255) NOT NULL,
+        mobile VARCHAR(15) NOT NULL,
+        house_no VARCHAR(100) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        landmark VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount DECIMAL(5,2) NOT NULL,
+        image VARCHAR(255),
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        address_id INT,
+        coupon_code VARCHAR(50),
+        payment_method ENUM('cod', 'upi') DEFAULT 'cod',
+        delivery_cost DECIMAL(10,2) DEFAULT 0,
+        total DECIMAL(10,2) NOT NULL,
+        status ENUM('pending', 'confirmed', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
+        date DATETIME NOT NULL,
+        cancellation_reason TEXT,
+        payment_status ENUM('pending', 'paid') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE SET NULL,
+        FOREIGN KEY (coupon_code) REFERENCES coupons(code) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT,
+        item_id INT,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        quantity INT NOT NULL,
+        image VARCHAR(255),
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE SET NULL
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        token VARCHAR(255) NOT NULL,
+        expires_at VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS restaurant_status (
+        id INT PRIMARY KEY,
+        status ENUM('open', 'closed') DEFAULT 'closed',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS favorites (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        item_id INT,
+        name VARCHAR(255) NOT NULL,
+        image VARCHAR(255),
+        price DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.query(`
+      INSERT IGNORE INTO restaurant_status (id, status) VALUES (1, 'closed')
+    `);
+
+    await connection.query(`
+      INSERT IGNORE INTO coupons (code, discount, image, expires_at) VALUES
+      ('WELCOME10', 10.00, NULL, DATE_ADD(NOW(), INTERVAL 30 DAY)),
+      ('SAVE20', 20.00, NULL, DATE_ADD(NOW(), INTERVAL 30 DAY))
+    `);
+
+    const [adminUsers] = await connection.query('SELECT id FROM users WHERE isAdmin = TRUE');
+    if (!adminUsers.length) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await connection.query(
+        `INSERT INTO users (name, email, phone, password, isAdmin) VALUES (?, ?, ?, ?, TRUE)`,
+        ['Admin', 'admin@delicute.com', '9999999999', hashedPassword]
+      );
+    }
+
+    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error('Database initialization error:', error.message, error.stack);
     throw error;
+  } finally {
+    connection.release();
   }
 }
 
 // Routes
-function loadRoutes(routePath) {
-  try {
-    const routes = require(routePath);
-    console.log(`✅ Loaded ${path.basename(routePath)} routes`);
-    return routes;
-  } catch (error) {
-    console.error(`❌ Failed to load ${path.basename(routePath)} routes:`, error.message);
-    throw error;
-  }
-}
+app.use('/api', require('./routes/index'));
+app.use('/api', require('./routes/userdashboard'));
+app.use('/api', require('./routes/admin'));
+app.use('/api', require('./routes/admindashboard'));
 
-async function setupRoutes(pool) {
-  app.set('dbPool', pool);
-  app.use(setUserMiddleware);
-  app.use('/api/admin', isAuthenticated, loadRoutes('./routes/admin'));
-  app.use('/api/admin/dashboard', isAuthenticated, loadRoutes('./routes/admindashboard'));
-  app.use('/api/user', isAuthenticated, loadRoutes('./routes/userdashboard'));
-  app.use('/api', loadRoutes('./routes/index'));
-
-  // Frontend serving
-  app.get('/', (req, res) => {
-    console.log('Serving index.html');
-    res.sendFile(path.join(__dirname, 'public', 'index.html'), err => {
-      if (err) handleFileError(err, res);
-    });
-  });
-
-  app.get('/admin', (req, res) => {
-    console.log('Serving admin.html');
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'), err => {
-      if (err) handleFileError(err, res);
-    });
-  });
-
-  app.get('/admin/dashboard', isAuthenticated, (req, res) => {
-    console.log('Serving admindashboard.html');
-    if (!req.session.user || req.session.user.role !== 'admin') {
-      console.log('No admin role, redirecting to /admin');
-      return res.redirect('/admin');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'admindashboard.html'), err => {
-      if (err) handleFileError(err, res);
-    });
-  });
-
-  app.get('/userdashboard', isAuthenticated, (req, res) => {
-    console.log('Serving userdashboard.html');
-    res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'), err => {
-      if (err) handleFileError(err, res);
-    });
-  });
-
-  app.get('/favicon.ico', (req, res) => {
-    const faviconPath = path.join(__dirname, 'public', 'favicon.ico');
-    res.sendFile(faviconPath, err => {
-      if (err) {
-        console.warn(`⚠️ Favicon not found: ${err.message}`);
-        res.status(404).send('Favicon not found');
-      }
-    });
-  });
-
-  // Unmatched API routes
-  app.use('/api/*', (req, res) => {
-    console.warn(`❌ 404: API route not found: ${req.originalUrl}`);
-    res.status(404).json({ error: `API endpoint not found: ${req.originalUrl}` });
-  });
-
-  // Catch-all (SPA fallback)
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/.well-known/') || req.path.match(/\.(js|css|jpg|png|ico)$/)) {
-      return res.status(404).json({ error: 'Asset not found' });
-    }
-    console.log(`Serving index.html for ${req.path}`);
-    res.sendFile(path.join(__dirname, 'public', 'index.html'), err => {
-      if (err) handleFileError(err, res);
-    });
-  });
-}
-
-// Handle file serving errors
-function handleFileError(err, res) {
-  console.error('❌ File serving error:', err.message);
-  res.status(404).json({ error: 'Resource not found' });
-}
-
-// Global error handler
-app.use((err, req, res, next) => {
-  const sessionInfo = req.session ? `SessionID: ${req.sessionID || 'None'}` : 'Session: Missing';
-  const userInfo = req.session && req.session.user
-    ? `${req.session.user.email} (${req.session.user.role})`
-    : 'None';
-  const errorDetails = {
-    message: err.message,
-    stack: err.stack,
-    request: `${req.method} ${req.originalUrl}`,
-    session: sessionInfo,
-    user: userInfo,
-    reqUser: req.user ? req.user.email : 'None',
-  };
-  console.error('❌ Error:', JSON.stringify(errorDetails, null, 2));
-  res.status(500).json({ error: 'Internal server error' });
+app.all('/api/*', (req, res) => {
+  console.warn(`API route not found: ${req.originalUrl}`);
+  res.status(404).json({ error: `API endpoint ${req.originalUrl} not found` });
 });
 
-// Start server
-const PORT = parseInt(process.env.PORT) || 3000;
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message, err.stack);
+  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
-    const pool = await initializeDatabase();
-    await setupRoutes(pool);
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`CORS origins: ${process.env.CLIENT_URL || 'http://localhost:3000,https://delicute.onrender.com'}`);
-    });
+    await initializeDatabase();
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error('Failed to start server:', error.message);
     process.exit(1);
   }
 }
