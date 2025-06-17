@@ -61,7 +61,7 @@
       margin-right: 0.5rem;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      transition: transform 0.3s ease;
+      transition: transform 0.4s ease-in-out;
     }
 
     .logo:hover img {
@@ -80,27 +80,30 @@
       flex-direction: column;
       cursor: pointer;
       padding: 0.5rem;
+      gap: 4px;
+      z-index: 60;
     }
 
     .hamburger span {
-      width: 20px;
-      height: 2px;
+      width: 22px;
+      height: 2.5px;
       background: #ffffff;
-      margin: 2px 0;
-      border-radius: 1px;
-      transition: all 0.3s ease;
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transform-origin: center;
     }
 
     .hamburger.active span:nth-child(1) {
-      transform: rotate(45deg) translate(4px, 4px);
+      transform: translateY(7px) rotate(45deg);
     }
 
     .hamburger.active span:nth-child(2) {
       opacity: 0;
+      transform: scaleX(0);
     }
 
     .hamburger.active span:nth-child(3) {
-      transform: rotate(-45deg) translate(5px, -5px);
+      transform: translateY(-7px) rotate(-45deg);
     }
 
     .desktop-nav {
@@ -137,7 +140,7 @@
       padding: 3rem 1.5rem;
       z-index: 40;
       transform: translateX(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 
     .mobile-menu.active {
@@ -153,6 +156,14 @@
       border-radius: 0.3rem;
       text-align: left;
       transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .mobile-menu.active a, .mobile-menu.active button {
+      opacity: 1;
+      transform: translateX(0);
+      transition: all 0.3s ease 0.1s;
     }
 
     .mobile-menu a:hover, .mobile-menu button:hover {
@@ -201,14 +212,14 @@
       font-size: 2.5rem;
       margin-bottom: 0.75rem;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 1s ease-in;
+      animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .hero-section p {
       font-size: 1rem;
       margin-bottom: 1.5rem;
       opacity: 0.9;
-      animation: fadeIn 1.2s ease-in;
+      animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
     }
 
     .hero-buttons {
@@ -216,7 +227,7 @@
       flex-wrap: wrap;
       gap: 0.75rem;
       justify-content: center;
-      animation: fadeIn 1.4s ease-in;
+      animation: fadeIn 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
     }
 
     .dashboard-content {
@@ -258,12 +269,12 @@
       border-radius: 0.3rem;
       font-size: 0.85rem;
       font-weight: 600;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
+      transform: scale(1.05);
       box-shadow: var(--shadow-hover);
     }
 
@@ -273,12 +284,12 @@
       padding: 0.4rem 0.8rem;
       border-radius: 0.3rem;
       font-size: 0.8rem;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
     .btn-danger:hover {
-      transform: translateY(-2px);
+      transform: scale(1.05);
       box-shadow: var(--shadow-hover);
     }
 
@@ -288,12 +299,12 @@
       padding: 0.4rem 0.8rem;
       border-radius: 0.3rem;
       font-size: 0.8rem;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
     .btn-toggle:hover {
-      transform: translateY(-2px);
+      transform: scale(1.05);
       box-shadow: var(--shadow-hover);
     }
 
@@ -345,9 +356,12 @@
       z-index: 10;
     }
 
+    tr {
+      transition: background 0.2s ease;
+    }
+
     tr:hover {
       background: rgba(0, 0, 0, 0.03);
-      transition: background 0.2s ease;
     }
 
     .menu-image, .coupon-image {
@@ -356,6 +370,11 @@
       object-fit: cover;
       border-radius: 0.3rem;
       border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease;
+    }
+
+    .menu-image:hover, .coupon-image:hover {
+      transform: scale(1.1);
     }
 
     .modal {
@@ -380,7 +399,7 @@
       max-width: 500px;
       box-shadow: var(--shadow);
       position: relative;
-      animation: slideIn 0.3s ease;
+      animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .close-btn {
@@ -390,11 +409,12 @@
       font-size: 1.25rem;
       cursor: pointer;
       color: #475569;
-      transition: color 0.2s ease;
+      transition: color 0.2s ease, transform 0.2s ease;
     }
 
     .close-btn:hover {
       color: #a855f7;
+      transform: scale(1.2);
     }
 
     .toast {
@@ -407,7 +427,7 @@
       font-size: 0.85rem;
       z-index: 2000;
       box-shadow: var(--shadow);
-      animation: toastSlide 3s ease-in-out forwards;
+      animation: toastSlide 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     .toast-success {
@@ -432,7 +452,7 @@
     }
 
     .toast-error:before {
-      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3E%3C/svg%3E');
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
     }
 
     @keyframes toastSlide {
@@ -965,21 +985,26 @@
   }
 
   function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    if (modalId === 'addMenuModal') {
-      document.getElementById('menuId').value = '';
-      document.getElementById('menuName').value = '';
-      document.getElementById('menuPrice').value = '';
-      document.getElementById('menuCategory').value = 'dessert';
-      document.getElementById('menuDescription').value = '';
-      document.getElementById('menuImage').value = '';
-    } else if (modalId === 'addCouponModal') {
-      document.getElementById('couponId').value = '';
-      document.getElementById('couponCode').value = '';
-      document.getElementById('couponDiscount').value = '';
-      document.getElementById('couponDescription').value = '';
-      document.getElementById('couponImage').value = '';
-    }
+    const modal = document.getElementById(modalId);
+    modal.classList.add('modal-closing');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      modal.classList.remove('modal-closing');
+      if (modalId === 'addMenuModal') {
+        document.getElementById('menuId').value = '';
+        document.getElementById('menuName').value = '';
+        document.getElementById('menuPrice').value = '';
+        document.getElementById('menuCategory').value = 'dessert';
+        document.getElementById('menuDescription').value = '';
+        document.getElementById('menuImage').value = '';
+      } else if (modalId === 'addCouponModal') {
+        document.getElementById('couponId').value = '';
+        document.getElementById('couponCode').value = '';
+        document.getElementById('couponDiscount').value = '';
+        document.getElementById('couponDescription').value = '';
+        document.getElementById('couponImage').value = '';
+      }
+    }, 300);
   }
 
   async function saveMenuItem() {

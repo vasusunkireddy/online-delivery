@@ -69,7 +69,10 @@ router.get('/profile', authenticateUserToken, async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(rows[0]);
+    res.json({
+      ...rows[0],
+      image: rows[0].image || null
+    });
   } catch (error) {
     console.error('Profile fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch profile' });
@@ -78,7 +81,7 @@ router.get('/profile', authenticateUserToken, async (req, res) => {
 
 // Update user profile
 router.put('/profile', authenticateUserToken, async (req, res) => {
-  const { name, email } = req.body;
+  const { name, email, image } = req.body;
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
@@ -88,14 +91,17 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
       return res.status(400).json({ error: 'Email already in use' });
     }
     const updates = { name, email };
-    if (req.body.image) {
-      updates.image = req.body.image;
+    if (image) {
+      updates.image = image;
     }
     const fields = Object.keys(updates).map((key) => `${key} = ?`).join(', ');
     const values = Object.values(updates).concat([req.user.id]);
     await pool.query(`UPDATE users SET ${fields} WHERE id = ?`, values);
     const [updatedUser] = await pool.query('SELECT id, name, email, mobile, image FROM users WHERE id = ?', [req.user.id]);
-    res.json(updatedUser[0]);
+    res.json({
+      ...updatedUser[0],
+      image: updatedUser[0].image || null
+    });
   } catch (error) {
     console.error('Profile update error:', error.message);
     res.status(500).json({ error: 'Failed to update profile' });
@@ -111,6 +117,10 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'delicute/profiles',
       allowed_formats: ['jpg', 'png'],
+      transformation: [
+        { width: 200, height: 200, crop: 'fill', gravity: 'face' },
+        { quality: 'auto' }
+      ]
     });
     await fs.unlink(req.file.path); // Delete local file
     const [user] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
@@ -118,6 +128,7 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
       const publicId = user[0].image.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`delicute/profiles/${publicId}`).catch(() => {});
     }
+    await pool.query('UPDATE users SET image = ? WHERE id = ?', [result.secure_url, req.user.id]);
     res.json({ url: result.secure_url });
   } catch (error) {
     console.error('Image upload error:', error.message);
@@ -206,11 +217,10 @@ router.delete('/addresses/:id', authenticateUserToken, async (req, res) => {
 // Get menu items
 router.get('/menu', authenticateUserToken, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, name, price, category, description, image, stock FROM menu_items WHERE stock > 0');
+    const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items');
     res.json(rows.map(row => ({
       ...row,
-      image: row.image || null,
-      stock: row.stock || 0
+      image: row.image || null
     })));
   } catch (error) {
     console.error('Menu fetch error:', error.message);
@@ -222,14 +232,13 @@ router.get('/menu', authenticateUserToken, async (req, res) => {
 router.get('/menu/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT id, name, price, category, description, image, stock FROM menu_items WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
     res.json({
       ...rows[0],
-      image: rows[0].image || null,
-      stock: rows[0].stock || 0
+      image: rows[0].image || null
     });
   } catch (error) {
     console.error('Menu item fetch error:', error.message);
@@ -332,33 +341,37 @@ router.delete('/favorites/:id', authenticateUserToken, async (req, res) => {
 router.get('/cart', authenticateUserToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, item_id AS itemId, name, price, image, quantity FROM cart WHERE user_id = ?',
+      'SELECT id, item_id AS itemId, name, price, image, quantity, description FROM cart WHERE user_id = ?',
       [req.user.id]
     );
-    res.json(rows.map(row => ({
-      ...row,
-      image: row.image || null
-    })));
+    res.json({
+      items: rows.map(row => ({
+        ...row,
+        image: row.image || null,
+        description: row.description || null
+      }))
+    });
   } catch (error) {
     console.error('Cart fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch cart' });
   }
 });
 
+// Add to cart
 router.post('/cart', authenticateUserToken, async (req, res) => {
-  const { itemId, name, price, image, quantity = 1 } = req.body;
+  const { itemId, name, price, image, quantity = 1, description } = req.body;
   if (!itemId || !name || !price || quantity < 1) {
     return res.status(400).json({ error: 'Item ID, name, price, and valid quantity are required' });
   }
-  const connection = await req.app.get('dbPool').getConnection();
+  const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const [menuItem] = await connection.query('SELECT id, stock FROM menu_items WHERE id = ? FOR UPDATE', [itemId]);
+    const [menuItem] = await pool.query('SELECT id, price, description FROM menu_items WHERE id = ?', [itemId]);
     if (menuItem.length === 0) {
       throw new Error('Menu item not found');
     }
-    if (menuItem[0].stock < quantity) {
-      throw new Error(`Only ${menuItem[0].stock} ${name} available in stock`);
+    if (parseFloat(price).toFixed(2) !== parseFloat(menuItem[0].price).toFixed(2)) {
+      throw new Error(`Price mismatch for ${name}`);
     }
     const [existing] = await connection.query(
       'SELECT id, quantity FROM cart WHERE user_id = ? AND item_id = ?',
@@ -367,9 +380,6 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
     let cartId;
     if (existing.length > 0) {
       const newQuantity = existing[0].quantity + quantity;
-      if (newQuantity > menuItem[0].stock) {
-        throw new Error(`Only ${menuItem[0].stock} ${name} available in stock`);
-      }
       await connection.query(
         'UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?',
         [newQuantity, existing[0].id]
@@ -377,13 +387,19 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
       cartId = existing[0].id;
     } else {
       const [result] = await connection.query(
-        'INSERT INTO cart (user_id, item_id, name, price, image, quantity) VALUES (?, ?, ?, ?, ?, ?)',
-        [req.user.id, itemId, name, parseFloat(price), image || null, quantity]
+        'INSERT INTO cart (user_id, item_id, name, price, image, quantity, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [req.user.id, itemId, name, parseFloat(price), image || null, quantity, description || menuItem[0].description || null]
       );
       cartId = result.insertId;
     }
     await connection.commit();
-    res.json({ message: 'Added to cart', id: cartId }); // Single response
+    const [newItem] = await pool.query('SELECT id, item_id AS itemId, name, price, image, quantity, description FROM cart WHERE id = ?', [cartId]);
+    res.json({
+      message: 'Added to cart',
+      ...newItem[0],
+      image: newItem[0].image || null,
+      description: newItem[0].description || null
+    });
   } catch (error) {
     await connection.rollback();
     console.error('Add to cart error:', error.message);
@@ -404,18 +420,11 @@ router.put('/cart/:id', authenticateUserToken, async (req, res) => {
   try {
     await connection.beginTransaction();
     const [cartItem] = await connection.query(
-      'SELECT item_id, name, quantity FROM cart WHERE id = ? AND user_id = ? FOR UPDATE',
+      'SELECT id, item_id, name FROM cart WHERE id = ? AND user_id = ?',
       [id, req.user.id]
     );
     if (cartItem.length === 0) {
       throw new Error('Cart item not found');
-    }
-    const [menuItem] = await connection.query('SELECT stock FROM menu_items WHERE id = ?', [cartItem[0].item_id]);
-    if (menuItem.length === 0) {
-      throw new Error('Menu item not found');
-    }
-    if (quantity > menuItem[0].stock) {
-      throw new Error(`Only ${menuItem[0].stock} ${cartItem[0].name} available in stock`);
     }
     await connection.query(
       'UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?',
@@ -449,7 +458,7 @@ router.delete('/cart/:id', authenticateUserToken, async (req, res) => {
 });
 
 // Clear cart
-router.delete('/cart/clear', authenticateUserToken, async (req, res) => {
+router.delete('/cart', authenticateUserToken, async (req, res) => {
   try {
     await pool.query('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
     res.json({ message: 'Cart cleared' });
@@ -530,17 +539,13 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       couponId = coupon[0].id;
     }
     for (const item of items) {
-      const [menuItem] = await connection.query('SELECT id, stock, price FROM menu_items WHERE id = ? FOR UPDATE', [item.itemId]);
+      const [menuItem] = await connection.query('SELECT id, price FROM menu_items WHERE id = ?', [item.itemId]);
       if (menuItem.length === 0) {
         throw new Error(`Menu item ${item.name} not found`);
-      }
-      if (menuItem[0].stock < item.quantity) {
-        throw new Error(`Only ${menuItem[0].stock} ${item.name} available in stock`);
       }
       if (parseFloat(item.price).toFixed(2) !== parseFloat(menuItem[0].price).toFixed(2)) {
         throw new Error(`Price mismatch for ${item.name}`);
       }
-      await connection.query('UPDATE menu_items SET stock = stock - ? WHERE id = ?', [item.quantity, item.itemId]);
     }
     const [orderResult] = await connection.query(
       'INSERT INTO orders (user_id, address_id, coupon_id, total, delivery, payment_method, payment_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -575,16 +580,12 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ? FOR UPDATE', [id, req.user.id]);
+    const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [id, req.user.id]);
     if (order.length === 0) {
       throw new Error('Order not found');
     }
     if (!['pending', 'confirmed'].includes(order[0].status)) {
       throw new Error('Order cannot be cancelled');
-    }
-    const [orderItems] = await connection.query('SELECT menu_item_id, quantity FROM order_items WHERE order_id = ?', [id]);
-    for (const item of orderItems) {
-      await connection.query('UPDATE menu_items SET stock = stock + ? WHERE id = ?', [item.quantity, item.menu_item_id]);
     }
     await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['cancelled', reason, id]);
     await connection.commit();

@@ -253,28 +253,30 @@
     }
 
     .btn-quantity {
-      background: rgba(255, 255, 255, 0.4);
-      color: var(--text-dark);
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      font-size: 1.25rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.3s ease;
+  background: rgba(255, 255, 255, 0.4);
+  color: #a855f7; /* PURPLE */
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+
+    .btn-quantity:hover:not(:disabled) {
+      background: rgba(168, 85, 247, 0.3);
+      transform: scale(1.05);
     }
 
     .btn-quantity:disabled {
       background: rgba(255, 255, 255, 0.2);
       color: #9ca3af;
       cursor: not-allowed;
-    }
-
-    .btn-quantity:hover:not(:disabled) {
-      background: rgba(168, 85, 247, 0.3);
     }
 
     .input-field {
@@ -507,8 +509,14 @@
     }
 
     .dark-mode .search-bar input {
-      color: var(--text-light);
-    }
+  /* Stuart color: #a855f7; */  /* Commented for reference if needed */
+  border: none;
+  outline: none;
+  color: var(--text-light);
+  font-size: 1rem;
+  width: 100%;
+}
+
 
     .dark-mode .search-bar input::placeholder {
       color: #9ca3af;
@@ -664,6 +672,8 @@
 
       .search-bar {
         padding: 0.5rem 1rem;
+      
+
       }
 
       .search-bar input {
@@ -748,7 +758,7 @@
       <div class="card" id="orders">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xl md:text-2xl font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">Order History</h2>
-          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearOrderHistory()">Clear History</button>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()">Clear Cart</button>
         </div>
         <div id="orderHistory"></div>
       </div>
@@ -989,7 +999,7 @@
     },
 
     uploadImage: async (file) => {
-      if (!file) return null;
+      if (!file) return state.user?.image || placeholderImage;
       if (!utils.validateImage(file)) {
         throw new Error('Please upload a valid JPEG or PNG image (max 2MB)');
       }
@@ -1005,7 +1015,8 @@
         }
         return response.url;
       } catch (error) {
-        throw new Error(error.message || 'Image upload failed');
+        utils.showToast(error.message || 'Image upload failed', 'error');
+        return state.user?.image || placeholderImage;
       }
     },
 
@@ -1072,8 +1083,9 @@
     },
 
     loadProfileImage: () => {
-      document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user?.image);
-      document.getElementById('profileImg').src = sanitizeImageUrl(state.user?.image);
+      const imageUrl = state.user?.image ? sanitizeImageUrl(state.user.image) : placeholderImage;
+      document.getElementById('profileModalImg').src = imageUrl;
+      document.getElementById('profileImg').src = imageUrl;
     },
 
     toggleCartLoading: (isLoading) => {
@@ -1238,11 +1250,10 @@
           <div class="menu-card">
             <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2" onerror="this.src='${placeholderImage}'">
             <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
-            <p class="text-gray-600 text-sm mb-1">${item.description || 'No description'}</p>
-            <p class="text-gray-500 text-sm mb-1">Category: ${item.category || 'N/A'}</p>
-            <p class="text-purple-600 font-bold text-base mb-2">₹${parseFloat(item.price).toFixed(2)}${item.stock ? ` <span class="text-gray-500 text-sm">(Only ${item.stock} left)</span>` : ''}</p>
+            <p class="text-gray-600 text-sm mb-2">${item.description || 'No description'}</p>
+            <p class="text-purple-600 font-bold text-base mb-2">₹${parseFloat(item.price).toFixed(2)}</p>
             <div class="flex justify-between items-center gap-2">
-              <button class="btn-primary text-sm py-1 px-3" ${item.stock === 0 ? 'disabled' : ''} onclick="data.addToCart(${item.id}, '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
+              <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart(${item.id}, '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
               <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites(${item.id})` : `data.addToFavorites(${item.id}, '${item.name}', '${sanitizeImageUrl(item.image)}', ${item.price})`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
             </div>
           </div>
@@ -1351,7 +1362,8 @@
     loadCart: async () => {
       try {
         ui.toggleCartLoading(true);
-        state.cart = await utils.fetchWithAuth('/api/user/cart');
+        const response = await utils.fetchWithAuth('/api/user/cart');
+        state.cart = response.items || [];
         data.renderCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to load cart', 'error');
@@ -1366,19 +1378,17 @@
       let originalTotal = 0;
       state.cart.forEach(item => {
         originalTotal += item.price * item.quantity;
-        const menuItem = state.menuItems.find(menu => menu.id === item.itemId);
-        const stock = menuItem?.stock ?? Infinity;
         cartItems.innerHTML += `
           <div class="order-card flex items-center gap-2 mb-2">
             <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='${placeholderImage}'">
             <div class="flex-1">
               <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-              <p class="text-gray-600 text-sm">₹${parseFloat(item.price).toFixed(2)} x ${item.quantity}${stock < Infinity ? ` (Max ${stock})` : ''}</p>
-              <p class="error-message" id="error-${item.id}"></p>
+              <p class="text-gray-600 text-sm mb-2">${item.description || 'No description'}</p>
+              <p class="text-purple-600 font-bold text-base">₹${parseFloat(item.price * item.quantity).toFixed(2)} (₹${parseFloat(item.price).toFixed(2)} x ${item.quantity})</p>
               <div class="flex items-center gap-2 mt-2">
-                <button class="btn-quantity" ${item.quantity <= 1 || state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity - 1}, ${stock})">-</button>
-                <span class="text-sm">${item.quantity}</span>
-                <button class="btn-quantity" ${item.quantity >= stock || state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity + 1}, ${stock})">+</button>
+                <button class="btn-quantity" ${item.quantity <= 1 || state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                <span class="text-sm font-medium">${item.quantity}</span>
+                <button class="btn-quantity" ${state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
               </div>
             </div>
             <button class="btn-secondary text-sm py-1 px-3" ${state.cartUpdating ? 'disabled' : ''} onclick="data.removeFromCart(${item.id})">Remove</button>
@@ -1401,37 +1411,23 @@
       if (state.cartUpdating) return;
       try {
         ui.toggleCartLoading(true);
-        const menuItem = await utils.fetchWithAuth(`/api/user/menu/${id}`);
-        if (!menuItem || menuItem.stock === 0) {
-          throw new Error(`${name} is out of stock`);
-        }
         const existingItem = state.cart.find(item => item.itemId === id);
-        let newQuantity = 1;
         if (existingItem) {
-          newQuantity = existingItem.quantity + 1;
-          if (newQuantity > menuItem.stock) {
-            throw new Error(`Only ${menuItem.stock} ${name} available in stock`);
-          }
-          await utils.fetchWithAuth(`/api/user/cart/${existingItem.id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity: newQuantity }),
-          });
+          await data.updateQuantity(existingItem.id, existingItem.quantity + 1);
         } else {
-          if (newQuantity > menuItem.stock) {
-            throw new Error(`Only ${menuItem.stock} ${name} available in stock`);
-          }
-          await utils.fetchWithAuth('/api/user/cart', {
+          const response = await utils.fetchWithAuth('/api/user/cart', {
             method: 'POST',
             body: JSON.stringify({
               itemId: id,
               name,
               price: parseFloat(price),
               image,
-              quantity: newQuantity,
+              quantity: 1,
             }),
           });
+          state.cart.push(response);
+          utils.showToast(`${name} added to cart!`, 'success');
         }
-        utils.showToast(`${name} added to cart!`, 'success');
         await data.loadCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to add to cart', 'error');
@@ -1440,32 +1436,19 @@
       }
     },
 
-    updateQuantity: async (id, newQuantity, stock) => {
+    updateQuantity: async (id, newQuantity) => {
       if (state.cartUpdating) return;
-      const item = state.cart.find(item => item.id === id);
-      if (!item) {
-        utils.showToast('Item not found in cart', 'error');
-        return;
-      }
-      if (newQuantity < 1) {
-        await data.removeFromCart(id);
-        return;
-      }
-      if (newQuantity > stock) {
-        document.getElementById(`error-${id}`).textContent = `Only ${stock} ${item.name} available`;
-        document.getElementById(`error-${id}`).classList.add('show');
-        setTimeout(() => {
-          document.getElementById(`error-${id}`).classList.remove('show');
-        }, 3000);
-        return;
-      }
       try {
         ui.toggleCartLoading(true);
-        await utils.fetchWithAuth(`/api/user/cart/${id}`, {
+        if (newQuantity < 1) {
+          await data.removeFromCart(id);
+          return;
+        }
+        const response = await utils.fetchWithAuth(`/api/user/cart/${id}`, {
           method: 'PUT',
           body: JSON.stringify({ quantity: newQuantity }),
         });
-        state.cart = state.cart.map(cartItem => cartItem.id === id ? { ...cartItem, quantity: newQuantity } : cartItem);
+        state.cart = state.cart.map(item => item.id === id ? { ...item, quantity: newQuantity } : item);
         utils.showToast('Quantity updated!', 'success');
         data.renderCart();
       } catch (error) {
@@ -1477,7 +1460,6 @@
 
     removeFromCart: async (id) => {
       if (state.cartUpdating) return;
-      if (!confirm('Are you sure you want to remove this item from the cart?')) return;
       try {
         ui.toggleCartLoading(true);
         await utils.fetchWithAuth(`/api/user/cart/${id}`, { method: 'DELETE' });
@@ -1485,7 +1467,7 @@
         utils.showToast('Item removed from cart!', 'success');
         data.renderCart();
       } catch (error) {
-        utils.showToast(error.message || 'Failed to remove item', 'error');
+        utils.showToast(error.message || 'Failed to remove item from cart', 'error');
       } finally {
         ui.toggleCartLoading(false);
       }
@@ -1493,16 +1475,15 @@
 
     clearCart: async () => {
       if (state.cartUpdating) return;
-      if (!confirm('Are you sure you want to clear your cart? This cannot be undone.')) return;
       try {
         ui.toggleCartLoading(true);
-        await utils.fetchWithAuth('/api/user/cart/clear', { method: 'DELETE' });
+        await utils.fetchWithAuth('/api/user/cart', { method: 'DELETE' });
         state.cart = [];
         state.appliedCoupon = null;
         document.getElementById('couponCode').value = '';
         document.getElementById('couponCode').classList.remove('valid', 'invalid');
         document.getElementById('couponError').classList.remove('show');
-        utils.showToast('Cart cleared!', 'success');
+        utils.showToast('Cart cleared successfully!', 'success');
         data.renderCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to clear cart', 'error');
@@ -1592,22 +1573,6 @@
       }
       try {
         ui.toggleCartLoading(true);
-        const menuItems = await utils.fetchWithAuth('/api/user/menu');
-        for (const cartItem of state.cart) {
-          const menuItem = menuItems.find(item => item.id === cartItem.itemId);
-          if (!menuItem) {
-            throw new Error(`${cartItem.name} not found in menu`);
-          }
-          if (menuItem.stock === 0) {
-            throw new Error(`${cartItem.name} is out of stock`);
-          }
-          if (cartItem.quantity > menuItem.stock) {
-            throw new Error(`Insufficient stock for ${cartItem.name}. Only ${menuItem.stock} available`);
-          }
-        }
-        if (!confirm('Are you sure you want to place this order?')) {
-          return;
-        }
         const orderData = {
           addressId: parseInt(selectedAddress),
           items: state.cart.map(item => ({
