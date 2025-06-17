@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
+const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs').promises;
 
 dotenv.config();
 
-// Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -17,210 +17,172 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
-// Utility to format date for MySQL
-const formatDateForMySQL = (date) => {
-  if (!date) return new Date().toISOString().slice(0, 19).replace('T', ' ');
-  const d = new Date(date);
-  if (isNaN(d.getTime())) throw new Error('Invalid date format');
-  return d.toISOString().slice(0, 19).replace('T', ' ');
+// Nodemailer transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Email template for order cancellation
+const getOrderEmailTemplate = (order, user, status) => {
+  const itemsList = order.items && order.items.length > 0
+    ? order.items.map(item => `
+      <li style="margin-bottom: 8px;">
+        ${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}
+      </li>
+    `).join('')
+    : '<li>No items</li>';
+
+  const address = order.address
+    ? [
+        order.address.fullName || '',
+        order.address.houseNo || '',
+        order.address.location || '',
+        order.address.landmark || '',
+      ].filter(part => part.trim()).join(', ')
+    : 'No address provided';
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+        .header { background: linear-gradient(to right, #a855f7, #f43f5e); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .content { padding: 20px; }
+        .content p { line-height: 1.6; margin: 10px 0; }
+        .order-details { background: #f9fafb; padding: 15px; border-radius: 6px; margin: 15px 0; }
+        .order-details ul { list-style: none; padding: 0; }
+        .footer { text-align: center; padding: 15px; font-size: 12px; color: #666; }
+        .footer a { color: #a855f7; text-decoration: none; }
+        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 12px; color: white; font-weight: 600; margin: 10px 0; }
+        .status-cancelled { background: #ef4444; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Delicute Order Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${user.name || 'Valued Customer'},</p>
+          <p>We regret to inform you that your order (ID: ${order.id}) has been <strong class="status-badge status-cancelled">Cancelled</strong>.</p>
+          ${order.cancellationReason ? `<p><strong>Cancellation Reason:</strong> ${order.cancellationReason}</p>` : ''}
+          <div class="order-details">
+            <p><strong>Order ID:</strong> ${order.id}</p>
+            <p><strong>Order Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : '-'}</p>
+            <p><strong>Delivery Address:</strong> ${address}</p>
+            <p><strong>Items:</strong></p>
+            <ul>${itemsList}</ul>
+            <p><strong>Delivery Cost:</strong> ₹${parseFloat(order.delivery || 0).toFixed(2)}</p>
+            <p><strong>Coupon:</strong> ${order.couponCode || 'None'}</p>
+            <p><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
+            <p><strong>Payment Method:</strong> ${order.paymentMethod || 'COD'}</p>
+            <p><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</p>
+          </div>
+          <p>If you have any questions, please contact us at <a href="mailto:support@delicute.com">support@delicute.com</a>.</p>
+        </div>
+        <div class="footer">
+          <p>© 2025 Delicute. All rights reserved. | <a href="https://delicute.com">Visit our website</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 };
 
-// Initialize database tables
-async function initializeTables() {
-  const connection = await pool.getConnection();
+// Middleware to authenticate user
+const authenticateUser = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  const token = authHeader.split(' ')[1];
   try {
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS addresses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        full_name VARCHAR(255) NOT NULL,
-        mobile VARCHAR(15) NOT NULL,
-        house_no VARCHAR(100) NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        landmark VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS favorites (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        item_id INT,
-        name VARCHAR(255) NOT NULL,
-        image VARCHAR(255),
-        price DECIMAL(10,2) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE CASCADE
-      )
-    `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS coupons (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE NOT NULL,
-        discount DECIMAL(5,2) NOT NULL,
-        image VARCHAR(255),
-        expires_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS cart (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        item_id INT,
-        name VARCHAR(255) NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        image VARCHAR(255),
-        quantity INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE CASCADE
-      )
-    `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        address_id INT,
-        coupon_code VARCHAR(50),
-        payment_method ENUM('cod') DEFAULT 'cod',
-        delivery_cost DECIMAL(10,2) DEFAULT 0,
-        total DECIMAL(10,2) NOT NULL,
-        status ENUM('pending', 'confirmed', 'preparing', 'delivered', 'cancelled') DEFAULT 'pending',
-        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        cancellation_reason TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE SET NULL,
-        FOREIGN KEY (coupon_code) REFERENCES coupons(code) ON DELETE SET NULL
-      )
-    `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS order_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        order_id INT,
-        item_id INT,
-        name VARCHAR(255) NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        quantity INT NOT NULL,
-        image VARCHAR(255),
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-        FOREIGN KEY (item_id) REFERENCES menu_items(id) ON DELETE SET NULL
-      )
-    `);
-
-    // Seed default coupons
-    await connection.execute(`
-      INSERT IGNORE INTO coupons (code, discount, image, expires_at) VALUES
-      ('WELCOME10', 10.00, '/Uploads/coupon1.jpg', DATE_ADD(NOW(), INTERVAL 30 DAY)),
-      ('SAVE20', 20.00, '/Uploads/coupon2.jpg', DATE_ADD(NOW(), INTERVAL 30 DAY))
-    `);
-    console.log('Database tables initialized');
-  } catch (error) {
-    console.error('Table initialization error:', error.message);
-    throw error;
-  } finally {
-    connection.release();
-  }
-}
-
-initializeTables().catch(err => console.error('Initialization failed:', err));
-
-// JWT authentication middleware
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication token required' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      console.error('Token verification failed:', err.message);
-      return res.status(403).json({ error: 'Session expired or invalid token' });
-    }
-    req.user = user;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
-  });
-}
-
-// Refresh token endpoint
-router.post('/refresh-token', async (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Token required' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    const newToken = jwt.sign({ id: decoded.id, mobile: decoded.mobile }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token: newToken });
   } catch (error) {
-    console.error('Refresh token error:', error.message);
-    res.status(403).json({ error: 'Invalid token' });
+    console.error('Token verification error:', error.message);
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
-});
+};
 
-// Image upload handling
-router.post('/user/upload', authenticateToken, async (req, res) => {
+// Upload user profile image
+router.post('/upload', authenticateUser, async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
       return res.status(400).json({ error: 'No image file provided' });
     }
     const image = req.files.image;
-    const validTypes = ['image/jpeg', 'image/png'];
-    const maxSize = 2 * 1024 * 1024; // 2MB
-
-    if (!validTypes.includes(image.mimetype)) {
+    if (!['image/jpeg', 'image/png'].includes(image.mimetype)) {
       return res.status(400).json({ error: 'Only JPEG or PNG images are allowed' });
     }
-    if (image.size > maxSize) {
-      return res.status(400).json({ error: 'Image size must not exceed 2MB' });
+    if (image.size > 2 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Image size must be under 2MB' });
     }
-
-    const fileName = `${uuidv4()}${path.extname(image.name)}`;
-    const uploadPath = path.join(__dirname, '..', 'Uploads', fileName);
-    await image.mv(uploadPath);
-    res.json({ url: `/Uploads/${fileName}` });
+    const uploadDir = path.join(__dirname, '..', 'Uploads', 'profiles');
+    await fs.mkdir(uploadDir, { recursive: true });
+    const filename = `${Date.now()}-${image.name.replace(/\s/g, '-')}`;
+    const imagePath = `profiles/${filename}`;
+    await image.mv(path.join(uploadDir, filename));
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute('SELECT image FROM users WHERE id = ?', [req.user.id]);
+    if (users.length && users[0].image && users[0].image !== '/default-profile.png') {
+      try {
+        const oldImagePath = path.join(__dirname, '..', 'Uploads', users[0].image);
+        await fs.access(oldImagePath);
+        await fs.unlink(oldImagePath);
+      } catch (unlinkError) {
+        if (unlinkError.code !== 'ENOENT') {
+          console.warn(`Failed to delete old image: ${users[0].image}`, unlinkError.message);
+        }
+      }
+    }
+    await connection.execute('UPDATE users SET image = ? WHERE id = ?', [imagePath, req.user.id]);
+    connection.release();
+    res.json({ url: `/Uploads/${imagePath}` });
   } catch (error) {
-    console.error('Image upload error:', error.message);
-    res.status(500).json({ error: 'Failed to upload image' });
+    console.error('Upload profile image error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to upload profile image' });
   }
 });
 
-// User Profile
-router.get('/user/profile', authenticateToken, async (req, res) => {
+// Get user profile
+router.get('/profile', authenticateUser, async (req, res) => {
   try {
     const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
+    const [users] = await connection.execute(
       'SELECT id, name, email, phone AS mobile, image FROM users WHERE id = ?',
       [req.user.id]
     );
     connection.release();
-    if (!rows.length) {
+    if (!users.length) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(rows[0]);
+    res.json({
+      ...users[0],
+      image: users[0].image ? `/Uploads/${users[0].image}` : '/Uploads/default-profile.png',
+    });
   } catch (error) {
-    console.error('Profile fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve profile' });
+    console.error('Get profile error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch profile' });
   }
 });
 
-router.put('/user/profile', authenticateToken, async (req, res) => {
-  const { name, email, image } = req.body;
+// Update user profile
+router.put('/profile', authenticateUser, async (req, res) => {
+  const { name, email } = req.body;
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
@@ -229,49 +191,54 @@ router.put('/user/profile', authenticateToken, async (req, res) => {
   }
   try {
     const connection = await pool.getConnection();
-    const [existing] = await connection.execute(
+    const [existingEmail] = await connection.execute(
       'SELECT id FROM users WHERE email = ? AND id != ?',
       [email, req.user.id]
     );
-    if (existing.length) {
+    if (existingEmail.length) {
       connection.release();
       return res.status(400).json({ error: 'Email already in use' });
     }
-    const [result] = await connection.execute(
-      'UPDATE users SET name = ?, email = ?, image = ? WHERE id = ?',
-      [name, email, image || null, req.user.id]
+    await connection.execute(
+      'UPDATE users SET name = ?, email = ? WHERE id = ?',
+      [name, email, req.user.id]
+    );
+    const [users] = await connection.execute(
+      'SELECT id, name, email, phone AS mobile, image FROM users WHERE id = ?',
+      [req.user.id]
     );
     connection.release();
-    if (!result.affectedRows) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json({ id: req.user.id, name, email, mobile: req.user.mobile, image });
+    res.json({
+      ...users[0],
+      image: users[0].image ? `/Uploads/${users[0].image}` : '/Uploads/default-profile.png',
+    });
   } catch (error) {
-    console.error('Profile update error:', error.message);
+    console.error('Update profile error:', error.message);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
-// Addresses
-router.get('/user/addresses', authenticateToken, async (req, res) => {
+// Get user addresses
+router.get('/addresses', authenticateUser, async (req, res) => {
   try {
     const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
+    const [addresses] = await connection.execute(
       'SELECT id, full_name AS fullName, mobile, house_no AS houseNo, location, landmark FROM addresses WHERE user_id = ?',
       [req.user.id]
     );
     connection.release();
-    res.json(rows);
+    res.json(addresses);
   } catch (error) {
-    console.error('Addresses fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve addresses' });
+    console.error('Get addresses error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch addresses' });
   }
 });
 
-router.post('/user/addresses', authenticateToken, async (req, res) => {
+// Add user address
+router.post('/addresses', authenticateUser, async (req, res) => {
   const { fullName, mobile, houseNo, location, landmark } = req.body;
   if (!fullName || !mobile || !houseNo || !location) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
+    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
   if (!/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Mobile number must be 10 digits' });
@@ -283,18 +250,19 @@ router.post('/user/addresses', authenticateToken, async (req, res) => {
       [req.user.id, fullName, mobile, houseNo, location, landmark || null]
     );
     connection.release();
-    res.json({ id: result.insertId, fullName, mobile, houseNo, location, landmark });
+    res.json({ message: 'Address added successfully', addressId: result.insertId });
   } catch (error) {
-    console.error('Address add error:', error.message);
+    console.error('Add address error:', error.message);
     res.status(500).json({ error: 'Failed to add address' });
   }
 });
 
-router.put('/user/addresses/:id', authenticateToken, async (req, res) => {
+// Update user address
+router.put('/addresses/:id', authenticateUser, async (req, res) => {
   const { id } = req.params;
   const { fullName, mobile, houseNo, location, landmark } = req.body;
   if (!fullName || !mobile || !houseNo || !location) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
+    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
   if (!/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Mobile number must be 10 digits' });
@@ -309,99 +277,303 @@ router.put('/user/addresses/:id', authenticateToken, async (req, res) => {
       connection.release();
       return res.status(404).json({ error: 'Address not found' });
     }
-    const [result] = await connection.execute(
+    await connection.execute(
       'UPDATE addresses SET full_name = ?, mobile = ?, house_no = ?, location = ?, landmark = ? WHERE id = ? AND user_id = ?',
       [fullName, mobile, houseNo, location, landmark || null, id, req.user.id]
+    );
+    connection.release();
+    res.json({ message: 'Address updated successfully' });
+  } catch (error) {
+    console.error('Update address error:', error.message);
+    res.status(500).json({ error: 'Failed to update address' });
+  }
+});
+
+// Delete user address
+router.delete('/addresses/:id', authenticateUser, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      'DELETE FROM addresses WHERE id = ? AND user_id = ?',
+      [id, req.user.id]
     );
     connection.release();
     if (!result.affectedRows) {
       return res.status(404).json({ error: 'Address not found' });
     }
-    res.json({ id, fullName, mobile, houseNo, location, landmark });
-  } catch (error) {
-    console.error('Address update error:', error.message);
-    res.status(500).json({ error: 'Failed to update address' });
-  }
-});
-
-router.delete('/user/addresses/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const connection = await pool.getConnection();
-    const [existing] = await connection.execute(
-      'SELECT id FROM addresses WHERE id = ? AND user_id = ?',
-      [id, req.user.id]
-    );
-    if (!existing.length) {
-      connection.release();
-      return res.status(404).json({ error: 'Address not found' });
-    }
-    await connection.execute('DELETE FROM addresses WHERE id = ? AND user_id = ?', [id, req.user.id]);
-    connection.release();
     res.json({ message: 'Address deleted successfully' });
   } catch (error) {
-    console.error('Address delete error:', error.message);
+    console.error('Delete address error:', error.message);
     res.status(500).json({ error: 'Failed to delete address' });
   }
 });
 
-// Menu
-router.get('/user/menu', authenticateToken, async (req, res) => {
+// Get user cart
+router.get('/cart', authenticateUser, async (req, res) => {
   try {
     const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT id, name, description, price, image, category, stock FROM menu_items WHERE stock >= 0'
-    );
-    connection.release();
-    res.json(rows);
-  } catch (error) {
-    console.error('Menu fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve menu' });
-  }
-});
-
-router.get('/user/menu/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT id, name, description, price, image, category, stock FROM menu_items WHERE id = ?',
-      [id]
-    );
-    connection.release();
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Menu item not found' });
-    }
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Menu item fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve menu item' });
-  }
-});
-
-// Favorites
-router.get('/user/favorites', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT id, item_id AS itemId, name, image, price FROM favorites WHERE user_id = ?',
+    const [items] = await connection.execute(
+      'SELECT c.id, c.item_id AS itemId, c.name, c.price, c.image, c.quantity FROM cart c WHERE c.user_id = ?',
       [req.user.id]
     );
     connection.release();
-    res.json(rows);
+    res.json(
+      items.map((item) => ({
+        ...item,
+        image: item.image ? `/Uploads/${item.image}` : '/Uploads/default-menu.png',
+      }))
+    );
   } catch (error) {
-    console.error('Favorites fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve favorites' });
+    console.error('Get cart error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch cart items' });
   }
 });
 
-router.post('/user/favorites', authenticateToken, async (req, res) => {
-  const { itemId, name, image, price } = req.body;
-  if (!itemId || !name || !price || isNaN(price) || price < 0) {
-    return res.status(400).json({ error: 'Item ID, name, and valid price are required' });
+// Add item to cart
+router.post('/cart', authenticateUser, async (req, res) => {
+  const { itemId, quantity = 1 } = req.body;
+  if (!itemId || !Number.isInteger(quantity) || quantity < 1) {
+    return res.status(400).json({ error: 'Valid item ID and quantity are required' });
   }
   try {
     const connection = await pool.getConnection();
+    const [items] = await connection.execute(
+      'SELECT id, name, price, image, stock FROM menu_items WHERE id = ?',
+      [itemId]
+    );
+    if (!items.length) {
+      connection.release();
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+    const item = items[0];
+    if (item.stock < quantity) {
+      connection.release();
+      return res.status(400).json({ error: `Only ${item.stock} ${item.name} available in stock` });
+    }
+    const [existing] = await connection.execute(
+      'SELECT id, quantity FROM cart WHERE user_id = ? AND item_id = ?',
+      [req.user.id, itemId]
+    );
+    if (existing.length) {
+      const newQuantity = existing[0].quantity + quantity;
+      if (newQuantity > item.stock) {
+        connection.release();
+        return res.status(400).json({ error: `Only ${item.stock} ${item.name} available in stock` });
+      }
+      await connection.execute(
+        'UPDATE cart SET quantity = ? WHERE user_id = ? AND item_id = ?',
+        [newQuantity, req.user.id, itemId]
+      );
+    } else {
+      await connection.execute(
+        'INSERT INTO cart (user_id, item_id, name, price, image, quantity) VALUES (?, ?, ?, ?, ?, ?)',
+        [req.user.id, itemId, item.name, item.price, item.image, quantity]
+      );
+    }
+    connection.release();
+    res.json({ message: 'Item added to cart' });
+  } catch (error) {
+    console.error('Add to cart error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to add item to cart' });
+  }
+});
+
+// Update cart item quantity
+router.put('/cart/:id', authenticateUser, async (req, res) => {
+  const { id } = req.params;
+  const { quantity } = req.body;
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    return res.status(400).json({ error: 'Valid quantity is required' });
+  }
+  try {
+    const connection = await pool.getConnection();
+    const [cartItems] = await connection.execute(
+      'SELECT c.item_id, c.quantity, m.stock, m.name FROM cart c JOIN menu_items m ON c.item_id = m.id WHERE c.id = ? AND c.user_id = ?',
+      [id, req.user.id]
+    );
+    if (!cartItems.length) {
+      connection.release();
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    const { stock, name } = cartItems[0];
+    if (quantity > stock) {
+      connection.release();
+      return res.status(400).json({ error: `Only ${stock} ${name} available in stock` });
+    }
+    const [result] = await connection.execute(
+      'UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?',
+      [quantity, id, req.user.id]
+    );
+    connection.release();
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    res.json({ message: 'Cart updated' });
+  } catch (error) {
+    console.error('Update cart error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to update cart' });
+  }
+});
+
+// Remove item from cart
+router.delete('/cart/:id', authenticateUser, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      'DELETE FROM cart WHERE id = ? AND user_id = ?',
+      [id, req.user.id]
+    );
+    connection.release();
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    res.json({ message: 'Item removed from cart' });
+  } catch (error) {
+    console.error('Remove from cart error:', error.message);
+    res.status(500).json({ error: 'Failed to remove item from cart' });
+  }
+});
+
+// Clear cart
+router.delete('/cart/clear', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
+    connection.release();
+    res.json({ message: 'Cart cleared' });
+  } catch (error) {
+    console.error('Clear cart error:', error.message);
+    res.status(500).json({ error: 'Failed to clear cart' });
+  }
+});
+
+// Get all menu items
+router.get('/menu', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [items] = await connection.execute(
+      'SELECT id, name, price, category, description, image, stock FROM menu_items WHERE stock > 0'
+    );
+    connection.release();
+    res.json(
+      items.map((item) => ({
+        ...item,
+        image: item.image ? `/Uploads/${item.image}` : '/Uploads/default-menu.png',
+      }))
+    );
+  } catch (error) {
+    console.error('Get menu items error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch menu items' });
+  }
+});
+
+// Get specific menu item by ID
+router.get('/menu/:id', authenticateUser, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await pool.getConnection();
+    const [items] = await connection.execute(
+      'SELECT id, name, price, category, description, image, stock FROM menu_items WHERE id = ?',
+      [id]
+    );
+    connection.release();
+    if (!items.length) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+    res.json({
+      ...items[0],
+      image: items[0].image ? `/Uploads/${items[0].image}` : '/Uploads/default-menu.png',
+    });
+  } catch (error) {
+    console.error('Get menu item error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch menu item' });
+  }
+});
+
+// Get coupons
+router.get('/coupons', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [coupons] = await connection.execute(
+      'SELECT id, code, discount, description, image FROM coupons WHERE expires_at > NOW()'
+    );
+    connection.release();
+    res.json(
+      coupons.map((coupon) => ({
+        ...coupon,
+        image: coupon.image ? `/Uploads/${coupon.image}` : '/Uploads/default-coupon.png',
+      }))
+    );
+  } catch (error) {
+    console.error('Get coupons error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch coupons' });
+  }
+});
+
+// Validate coupon
+router.get('/coupons/validate', authenticateUser, async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.status(400).json({ error: 'Coupon code is required' });
+  }
+  try {
+    const connection = await pool.getConnection();
+    const [coupons] = await connection.execute(
+      'SELECT id, code, discount FROM coupons WHERE code = ? AND expires_at > NOW()',
+      [code]
+    );
+    connection.release();
+    if (!coupons.length) {
+      return res.status(400).json({ error: 'Invalid or expired coupon code' });
+    }
+    res.json(coupons[0]);
+  } catch (error) {
+    console.error('Validate coupon error:', error.message);
+    res.status(500).json({ error: 'Failed to validate coupon' });
+  }
+});
+
+// Get user favorites
+router.get('/favorites', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [favorites] = await connection.execute(
+      `
+      SELECT f.id, f.item_id AS itemId, m.name, m.price, m.category, m.description, m.image
+      FROM favorites f
+      JOIN menu_items m ON f.item_id = m.id
+      WHERE f.user_id = ?
+      `,
+      [req.user.id]
+    );
+    connection.release();
+    res.json(
+      favorites.map((favorite) => ({
+        ...favorite,
+        image: favorite.image ? `/Uploads/${favorite.image}` : '/Uploads/default-menu.png',
+      }))
+    );
+  } catch (error) {
+    console.error('Get favorites error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch favorites' });
+  }
+});
+
+// Add to favorites
+router.post('/favorites', authenticateUser, async (req, res) => {
+  const { itemId } = req.body;
+  if (!itemId || !Number.isInteger(parseInt(itemId))) {
+    return res.status(400).json({ error: 'Valid item ID is required' });
+  }
+  try {
+    const connection = await pool.getConnection();
+    const [items] = await connection.execute('SELECT id, name FROM menu_items WHERE id = ?', [itemId]);
+    if (!items.length) {
+      connection.release();
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
     const [existing] = await connection.execute(
       'SELECT id FROM favorites WHERE user_id = ? AND item_id = ?',
       [req.user.id, itemId]
@@ -410,311 +582,252 @@ router.post('/user/favorites', authenticateToken, async (req, res) => {
       connection.release();
       return res.status(400).json({ error: 'Item already in favorites' });
     }
+    await connection.execute(
+      'INSERT INTO favorites (user_id, item_id, name) VALUES (?, ?, ?)',
+      [req.user.id, itemId, items[0].name]
+    );
+    connection.release();
+    res.json({ message: 'Item added to favorites' });
+  } catch (error) {
+    console.error('Add to favorites error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to add to favorites' });
+  }
+});
+
+// Remove from favorites
+router.delete('/favorites/:itemId', authenticateUser, async (req, res) => {
+  const { itemId } = req.params;
+  try {
+    const connection = await pool.getConnection();
     const [result] = await connection.execute(
-      'INSERT INTO favorites (user_id, item_id, name, image, price) VALUES (?, ?, ?, ?, ?)',
-      [req.user.id, itemId, name, image || null, parseFloat(price)]
-    );
-    connection.release();
-    res.json({ id: result.insertId, itemId, name, image, price });
-  } catch (error) {
-    console.error('Favorite add error:', error.message);
-    res.status(500).json({ error: 'Failed to add favorite' });
-  }
-});
-
-router.delete('/user/favorites/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const connection = await pool.getConnection();
-    const [existing] = await connection.execute(
-      'SELECT id FROM favorites WHERE item_id = ? AND user_id = ?',
-      [id, req.user.id]
-    );
-    if (!existing.length) {
-      connection.release();
-      return res.status(404).json({ error: 'Favorite not found' });
-    }
-    await connection.execute('DELETE FROM favorites WHERE item_id = ? AND user_id = ?', [id, req.user.id]);
-    connection.release();
-    res.json({ message: 'Favorite removed successfully' });
-  } catch (error) {
-    console.error('Favorite delete error:', error.message);
-    res.status(500).json({ error: 'Failed to remove favorite' });
-  }
-});
-
-// Coupons
-router.get('/user/coupons', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT id, code, discount, image FROM coupons WHERE expires_at > NOW() OR expires_at IS NULL'
-    );
-    connection.release();
-    res.json(rows);
-  } catch (error) {
-    console.error('Coupons fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve coupons' });
-  }
-});
-
-router.get('/user/coupons/validate', authenticateToken, async (req, res) => {
-  const { code } = req.query;
-  if (!code) {
-    return res.status(400).json({ error: 'Coupon code is required' });
-  }
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT code, discount FROM coupons WHERE code = ? AND (expires_at > NOW() OR expires_at IS NULL)',
-      [code]
-    );
-    connection.release();
-    if (!rows.length) {
-      return res.status(400).json({ error: 'Invalid or expired coupon code' });
-    }
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Coupon validation error:', error.message);
-    res.status(500).json({ error: 'Failed to validate coupon' });
-  }
-});
-
-// Cart
-router.get('/user/cart', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT c.id, c.item_id AS itemId, c.quantity, c.name, c.price, c.image, m.stock ' +
-      'FROM cart c JOIN menu_items m ON c.item_id = m.id WHERE c.user_id = ?',
-      [req.user.id]
-    );
-    connection.release();
-    res.json(rows);
-  } catch (error) {
-    console.error('Cart fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve cart' });
-  }
-});
-
-router.post('/user/cart', authenticateToken, async (req, res) => {
-  const { itemId, name, price, image, quantity } = req.body;
-  if (!itemId || !name || !price || !quantity || isNaN(price) || price < 0 || isNaN(quantity) || quantity < 1) {
-    return res.status(400).json({ error: 'Invalid item details or quantity' });
-  }
-  try {
-    const connection = await pool.getConnection();
-    const [menuItem] = await connection.execute(
-      'SELECT stock, name FROM menu_items WHERE id = ?',
-      [itemId]
-    );
-    if (!menuItem.length || menuItem[0].stock < quantity) {
-      connection.release();
-      return res.status(400).json({ error: `Insufficient stock for ${name}` });
-    }
-    const [existing] = await connection.execute(
-      'SELECT id, quantity FROM cart WHERE user_id = ? AND item_id = ?',
+      'DELETE FROM favorites WHERE user_id = ? AND item_id = ?',
       [req.user.id, itemId]
     );
-    if (existing.length) {
-      const newQuantity = existing[0].quantity + quantity;
-      if (newQuantity > menuItem[0].stock) {
-        connection.release();
-        return res.status(400).json({ error: `Only ${menuItem[0].stock} ${name} available` });
-      }
-      await connection.execute(
-        'UPDATE cart SET quantity = ? WHERE id = ?',
-        [newQuantity, existing[0].id]
-      );
-    } else {
-      await connection.execute(
-        'INSERT INTO cart (user_id, item_id, name, price, image, quantity) VALUES (?, ?, ?, ?, ?, ?)',
-        [req.user.id, itemId, name, parseFloat(price), image || null, quantity]
-      );
-    }
     connection.release();
-    res.json({ message: 'Item added to cart successfully' });
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'Favorite not found' });
+    }
+    res.json({ message: 'Item removed from favorites' });
   } catch (error) {
-    console.error('Cart add error:', error.message);
-    res.status(500).json({ error: 'Failed to add item to cart' });
+    console.error('Remove from favorites error:', error.message);
+    res.status(500).json({ error: 'Failed to remove from favorites' });
   }
 });
 
-router.put('/user/cart/:id', authenticateToken, async (req, res) => {
+// Get all user orders
+router.get('/orders', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [orders] = await connection.execute(
+      `
+      SELECT o.id, o.user_id, o.address_id, o.coupon_code AS couponCode, o.payment_method AS paymentMethod, 
+             o.delivery_cost AS delivery, o.total, o.status, o.date, o.payment_status AS paymentStatus, 
+             a.full_name AS fullName, a.mobile, a.house_no AS houseNo, a.location, a.landmark,
+             o.cancellation_reason AS cancellationReason
+      FROM orders o
+      LEFT JOIN addresses a ON o.address_id = a.id
+      WHERE o.user_id = ?
+      `,
+      [req.user.id]
+    );
+    const orderIds = orders.map((order) => order.id);
+    const [items] = orderIds.length > 0
+      ? await connection.execute(
+          'SELECT order_id, item_id AS itemId, name, price, quantity, image FROM order_items WHERE order_id IN (?)',
+          [orderIds]
+        )
+      : [[], []];
+    connection.release();
+    const ordersWithItems = orders.map((order) => ({
+      ...order,
+      address: order.fullName
+        ? {
+            fullName: order.fullName,
+            mobile: order.mobile,
+            houseNo: order.houseNo,
+            location: order.location,
+            landmark: order.landmark,
+          }
+        : null,
+      items: items
+        .filter((item) => item.order_id === order.id)
+        .map((item) => ({
+          ...item,
+          image: item.image ? `/Uploads/${item.image}` : '/Uploads/default-menu.png',
+        })),
+    }));
+    res.json(ordersWithItems);
+  } catch (error) {
+    console.error('Get orders error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// Get specific user order by ID
+router.get('/orders/:id', authenticateUser, async (req, res) => {
   const { id } = req.params;
-  const { quantity } = req.body;
-  if (!quantity || isNaN(quantity) || quantity < 1) {
-    return res.status(400).json({ error: 'Quantity must be at least 1' });
-  }
   try {
     const connection = await pool.getConnection();
-    const [cartItem] = await connection.execute(
-      'SELECT c.item_id, c.quantity, c.name, m.stock FROM cart c JOIN menu_items m ON c.item_id = m.id WHERE c.id = ? AND c.user_id = ?',
-      [id, req.user.id]
+    const [orders] = await connection.execute(
+      `
+      SELECT o.id, o.user_id, o.address_id, o.coupon_code AS couponCode, o.payment_method AS paymentMethod, 
+             o.delivery_cost AS delivery, o.total, o.status, o.date, o.payment_status AS paymentStatus, 
+             a.full_name AS fullName, a.mobile, a.house_no AS houseNo, a.location, a.landmark,
+             o.cancellation_reason AS cancellationReason
+      FROM orders o
+      LEFT JOIN addresses a ON o.address_id = a.id
+      WHERE o.user_id = ? AND o.id = ?
+      `,
+      [req.user.id, id]
     );
-    if (!cartItem.length) {
+    if (!orders.length) {
       connection.release();
-      return res.status(404).json({ error: 'Cart item not found' });
+      return res.status(404).json({ error: 'Order not found' });
     }
-    if (quantity > cartItem[0].stock) {
-      connection.release();
-      return res.status(400).json({ error: `Only ${cartItem[0].stock} ${cartItem[0].name} available` });
-    }
-    await connection.execute(
-      'UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?',
-      [quantity, id, req.user.id]
+    const [items] = await connection.execute(
+      'SELECT order_id, item_id AS itemId, name, price, quantity, image FROM order_items WHERE order_id = ?',
+      [id]
     );
     connection.release();
-    res.json({ message: 'Cart item quantity updated successfully' });
+    const order = orders[0];
+    res.json({
+      ...order,
+      address: order.fullName
+        ? {
+            fullName: order.fullName,
+            mobile: order.mobile,
+            houseNo: order.houseNo,
+            location: order.location,
+            landmark: order.landmark,
+          }
+        : null,
+      items: items.map((item) => ({
+        ...item,
+        image: item.image ? `/Uploads/${item.image}` : '/Uploads/default-menu.png',
+      })),
+    });
   } catch (error) {
-    console.error('Cart update error:', error.message);
-    res.status(500).json({ error: 'Failed to update cart item' });
+    console.error('Get order error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch order' });
   }
 });
 
-router.delete('/user/cart/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const connection = await pool.getConnection();
-    const [existing] = await connection.execute(
-      'SELECT id FROM cart WHERE id = ? AND user_id = ?',
-      [id, req.user.id]
-    );
-    if (!existing.length) {
-      connection.release();
-      return res.status(404).json({ error: 'Cart item not found' });
-    }
-    await connection.execute('DELETE FROM cart WHERE id = ? AND user_id = ?', [id, req.user.id]);
-    connection.release();
-    res.json({ message: 'Item removed from cart successfully' });
-  } catch (error) {
-    console.error('Cart item delete error:', error.message);
-    res.status(500).json({ error: 'Failed to remove item from cart' });
-  }
-});
-
-router.delete('/user/cart/clear', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
-    connection.release();
-    res.json({ message: 'Cart cleared successfully' });
-  } catch (error) {
-    console.error('Cart clear error:', error.message);
-    res.status(500).json({ error: 'Failed to clear cart' });
-  }
-});
-
-// Orders
-router.post('/user/orders', authenticateToken, async (req, res) => {
+// Place order
+router.post('/orders', authenticateUser, async (req, res) => {
   const { addressId, items, couponCode, paymentMethod, deliveryCost, total, status, date } = req.body;
-  if (!addressId || !items || !items.length || !total || isNaN(total) || total < 0) {
-    return res.status(400).json({ error: 'Address, items, and valid total are required' });
+  if (!addressId || !items || !Array.isArray(items) || items.length === 0 || !paymentMethod || !total) {
+    return res.status(400).json({ error: 'Address ID, items, payment method, and total are required' });
   }
   try {
     const connection = await pool.getConnection();
     await connection.beginTransaction();
-    try {
-      // Validate address
-      const [address] = await connection.execute(
-        'SELECT id FROM addresses WHERE id = ? AND user_id = ?',
-        [addressId, req.user.id]
-      );
-      if (!address.length) {
-        throw new Error('Invalid address selected');
-      }
 
-      // Validate coupon
-      if (couponCode) {
-        const [coupon] = await connection.execute(
-          'SELECT code FROM coupons WHERE code = ? AND (expires_at > NOW() OR expires_at IS NULL)',
-          [couponCode]
-        );
-        if (!coupon.length) {
-          throw new Error('Invalid or expired coupon code');
-        }
-      }
-
-      // Validate items and stock
-      for (const item of items) {
-        if (!item.itemId || !item.name || !item.price || !item.quantity || isNaN(item.price) || item.price < 0 || isNaN(item.quantity) || item.quantity < 1) {
-          throw new Error('Invalid item details');
-        }
-        const [menuItem] = await connection.execute(
-          'SELECT stock, name FROM menu_items WHERE id = ?',
-          [item.itemId]
-        );
-        if (!menuItem.length || menuItem[0].stock < item.quantity) {
-          throw new Error(`Insufficient stock for ${menuItem[0]?.name || 'item'}`);
-        }
-      }
-
-      // Format date
-      const formattedDate = formatDateForMySQL(date);
-
-      // Create order
-      const [orderResult] = await connection.execute(
-        'INSERT INTO orders (user_id, address_id, coupon_code, payment_method, delivery_cost, total, status, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [req.user.id, addressId, couponCode || null, paymentMethod || 'cod', parseFloat(deliveryCost) || 0, parseFloat(total), status || 'pending', formattedDate]
-      );
-
-      // Insert order items and update stock
-      for (const item of items) {
-        await connection.execute(
-          'INSERT INTO order_items (order_id, item_id, name, price, quantity, image) VALUES (?, ?, ?, ?, ?, ?)',
-          [orderResult.insertId, item.itemId, item.name, parseFloat(item.price), item.quantity, item.image || null]
-        );
-        await connection.execute(
-          'UPDATE menu_items SET stock = stock - ? WHERE id = ?',
-          [item.quantity, item.itemId]
-        );
-      }
-
-      // Clear cart
-      await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
-
-      await connection.commit();
-      connection.release();
-      res.json({ id: orderResult.insertId, message: 'Order placed successfully' });
-    } catch (error) {
+    // Validate address
+    const [addresses] = await connection.execute(
+      'SELECT id FROM addresses WHERE id = ? AND user_id = ?',
+      [addressId, req.user.id]
+    );
+    if (!addresses.length) {
       await connection.rollback();
       connection.release();
-      throw error;
+      return res.status(400).json({ error: 'Invalid address ID' });
     }
-  } catch (error) {
-    console.error('Order placement error:', error.message);
-    res.status(400).json({ error: error.message || 'Failed to place order' });
-  }
-});
 
-router.get('/user/orders', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [orders] = await connection.execute(
-      'SELECT o.id, o.date, o.total, o.delivery_cost AS delivery, o.status, o.cancellation_reason, ' +
-      'GROUP_CONCAT(oi.name) AS item_names ' +
-      'FROM orders o LEFT JOIN order_items oi ON o.id = oi.order_id ' +
-      'WHERE o.user_id = ? GROUP BY o.id ORDER BY o.date DESC',
-      [req.user.id]
+    // Validate coupon if provided
+    if (couponCode) {
+      const [coupons] = await connection.execute(
+        'SELECT id, discount FROM coupons WHERE code = ? AND expires_at > NOW()',
+        [couponCode]
+      );
+      if (!coupons.length) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: 'Invalid or expired coupon code' });
+      }
+      const expectedDiscount = (total * coupons[0].discount) / 100;
+      if (Math.abs(total - (items.reduce((sum, item) => sum + item.price * item.quantity, 0) - expectedDiscount)) > 0.01) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: 'Invalid total amount after coupon discount' });
+      }
+    }
+
+    // Validate items and stock
+    for (const item of items) {
+      const [menuItems] = await connection.execute(
+        'SELECT id, name, price, image, stock FROM menu_items WHERE id = ?',
+        [item.itemId]
+      );
+      if (!menuItems.length) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: `Menu item ${item.itemId} not found` });
+      }
+      const menuItem = menuItems[0];
+      if (menuItem.stock < item.quantity) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: `Insufficient stock for ${menuItem.name}` });
+      }
+      if (Math.abs(menuItem.price - item.price) > 0.01) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ error: `Invalid price for ${menuItem.name}` });
+      }
+      await connection.execute(
+        'UPDATE menu_items SET stock = stock - ? WHERE id = ?',
+        [item.quantity, item.itemId]
+      );
+    }
+
+    // Insert order
+    const [orderResult] = await connection.execute(
+      `
+      INSERT INTO orders (user_id, address_id, coupon_code, payment_method, delivery_cost, total, status, payment_status, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        req.user.id,
+        addressId,
+        couponCode || null,
+        paymentMethod,
+        deliveryCost || 0,
+        total,
+        status || 'pending',
+        paymentMethod === 'cod' ? 'pending' : 'failed',
+        date || new Date().toISOString().slice(0, 19).replace('T', ' '),
+      ]
     );
-    const result = orders.map(order => ({
-      id: order.id,
-      date: order.date.toISOString(),
-      total: parseFloat(order.total),
-      delivery: parseFloat(order.delivery),
-      status: order.status,
-      items: order.item_names ? order.item_names.split(',') : [],
-      cancellationReason: order.cancellation_reason || null
-    }));
+    const orderId = orderResult.insertId;
+
+    // Insert order items
+    for (const item of items) {
+      await connection.execute(
+        'INSERT INTO order_items (order_id, item_id, name, price, quantity, image) VALUES (?, ?, ?, ?, ?, ?)',
+        [orderId, item.itemId, item.name, item.price, item.quantity, item.image]
+      );
+    }
+
+    // Clear cart
+    await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
+
+    await connection.commit();
     connection.release();
-    res.json(result);
+    res.json({ message: 'Order placed successfully', orderId });
   } catch (error) {
-    console.error('Orders fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to retrieve orders' });
+    console.error('Place order error:', error.message);
+    try {
+      await connection.rollback();
+    } catch (rollbackError) {
+      console.error('Rollback error:', rollbackError.message);
+    }
+    connection.release();
+    res.status(500).json({ error: error.message || 'Failed to place order' });
   }
 });
 
-router.put('/user/orders/:id/cancel', authenticateToken, async (req, res) => {
+// Cancel user order
+router.post('/orders/:id/cancel', authenticateUser, async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
   if (!reason) {
@@ -722,90 +835,111 @@ router.put('/user/orders/:id/cancel', authenticateToken, async (req, res) => {
   }
   try {
     const connection = await pool.getConnection();
-    await connection.beginTransaction();
-    try {
-      const [order] = await connection.execute(
-        'SELECT status FROM orders WHERE id = ? AND user_id = ?',
-        [id, req.user.id]
-      );
-      if (!order.length) {
-        throw new Error('Order not found');
-      }
-      if (!['pending', 'confirmed'].includes(order[0].status.toLowerCase())) {
-        throw new Error('Order cannot be cancelled at this stage');
-      }
-
-      // Restore stock
-      const [orderItems] = await connection.execute(
-        'SELECT item_id, quantity FROM order_items WHERE order_id = ?',
-        [id]
-      );
-      for (const item of orderItems) {
-        if (item.item_id) {
-          await connection.execute(
-            'UPDATE menu_items SET stock = stock + ? WHERE id = ?',
-            [item.quantity, item.item_id]
-          );
-        }
-      }
-
-      await connection.execute(
-        'UPDATE orders SET status = "cancelled", cancellation_reason = ? WHERE id = ? AND user_id = ?',
-        [reason, id, req.user.id]
-      );
-
-      await connection.commit();
-      connection.release();
-      res.json({ message: 'Order cancelled successfully' });
-    } catch (error) {
-      await connection.rollback();
-      connection.release();
-      throw error;
-    }
-  } catch (error) {
-    console.error('Order cancellation error:', error.message);
-    res.status(400).json({ error: error.message || 'Failed to cancel order' });
-  }
-});
-
-router.get('/user/orders/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute(
-      'SELECT id, status FROM orders WHERE id = ? AND user_id = ?',
-      [id, req.user.id]
+    const [orders] = await connection.execute(
+      `
+      SELECT o.id, o.user_id, o.address_id, o.coupon_code, o.payment_method, o.delivery_cost, o.total,
+             o.status, o.date, o.payment_status, a.full_name, a.mobile, a.house_no, a.location, a.landmark,
+             u.name AS user_name, u.email AS user_email
+      FROM orders o
+      LEFT JOIN addresses a ON o.address_id = a.id
+      JOIN users u ON o.user_id = u.id
+      WHERE o.user_id = ? AND o.id = ?
+      `,
+      [req.user.id, id]
     );
-    connection.release();
-    if (!rows.length) {
+    if (!orders.length) {
+      connection.release();
       return res.status(404).json({ error: 'Order not found' });
     }
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Order tracking error:', error.message);
-    res.status(500).json({ error: 'Failed to track order' });
-  }
-});
-
-router.delete('/user/orders/clear', authenticateToken, async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
+    const order = orders[0];
+    if (!['pending', 'confirmed'].includes(order.status)) {
+      connection.release();
+      return res.status(400).json({ error: 'Only pending or confirmed orders can be cancelled' });
+    }
+    const [items] = await connection.execute(
+      'SELECT order_id, item_id, name, price, quantity, image FROM order_items WHERE order_id = ?',
+      [id]
+    );
+    // Restock items
+    for (const item of items) {
+      await connection.execute(
+        'UPDATE menu_items SET stock = stock + ? WHERE id = ?',
+        [item.quantity, item.item_id]
+      );
+    }
     await connection.execute(
-      'DELETE FROM orders WHERE user_id = ? AND status = "delivered"',
-      [req.user.id]
+      'UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ? AND user_id = ?',
+      ['cancelled', reason, id, req.user.id]
     );
     connection.release();
-    res.json({ message: 'Delivered orders cleared successfully' });
+    const orderData = {
+      ...order,
+      user: { name: order.user_name, email: order.user_email },
+      address: {
+        fullName: order.full_name,
+        mobile: order.mobile,
+        houseNo: order.house_no,
+        location: order.location,
+        landmark: order.landmark,
+      },
+      items: items.map((item) => ({
+        ...item,
+        image: item.image ? `/Uploads/${item.image}` : '/Uploads/default-menu.png',
+      })),
+      delivery: order.delivery_cost,
+      couponCode: order.coupon_code,
+      paymentStatus: order.payment_status || 'pending',
+      cancellationReason: reason,
+    };
+    const mailOptions = {
+      from: '"Delicute Restaurant" <support@delicute.com>',
+      to: order.user_email,
+      subject: `Your Delicute Order #${order.id} - Cancelled`,
+      html: getOrderEmailTemplate(orderData, orderData.user, 'cancelled'),
+    };
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`Cancellation email sent to ${order.user_email} for order ${order.id}`);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError.message);
+    }
+    res.json({ message: 'Order cancelled successfully' });
   } catch (error) {
-    console.error('Order history clear error:', error.message);
-    res.status(500).json({ error: 'Failed to clear order history' });
+    console.error('Cancel order error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to cancel order' });
   }
 });
 
-// Logout
-router.post('/logout', authenticateToken, (req, res) => {
-  // In a real app, you might invalidate the token in a blacklist or similar
-  res.json({ message: 'Logged out successfully' });
+// Clear user orders
+router.delete('/orders/clear', authenticateUser, async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [orders] = await connection.execute(
+      'SELECT id FROM orders WHERE user_id = ? AND status IN ("pending", "confirmed")',
+      [req.user.id]
+    );
+    for (const order of orders) {
+      const [items] = await connection.execute(
+        'SELECT item_id, quantity FROM order_items WHERE order_id = ?',
+        [order.id]
+      );
+      for (const item of items) {
+        await connection.execute(
+          'UPDATE menu_items SET stock = stock + ? WHERE id = ?',
+          [item.quantity, item.item_id]
+        );
+      }
+    }
+    await connection.execute(
+      'UPDATE orders SET status = ?, cancellation_reason = ? WHERE user_id = ? AND status IN ("pending", "confirmed")',
+      ['cancelled', 'Cleared by user', req.user.id]
+    );
+    connection.release();
+    res.json({ message: 'Pending and confirmed orders cancelled successfully' });
+  } catch (error) {
+    console.error('Clear orders error:', error.message);
+    res.status(500).json({ error: 'Failed to clear orders' });
+  }
 });
 
 module.exports = router;

@@ -2,204 +2,175 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
-const dotenv = require('dotenv');
 
-dotenv.config();
+// Configure multer for file uploads
+const upload = multer({
+  dest: path.join(__dirname, '../public/uploads'),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (['image/jpeg', 'image/png'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG or PNG images are allowed'), false);
+    }
+  },
+});
 
-// Database connection pool
+// Database pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
 });
 
-// Middleware to verify JWT and admin status
-const authenticateAdmin = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-  const token = authHeader.split(' ')[1];
+// Middleware to verify admin JWT
+const authenticateAdminToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.isAdmin) {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied: Admin role required' });
     }
     req.user = decoded;
     next();
   } catch (error) {
-    console.error('Token verification error:', error.message);
-    return res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
 // Check session
-router.get('/admin/dashboard/check-session', authenticateAdmin, async (req, res) => {
+router.get('/check-session', authenticateAdminToken, async (req, res) => {
+  res.json({ message: 'Session valid' });
+});
+
+// Get restaurant status
+router.get('/status', authenticateAdminToken, async (req, res) => {
   try {
-    res.json({ message: 'Session valid' });
+    const [rows] = await pool.query('SELECT status FROM restaurant_status ORDER BY updated_at DESC LIMIT 1');
+    const status = rows.length > 0 ? rows[0].status : 'closed';
+    res.json({ status });
   } catch (error) {
-    console.error('Check session error:', error.message);
-    res.status(500).json({ error: 'Failed to check session' });
+    console.error('Status fetch error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch status' });
   }
 });
 
 // Toggle restaurant status
-router.put('/admin/dashboard/restaurant/status', authenticateAdmin, async (req, res) => {
+router.put('/status', authenticateAdminToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT status FROM restaurant_status WHERE id = 1');
-    if (!rows.length) {
-      await connection.execute('INSERT INTO restaurant_status (id, status) VALUES (1, "closed")');
-      connection.release();
-      return res.json({ status: 'closed' });
-    }
-    const currentStatus = rows[0].status;
+    const [rows] = await pool.query('SELECT status FROM restaurant_status ORDER BY updated_at DESC LIMIT 1');
+    const currentStatus = rows.length > 0 ? rows[0].status : 'closed';
     const newStatus = currentStatus === 'open' ? 'closed' : 'open';
-    await connection.execute(
-      'UPDATE restaurant_status SET status = ?, updated_at = NOW() WHERE id = 1',
-      [newStatus]
-    );
-    connection.release();
+    await pool.query('INSERT INTO restaurant_status (status) VALUES (?)', [newStatus]);
     res.json({ status: newStatus });
   } catch (error) {
-    console.error('Toggle restaurant status error:', error.message);
-    res.status(500).json({ error: 'Failed to toggle restaurant status' });
+    console.error('Status toggle error:', error.message);
+    res.status(500).json({ error: 'Failed to toggle status' });
   }
 });
 
 // Get all menu items
-router.get('/admin/dashboard/menu', authenticateAdmin, async (req, res) => {
+router.get('/menu', authenticateAdminToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [items] = await connection.execute(
-      'SELECT id, name, price, category, description, image FROM menu_items'
-    );
-    connection.release();
-    res.json(items);
+    const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items');
+    res.json(rows.map(row => ({
+      ...row,
+      image: row.image || null // Ensure null if no image
+    })));
   } catch (error) {
-    console.error('Get menu items error:', error.message);
+    console.error('Menu fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch menu items' });
   }
 });
 
 // Add menu item
-router.post('/admin/dashboard/menu', authenticateAdmin, async (req, res) => {
+router.post('/menu', authenticateAdminToken, upload.single('image'), async (req, res) => {
   const { name, price, category, description } = req.body;
-  const image = req.files?.image;
   if (!name || !price || !category) {
     return res.status(400).json({ error: 'Name, price, and category are required' });
   }
   try {
-    let imagePath = null;
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.mimetype)) {
-        return res.status(400).json({ error: 'Only JPEG or PNG images are allowed' });
-      }
-      if (image.size > 5 * 1024 * 1024) {
-        return res.status(413).json({ error: 'Image size must be under 5MB' });
-      }
-      const uploadDir = path.join(__dirname, '..', 'Uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${image.name.replace(/\s/g, '-')}`;
-      imagePath = filename;
-      await image.mv(path.join(uploadDir, filename));
+    let imageUrl = null;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'delicute/menu',
+        allowed_formats: ['jpg', 'png'],
+      });
+      imageUrl = result.secure_url;
+      await fs.unlink(req.file.path); // Delete local file
     }
-    const connection = await pool.getConnection();
-    await connection.execute(
-      'INSERT INTO menu_items (name, price, category, description, image, stock) VALUES (?, ?, ?, ?, ?, 100)',
-      [name, parseFloat(price), category, description || null, imagePath]
+    const [result] = await pool.query(
+      'INSERT INTO menu_items (name, price, category, description, image) VALUES (?, ?, ?, ?, ?)',
+      [name, parseFloat(price), category, description || null, imageUrl]
     );
-    connection.release();
-    res.json({ message: 'Menu item added successfully' });
+    res.json({ message: 'Menu item added', id: result.insertId });
   } catch (error) {
     console.error('Add menu item error:', error.message);
+    if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ error: 'Failed to add menu item' });
   }
 });
 
 // Update menu item
-router.put('/admin/dashboard/menu/:item_id', authenticateAdmin, async (req, res) => {
-  const { item_id } = req.params;
+router.put('/menu/:id', authenticateAdminToken, upload.single('image'), async (req, res) => {
+  const { id } = req.params;
   const { name, price, category, description } = req.body;
-  const image = req.files?.image;
   if (!name || !price || !category) {
     return res.status(400).json({ error: 'Name, price, and category are required' });
   }
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT image FROM menu_items WHERE id = ?', [item_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT image FROM menu_items WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
-    let imagePath = rows[0].image;
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.mimetype)) {
-        return res.status(400).json({ error: 'Only JPEG or PNG images are allowed' });
-      }
-      if (image.size > 5 * 1024 * 1024) {
-        return res.status(413).json({ error: 'Image size must be under 5MB' });
-      }
-      const uploadDir = path.join(__dirname, '..', 'Uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${image.name.replace(/\s/g, '-')}`;
-      imagePath = filename;
-      await image.mv(path.join(uploadDir, filename));
+    let imageUrl = rows[0].image;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'delicute/menu',
+        allowed_formats: ['jpg', 'png'],
+      });
+      imageUrl = result.secure_url;
+      await fs.unlink(req.file.path); // Delete local file
       if (rows[0].image) {
-        try {
-          const oldImagePath = path.join(uploadDir, rows[0].image);
-          await fs.access(oldImagePath); // Check if file exists
-          await fs.unlink(oldImagePath);
-        } catch (unlinkError) {
-          if (unlinkError.code !== 'ENOENT') {
-            console.warn(`Failed to delete old image: ${rows[0].image}`, unlinkError.message);
-          }
-        }
+        const publicId = rows[0].image.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`delicute/menu/${publicId}`).catch(() => {});
       }
     }
-    await connection.execute(
+    await pool.query(
       'UPDATE menu_items SET name = ?, price = ?, category = ?, description = ?, image = ? WHERE id = ?',
-      [name, parseFloat(price), category, description || null, imagePath, item_id]
+      [name, parseFloat(price), category, description || null, imageUrl, id]
     );
-    connection.release();
-    res.json({ message: 'Menu item updated successfully' });
+    res.json({ message: 'Menu item updated' });
   } catch (error) {
     console.error('Update menu item error:', error.message);
+    if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ error: 'Failed to update menu item' });
   }
 });
 
 // Delete menu item
-router.delete('/admin/dashboard/menu/:item_id', authenticateAdmin, async (req, res) => {
-  const { item_id } = req.params;
+router.delete('/menu/:id', authenticateAdminToken, async (req, res) => {
+  const { id } = req.params;
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT image FROM menu_items WHERE id = ?', [item_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT image FROM menu_items WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
     if (rows[0].image) {
-      try {
-        const imagePath = path.join(__dirname, '..', 'Uploads', rows[0].image);
-        await fs.access(imagePath); // Check if file exists
-        await fs.unlink(imagePath);
-      } catch (unlinkError) {
-        if (unlinkError.code !== 'ENOENT') {
-          console.warn(`Failed to delete image: ${rows[0].image}`, unlinkError.message);
-        }
-      }
+      const publicId = rows[0].image.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`delicute/menu/${publicId}`).catch(() => {});
     }
-    await connection.execute('DELETE FROM menu_items WHERE id = ?', [item_id]);
-    connection.release();
-    res.json({ message: 'Menu item deleted successfully' });
+    await pool.query('DELETE FROM menu_items WHERE id = ?', [id]);
+    res.json({ message: 'Menu item deleted' });
   } catch (error) {
     console.error('Delete menu item error:', error.message);
     res.status(500).json({ error: 'Failed to delete menu item' });
@@ -207,131 +178,98 @@ router.delete('/admin/dashboard/menu/:item_id', authenticateAdmin, async (req, r
 });
 
 // Get all coupons
-router.get('/admin/dashboard/coupons', authenticateAdmin, async (req, res) => {
+router.get('/coupons', authenticateAdminToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [coupons] = await connection.execute(
-      'SELECT id, code, discount, description, image FROM coupons'
-    );
-    connection.release();
-    res.json(coupons);
+    const [rows] = await pool.query('SELECT id, code, discount, description, image FROM coupons');
+    res.json(rows.map(row => ({
+      ...row,
+      image: row.image || null // Ensure null if no image
+    })));
   } catch (error) {
-    console.error('Get coupons error:', error.message);
+    console.error('Coupon fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch coupons' });
   }
 });
 
 // Add coupon
-router.post('/admin/dashboard/coupons', authenticateAdmin, async (req, res) => {
+router.post('/coupons', authenticateAdminToken, upload.single('image'), async (req, res) => {
   const { code, discount, description } = req.body;
-  const image = req.files?.image;
   if (!code || !discount) {
     return res.status(400).json({ error: 'Code and discount are required' });
   }
   try {
-    let imagePath = null;
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.mimetype)) {
-        return res.status(400).json({ error: 'Only JPEG or PNG images are allowed' });
-      }
-      if (image.size > 5 * 1024 * 1024) {
-        return res.status(413).json({ error: 'Image size must be under 5MB' });
-      }
-      const uploadDir = path.join(__dirname, '..', 'Uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${image.name.replace(/\s/g, '-')}`;
-      imagePath = filename;
-      await image.mv(path.join(uploadDir, filename));
+    let imageUrl = null;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'delicute/coupons',
+        allowed_formats: ['jpg', 'png'],
+      });
+      imageUrl = result.secure_url;
+      await fs.unlink(req.file.path); // Delete local file
     }
-    const connection = await pool.getConnection();
-    await connection.execute(
-      'INSERT INTO coupons (code, discount, description, image, expires_at) VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))',
-      [code, parseFloat(discount), description || null, imagePath]
+    const [result] = await pool.query(
+      'INSERT INTO coupons (code, discount, description, image) VALUES (?, ?, ?, ?)',
+      [code, parseFloat(discount), description || null, imageUrl]
     );
-    connection.release();
-    res.json({ message: 'Coupon added successfully' });
+    res.json({ message: 'Coupon added', id: result.insertId });
   } catch (error) {
     console.error('Add coupon error:', error.message);
+    if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ error: 'Failed to add coupon' });
   }
 });
 
 // Update coupon
-router.put('/admin/dashboard/coupons/:coupon_id', authenticateAdmin, async (req, res) => {
-  const { coupon_id } = req.params;
+router.put('/coupons/:id', authenticateAdminToken, upload.single('image'), async (req, res) => {
+  const { id } = req.params;
   const { code, discount, description } = req.body;
-  const image = req.files?.image;
   if (!code || !discount) {
     return res.status(400).json({ error: 'Code and discount are required' });
   }
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT image FROM coupons WHERE id = ?', [coupon_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT image FROM coupons WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Coupon not found' });
     }
-    let imagePath = rows[0].image;
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.mimetype)) {
-        return res.status(400).json({ error: 'Only JPEG or PNG images are allowed' });
-      }
-      if (image.size > 5 * 1024 * 1024) {
-        return res.status(413).json({ error: 'Image size must be under 5MB' });
-      }
-      const uploadDir = path.join(__dirname, '..', 'Uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${image.name.replace(/\s/g, '-')}`;
-      imagePath = filename;
-      await image.mv(path.join(uploadDir, filename));
+    let imageUrl = rows[0].image;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'delicute/coupons',
+        allowed_formats: ['jpg', 'png'],
+      });
+      imageUrl = result.secure_url;
+      await fs.unlink(req.file.path); // Delete local file
       if (rows[0].image) {
-        try {
-          const oldImagePath = path.join(uploadDir, rows[0].image);
-          await fs.access(oldImagePath); // Check if file exists
-          await fs.unlink(oldImagePath);
-        } catch (unlinkError) {
-          if (unlinkError.code !== 'ENOENT') {
-            console.warn(`Failed to delete old image: ${rows[0].image}`, unlinkError.message);
-          }
-        }
+        const publicId = rows[0].image.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`delicute/coupons/${publicId}`).catch(() => {});
       }
     }
-    await connection.execute(
+    await pool.query(
       'UPDATE coupons SET code = ?, discount = ?, description = ?, image = ? WHERE id = ?',
-      [code, parseFloat(discount), description || null, imagePath, coupon_id]
+      [code, parseFloat(discount), description || null, imageUrl, id]
     );
-    connection.release();
-    res.json({ message: 'Coupon updated successfully' });
+    res.json({ message: 'Coupon updated' });
   } catch (error) {
     console.error('Update coupon error:', error.message);
+    if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ error: 'Failed to update coupon' });
   }
 });
 
 // Delete coupon
-router.delete('/admin/dashboard/coupons/:coupon_id', authenticateAdmin, async (req, res) => {
-  const { coupon_id } = req.params;
+router.delete('/coupons/:id', authenticateAdminToken, async (req, res) => {
+  const { id } = req.params;
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT image FROM coupons WHERE id = ?', [coupon_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT image FROM coupons WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Coupon not found' });
     }
     if (rows[0].image) {
-      try {
-        const imagePath = path.join(__dirname, '..', 'Uploads', rows[0].image);
-        await fs.access(imagePath); // Check if file exists
-        await fs.unlink(imagePath);
-      } catch (unlinkError) {
-        if (unlinkError.code !== 'ENOENT') {
-          console.warn(`Failed to delete image: ${rows[0].image}`, unlinkError.message);
-        }
-      }
+      const publicId = rows[0].image.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`delicute/coupons/${publicId}`).catch(() => {});
     }
-    await connection.execute('DELETE FROM coupons WHERE id = ?', [coupon_id]);
-    connection.release();
-    res.json({ message: 'Coupon deleted successfully' });
+    await pool.query('DELETE FROM coupons WHERE id = ?', [id]);
+    res.json({ message: 'Coupon deleted' });
   } catch (error) {
     console.error('Delete coupon error:', error.message);
     res.status(500).json({ error: 'Failed to delete coupon' });
@@ -339,175 +277,176 @@ router.delete('/admin/dashboard/coupons/:coupon_id', authenticateAdmin, async (r
 });
 
 // Get all customers
-router.get('/admin/dashboard/customers', authenticateAdmin, async (req, res) => {
+router.get('/customers', authenticateAdminToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [customers] = await connection.execute(
-      'SELECT id, name, email, phone, isAdmin AS status FROM users WHERE isAdmin = FALSE'
-    );
-    connection.release();
-    res.json(customers.map(customer => ({
-      ...customer,
-      status: customer.status ? 'blocked' : 'active' // Map isAdmin to active/blocked
-    })));
+    const [rows] = await pool.query('SELECT id, name, email, phone, status FROM users WHERE role = ?', ['user']);
+    res.json(rows);
   } catch (error) {
-    console.error('Get customers error:', error.message);
+    console.error('Customer fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch customers' });
   }
 });
 
 // Toggle customer status
-router.put('/admin/dashboard/customers/:user_id/status', authenticateAdmin, async (req, res) => {
-  const { user_id } = req.params;
+router.put('/customers/:id/status', authenticateAdminToken, async (req, res) => {
+  const { id } = req.params;
   const { status } = req.body;
   if (!['active', 'blocked'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT id FROM users WHERE id = ? AND isAdmin = FALSE', [user_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT id FROM users WHERE id = ? AND role = ?', [id, 'user']);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
-    const isAdmin = status === 'blocked' ? true : false;
-    await connection.execute('UPDATE users SET isAdmin = ? WHERE id = ?', [isAdmin, user_id]);
-    connection.release();
-    res.json({ message: `Customer ${status === 'blocked' ? 'blocked' : 'unblocked'} successfully` });
+    await pool.query('UPDATE users SET status = ? WHERE id = ?', [status, id]);
+    res.json({ message: `Customer ${status === 'blocked' ? 'blocked' : 'unblocked'}` });
   } catch (error) {
     console.error('Toggle customer status error:', error.message);
-    res.status(500).json({ error: 'Failed to toggle customer status' });
+    res.status(500).json({ error: 'Failed to update customer status' });
   }
 });
 
 // Get all orders
-router.get('/admin/dashboard/orders', authenticateAdmin, async (req, res) => {
+router.get('/orders', authenticateAdminToken, async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [orders] = await connection.execute(`
-      SELECT o.id, o.user_id, o.address_id, o.coupon_code, o.payment_method, o.delivery_cost, o.total,
-             o.status, o.date, o.payment_status, u.name AS user_name, u.email AS user_email,
-             a.full_name, a.mobile, a.house_no, a.location, a.landmark
+    const [orders] = await pool.query(`
+      SELECT 
+        o.id, o.user_id, o.total, o.delivery, o.payment_status, o.status, o.created_at,
+        u.name AS user_name, u.email AS user_email,
+        a.full_name, a.house_no, a.location, a.landmark, a.mobile,
+        c.code AS coupon_code
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
       LEFT JOIN addresses a ON o.address_id = a.id
+      LEFT JOIN coupons c ON o.coupon_id = c.id
     `);
-    const orderIds = orders.map(order => order.id);
-    const [items] = orderIds.length > 0 ? await connection.execute(
-      'SELECT order_id, item_id, name, price, quantity, image FROM order_items WHERE order_id IN (?)',
-      [orderIds]
-    ) : [[], []];
-    connection.release();
-    const ordersWithItems = orders.map(order => ({
-      ...order,
-      user: { name: order.user_name, email: order.user_email },
+    const orderIds = orders.map((order) => order.id);
+    let items = [];
+    if (orderIds.length > 0) {
+      [items] = await pool.query(`
+        SELECT oi.order_id, oi.quantity, oi.price, m.name
+        FROM order_items oi
+        JOIN menu_items m ON oi.menu_item_id = m.id
+        WHERE oi.order_id IN (?)
+      `, [orderIds]);
+    }
+    const ordersWithDetails = orders.map((order) => ({
+      id: order.id,
+      user: { name: order.user_name || 'Unknown', email: order.user_email || '-' },
       address: {
-        fullName: order.full_name,
-        mobile: order.mobile,
-        houseNo: order.house_no,
-        location: order.location,
-        landmark: order.landmark
+        fullName: order.full_name || '',
+        houseNo: order.house_no || '',
+        location: order.location || '',
+        landmark: order.landmark || '',
+        mobile: order.mobile || '',
       },
-      items: items.filter(item => item.order_id === order.id),
-      delivery: order.delivery_cost,
-      couponCode: order.coupon_code,
-      paymentStatus: order.payment_status || 'pending'
+      items: items
+        .filter((item) => item.order_id === order.id)
+        .map((item) => ({
+          name: item.name || 'Unknown',
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      total: order.total || 0,
+      delivery: order.delivery || 0,
+      couponCode: order.coupon_code || null,
+      paymentStatus: order.payment_status || 'pending',
+      status: order.status || 'pending',
+      date: order.created_at,
     }));
-    res.json(ordersWithItems);
+    res.json(ordersWithDetails);
   } catch (error) {
-    console.error('Get orders error:', error.message);
+    console.error('Order fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
 
-// Get single order
-router.get('/admin/dashboard/orders/:order_id', authenticateAdmin, async (req, res) => {
-  const { order_id } = req.params;
+// Get order details
+router.get('/orders/:id', authenticateAdminToken, async (req, res) => {
+  const { id } = req.params;
   try {
-    const connection = await pool.getConnection();
-    const [orders] = await connection.execute(
-      `
-      SELECT o.id, o.user_id, o.address_id, o.coupon_code, o.payment_method, o.delivery_cost, o.total,
-             o.status, o.date, o.payment_status, u.name AS user_name, u.email AS user_email,
-             a.full_name, a.mobile, a.house_no, a.location, a.landmark
+    const [orders] = await pool.query(`
+      SELECT 
+        o.id, o.user_id, o.total, o.delivery, o.payment_method, o.payment_status, o.status, o.created_at,
+        u.name AS user_name, u.email AS user_email,
+        a.full_name, a.house_no, a.location, a.landmark, a.mobile,
+        c.code AS coupon_code
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
       LEFT JOIN addresses a ON o.address_id = a.id
+      LEFT JOIN coupons c ON o.coupon_id = c.id
       WHERE o.id = ?
-    `,
-      [order_id]
-    );
-    if (!orders.length) {
-      connection.release();
+    `, [id]);
+    if (orders.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    const [items] = await connection.execute(
-      'SELECT item_id, name, price, quantity, image FROM order_items WHERE order_id = ?',
-      [order_id]
-    );
-    connection.release();
     const order = orders[0];
-    res.json({
-      ...order,
-      user: { name: order.user_name, email: order.user_email },
+    const [items] = await pool.query(`
+      SELECT oi.quantity, oi.price, m.name
+      FROM order_items oi
+      JOIN menu_items m ON oi.menu_item_id = m.id
+      WHERE oi.order_id = ?
+    `, [id]);
+    const orderDetails = {
+      id: order.id,
+      user: { name: order.user_name || 'Unknown', email: order.user_email || '-' },
       address: {
-        fullName: order.full_name,
-        mobile: order.mobile,
-        houseNo: order.house_no,
-        location: order.location,
-        landmark: order.landmark
+        fullName: order.full_name || '',
+        houseNo: order.house_no || '',
+        location: order.location || '',
+        landmark: order.landmark || '',
+        mobile: order.mobile || '',
       },
-      items,
-      delivery: order.delivery_cost,
-      couponCode: order.coupon_code,
-      paymentStatus: order.payment_status || 'pending'
-    });
+      items: items.map((item) => ({
+        name: item.name || 'Unknown',
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      total: order.total || 0,
+      delivery: order.delivery || 0,
+      couponCode: order.coupon_code || null,
+      paymentMethod: order.payment_method || 'cod',
+      paymentStatus: order.payment_status || 'pending',
+      status: order.status || 'pending',
+      date: order.created_at,
+    };
+    res.json(orderDetails);
   } catch (error) {
-    console.error('Get order error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch order' });
+    console.error('Order details fetch error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch order details' });
   }
 });
 
 // Update order status
-router.put('/admin/dashboard/orders/:order_id', authenticateAdmin, async (req, res) => {
-  const { order_id } = req.params;
+router.put('/orders/:id', authenticateAdminToken, async (req, res) => {
+  const { id } = req.params;
   const { status, paymentStatus } = req.body;
   if (!status || !['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT id FROM orders WHERE id = ?', [order_id]);
-    if (!rows.length) {
-      connection.release();
+    const [rows] = await pool.query('SELECT id FROM orders WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
     const updates = { status };
-    if (paymentStatus) {
+    if (paymentStatus && ['pending', 'paid', 'failed'].includes(paymentStatus)) {
       updates.payment_status = paymentStatus;
     }
-    const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-    const values = Object.values(updates);
-    await connection.execute(
-      `UPDATE orders SET ${fields} WHERE id = ?`,
-      [...values, order_id]
-    );
-    connection.release();
-    res.json({ message: 'Order updated successfully' });
+    const fields = Object.keys(updates).map((key) => `${key} = ?`).join(', ');
+    const values = Object.values(updates).concat([id]);
+    await pool.query(`UPDATE orders SET ${fields} WHERE id = ?`, values);
+    res.json({ message: 'Order updated' });
   } catch (error) {
-    console.error('Update order status error:', error.message);
-    res.status(500).json({ error: 'Failed to update order status' });
+    console.error('Update order error:', error.message);
+    res.status(500).json({ error: 'Failed to update order' });
   }
 });
 
 // Logout
-router.post('/admin/dashboard/logout', authenticateAdmin, async (req, res) => {
-  try {
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    console.error('Logout error:', error.message);
-    res.status(500).json({ error: 'Failed to logout' });
-  }
+router.post('/logout', authenticateAdminToken, async (req, res) => {
+  res.json({ message: 'Logged out successfully' });
 });
 
 module.exports = router;
