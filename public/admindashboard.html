@@ -7,29 +7,176 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary-gradient: linear-gradient(to right, #a855f7, #f43f5e);
+      --secondary-gradient: linear-gradient(to right, #10b981, #34d399);
+      --danger-gradient: linear-gradient(to right, #ef4444, #f87171);
+      --bg-gradient: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+      --shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
     body {
-      background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+      background: var(--bg-gradient);
       font-family: 'Poppins', sans-serif;
       color: #1e293b;
       margin: 0;
       scroll-behavior: smooth;
       overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem 1rem;
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+
+    .logo img {
+      width: 2.25rem;
+      height: 2.25rem;
+      margin-right: 0.5rem;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover img {
+      transform: rotate(360deg);
+    }
+
+    .subtext {
+      font-size: 0.65rem;
+      color: #d1d5db;
+      letter-spacing: 0.5px;
+      margin-top: 0.2rem;
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .hamburger span {
+      width: 20px;
+      height: 2px;
+      background: #ffffff;
+      margin: 2px 0;
+      border-radius: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(4px, 4px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      border-radius: 0.3rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fef3c7;
+      transform: translateY(-1px);
+    }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background: linear-gradient(to bottom, #1f2937, #111827);
+      padding: 3rem 1.5rem;
+      z-index: 40;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-menu.active {
+      transform: translateX(0);
+    }
+
+    .mobile-menu a, .mobile-menu button {
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 500;
+      margin: 0.75rem 0;
+      padding: 0.5rem 1rem;
+      border-radius: 0.3rem;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu a:hover, .mobile-menu button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fef3c7;
+    }
+
     .hero-section {
       position: relative;
       background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-      min-height: 60vh;
+      min-height: 50vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       color: white;
-      padding: 4rem 1.5rem;
-      margin-bottom: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      padding: 3rem 1rem;
+      margin: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
+
     .hero-section::before {
       content: '';
       position: absolute;
@@ -37,92 +184,180 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.45));
       z-index: 1;
-      border-radius: 1rem;
+      border-radius: 0.75rem;
     }
+
     .hero-content {
       position: relative;
       z-index: 2;
-      max-width: 700px;
+      max-width: 600px;
+      padding: 1rem;
     }
+
     .hero-section h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 3.5rem;
-      margin-bottom: 1rem;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease-in;
     }
+
     .hero-section p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.95;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.9;
+      animation: fadeIn 1.2s ease-in;
     }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      animation: fadeIn 1.4s ease-in;
+    }
+
     .dashboard-content {
       background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(10px);
-      border-radius: 1rem;
-      padding: 2.5rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      box-shadow: var(--shadow);
       max-width: 1400px;
-      margin: 1.5rem auto;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      margin: 1rem auto;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex: 1;
     }
+
     .section-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 2rem;
-      text-align: center;
-      position: relative;
-    }
-    .section-title::after {
-      content: '';
-      display: block;
-      width: 150px;
-      height: 5px;
-      background: linear-gradient(to right, #a855f7, #f43f5e);
-      margin: 0.75rem auto;
-      border-radius: 2px;
-    }
-    .nav-link {
-      font-family: 'Poppins', sans-serif;
-      font-size: 1rem;
-      font-weight: 500;
-      color: #ffffff;
-      padding: 0.5rem 1rem;
-      transition: all 0.3s ease;
-      border-radius: 0.4rem;
-    }
-    .nav-link:hover {
-      color: #fef3c7;
-      background: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
-    .logo {
       font-family: 'Cormorant Garamond', serif;
       font-size: 2rem;
       font-weight: 700;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      position: relative;
     }
-    .logo img {
-      width: 3rem;
-      height: 3rem;
-      margin-right: 0.75rem;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      transition: transform 0.3s ease;
+
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 100px;
+      height: 4px;
+      background: var(--primary-gradient);
+      margin: 0.5rem auto;
+      border-radius: 2px;
     }
-    .logo img:hover {
-      transform: scale(1.1);
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.3rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
     }
-    .subtext {
-      font-size: 0.75rem;
-      color: #d1d5db;
-      letter-spacing: 0.6px;
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
     }
+
+    .btn-danger {
+      background: var(--danger-gradient);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.3rem;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .btn-toggle {
+      background: var(--secondary-gradient);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.3rem;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .input-field {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.3rem;
+      padding: 0.6rem;
+      width: 100%;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 5px rgba(168, 85, 247, 0.2);
+      outline: none;
+    }
+
+    .table-container {
+      max-height: 350px;
+      overflow-y: auto;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      background: rgba(255, 255, 255, 0.95);
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: #a855f7 #e5e7eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 0.8rem;
+    }
+
+    th {
+      background: var(--primary-gradient);
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tr:hover {
+      background: rgba(0, 0, 0, 0.03);
+      transition: background 0.2s ease;
+    }
+
+    .menu-image, .coupon-image {
+      width: 35px;
+      height: 35px;
+      object-fit: cover;
+      border-radius: 0.3rem;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -130,345 +365,248 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.75);
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      padding: 1rem;
     }
+
     .modal-content {
       background: rgba(255, 255, 255, 0.98);
-      padding: 2rem;
-      border-radius: 1rem;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow);
       position: relative;
       animation: slideIn 0.3s ease;
     }
+
     .close-btn {
       position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      font-size: 1.5rem;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 1.25rem;
       cursor: pointer;
       color: #475569;
       transition: color 0.2s ease;
     }
+
     .close-btn:hover {
       color: #a855f7;
     }
+
     .toast {
       position: fixed;
-      top: 15px;
-      right: 15px;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 0.3rem;
       color: white;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       z-index: 2000;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow);
       animation: toastSlide 3s ease-in-out forwards;
     }
+
     .toast-success {
-      background: linear-gradient(to right, #10b981, #34d399);
+      background: var(--secondary-gradient);
     }
+
     .toast-error {
-      background: linear-gradient(to right, #ef4444, #f87171);
+      background: var(--danger-gradient);
     }
+
     .toast:before {
       content: '';
       display: inline-block;
-      width: 1rem;
-      height: 1rem;
+      width: 0.9rem;
+      height: 0.9rem;
       background-size: cover;
-      margin-right: 0.5rem;
+      margin-right: 0.4rem;
     }
+
     .toast-success:before {
       background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
     }
+
     .toast-error:before {
       background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3E%3C/svg%3E');
     }
+
     @keyframes toastSlide {
-      0% { opacity: 0; transform: translateY(-20px); }
+      0% { opacity: 0; transform: translateY(-15px); }
       10% { opacity: 1; transform: translateY(0); }
       90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 0; transform: translateY(-15px); }
     }
+
     @keyframes slideIn {
-      from { transform: translateY(-30px); opacity: 0; }
+      from { transform: translateY(-20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    .btn-primary {
-      background: linear-gradient(to right, #a855f7, #f43f5e);
-      color: white;
-      padding: 0.6rem 1.5rem;
-      border-radius: 0.4rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    }
-    .btn-danger {
-      background: linear-gradient(to right, #ef4444, #f87171);
-      color: white;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.4rem;
-      font-size: 0.85rem;
-      transition: all 0.3s ease;
-    }
-    .btn-danger:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    }
-    .btn-toggle {
-      background: linear-gradient(to right, #10b981, #34d399);
-      color: white;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.4rem;
-      font-size: 0.85rem;
-      transition: all 0.3s ease;
-    }
-    .btn-toggle:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    }
-    .input-field {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      border-radius: 0.4rem;
-      padding: 0.7rem;
-      width: 100%;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-    }
-    .input-field:focus {
-      border-color: #a855f7;
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.3);
-      outline: none;
-    }
-    .hamburger {
-      display: none;
-      flex-direction: column;
-      cursor: pointer;
-      z-index: 50;
-      padding: 0.5rem;
-    }
-    .hamburger span {
-      width: 24px;
-      height: 3px;
-      background: #ffffff;
-      margin: 2px 0;
-      border-radius: 2px;
-      transition: all 0.3s ease;
-    }
-    .hamburger.active span:nth-child(1) {
-      transform: rotate(45deg) translate(5px, 5px);
-    }
-    .hamburger.active span:nth-child(2) {
-      opacity: 0;
-    }
-    .hamburger.active span:nth-child(3) {
-      transform: rotate(-45deg) translate(7px, -7px);
-    }
-    .mobile-menu {
-      display: none;
-      flex-direction: column;
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 75%;
-      max-width: 280px;
-      height: 100vh;
-      background: linear-gradient(to bottom, #1f2937, #111827);
-      padding: 4rem 1.5rem;
-      z-index: 40;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    }
-    .mobile-menu.active {
-      transform: translateX(0);
-    }
-    .mobile-menu a {
-      color: #ffffff;
-      font-size: 1.1rem;
-      font-weight: 500;
-      margin: 1rem 0;
-      text-align: left;
-      transition: all 0.3s ease;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.4rem;
-    }
-    .mobile-menu a:hover {
-      color: #fef3c7;
-      background: rgba(255, 255, 255, 0.1);
-    }
-    .table-container {
-      max-height: 400px;
-      overflow-y: auto;
-      border-radius: 0.5rem;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      background: rgba(255, 255, 255, 0.95);
-      position: relative;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.8rem;
-      text-align: left;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      font-size: 0.85rem;
-    }
-    th {
-      background: linear-gradient(to right, #a855f7, #f43f5e);
-      color: white;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    tr:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-    .menu-image, .coupon-image {
-      width: 40px;
-      height: 40px;
-      object-fit: cover;
-      border-radius: 0.4rem;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    .hero-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 1.5rem;
-      color: #475569;
-      font-size: 0.95rem;
-      font-weight: 500;
-    }
-    .loading-state {
-      text-align: center;
-      padding: 1.5rem;
-      color: #475569;
-      font-size: 0.95rem;
-      font-weight: 500;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
-    }
+
     .status-toggle {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
-      padding: 0.8rem;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 0.5rem;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.3rem;
     }
+
     .status-indicator {
-      width: 1.2rem;
-      height: 1.2rem;
+      width: 1rem;
+      height: 1rem;
       border-radius: 50%;
       background: #ef4444;
       transition: background 0.3s ease;
     }
+
     .status-indicator.open {
       background: #10b981;
     }
+
     .order-details {
       background: rgba(255, 255, 255, 0.95);
       padding: 1rem;
-      border-radius: 0.5rem;
-      margin-top: 0.8rem;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 0.3rem;
+      margin-top: 0.5rem;
+      box-shadow: var(--shadow);
     }
+
+    .empty-state {
+      text-align: center;
+      padding: 1rem;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 1rem;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 500;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    footer {
+      background: linear-gradient(to right, #1f2937, #111827);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: auto;
+    }
+
     @media (max-width: 640px) {
       .hamburger {
         display: flex;
       }
+
       .desktop-nav {
         display: none;
       }
+
       .mobile-menu {
         display: flex;
       }
+
       .dashboard-content {
-        padding: 1.5rem;
-        margin: 1rem 0.5rem;
+        padding: 1.25rem;
+        margin: 0.5rem;
       }
+
       .hero-section {
-        min-height: 50vh;
-        padding: 2.5rem 1rem;
+        min-height: 40vh;
+        padding: 2rem 0.75rem;
+        margin: 0.5rem;
       }
+
       .hero-section h1 {
-        font-size: 2.5rem;
-      }
-      .hero-section p {
-        font-size: 1rem;
-      }
-      .section-title {
         font-size: 2rem;
       }
+
+      .hero-section p {
+        font-size: 0.9rem;
+      }
+
+      .section-title {
+        font-size: 1.75rem;
+      }
+
       .section-title::after {
-        width: 120px;
-        height: 4px;
+        width: 80px;
+        height: 3px;
       }
+
       .logo {
-        font-size: 1.8rem;
+        font-size: 1.25rem;
       }
+
       .logo img {
-        width: 2.5rem;
-        height: 2.5rem;
+        width: 2rem;
+        height: 2rem;
       }
+
       .subtext {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
       }
+
       .modal-content {
-        padding: 1.5rem;
+        padding: 1.25rem;
         max-width: 95%;
       }
+
       .toast {
-        top: 10px;
-        right: 10px;
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
       }
+
       .table-container {
         max-height: 300px;
       }
+
       th, td {
         padding: 0.5rem;
         font-size: 0.75rem;
       }
+
       .menu-image, .coupon-image {
         width: 30px;
         height: 30px;
       }
+
       .hero-buttons {
-        gap: 0.8rem;
+        gap: 0.5rem;
       }
+
       .btn-primary, .btn-danger, .btn-toggle {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
       }
     }
+
     @media (min-width: 641px) {
       .mobile-menu {
         display: none !important;
       }
+
       .hamburger {
         display: none;
       }
@@ -477,34 +615,34 @@
 </head>
 <body>
   <header>
-    <nav class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-900/90 to-gray-700/90 fixed w-full top-0 z-50 backdrop-blur-md">
+    <nav class="nav-container">
       <div class="flex flex-col items-start">
         <div class="logo">
           <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
           <span>Delicute Admin</span>
         </div>
-        <p class="subtext mt-0.5">Craft Your Culinary Experience</p>
+        <p class="subtext">Craft Your Culinary Experience</p>
       </div>
       <div class="hamburger" onclick="toggleMobileMenu()">
         <span></span>
         <span></span>
         <span></span>
       </div>
-      <div class="desktop-nav flex items-center space-x-4">
+      <div class="desktop-nav">
         <div class="status-toggle">
-          <span class="text-white font-semibold text-sm">Restaurant: </span>
-          <span id="statusText" class="text-white text-sm">Closed</span>
+          <span class="text-white font-semibold text-xs">Restaurant: </span>
+          <span id="statusText" class="text-white text-xs">Closed</span>
           <span id="statusIndicator" class="status-indicator"></span>
-          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle Status</button>
+          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle</button>
         </div>
         <a href="#" class="nav-link" onclick="logout()">Logout</a>
       </div>
       <div class="mobile-menu">
-        <div class="status-toggle mb-3">
-          <span class="text-white font-semibold text-sm">Restaurant: </span>
-          <span id="mobileStatusText" class="text-white text-sm">Closed</span>
+        <div class="status-toggle mb-4">
+          <span class="text-white font-semibold text-xs">Restaurant: </span>
+          <span id="mobileStatusText" class="text-white text-xs">Closed</span>
           <span id="mobileStatusIndicator" class="status-indicator"></span>
-          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle Status</button>
+          <button class="btn-toggle" onclick="toggleRestaurantStatus()">Toggle</button>
         </div>
         <a href="#" class="nav-link" onclick="logout(); toggleMobileMenu()">Logout</a>
       </div>
@@ -525,7 +663,7 @@
       </div>
     </section>
 
-    <section class="mb-10">
+    <section class="mb-8">
       <h2 class="section-title">Menu Items</h2>
       <div class="table-container">
         <table id="menuTable">
@@ -547,7 +685,7 @@
       </div>
     </section>
 
-    <section class="mb-10">
+    <section class="mb-8">
       <h2 class="section-title">Coupons</h2>
       <div class="table-container">
         <table id="couponTable">
@@ -568,7 +706,7 @@
       </div>
     </section>
 
-    <section class="mb-10">
+    <section class="mb-8">
       <h2 class="section-title">Customers</h2>
       <div class="table-container">
         <table id="customerTable">
@@ -616,7 +754,7 @@
   <div id="addMenuModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('addMenuModal')">×</span>
-      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;" id="menuModalTitle">Add Menu Item</h2>
+      <h2 class="text-lg font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;" id="menuModalTitle">Add Menu Item</h2>
       <div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="menuName">Name</label>
@@ -653,7 +791,7 @@
   <div id="addCouponModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('addCouponModal')">×</span>
-      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;" id="couponModalTitle">Add Coupon</h2>
+      <h2 class="text-lg font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;" id="couponModalTitle">Add Coupon</h2>
       <div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="couponCode">Code</label>
@@ -680,15 +818,15 @@
   <div id="orderDetailsModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('orderDetailsModal')">×</span>
-      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Order Details</h2>
+      <h2 class="text-lg font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Order Details</h2>
       <div id="orderDetailsContent" class="order-details">
         <p>Loading order details...</p>
       </div>
     </div>
   </div>
 
-  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-8 text-center">
-    <p class="text-base font-semibold">© 2025 Delicute. Crafted with Culinary Passion.</p>
+  <footer>
+    <p class="text-sm font-semibold">© 2025 Delicute. Crafted with Culinary Passion.</p>
   </footer>
 
   <script>
@@ -702,16 +840,21 @@
     if (sessionValid) return true;
     try {
       const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No token in localStorage');
-      }
+      if (!token) throw new Error('No token found');
       const response = await fetch(`${baseUrl}${apiPrefix}/check-session`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Session check failed: ${errorData.error || response.statusText}`);
+        if (data.error === 'Customer is blocked') {
+          showToast('Your account is blocked. Contact support.', 'error');
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          setTimeout(() => window.location.href = '/admin.html', 1000);
+          return false;
+        }
+        throw new Error(`Session check failed: ${data.error || response.statusText}`);
       }
       sessionValid = true;
       return true;
@@ -741,9 +884,7 @@
   }
 
   async function handleFetch(url, options = {}) {
-    if (!(await checkSession())) {
-      throw new Error('Session check failed');
-    }
+    if (!(await checkSession())) throw new Error('Session check failed');
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${baseUrl}${url}`, {
@@ -776,7 +917,7 @@
     } catch (error) {
       console.error(`Fetch error for ${url}:`, error.message);
       if (!sessionExpiredShown || error.message.includes('404') || error.message.includes('File too large')) {
-        showToast(`${error.message}. Check console for details.`, 'error');
+        showToast(`${error.message}.`, 'error');
       }
       throw error;
     }
@@ -879,9 +1020,7 @@
       showToast(id ? 'Menu item updated!' : 'Menu item added!', 'success');
       closeModal('addMenuModal');
       loadMenuItems();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function saveCoupon() {
@@ -920,9 +1059,7 @@
       showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
       closeModal('addCouponModal');
       loadCoupons();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function deleteMenuItem(id) {
@@ -931,9 +1068,7 @@
       await handleFetch(`${apiPrefix}/menu/${id}`, { method: 'DELETE' });
       showToast('Menu item deleted!', 'success');
       loadMenuItems();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function deleteCoupon(id) {
@@ -942,9 +1077,7 @@
       await handleFetch(`${apiPrefix}/coupons/${id}`, { method: 'DELETE' });
       showToast('Coupon deleted!', 'success');
       loadCoupons();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function toggleCustomerStatus(id, currentStatus) {
@@ -956,21 +1089,15 @@
       });
       showToast(`Customer ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}!`, 'success');
       loadCustomers();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   const debouncedToggleRestaurantStatus = debounce(async () => {
     try {
-      const response = await handleFetch(`${apiPrefix}/status`, {
-        method: 'PUT',
-      });
+      const response = await handleFetch(`${apiPrefix}/status`, { method: 'PUT' });
       updateStatusDisplay(response.status);
       showToast(`Restaurant is now ${response.status}!`, 'success');
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }, 500);
 
   function toggleRestaurantStatus() {
@@ -992,18 +1119,14 @@
   async function updateOrderStatus(id, status) {
     try {
       const updateData = { status };
-      if (status === 'delivered') {
-        updateData.paymentStatus = 'paid';
-      }
+      if (status === 'delivered') updateData.paymentStatus = 'paid';
       await handleFetch(`${apiPrefix}/orders/${id}`, {
         method: 'PUT',
         body: JSON.stringify(updateData),
       });
       showToast('Order status updated!', 'success');
       loadOrders();
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function viewOrderDetails(id) {
@@ -1011,18 +1134,12 @@
       const order = await handleFetch(`${apiPrefix}/orders/${id}`);
       const content = document.getElementById('orderDetailsContent');
       const address = order.address
-        ? [
-            order.address.fullName || '',
-            order.address.houseNo || '',
-            order.address.location || '',
-            order.address.landmark || '',
-            order.address.mobile || '',
-          ].filter((part) => part.trim()).join(', ')
+        ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark, order.address.mobile]
+            .filter(part => part && part.trim())
+            .join(', ')
         : 'No address';
-      const items = order.items && order.items.length > 0
-        ? order.items.map(
-            (item) => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`
-          ).join('')
+      const items = order.items?.length > 0
+        ? order.items.map(item => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`).join('')
         : '<li>No items</li>';
       content.innerHTML = `
         <p><strong>Order ID:</strong> ${order.id}</p>
@@ -1050,31 +1167,29 @@
     tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
     try {
       const items = await handleFetch(`${apiPrefix}/menu`);
-      if (!items || items.length === 0) {
+      if (!items?.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
         return;
       }
-      tbody.innerHTML = items.map(
-        (item) => {
-          const imageSrc = item.image ? item.image : placeholderImage;
-          return `
-            <tr>
-              <td>${item.id}</td>
-              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
-              <td>${item.name}</td>
-              <td>₹${parseFloat(item.price).toFixed(2)}</td>
-              <td>${item.category}</td>
-              <td>${item.description || '-'}</td>
-              <td>
-                <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
-              </td>
-            </tr>
-          `;
-        }
-      ).join('');
+      tbody.innerHTML = items.map(item => {
+        const imageSrc = item.image || placeholderImage;
+        return `
+          <tr>
+            <td>${item.id}</td>
+            <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
+            <td>${item.name}</td>
+            <td>₹${parseFloat(item.price).toFixed(2)}</td>
+            <td>${item.category}</td>
+            <td>${item.description || '-'}</td>
+            <td>
+              <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
+              <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items. Check console for details.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items.</td></tr>';
     }
   }
 
@@ -1083,30 +1198,28 @@
     tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
     try {
       const coupons = await handleFetch(`${apiPrefix}/coupons`);
-      if (!coupons || coupons.length === 0) {
+      if (!coupons?.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
         return;
       }
-      tbody.innerHTML = coupons.map(
-        (coupon) => {
-          const imageSrc = coupon.image ? coupon.image : placeholderImage;
-          return `
-            <tr>
-              <td>${coupon.id}</td>
-              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
-              <td>${coupon.code}</td>
-              <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
-              <td>${coupon.description || '-'}</td>
-              <td>
-                <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
-              </td>
-            </tr>
-          `;
-        }
-      ).join('');
+      tbody.innerHTML = coupons.map(coupon => {
+        const imageSrc = coupon.image || placeholderImage;
+        return `
+          <tr>
+            <td>${coupon.id}</td>
+            <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
+            <td>${coupon.code}</td>
+            <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
+            <td>${coupon.description || '-'}</td>
+            <td>
+              <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
+              <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load coupons. Check console for details.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load coupons.</td></tr>';
     }
   }
 
@@ -1115,28 +1228,26 @@
     tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
     try {
       const customers = await handleFetch(`${apiPrefix}/customers`);
-      if (!customers || customers.length === 0) {
+      if (!customers?.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
         return;
       }
-      tbody.innerHTML = customers.map(
-        (customer) => `
-          <tr>
-            <td>${customer.id}</td>
-            <td>${customer.name}</td>
-            <td>${customer.email}</td>
-            <td>${customer.phone || '-'}</td>
-            <td>${customer.status}</td>
-            <td>
-              <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
-                ${customer.status === 'active' ? 'Block' : 'Unblock'}
-              </button>
-            </td>
-          </tr>
-        `
-      ).join('');
+      tbody.innerHTML = customers.map(customer => `
+        <tr>
+          <td>${customer.id}</td>
+          <td>${customer.name}</td>
+          <td>${customer.email}</td>
+          <td>${customer.phone || '-'}</td>
+          <td>${customer.status}</td>
+          <td>
+            <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
+              ${customer.status === 'active' ? 'Block' : 'Unblock'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
     } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load customers. Check console for details.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load customers.</td></tr>';
     }
   }
 
@@ -1145,24 +1256,21 @@
     tbody.innerHTML = '<tr><td colspan="8" class="loading-state">Loading orders...</td></tr>';
     try {
       const orders = await handleFetch(`${apiPrefix}/orders`);
-      if (!orders || orders.length === 0) {
+      if (!orders?.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No orders found.</td></tr>';
         return;
       }
-      tbody.innerHTML = orders.map((order) => {
-        const itemsDisplay = order.items && order.items.length > 0
-          ? order.items.map((item) => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
+      tbody.innerHTML = orders.map(order => {
+        const itemsDisplay = order.items?.length > 0
+          ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
           : 'No items';
         const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
           ? `₹${parseFloat(order.total).toFixed(2)}`
           : '₹0.00';
         const addressDisplay = order.address
-          ? [
-              order.address.fullName || '',
-              order.address.houseNo || '',
-              order.address.location || '',
-              order.address.landmark || '',
-            ].filter((part) => part.trim()).join(', ')
+          ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark]
+              .filter(part => part && part.trim())
+              .join(', ')
           : 'No address';
         return `
           <tr>
@@ -1188,7 +1296,7 @@
         `;
       }).join('');
     } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load orders. Check console for details.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load orders.</td></tr>';
     }
   }
 
@@ -1196,20 +1304,16 @@
     try {
       const response = await handleFetch(`${apiPrefix}/status`);
       updateStatusDisplay(response.status);
-    } catch (error) {
-      // Error handled in handleFetch
-    }
+    } catch (error) {}
   }
 
   async function logout() {
     try {
       await handleFetch(`${apiPrefix}/logout`, { method: 'POST' });
       showToast('Logged out successfully!', 'success');
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
-      window.location.href = '/admin.html';
     } catch (error) {
       showToast('Logout failed. Redirecting...', 'error');
+    } finally {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
       window.location.href = '/admin.html';
@@ -1228,11 +1332,10 @@
       ]);
     } catch (error) {
       console.error('Initialization error:', error.message);
-      // Error handled in checkSession
     }
   }
 
   document.addEventListener('DOMContentLoaded', init);
-</script>
+  </script>
 </body>
 </html>
