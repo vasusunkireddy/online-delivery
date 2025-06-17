@@ -90,10 +90,7 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
     if (existingEmail.length > 0) {
       return res.status(400).json({ error: 'Email already in use' });
     }
-    const updates = { name, email };
-    if (image) {
-      updates.image = image;
-    }
+    const updates = { name, email, image: image || null };
     const fields = Object.keys(updates).map((key) => `${key} = ?`).join(', ');
     const values = Object.values(updates).concat([req.user.id]);
     await pool.query(`UPDATE users SET ${fields} WHERE id = ?`, values);
@@ -111,7 +108,7 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
 // Upload profile image
 router.post('/upload', authenticateUserToken, upload.single('image'), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No image provided' });
+    return res.status(400).json({ error: 'No image file provided' });
   }
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
@@ -122,7 +119,7 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
         { quality: 'auto' }
       ]
     });
-    await fs.unlink(req.file.path); // Delete local file
+    await fs.unlink(req.file.path);
     const [user] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
     if (user[0].image && user[0].image.includes('cloudinary')) {
       const publicId = user[0].image.split('/').pop().split('.')[0];
@@ -133,7 +130,7 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
   } catch (error) {
     console.error('Image upload error:', error.message);
     if (req.file) await fs.unlink(req.file.path).catch(() => {});
-    res.status(500).json({ error: 'Failed to upload image' });
+    res.status(500).json({ error: error.message || 'Failed to upload image' });
   }
 });
 
@@ -220,7 +217,8 @@ router.get('/menu', authenticateUserToken, async (req, res) => {
     const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items');
     res.json(rows.map(row => ({
       ...row,
-      image: row.image || null
+      image: row.image || null,
+      description: row.description || null
     })));
   } catch (error) {
     console.error('Menu fetch error:', error.message);
@@ -238,7 +236,8 @@ router.get('/menu/:id', authenticateUserToken, async (req, res) => {
     }
     res.json({
       ...rows[0],
-      image: rows[0].image || null
+      image: rows[0].image || null,
+      description: rows[0].description || null
     });
   } catch (error) {
     console.error('Menu item fetch error:', error.message);
@@ -252,7 +251,8 @@ router.get('/coupons', authenticateUserToken, async (req, res) => {
     const [rows] = await pool.query('SELECT id, code, discount, description, image FROM coupons');
     res.json(rows.map(row => ({
       ...row,
-      image: row.image || null
+      image: row.image || null,
+      description: row.description || null
     })));
   } catch (error) {
     console.error('Coupons fetch error:', error.message);
@@ -366,7 +366,7 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const [menuItem] = await pool.query('SELECT id, price, description FROM menu_items WHERE id = ?', [itemId]);
+    const [menuItem] = await connection.query('SELECT id, price, description FROM menu_items WHERE id = ?', [itemId]);
     if (menuItem.length === 0) {
       throw new Error('Menu item not found');
     }
@@ -381,8 +381,8 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
     if (existing.length > 0) {
       const newQuantity = existing[0].quantity + quantity;
       await connection.query(
-        'UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?',
-        [newQuantity, existing[0].id]
+        'UPDATE cart SET quantity = ?, description = ?, updated_at = NOW() WHERE id = ?',
+        [newQuantity, description || menuItem[0].description || null, existing[0].id]
       );
       cartId = existing[0].id;
     } else {
@@ -393,11 +393,18 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
       cartId = result.insertId;
     }
     await connection.commit();
-    const [newItem] = await pool.query('SELECT id, item_id AS itemId, name, price, image, quantity, description FROM cart WHERE id = ?', [cartId]);
+    const [newItem] = await connection.query(
+      'SELECT id, item_id AS itemId, name, price, image, quantity, description FROM cart WHERE id = ?',
+      [cartId]
+    );
     res.json({
       message: 'Added to cart',
-      ...newItem[0],
+      id: newItem[0].id,
+      itemId: newItem[0].itemId,
+      name: newItem[0].name,
+      price: newItem[0].price,
       image: newItem[0].image || null,
+      quantity: newItem[0].quantity,
       description: newItem[0].description || null
     });
   } catch (error) {
@@ -577,42 +584,42 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
   if (!reason) {
     return res.status(400).json({ error: 'Cancellation reason is required' });
   }
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [id, req.user.id]);
-    if (order.length === 0) {
-      throw new Error('Order not found');
+      const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [id, req.user.id]);
+      if (order.length === 0) {
+        throw new Error('Order not found');
+      }
+      if (!['pending', 'confirmed'].includes(order[0].status)) {
+        throw new Error('Order cannot be cancelled');
+      }
+      await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['cancelled', reason, id]);
+      await connection.commit();
+      res.json({ message: 'Order cancelled' });
+    } catch (error) {
+      await connection.rollback();
+      console.error('Cancel order error:', error.message);
+      res.status(400).json({ error: error.message || 'Failed to cancel order' });
+    } finally {
+      connection.release();
     }
-    if (!['pending', 'confirmed'].includes(order[0].status)) {
-      throw new Error('Order cannot be cancelled');
+  });
+  
+  // Clear order history
+  router.delete('/orders/clear', authenticateUserToken, async (req, res) => {
+    try {
+      await pool.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE user_id = ? AND status IN (?, ?)', ['cancelled', 'Cleared by user', req.user.id, 'pending', 'confirmed']);
+      res.json({ message: 'Order history cleared' });
+    } catch (error) {
+      console.error('Clear order history error:', error.message);
+      res.status(500).json({ error: 'Failed to clear order history' });
     }
-    await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['cancelled', reason, id]);
-    await connection.commit();
-    res.json({ message: 'Order cancelled' });
-  } catch (error) {
-    await connection.rollback();
-    console.error('Cancel order error:', error.message);
-    res.status(400).json({ error: error.message || 'Failed to cancel order' });
-  } finally {
-    connection.release();
-  }
-});
-
-// Clear order history
-router.delete('/orders/clear', authenticateUserToken, async (req, res) => {
-  try {
-    await pool.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE user_id = ? AND status IN (?, ?)', ['cancelled', 'Cleared by user', req.user.id, 'pending', 'confirmed']);
-    res.json({ message: 'Order history cleared' });
-  } catch (error) {
-    console.error('Clear order history error:', error.message);
-    res.status(500).json({ error: 'Failed to clear order history' });
-  }
-});
-
-// Logout
-router.post('/logout', authenticateUserToken, async (req, res) => {
-  res.json({ message: 'Logged out successfully' });
-});
-
-module.exports = router;
+  });
+  
+  // Logout
+  router.post('/logout', authenticateUserToken, async (req, res) => {
+    res.json({ message: 'Logged out successfully' });
+  });
+  
+  module.exports = router;

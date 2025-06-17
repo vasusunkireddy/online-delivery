@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delicute Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@200;300;400;500;600&family=Cormorant+Garamond:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     body {
       background: linear-gradient(135deg, #fef3f9 0%, #e0f4ff 100%);
@@ -30,76 +30,76 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
       z-index: 1;
     }
     .hero-content {
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(15px);
       border-radius: 1.5rem;
-      padding: 2.5rem;
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      padding: 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
       text-align: center;
       position: relative;
       z-index: 2;
-      max-width: 750px;
-      margin: 1rem auto;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 800px;
+      margin: 1.5rem auto;
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
     .hero-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 3.5rem;
+      font-size: 3rem;
       font-weight: 700;
       color: #ffffff;
-      letter-spacing: 1.5px;
-      margin-bottom: 1rem;
+      letter-spacing: 1.2px;
+      margin-bottom: 0.75rem;
     }
     .hero-title::after {
       content: '';
       display: block;
-      width: 180px;
-      height: 5px;
+      width: 150px;
+      height: 4px;
       background: linear-gradient(to right, #3b82f6, #d946ef);
-      margin: 1.25rem auto;
-      border-radius: 3px;
+      margin: 1rem auto;
+      border-radius: 2px;
     }
     .nav-link {
       font-family: 'Poppins', sans-serif;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 500;
       color: #ffffff;
-      padding: 0.75rem 1.25rem;
+      padding: 0.6rem 1rem;
       transition: all 0.3s ease;
       border-radius: 0.5rem;
     }
     .nav-link:hover {
       color: #fef08a;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
     }
     .logo {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: #ffffff;
       display: flex;
       align-items: center;
     }
     .logo img {
-      width: 2.5rem;
-      height: 2.5rem;
-      margin-right: 0.75rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      margin-right: 0.6rem;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.4);
     }
     .subtext {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       color: #d1d5db;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
     }
     .fade-in {
       opacity: 0;
-      transform: translateY(20px);
-      animation: fadeIn 1s ease forwards;
+      transform: translateY(15px);
+      animation: fadeIn 1.2s ease forwards;
     }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
@@ -111,25 +111,25 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
     .modal-content {
       background: rgba(255, 255, 255, 0.98);
-      padding: 2rem;
-      border-radius: 1.5rem;
+      padding: 1.75rem;
+      border-radius: 1.25rem;
       width: 90%;
-      max-width: 450px;
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
       position: relative;
     }
     .close-btn {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 1.5rem;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 1.25rem;
       cursor: pointer;
       color: #4b5e7a;
       transition: color 0.2s ease;
@@ -140,18 +140,18 @@
     .login-slide {
       background: linear-gradient(to right, #3b82f6, #d946ef);
       border-radius: 0.5rem;
-      padding: 0.75rem 1.5rem;
+      padding: 0.6rem 1.25rem;
       color: white;
       font-weight: 600;
     }
     .toast {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 1rem 1.5rem;
-      border-radius: 0.75rem;
+      top: 15px;
+      right: 15px;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
       color: white;
-      font-size: 1rem;
+      font-size: 0.85rem;
       z-index: 2000;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       animation: toastSlide 3.5s ease-in-out forwards;
@@ -165,10 +165,10 @@
     .toast::before {
       content: '';
       display: inline-block;
-      width: 1.25rem;
-      height: 1.25rem;
+      width: 1rem;
+      height: 1rem;
       background-size: cover;
-      margin-right: 0.75rem;
+      margin-right: 0.5rem;
     }
     .toast-success::before {
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /%3E%3C/svg%3E');
@@ -177,36 +177,36 @@
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /%3E%3C/svg%3E');
     }
     @keyframes toastSlide {
-      0% { opacity: 0; transform: translateY(-30px); }
+      0% { opacity: 0; transform: translateY(-20px); }
       10% { opacity: 1; transform: translateY(0); }
       90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 0; transform: translateY(-20px); }
     }
     .btn-primary {
       background: linear-gradient(to right, #3b82f6, #d946ef);
       color: white;
-      padding: 0.75rem 2rem;
+      padding: 0.6rem 1.5rem;
       border-radius: 0.5rem;
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.3s ease;
     }
     .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .input-field {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 0.5rem;
-      padding: 0.85rem;
+      padding: 0.75rem;
       width: 100%;
-      font-size: 1rem;
+      font-size: 0.9rem;
       transition: all 0.3s ease;
     }
     .input-field:focus {
       border-color: #3b82f6;
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
       outline: none;
     }
     .hamburger {
@@ -217,21 +217,21 @@
       padding: 0.5rem;
     }
     .hamburger span {
-      width: 28px;
-      height: 4px;
+      width: 24px;
+      height: 3px;
       background: #ffffff;
-      margin: 3px 0;
+      margin: 2px 0;
       border-radius: 2px;
       transition: all 0.4s ease;
     }
     .hamburger.active span:nth-child(1) {
-      transform: rotate(45deg) translate(6px, 6px);
+      transform: rotate(45deg) translate(5px, 5px);
     }
     .hamburger.active span:nth-child(2) {
       opacity: 0;
     }
     .hamburger.active span:nth-child(3) {
-      transform: rotate(-45deg) translate(8px, -8px);
+      transform: rotate(-45deg) translate(7px, -7px);
     }
     .mobile-menu {
       display: none;
@@ -239,11 +239,11 @@
       position: fixed;
       top: 0;
       right: 0;
-      width: 80%;
-      max-width: 300px;
+      width: 75%;
+      max-width: 280px;
       height: 100vh;
       background: linear-gradient(to bottom, #1f2937, #111827);
-      padding: 5rem 2rem;
+      padding: 4rem 1.5rem;
       z-index: 40;
       transform: translateX(100%);
       transition: transform 0.4s ease;
@@ -253,9 +253,9 @@
     }
     .mobile-menu a {
       color: #ffffff;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       font-weight: 500;
-      margin: 1.25rem 0;
+      margin: 1rem 0;
       text-align: left;
       transition: all 0.3s ease;
       padding: 0.5rem 1rem;
@@ -263,7 +263,7 @@
     }
     .mobile-menu a:hover {
       color: #fef08a;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
     }
     @media (max-width: 640px) {
       .hamburger {
@@ -276,35 +276,52 @@
         display: flex;
       }
       .hero-content {
-        padding: 2rem 1.25rem;
-        margin: 0.75rem;
+        padding: 1.5rem 1rem;
+        margin: 0.5rem;
       }
       .hero-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
       }
       .hero-title::after {
-        width: 120px;
-        height: 4px;
+        width: 100px;
+        height: 3px;
       }
       .logo {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
       }
       .logo img {
-        width: 2rem;
-        height: 2rem;
+        width: 1.75rem;
+        height: 1.75rem;
       }
       .subtext {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
       }
       .modal-content {
-        padding: 1.5rem;
+        padding: 1.25rem;
         max-width: 95%;
       }
       .toast {
-        top: 15px;
-        right: 15px;
-        padding: 0.75rem 1.25rem;
-        font-size: 0.9rem;
+        top: 10px;
+        right: 10px;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+      }
+      .hero-content p {
+        font-size: 0.85rem;
+      }
+      .btn-primary {
+        padding: 0.5rem 1.25rem;
+        font-size: 0.85rem;
+      }
+      .input-field {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+      }
+      .modal-content h2 {
+        font-size: 1.5rem;
+      }
+      .modal-content label {
+        font-size: 0.75rem;
       }
     }
     @media (min-width: 641px) {
@@ -315,11 +332,38 @@
         display: none;
       }
     }
+    @media (min-width: 1024px) {
+      .hero-title {
+        font-size: 3.5rem;
+      }
+      .hero-content {
+        padding: 3rem;
+        max-width: 900px;
+      }
+      .hero-content p {
+        font-size: 1.1rem;
+      }
+      .btn-primary {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+      }
+      .nav-link {
+        font-size: 1rem;
+        padding: 0.75rem 1.25rem;
+      }
+      .logo {
+        font-size: 2rem;
+      }
+      .logo img {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="cloud-bg">
-    <nav class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-gray-900/90 to-gray-700/90 fixed w-full top-0 z-50 backdrop-blur-md">
+    <nav class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-900/95 to-gray-700/95 fixed w-full top-0 z-50 backdrop-blur-lg">
       <div class="flex flex-col items-start">
         <div class="logo">
           <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
@@ -332,7 +376,7 @@
         <span></span>
         <span></span>
       </div>
-      <div class="desktop-nav flex items-center space-x-3">
+      <div class="desktop-nav flex items-center space-x-4">
         <a href="#" class="nav-link login-slide" onclick="openModal('loginModal')">Admin Login</a>
         <a href="#" class="nav-link login-slide" onclick="openModal('signupModal')">Admin Signup</a>
       </div>
@@ -341,12 +385,12 @@
         <a href="#" class="nav-link login-slide" onclick="openModal('signupModal'); toggleMobileMenu()">Admin Signup</a>
       </div>
     </nav>
-    <div class="flex flex-1 items-center justify-center text-center min-h-screen pt-20">
-      <div class="hero-content">
-        <p class="text-lg font-light text-white mb-4">Welcome to Delicute Admin Portal</p>
+    <div class="flex flex-1 items-center justify-center text-center min-h-screen pt-16">
+      <div class="hero-content fade-in">
+        <p class="text-base font-light text-white mb-3">Welcome to Delicute Admin Portal</p>
         <h1 class="hero-title">Admin Panel</h1>
-        <p class="text-white text-base mb-6">Manage your restaurant with ease and elegance.</p>
-        <div class="flex justify-center gap-4">
+        <p class="text-white text-sm mb-5">Manage your restaurant with ease and elegance.</p>
+        <div class="flex justify-center gap-3">
           <button class="btn-primary" onclick="openModal('loginModal')">Login</button>
           <button class="btn-primary" onclick="openModal('signupModal')">Signup</button>
         </div>
@@ -355,84 +399,84 @@
   </header>
 
   <div id="loginModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content fade-in">
       <span class="close-btn" onclick="closeModal('loginModal')">×</span>
-      <h2 class="text-2xl font-semibold mb-5 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Login</h2>
+      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Login</h2>
       <div id="loginForm">
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="loginEmail">Email</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="loginEmail">Email</label>
           <input type="email" id="loginEmail" class="input-field" placeholder="Enter admin email">
         </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="loginPassword">Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="loginPassword">Password</label>
           <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
         </div>
-        <button class="btn-primary w-full mb-4" onclick="loginAdmin()">Login</button>
-        <p class="text-center text-sm mt-3"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
+        <button class="btn-primary w-full mb-3" onclick="loginAdmin()">Login</button>
+        <p class="text-center text-xs mt-2"><a href="#" class="text-blue-500 hover:underline" onclick="showForgotPassword()">Forgot Password?</a></p>
       </div>
       <div id="forgotPasswordForm" class="hidden">
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="forgotEmail">Email</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="forgotEmail">Email</label>
           <input type="email" id="forgotEmail" class="input-field" placeholder="Enter your email">
         </div>
-        <button class="btn-primary w-full mb-4" onclick="sendOtp()">Send OTP</button>
+        <button class="btn-primary w-full mb-3" onclick="sendOtp()">Send OTP</button>
       </div>
       <div id="otpForm" class="hidden">
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="otp">Enter OTP</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="otp">Enter OTP</label>
           <input type="text" id="otp" class="input-field" placeholder="Enter OTP">
         </div>
-        <button class="btn-primary w-full mb-4" onclick="verifyOtp()">Verify OTP</button>
+        <button class="btn-primary w-full mb-3" onclick="verifyOtp()">Verify OTP</button>
       </div>
       <div id="newPasswordForm" class="hidden">
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="newPassword">New Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="newPassword">New Password</label>
           <input type="password" id="newPassword" class="input-field" placeholder="Enter new password">
         </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="confirmPassword">Confirm Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="confirmPassword">Confirm Password</label>
           <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm new password">
         </div>
-        <button class="btn-primary w-full mb-4" onclick="resetPassword()">Reset Password</button>
+        <button class="btn-primary w-full mb-3" onclick="resetPassword()">Reset Password</button>
       </div>
       <div id="successMessage" class="hidden text-center">
-        <p class="text-green-600 mb-4 text-sm">Password reset successfully!</p>
-        <button class="btn-primary px-5" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
+        <p class="text-green-600 mb-3 text-xs">Password reset successfully!</p>
+        <button class="btn-primary px-4" onclick="closeModal('loginModal'); openModal('loginModal')">Back to Login</button>
       </div>
     </div>
   </div>
 
   <div id="signupModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content fade-in">
       <span class="close-btn" onclick="closeModal('signupModal')">×</span>
-      <h2 class="text-2xl font-semibold mb-5 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Signup</h2>
+      <h2 class="text-xl font-semibold mb-4 text-center" style="font-family: 'Cormorant Garamond', serif;">Admin Signup</h2>
       <div id="signupForm">
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupName">Name</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="signupName">Name</label>
           <input type="text" id="signupName" class="input-field" placeholder="Enter your name">
         </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupEmail">Email</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="signupEmail">Email</label>
           <input type="email" id="signupEmail" class="input-field" placeholder="Enter your email">
         </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupPhone">Mobile Number</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="signupPhone">Mobile Number</label>
           <input type="tel" id="signupPhone" class="input-field" placeholder="Enter your mobile number">
         </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 text-sm" for="signupPassword">Create Password</label>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1 text-xs" for="signupPassword">Create Password</label>
           <input type="password" id="signupPassword" class="input-field" placeholder="Create a password">
         </div>
-        <p class="text-center text-xs mb-4">
+        <p class="text-center text-xs mb-3">
           By signing up, you agree to our <a href="terms.html" target="_blank" class="text-blue-500 hover:underline">Terms and Conditions</a>.
         </p>
-        <button class="btn-primary w-full mb-4" onclick="signupAdmin()">Signup</button>
+        <button class="btn-primary w-full mb-3" onclick="signupAdmin()">Signup</button>
       </div>
     </div>
   </div>
 
-  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-10 text-center">
-    <p class="text-lg">© 2025 Delicute. All rights reserved.</p>
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-8 text-center">
+    <p class="text-sm">© 2025 Delicute. All rights reserved.</p>
   </footer>
 
   <script>
