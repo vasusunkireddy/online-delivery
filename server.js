@@ -5,6 +5,7 @@ const cors = require('cors');
 const session = require('express-session');
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
+const fs = require('fs').promises; // Added for file existence check
 const indexRoutes = require('./routes/index');
 const adminRoutes = require('./routes/admin');
 const adminDashboardRoutes = require('./routes/admindashboard');
@@ -14,8 +15,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'http://localhost:3000'],
+  origin: [process.env.CLIENT_URL || 'http://localhost:3000'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,9 +26,16 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'default_session_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' },
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
 }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0, // Cache static files in production
+}));
 
 // Cloudinary configuration
 cloudinary.config({
@@ -57,7 +67,7 @@ async function initializeDatabase() {
     connection.release();
   } catch (error) {
     console.error('Database connection error:', error.message);
-    process.exit(1);
+    throw error;
   }
 }
 
@@ -67,49 +77,112 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminDashboardRoutes);
 app.use('/api/user', userDashboardRoutes);
 
-// Fallback route for userdashboard.html
-app.get('/userdashboard.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'userdashboard.html'), (err) => {
-    if (err) {
-      console.error('Error serving userdashboard.html:', err);
-      res.status(404).json({ error: 'Page not found' });
-    }
-  });
-});
-
-// Fallback for client-side routing (e.g., refresh on userdashboard.html)
-app.get('*', (req, res) => {
-  if (req.url.startsWith('/api')) {
-    res.status(404).json({ error: 'API endpoint not found' });
-  } else {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+// Specific route for admin.html
+app.get('/admin.html', async (req, res) => {
+  const filePath = path.join(__dirname, 'public', 'admin.html');
+  console.log(`Request for /admin.html, attempting to serve: ${filePath}`);
+  try {
+    await fs.access(filePath); // Check if file exists
+    res.sendFile(filePath, (err) => {
       if (err) {
-        console.error('Error serving fallback index.html:', err);
-        res.status(404).json({ error: 'Resource not found' });
+        console.error(`Error serving admin.html: ${err.message}`);
+        res.status(404).json({ error: 'Page not found', message: 'Admin page does not exist' });
       }
     });
+  } catch (error) {
+    console.error(`admin.html not found at ${filePath}: ${error.message}`);
+    res.status(404).json({ error: 'Page not found', message: 'Admin page does not exist' });
+  }
+});
+
+// Specific route for admindashboard.html
+app.get('/admindashboard.html', async (req, res) => {
+  const filePath = path.join(__dirname, 'public', 'admindashboard.html');
+  console.log(`Request for /admindashboard.html, attempting to serve: ${filePath}`);
+  try {
+    await fs.access(filePath); // Check if file exists
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error(`Error serving admindashboard.html: ${err.message}`);
+        res.status(404).json({ error: 'Page not found', message: 'Admin dashboard page does not exist' });
+      }
+    });
+  } catch (error) {
+    console.error(`admindashboard.html not found at ${filePath}: ${error.message}`);
+    res.status(404).json({ error: 'Page not found', message: 'Admin dashboard page does not exist' });
+  }
+});
+
+// Specific route for userdashboard.html
+app.get('/userdashboard.html', async (req, res) => {
+  const filePath = path.join(__dirname, 'public', 'userdashboard.html');
+  console.log(`Request for /userdashboard.html, attempting to serve: ${filePath}`);
+  try {
+    await fs.access(filePath); // Check if file exists
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error(`Error serving userdashboard.html: ${err.message}`);
+        res.status(404).json({ error: 'Page not found', message: 'User dashboard page does not exist' });
+      }
+    });
+  } catch (error) {
+    console.error(`userdashboard.html not found at ${filePath}: ${error.message}`);
+    res.status(404).json({ error: 'Page not found', message: 'User dashboard page does not exist' });
+  }
+});
+
+// Fallback route for client-side routing
+app.get('*', async (req, res) => {
+  if (req.url.startsWith('/api')) {
+    console.warn(`API endpoint not found: ${req.method} ${req.url}`);
+    return res.status(404).json({ error: 'API endpoint not found', message: 'The requested API route does not exist' });
+  }
+  const filePath = path.join(__dirname, 'public', 'index.html');
+  console.log(`Fallback request for ${req.url}, attempting to serve: ${filePath}`);
+  try {
+    await fs.access(filePath); // Check if file exists
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error(`Error serving fallback index.html: ${err.message}`);
+        res.status(404).json({ error: 'Resource not found', message: 'The requested page does not exist' });
+      }
+    });
+  } catch (error) {
+    console.error(`index.html not found at ${filePath}: ${error.message}`);
+    res.status(404).json({ error: 'Resource not found', message: 'The requested page does not exist' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.stack);
-  if (err.message === 'Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed') {
-    return res.status(400).json({ error: err.message });
-  }
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'File too large. Please upload an image under 2MB.' });
-  }
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({ error: 'Token expired' });
-  }
-  res.status(500).json({
+  console.error(`Server error: ${err.stack}`);
+  const isDev = process.env.NODE_ENV === 'development';
+  const errorResponse = {
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
-  });
+    message: isDev ? err.message : 'Something went wrong',
+  };
+
+  // Specific error cases
+  switch (true) {
+    case err.message === 'Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed':
+      return res.status(400).json({ error: err.message });
+    case err.code === 'LIMIT_FILE_SIZE':
+      return res.status(413).json({ error: 'File too large', message: 'Please upload an image under 2MB' });
+    case err.name === 'JsonWebTokenError':
+      return res.status(401).json({ error: 'Invalid token', message: 'Authentication token is invalid' });
+    case err.name === 'TokenExpiredError':
+      return res.status(401).json({ error: 'Token expired', message: 'Authentication token has expired' });
+    case err.code === 'ER_ACCESS_DENIED_ERROR':
+      errorResponse.error = 'Database access denied';
+      errorResponse.message = isDev ? err.message : 'Unable to connect to the database';
+      return res.status(500).json(errorResponse);
+    case err.code === 'ER_NO_SUCH_TABLE':
+      errorResponse.error = 'Database table not found';
+      errorResponse.message = isDev ? err.message : 'Database configuration error';
+      return res.status(500).json(errorResponse);
+    default:
+      return res.status(500).json(errorResponse);
+  }
 });
 
 // Start server
@@ -119,7 +192,7 @@ async function startServer() {
     await initializeDatabase();
     app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error(`Failed to start server: ${error.message}`);
     process.exit(1);
   }
 }

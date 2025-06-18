@@ -399,6 +399,8 @@
       border-radius: 1.25rem;
       width: 90%;
       max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       animation: modalPop 0.3s ease forwards;
       position: relative;
@@ -568,6 +570,12 @@
       color: #9ca3af;
     }
 
+    /* Accessibility: Focus states for buttons */
+    .btn-primary:focus, .btn-secondary:focus, .btn-quantity:focus {
+      outline: 2px solid #a855f7;
+      outline-offset: 2px;
+    }
+
     @media (max-width: 640px) {
       .dashboard-content {
         margin: 1rem auto;
@@ -713,7 +721,7 @@
 
       .tracking-bar {
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.75rem;
       }
 
       .tracking-step {
@@ -728,31 +736,39 @@
     <div class="dashboard-content" id="dashboard-content">
       <div class="header">
         <div class="logo">
-          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-10 h-10 rounded-full border-2 border-white">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-10 h-10 rounded-full border-2 border-white" loading="lazy">
           <span>Delicute</span>
         </div>
         <div class="flex items-center gap-4">
-          <div class="nav-links" id="navLinks">
-            <div class="nav-link" onclick="utils.scrollToSection('dashboard-content')">Home</div>
-            <div class="nav-link" onclick="utils.scrollToSection('myOrders')">My Orders</div>
-            <div class="nav-link" onclick="utils.scrollToSection('orders')">Order History</div>
-            <div class="nav-link" onclick="utils.scrollToSection('menuSection')">Menu</div>
+          <div class="nav-links" id="navLinks" role="navigation" aria-label="Main navigation">
+            <div class="nav-link" onclick="utils.scrollToSection('dashboard-content')" aria-label="Go to Home">Home</div>
+            <div class="nav-link" onclick="utils.scrollToSection('myOrders')" aria-label="Go to My Orders">My Orders</div>
+            <div class="nav-link" onclick="utils.scrollToSection('orders')" aria-label="Go to Order History">Order History</div>
+            <div class="nav-link" onclick="utils.scrollToSection('menuSection')" aria-label="Go to Menu">Menu</div>
           </div>
-          <div class="profile-dropdown">
-            <img src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
-            <div class="dropdown-menu" id="profileDropdown">
-              <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')">Home</div>
-              <div class="dropdown-item" onclick="utils.scrollToSection('myOrders')">My Orders</div>
-              <div class="dropdown-item" onclick="utils.scrollToSection('orders')">Order History</div>
-              <div class="dropdown-item" onclick="ui.openModal('profileModal')">Edit Profile</div>
-              <div class="dropdown-item" onclick="ui.openModal('addressModal')">Manage Addresses</div>
-              <div class="dropdown-item" onclick="ui.openModal('favoritesModal')">Favorites</div>
-              <div class="dropdown-item" onclick="ui.openModal('cartModal')">Cart</div>
-              <div class="dropdown-item" onclick="ui.toggleDarkMode()">Toggle Dark Mode</div>
-              <div class="dropdown-item" onclick="data.logout()">Logout</div>
+          <div class="profile-dropdown" aria-label="User Profile">
+            <img
+              src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg"
+              alt="Profile Image"
+              class="profile-img"
+              id="profileImg"
+              loading="lazy"
+              onclick="ui.toggleDropdown()"
+              aria-label="Toggle profile dropdown"
+            >
+            <div class="dropdown-menu" id="profileDropdown" aria-expanded="false">
+              <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')" aria-label="Go to Home">Home</div>
+              <div class="dropdown-item" onclick="utils.scrollToSection('myOrders')" aria-label="Go to My Orders">My Orders</div>
+              <div class="dropdown-item" onclick="utils.scrollToSection('orders')" aria-label="Go to Order History">Order History</div>
+              <div class="dropdown-item" onclick="ui.openModal('profileModal')" aria-label="Edit Profile">Edit Profile</div>
+              <div class="dropdown-item" onclick="ui.openModal('addressModal')" aria-label="Manage Addresses">Manage Addresses</div>
+              <div class="dropdown-item" onclick="ui.openModal('favoritesModal')" aria-label="View Favorites">Favorites</div>
+              <div class="dropdown-item" onclick="ui.openModal('cartModal')" aria-label="View Cart">Cart</div>
+              <div class="dropdown-item" onclick="ui.toggleDarkMode()" aria-label="Toggle Dark Mode">Toggle Dark Mode</div>
+              <div class="dropdown-item" onclick="data.logout()" aria-label="Logout">Logout</div>
             </div>
           </div>
-          <div class="hamburger" id="hamburger" onclick="ui.toggleNav()">
+          <div class="hamburger" id="hamburger" onclick="ui.toggleNav()" aria-label="Toggle mobile navigation">
             <span></span>
             <span></span>
             <span></span>
@@ -764,13 +780,13 @@
         <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-black" style="font-family: 'Playfair Display', serif;">Welcome, <span id="userName">User</span>!</h2>
         <p class="text-base md:text-lg text-black mb-2">Total Orders: <span id="totalOrders">0</span></p>
         <p class="text-base md:text-lg text-black mb-3">"EVERY BITE TELLS A STORY!"</p>
-        <button class="btn-primary" onclick="utils.scrollToSection('menuSection')">Explore Menu</button>
+        <button class="btn-primary" onclick="utils.scrollToSection('menuSection')" aria-label="Explore Menu">Explore Menu</button>
       </div>
 
       <div class="card" id="myOrders">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xl md:text-2xl font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">My Orders</h2>
-          <button class="btn-secondary text-sm py-1 px-3" onclick="data.refreshOrders()">Refresh</button>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.refreshOrders()" aria-label="Refresh Orders">Refresh</button>
         </div>
         <div id="activeOrders"></div>
       </div>
@@ -779,12 +795,12 @@
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-gray-800" style="font-family: 'Playfair Display', serif;">Our Menu</h2>
         <div class="flex flex-col sm:flex-row justify-between items-center mb-3 gap-2">
           <div class="search-bar w-full sm:w-1/2 max-w-sm">
-            <svg class="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            <input type="text" id="menuSearch" placeholder="Search menu..." onkeyup="debounceSearch()">
+            <input type="text" id="menuSearch" placeholder="Search menu..." onkeyup="debounceSearch()" aria-label="Search menu items">
           </div>
-          <select id="categoryFilter" class="category-filter" onchange="data.filterCategory()">
+          <select id="categoryFilter" class="category-filter" onchange="data.filterCategory()" aria-label="Filter by category">
             <option value="">All Categories</option>
             <option value="starter">Starters</option>
             <option value="main">Main Dishes</option>
@@ -808,7 +824,7 @@
       <div class="card" id="orders">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xl md:text-2xl font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">Order History</h2>
-          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()">Clear Cart</button>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()" aria-label="Clear Cart">Clear Cart</button>
         </div>
         <div id="orderHistory"></div>
       </div>
@@ -816,33 +832,33 @@
 
     <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
-        <span class="close-btn" onclick="ui.closeModal('profileModal')">×</span>
-        <img src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg" alt="Profile Image" id="profileModalImg">
+        <span class="close-btn" onclick="ui.closeModal('profileModal')" aria-label="Close Profile Modal">×</span>
+        <img src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg" alt="Profile Image" id="profileModalImg" loading="lazy">
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name *</label>
-          <input type="text" id="profileName" class="input-field" placeholder="Enter your name" required>
+          <input type="text" id="profileName" class="input-field" placeholder="Enter your name" required aria-required="true">
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileEmail">Email *</label>
-          <input type="email" id="profileEmail" class="input-field" placeholder="Enter your email" required>
+          <input type="email" id="profileEmail" class="input-field" placeholder="Enter your email" required aria-required="true">
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileMobile">Mobile Number *</label>
-          <input type="tel" id="profileMobile" class="input-field bg-gray-100" readonly>
+          <input type="tel" id="profileMobile" class="input-field bg-gray-100" readonly aria-readonly="true">
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image (JPEG/PNG, max 2MB)</label>
-          <input type="file" id="profileImage" accept="image/jpeg,image/png" class="input-field">
+          <input type="file" id="profileImage" accept="image/jpeg,image/png" class="input-field" aria-describedby="profileImageError">
           <p class="error-message" id="profileImageError"></p>
         </div>
-        <button class="btn-primary w-full" onclick="data.updateProfile()">Save Changes</button>
+        <button class="btn-primary w-full" onclick="data.updateProfile()" aria-label="Save Profile Changes">Save Changes</button>
       </div>
     </div>
 
     <div id="addressModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('addressModal')">×</span>
+        <span class="close-btn" onclick="ui.closeModal('addressModal')" aria-label="Close Address Modal">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Manage Addresses</h2>
         <div id="addressList" class="mb-3"></div>
         <h3 class="text-lg font-semibold mb-2 text-gray-800" id="addressFormTitle">Add New Address</h3>
@@ -850,32 +866,32 @@
           <input type="hidden" id="addressId">
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="addressFullName">Full Name *</label>
-            <input type="text" id="addressFullName" class="input-field" placeholder="Enter full name" required>
+            <input type="text" id="addressFullName" class="input-field" placeholder="Enter full name" required aria-required="true">
           </div>
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="addressMobile">Mobile Number *</label>
-            <input type="tel" id="addressMobile" class="input-field" placeholder="Enter mobile number" required>
+            <input type="tel" id="addressMobile" class="input-field" placeholder="Enter mobile number" required aria-required="true">
           </div>
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="addressHouseNo">House/Flat No. *</label>
-            <input type="text" id="addressHouseNo" class="input-field" placeholder="Enter house/flat no." required>
+            <input type="text" id="addressHouseNo" class="input-field" placeholder="Enter house/flat no." required aria-required="true">
           </div>
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="addressLocation">Location/Street *</label>
-            <input type="text" id="addressLocation" class="input-field" placeholder="Enter location/street" required>
+            <input type="text" id="addressLocation" class="input-field" placeholder="Enter location/street" required aria-required="true">
           </div>
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="addressLandmark">Landmark (Optional)</label>
             <input type="text" id="addressLandmark" class="input-field" placeholder="Enter landmark">
           </div>
-          <button type="submit" class="btn-primary w-full" id="addressSubmitBtn">Add Address</button>
+          <button type="submit" class="btn-primary w-full" id="addressSubmitBtn" aria-label="Add or Update Address">Add Address</button>
         </form>
       </div>
     </div>
 
     <div id="favoritesModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('favoritesModal')">×</span>
+        <span class="close-btn" onclick="ui.closeModal('favoritesModal')" aria-label="Close Favorites Modal">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Your Favorites</h2>
         <div id="favoritesModalList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
       </div>
@@ -883,23 +899,23 @@
 
     <div id="cartModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('cartModal')">×</span>
+        <span class="close-btn" onclick="ui.closeModal('cartModal')" aria-label="Close Cart Modal">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Your Cart</h2>
         <div id="cartItems" class="mb-3 cart-items"></div>
         <div class="flex justify-between items-center mb-3">
-          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()">Clear Cart</button>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.clearCart()" aria-label="Clear Cart">Clear Cart</button>
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="cartAddressSelect">Select Address *</label>
-          <select id="cartAddressSelect" class="input-field" required>
+          <select id="cartAddressSelect" class="input-field" required aria-required="true">
             <option value="">Select Address</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="couponCode">Apply Coupon</label>
           <div class="flex gap-2">
-            <input type="text" id="couponCode" class="input-field" placeholder="Enter coupon code" oninput="data.validateCouponInput()">
-            <button class="btn-primary px-4" onclick="data.applyCoupon()">Apply</button>
+            <input type="text" id="couponCode" class="input-field" placeholder="Enter coupon code" oninput="data.validateCouponInput()" aria-describedby="couponError">
+            <button class="btn-primary px-4" onclick="data.applyCoupon()" aria-label="Apply Coupon">Apply</button>
           </div>
           <p class="error-message" id="couponError"></p>
         </div>
@@ -910,29 +926,29 @@
           <p class="text-lg font-bold text-gray-800 mb-3">Final Total: ₹<span id="cartFinalTotal">0</span></p>
         </div>
         <p class="text-red-600 mb-3 text-sm text-center">Note: All UPI payments will be available soon. Thank you.</p>
-        <button class="btn-primary w-full" id="placeOrderBtn" onclick="data.placeOrder('cod')">Place Order (COD)</button>
+        <button class="btn-primary w-full" id="placeOrderBtn" onclick="data.placeOrder('cod')" aria-label="Place Order with Cash on Delivery">Place Order (COD)</button>
       </div>
     </div>
 
     <div id="cancelOrderModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('cancelOrderModal')">×</span>
+        <span class="close-btn" onclick="ui.closeModal('cancelOrderModal')" aria-label="Close Cancel Order Modal">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Cancel Order</h2>
         <p class="text-gray-600 mb-3">Please provide a reason for cancellation:</p>
         <form id="cancelOrderForm">
           <input type="hidden" id="cancelOrderId">
           <div class="mb-3">
             <label class="block text-gray-700 mb-1 text-sm" for="cancelReason">Reason *</label>
-            <textarea id="cancelReason" class="input-field" rows="4" placeholder="Enter reason for cancellation" required></textarea>
+            <textarea id="cancelReason" class="input-field" rows="4" placeholder="Enter reason for cancellation" required aria-required="true"></textarea>
           </div>
-          <button type="submit" class="btn-primary w-full">Submit Cancellation</button>
+          <button type="submit" class="btn-primary w-full" aria-label="Submit Order Cancellation">Submit Cancellation</button>
         </form>
       </div>
     </div>
 
     <div id="trackOrderModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('trackOrderModal')">×</span>
+        <span class="close-btn" onclick="ui.closeModal('trackOrderModal')" aria-label="Close Track Order Modal">×</span>
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Track Order #<span id="trackOrderId"></span></h2>
         <div id="trackOrderDetails"></div>
       </div>
@@ -955,31 +971,47 @@
     appliedCoupon: null,
     cartUpdating: false,
     API_BASE_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://delicute.onrender.com',
+    cache: {}, // Cache for API responses
   };
 
   const placeholderImage = 'https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg';
   const defaultProfileImage = 'https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg';
 
+  // Enhanced URL sanitization
   const sanitizeImageUrl = (url) => {
-    if (!url || url === 'null' || !url.startsWith('https://res.cloudinary.com/')) {
-      return url && url.includes('delicute/profile/') ? url : defaultProfileImage;
-    }
-    return url;
+    if (!url || typeof url !== 'string' || url === 'null') return defaultProfileImage;
+    const isValidCloudinary = url.startsWith('https://res.cloudinary.com/') && url.includes('delicute/');
+    return isValidCloudinary ? url : defaultProfileImage;
+  };
+
+  // Sanitize user inputs to prevent XSS
+  const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   };
 
   const utils = {
+    // Cancelable debounce
     debounce: (func, delay) => {
       let timeout;
       return (...args) => {
         clearTimeout(timeout);
         timeout = setTimeout(() => func(...args), delay);
+        return () => clearTimeout(timeout); // Allow cancellation
       };
     },
 
     showToast: (message, type = 'success') => {
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      toast.innerHTML = `<span>${message}</span>`;
+      toast.innerHTML = `<span>${sanitizeInput(message)}</span>`;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 3500);
     },
@@ -988,16 +1020,14 @@
       const section = document.getElementById(sectionId);
       section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       if (window.innerWidth <= 640) {
-        ui.toggleNav(); // Close mobile nav after selection
+        ui.toggleNav();
       }
     },
 
     fetchWithAuth: async (url, options = {}) => {
       try {
-        let token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No token found');
 
         const headers = {
           ...options.headers,
@@ -1046,37 +1076,44 @@
       }
     },
 
-    validateMobile: (mobile) => {
-      return /^\d{10}$/.test(mobile);
+    // Cache API responses with TTL
+    fetchWithCache: async (url, options = {}, ttl = 5 * 60 * 1000) => {
+      const cacheKey = `${url}_${JSON.stringify(options)}`;
+      const cached = state.cache[cacheKey];
+      if (cached && Date.now() - cached.timestamp < ttl) {
+        return cached.data;
+      }
+      const data = await utils.fetchWithAuth(url, options);
+      state.cache[cacheKey] = { data, timestamp: Date.now() };
+      return data;
     },
 
-    validateEmail: (email) => {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    },
+    validateMobile: (mobile) => /^\d{10}$/.test(mobile),
+
+    validateEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
 
     validateImage: (file) => {
       if (!file) return true;
       const validTypes = ['image/jpeg', 'image/png'];
       const maxSize = 2 * 1024 * 1024; // 2MB
+      const errorElement = document.getElementById('profileImageError');
       if (!validTypes.includes(file.type)) {
-        document.getElementById('profileImageError').textContent = 'Only JPEG or PNG images are allowed';
-        document.getElementById('profileImageError').classList.add('show');
+        errorElement.textContent = 'Please upload a JPEG or PNG image.';
+        errorElement.classList.add('show');
         return false;
       }
       if (file.size > maxSize) {
-        document.getElementById('profileImageError').textContent = 'Image size must be under 2MB';
-        document.getElementById('profileImageError').classList.add('show');
+        errorElement.textContent = 'Image size must be under 2MB.';
+        errorElement.classList.add('show');
         return false;
       }
-      document.getElementById('profileImageError').classList.remove('show');
+      errorElement.classList.remove('show');
       return true;
     },
 
     uploadImage: async (file) => {
       if (!file) return state.user?.image || defaultProfileImage;
-      if (!utils.validateImage(file)) {
-        throw new Error('Invalid image');
-      }
+      if (!utils.validateImage(file)) throw new Error('Invalid image');
       const formData = new FormData();
       formData.append('image', file);
       try {
@@ -1105,17 +1142,22 @@
     toggleNav: () => {
       const navLinks = document.getElementById('navLinks');
       const hamburger = document.getElementById('hamburger');
+      const dropdown = document.getElementById('profileDropdown');
       navLinks.classList.toggle('active');
       hamburger.classList.toggle('active');
-      document.getElementById('profileDropdown').classList.remove('show'); // Close dropdown when toggling nav
+      dropdown.classList.remove('show'); // Close dropdown when toggling nav
+      hamburger.setAttribute('aria-expanded', navLinks.classList.contains('active'));
     },
 
     toggleDropdown: () => {
       const dropdown = document.getElementById('profileDropdown');
+      const navLinks = document.getElementById('navLinks');
       const isOpen = dropdown.classList.contains('show');
       dropdown.classList.toggle('show');
+      dropdown.setAttribute('aria-expanded', !isOpen);
       if (window.innerWidth <= 640 && !isOpen) {
-        ui.toggleNav(); // Close mobile nav when opening dropdown
+        navLinks.classList.remove('active');
+        document.getElementById('hamburger').classList.remove('active');
       }
     },
 
@@ -1190,26 +1232,26 @@
   };
 
   const data = {
-    checkAuth: () => {
-      return !!localStorage.getItem('token');
-    },
+    checkAuth: () => !!localStorage.getItem('token'),
 
     loadProfile: async () => {
       try {
-        state.user = await utils.fetchWithAuth('/api/user/profile');
-        document.getElementById('userName').textContent = state.user.name || 'User';
-        document.getElementById('profileName').value = state.user.name || '';
-        document.getElementById('profileEmail').value = state.user.email || '';
-        document.getElementById('profileMobile').value = state.user.mobile || '';
+        state.user = await utils.fetchWithCache('/api/user/profile');
+        if (!state.user || !state.user.name) throw new Error('Invalid user data');
+        document.getElementById('userName').textContent = sanitizeInput(state.user.name) || 'User';
+        document.getElementById('profileName').value = sanitizeInput(state.user.name) || '';
+        document.getElementById('profileEmail').value = sanitizeInput(state.user.email) || '';
+        document.getElementById('profileMobile').value = sanitizeInput(state.user.mobile) || '';
         ui.loadProfileImage();
       } catch (error) {
         console.error('Profile load error:', error);
+        utils.showToast('Failed to load profile', 'error');
       }
     },
 
     updateProfile: async () => {
-      const name = document.getElementById('profileName').value.trim();
-      const email = document.getElementById('profileEmail').value.trim();
+      const name = sanitizeInput(document.getElementById('profileName').value.trim());
+      const email = sanitizeInput(document.getElementById('profileEmail').value.trim());
       const imageInput = document.getElementById('profileImage').files[0];
       if (!name || !email) {
         return utils.showToast('Name and Email are required', 'error');
@@ -1227,7 +1269,7 @@
           method: 'PUT',
           body: JSON.stringify(body),
         });
-        document.getElementById('userName').textContent = state.user.name;
+        document.getElementById('userName').textContent = sanitizeInput(state.user.name);
         ui.loadProfileImage();
         document.getElementById('profileImage').value = '';
         utils.showToast('Profile updated successfully!', 'success');
@@ -1239,20 +1281,20 @@
 
     loadAddresses: async () => {
       try {
-        state.addresses = await utils.fetchWithAuth('/api/user/addresses');
+        state.addresses = await utils.fetchWithCache('/api/user/addresses');
         const addressSelect = document.getElementById('cartAddressSelect');
         const addressList = document.getElementById('addressList');
         addressSelect.innerHTML = '<option value="">Select Address</option>';
         addressList.innerHTML = '';
         state.addresses.forEach(addr => {
-          const addressString = `${addr.fullName}, ${addr.houseNo}, ${addr.location}${addr.landmark ? `, ${addr.landmark}` : ''}, Mobile: ${addr.mobile}`;
+          const addressString = `${sanitizeInput(addr.fullName)}, ${sanitizeInput(addr.houseNo)}, ${sanitizeInput(addr.location)}${addr.landmark ? `, ${sanitizeInput(addr.landmark)}` : ''}, Mobile: ${sanitizeInput(addr.mobile)}`;
           addressSelect.innerHTML += `<option value="${addr.id}">${addressString}</option>`;
           addressList.innerHTML += `
             <div class="order-card flex justify-between items-center">
               <p class="text-gray-600 text-sm">${addressString}</p>
               <div class="flex gap-2">
-                <button class="btn-primary text-sm py-1 px-3" onclick="data.editAddress(${addr.id})">Edit</button>
-                <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress(${addr.id})">Delete</button>
+                <button class="btn-primary text-sm py-1 px-3" onclick="data.editAddress(${addr.id})" aria-label="Edit Address">Edit</button>
+                <button class="btn-secondary text-sm py-1 px-3" onclick="data.deleteAddress(${addr.id})" aria-label="Delete Address">Delete</button>
               </div>
             </div>
           `;
@@ -1265,11 +1307,11 @@
     addOrUpdateAddress: async (e) => {
       e.preventDefault();
       const id = document.getElementById('addressId').value;
-      const fullName = document.getElementById('addressFullName').value.trim();
-      const mobile = document.getElementById('addressMobile').value.trim();
-      const houseNo = document.getElementById('addressHouseNo').value.trim();
-      const location = document.getElementById('addressLocation').value.trim();
-      const landmark = document.getElementById('addressLandmark').value.trim();
+      const fullName = sanitizeInput(document.getElementById('addressFullName').value.trim());
+      const mobile = sanitizeInput(document.getElementById('addressMobile').value.trim());
+      const houseNo = sanitizeInput(document.getElementById('addressHouseNo').value.trim());
+      const location = sanitizeInput(document.getElementById('addressLocation').value.trim());
+      const landmark = sanitizeInput(document.getElementById('addressLandmark').value.trim());
       if (!fullName || !mobile || !houseNo || !location) {
         return utils.showToast('Please fill all required fields', 'error');
       }
@@ -1295,9 +1337,7 @@
     editAddress: async (id) => {
       try {
         const address = state.addresses.find(addr => addr.id === parseInt(id));
-        if (!address) {
-          throw new Error('Address not found');
-        }
+        if (!address) throw new Error('Address not found');
         ui.populateAddressForm(address);
       } catch (error) {
         utils.showToast(error.message || 'Failed to load address', 'error');
@@ -1317,7 +1357,7 @@
 
     loadMenu: async () => {
       try {
-        state.menuItems = await utils.fetchWithAuth('/api/user/menu');
+        state.menuItems = await utils.fetchWithCache('/api/user/menu');
         data.renderMenu();
       } catch (error) {
         utils.showToast(error.message || 'Failed to load menu', 'error');
@@ -1327,7 +1367,7 @@
     renderMenu: (items = state.menuItems) => {
       const menuContainer = document.getElementById('menuItems');
       menuContainer.innerHTML = '';
-      if (items.length === 0) {
+      if (!items || items.length === 0) {
         menuContainer.innerHTML = '<p class="text-center text-gray-600 text-sm">No items found.</p>';
         return;
       }
@@ -1335,13 +1375,13 @@
         const isFavorite = state.favorites.some(fav => fav.itemId === item.id);
         menuContainer.innerHTML += `
           <div class="menu-card">
-            <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-2" onerror="this.src='${placeholderImage}'">
-            <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${item.name}</h3>
-            <p class="text-gray-600 text-sm mb-2">${item.description || 'No description'}</p>
-            <p class="text-purple-600 font-bold text-base mb-2">₹${parseFloat(item.price).toFixed(2)}</p>
+            <img src="${sanitizeImageUrl(item.image)}" alt="${sanitizeInput(item.name)}" class="w-full h-48 object-cover rounded-lg mb-2" loading="lazy" onerror="this.src='${placeholderImage}'">
+            <h3 class="text-base font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">${sanitizeInput(item.name)}</h3>
+            <p class="text-gray-600 text-sm mb-2">${sanitizeInput(item.description) || 'No description'}</p>
+            <p class="text-purple-600 font-bold text-base mb-2">₹${parseFloat(item.price || 0).toFixed(2)}</p>
             <div class="flex justify-between items-center gap-2">
-              <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart(${item.id}, '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
-              <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites(${item.id})` : `data.addToFavorites(${item.id}, '${item.name}', '${sanitizeImageUrl(item.image)}', ${item.price})`}">${isFavorite ? 'Remove' : 'Favorite'}</button>
+              <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart(${item.id}, '${sanitizeInput(item.name)}', ${item.price}, '${sanitizeImageUrl(item.image)}')" aria-label="Add ${sanitizeInput(item.name)} to Cart">Add to Cart</button>
+              <button class="btn-secondary text-sm py-1 px-3" onclick="${isFavorite ? `data.removeFromFavorites(${item.id})` : `data.addToFavorites(${item.id}, '${sanitizeInput(item.name)}', '${sanitizeImageUrl(item.image)}', ${item.price})`}" aria-label="${isFavorite ? 'Remove' : 'Add'} ${sanitizeInput(item.name)} to Favorites">${isFavorite ? 'Remove' : 'Favorite'}</button>
             </div>
           </div>
         `;
@@ -1349,7 +1389,7 @@
     },
 
     searchMenu: () => {
-      const query = document.getElementById('menuSearch').value.toLowerCase();
+      const query = sanitizeInput(document.getElementById('menuSearch').value.toLowerCase());
       const filteredItems = state.menuItems.filter(item => item.name.toLowerCase().includes(query));
       data.renderMenu(filteredItems);
     },
@@ -1362,20 +1402,20 @@
 
     loadCoupons: async () => {
       try {
-        state.coupons = await utils.fetchWithAuth('/api/user/coupons');
+        state.coupons = await utils.fetchWithCache('/api/user/coupons');
         const couponsList = document.getElementById('couponsList');
         couponsList.innerHTML = '';
-        if (state.coupons.length === 0) {
+        if (!state.coupons || state.coupons.length === 0) {
           couponsList.innerHTML = '<p class="text-center text-gray-600 text-sm">No coupons available.</p>';
           return;
         }
         state.coupons.forEach(coupon => {
           couponsList.innerHTML += `
             <div class="coupon-card">
-              <img src="${sanitizeImageUrl(coupon.image)}" alt="${coupon.code}" class="w-full h-24 object-cover rounded-lg mb-2" onerror="this.src='${placeholderImage}'">
-              <h3 class="text-base font-semibold text-gray-800">${coupon.code}</h3>
+              <img src="${sanitizeImageUrl(coupon.image)}" alt="${sanitizeInput(coupon.code)}" class="w-full h-24 object-cover rounded-lg mb-2" loading="lazy" onerror="this.src='${placeholderImage}'">
+              <h3 class="text-base font-semibold text-gray-800">${sanitizeInput(coupon.code)}</h3>
               <p class="text-gray-600 text-sm mb-2">${coupon.discount}% OFF</p>
-              <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCouponFromList('${coupon.code}', ${coupon.discount})">Apply Coupon</button>
+              <button class="btn-primary w-full text-sm py-1 px-3" onclick="data.applyCouponFromList('${sanitizeInput(coupon.code)}', ${coupon.discount})" aria-label="Apply Coupon ${sanitizeInput(coupon.code)}">Apply Coupon</button>
             </div>
           `;
         });
@@ -1386,7 +1426,7 @@
 
     loadFavorites: async () => {
       try {
-        state.favorites = await utils.fetchWithAuth('/api/user/favorites');
+        state.favorites = await utils.fetchWithCache('/api/user/favorites');
         data.renderFavorites();
         data.renderMenu();
       } catch (error) {
@@ -1399,7 +1439,7 @@
       const favoritesModalList = document.getElementById('favoritesModalList');
       favoritesList.innerHTML = '';
       favoritesModalList.innerHTML = '';
-      if (state.favorites.length === 0) {
+      if (!state.favorites || state.favorites.length === 0) {
         favoritesList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
         favoritesModalList.innerHTML = '<p class="text-center text-gray-600 text-sm">No favorites yet.</p>';
         return;
@@ -1407,14 +1447,14 @@
       state.favorites.forEach(item => {
         const cardHTML = `
           <div class="favorite-card flex items-center gap-2">
-            <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='${placeholderImage}'">
+            <img src="${sanitizeImageUrl(item.image)}" alt="${sanitizeInput(item.name)}" class="w-16 h-16 object-cover rounded-lg" loading="lazy" onerror="this.src='${placeholderImage}'">
             <div class="flex-1">
-              <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-              <p class="text-gray-600 text-sm">₹${parseFloat(item.price).toFixed(2)}</p>
+              <h3 class="text-base font-semibold text-gray-800">${sanitizeInput(item.name)}</h3>
+              <p class="text-gray-600 text-sm">₹${parseFloat(item.price || 0).toFixed(2)}</p>
             </div>
             <div class="flex gap-2">
-              <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart(${item.itemId}, '${item.name}', ${item.price}, '${sanitizeImageUrl(item.image)}')">Add to Cart</button>
-              <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites(${item.itemId})">Remove</button>
+              <button class="btn-primary text-sm py-1 px-3" onclick="data.addToCart(${item.itemId}, '${sanitizeInput(item.name)}', ${item.price}, '${sanitizeImageUrl(item.image)}')" aria-label="Add ${sanitizeInput(item.name)} to Cart">Add to Cart</button>
+              <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromFavorites(${item.itemId})" aria-label="Remove ${sanitizeInput(item.name)} from Favorites">Remove</button>
             </div>
           </div>
         `;
@@ -1427,9 +1467,9 @@
       try {
         await utils.fetchWithAuth('/api/user/favorites', {
           method: 'POST',
-          body: JSON.stringify({ itemId: id, name, image, price }),
+          body: JSON.stringify({ itemId: id, name: sanitizeInput(name), image: sanitizeImageUrl(image), price }),
         });
-        utils.showToast(`${name} added to favorites!`, 'success');
+        utils.showToast(`${sanitizeInput(name)} added to favorites!`, 'success');
         data.loadFavorites();
       } catch (error) {
         utils.showToast(error.message || 'Failed to add favorite', 'error');
@@ -1449,7 +1489,7 @@
     loadCart: async () => {
       try {
         ui.toggleCartLoading(true);
-        const response = await utils.fetchWithAuth('/api/user/cart');
+        const response = await utils.fetchWithCache('/api/user/cart');
         state.cart = response.items || [];
         data.renderCart();
       } catch (error) {
@@ -1467,18 +1507,18 @@
         originalTotal += item.price * item.quantity;
         cartItems.innerHTML += `
           <div class="order-card flex items-center gap-2 mb-2">
-            <img src="${sanitizeImageUrl(item.image)}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='${placeholderImage}'">
+            <img src="${sanitizeImageUrl(item.image)}" alt="${sanitizeInput(item.name)}" class="w-16 h-16 object-cover rounded-lg" loading="lazy" onerror="this.src='${placeholderImage}'">
             <div class="flex-1">
-              <h3 class="text-base font-semibold text-gray-800">${item.name}</h3>
-              <p class="text-gray-600 text-sm mb-2">${item.description || 'No description'}</p>
+              <h3 class="text-base font-semibold text-gray-800">${sanitizeInput(item.name)}</h3>
+              <p class="text-gray-600 text-sm mb-2">${sanitizeInput(item.description) || 'No description'}</p>
               <p class="text-purple-600 font-bold text-base">₹${parseFloat(item.price * item.quantity).toFixed(2)} (₹${parseFloat(item.price).toFixed(2)} x ${item.quantity})</p>
               <div class="flex items-center gap-2 mt-2">
-                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity - 1})" aria-label="Decrease quantity of ${sanitizeInput(item.name)}">-</button>
                 <span class="text-sm font-medium">${item.quantity}</span>
-                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity + 1})" aria-label="Increase quantity of ${sanitizeInput(item.name)}">+</button>
               </div>
             </div>
-            <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart(${item.id})">Remove</button>
+            <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart(${item.id})" aria-label="Remove ${sanitizeInput(item.name)} from Cart">Remove</button>
           </div>
         `;
       });
@@ -1506,14 +1546,14 @@
             method: 'POST',
             body: JSON.stringify({
               itemId: id,
-              name,
+              name: sanitizeInput(name),
               price: parseFloat(price),
               image: sanitizeImageUrl(image),
               quantity: 1,
             }),
           });
           state.cart.push(response);
-          utils.showToast(`${name} added to cart!`, 'success');
+          utils.showToast(`${sanitizeInput(name)} added to cart!`, 'success');
         }
         await data.loadCart();
       } catch (error) {
@@ -1580,7 +1620,7 @@
     validateCouponInput: () => {
       const couponInput = document.getElementById('couponCode');
       const couponError = document.getElementById('couponError');
-      const code = couponInput.value.trim().toUpperCase();
+      const code = sanitizeInput(couponInput.value.trim().toUpperCase());
       if (!code) {
         couponInput.classList.remove('valid', 'invalid');
         couponError.classList.remove('show');
@@ -1600,7 +1640,7 @@
     },
 
     applyCoupon: async () => {
-      const code = document.getElementById('couponCode').value.trim().toUpperCase();
+      const code = sanitizeInput(document.getElementById('couponCode').value.trim().toUpperCase());
       if (!code) {
         return utils.showToast('Please enter a coupon code', 'error');
       }
@@ -1618,8 +1658,8 @@
 
     applyCouponFromList: async (code, discount) => {
       try {
-        state.appliedCoupon = { code, discount };
-        utils.showToast(`Coupon ${code} applied! ${discount}% off`, 'success');
+        state.appliedCoupon = { code: sanitizeInput(code), discount };
+        utils.showToast(`Coupon ${sanitizeInput(code)} applied! ${discount}% off`, 'success');
         data.renderCart();
         ui.closeModal('cartModal');
         ui.openModal('cartModal');
@@ -1643,28 +1683,26 @@
             itemId: item.itemId,
             quantity: item.quantity,
             price: item.price,
-            name: item.name,
+            name: sanitizeInput(item.name),
           })),
-          addressId: parseInt(addressId),
-          couponCode: state.appliedCoupon?.code || null,
+                    addressId: parseInt(addressId),
+          couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
           paymentMethod,
           orderDate: utils.formatDateForMySQL(new Date()),
         };
-        for (const item of orderData.items) {
-          if (!item.itemId || !item.price || !item.quantity || !item.name) {
-            throw new Error('Invalid item data');
-          }
-        }
-        await utils.fetchWithAuth('/api/user/orders', {
+        const response = await utils.fetchWithAuth('/api/user/orders', {
           method: 'POST',
           body: JSON.stringify(orderData),
         });
         state.cart = [];
         state.appliedCoupon = null;
-        utils.showToast('Order placed successfully!', 'success');
-        ui.closeModal('cartModal');
-        data.loadOrders();
+        document.getElementById('couponCode').value = '';
+        document.getElementById('couponCode').classList.remove('valid', 'invalid');
+        document.getElementById('couponError').classList.remove('show');
+        utils.showToast(`Order placed successfully! Order ID: ${response.orderId}`, 'success');
         data.renderCart();
+        data.loadOrders();
+        ui.closeModal('cartModal');
       } catch (error) {
         utils.showToast(error.message || 'Failed to place order', 'error');
       } finally {
@@ -1674,97 +1712,73 @@
 
     loadOrders: async () => {
       try {
-        state.orders = await utils.fetchWithAuth('/api/user/orders');
-        document.getElementById('totalOrders').textContent = state.orders.length;
-        data.renderOrders();
+        state.orders = await utils.fetchWithCache('/api/user/orders');
+        document.getElementById('totalOrders').textContent = state.orders.length || 0;
         data.renderActiveOrders();
+        data.renderOrderHistory();
       } catch (error) {
         utils.showToast(error.message || 'Failed to load orders', 'error');
       }
     },
 
-    renderOrders: () => {
-      const orderHistory = document.getElementById('orderHistory');
-      orderHistory.innerHTML = '';
-      if (state.orders.length === 0) {
-        orderHistory.innerHTML = '<p class="text-center text-gray-600 text-sm">No orders yet.</p>';
-        return;
+    refreshOrders: async () => {
+      try {
+        state.orders = await utils.fetchWithAuth('/api/user/orders');
+        document.getElementById('totalOrders').textContent = state.orders.length || 0;
+        data.renderActiveOrders();
+        data.renderOrderHistory();
+        utils.showToast('Orders refreshed!', 'success');
+      } catch (error) {
+        utils.showToast(error.message || 'Failed to refresh orders', 'error');
       }
-      state.orders.forEach(order => {
-        const itemsList = order.items.map(item => `
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-sm text-gray-600">${item.name} x${item.quantity}</span>
-            <span class="text-sm text-purple-600">₹${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        `).join('');
-        const subtotal = order.subtotal || 0;
-        const discount = order.discount || 0;
-        const deliveryFee = order.deliveryFee || 0;
-        const total = order.total || subtotal - discount + deliveryFee;
-        orderHistory.innerHTML += `
-          <div class="order-card">
-            <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-            <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
-            <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
-            ${itemsList}
-            <p class="text-gray-600 text-sm mb-1">Subtotal: ₹${parseFloat(subtotal).toFixed(2)}</p>
-            <p class="text-green-600 text-sm mb-1">Discount: ₹${parseFloat(discount).toFixed(2)}</p>
-            <p class="text-gray-600 text-sm mb-1">Delivery: ₹${parseFloat(deliveryFee).toFixed(2)}</p>
-            <p class="text-lg font-bold text-gray-800 mb-2">Total: ₹${parseFloat(total).toFixed(2)}</p>
-          </div>
-        `;
-      });
     },
 
     renderActiveOrders: () => {
       const activeOrders = document.getElementById('activeOrders');
       activeOrders.innerHTML = '';
-      const active = state.orders.filter(order => ['Pending', 'Confirmed', 'In Transit'].includes(order.status));
-      if (active.length === 0) {
+      const active = state.orders.filter(order => ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status));
+      if (!active || active.length === 0) {
         activeOrders.innerHTML = '<p class="text-center text-gray-600 text-sm">No active orders.</p>';
         return;
       }
       active.forEach(order => {
-        const itemsList = order.items.map(item => `
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-sm text-gray-600">${item.name} x${item.quantity}</span>
-            <span class="text-sm text-purple-600">₹${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        `).join('');
-        const subtotal = order.subtotal || 0;
-        const discount = order.discount || 0;
-        const deliveryFee = order.deliveryFee || 0;
-        const total = order.total || subtotal - discount + deliveryFee;
-        const canCancel = ['Pending', 'Confirmed'].includes(order.status);
-        const trackingSteps = [
-          { name: 'Order Placed', active: ['Pending', 'Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
-          { name: 'Confirmed', active: ['Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
-          { name: 'In Transit', active: ['In Transit', 'Delivered'].includes(order.status) },
-          { name: 'Delivered', active: order.status === 'Delivered' },
-        ];
-        const trackingBar = `
-          <div class="tracking-bar">
-            ${trackingSteps.map(step => `
-              <div class="tracking-step ${step.active ? 'active' : 'inactive'}">${step.name}</div>
-            `).join('')}
+        activeOrders.innerHTML += `
+          <div class="order-card flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
+              <p class="text-gray-600 text-sm">${sanitizeInput(order.items.map(i => i.name).join(', '))}</p>
+              <p class="text-purple-600 font-bold text-base">₹${parseFloat(order.total || 0).toFixed(2)}</p>
+              <p class="text-gray-600 text-sm">Status: ${sanitizeInput(order.status)}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-primary text-sm py-1 px-3" onclick="data.trackOrder(${order.id})" aria-label="Track Order #${order.id}">Track</button>
+              ${order.status === 'pending' ? `<button class="btn-secondary text-sm py-1 px-3" onclick="data.openCancelOrderModal(${order.id})" aria-label="Cancel Order #${order.id}">Cancel</button>` : ''}
+            </div>
           </div>
         `;
-        activeOrders.innerHTML += `
-          <div class="order-card">
-            <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-            <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
-            <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
-            ${itemsList}
-            <p class="text-gray-600 text-sm mb-1">Subtotal: ₹${parseFloat(subtotal).toFixed(2)}</p>
-            <p class="text-green-600 text-sm mb-1">Discount: ₹${parseFloat(discount).toFixed(2)}</p>
-            <p class="text-gray-600 text-sm mb-1">Delivery: ₹${parseFloat(deliveryFee).toFixed(2)}</p>
-            <p class="text-lg font-bold text-gray-800 mb-2">Total: ₹${parseFloat(total).toFixed(2)}</p>
-            ${trackingBar}
-            <div class="flex gap-2 mt-2">
-              <button class="btn-primary text-sm py-1 px-3" onclick="data.trackOrder(${order.id})">Track Order</button>
-              ${canCancel ? `<button class="btn-secondary text-sm py-1 px-3" onclick="data.openCancelOrderModal(${order.id})">Cancel Order</button>` : ''}
+      });
+    },
+
+    renderOrderHistory: () => {
+      const orderHistory = document.getElementById('orderHistory');
+      orderHistory.innerHTML = '';
+      if (!state.orders || state.orders.length === 0) {
+        orderHistory.innerHTML = '<p class="text-center text-gray-600 text-sm">No order history.</p>';
+        return;
+      }
+      state.orders.forEach(order => {
+        orderHistory.innerHTML += `
+          <div class="order-card flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
+              <p class="text-gray-600 text-sm">${sanitizeInput(order.items.map(i => i.name).join(', '))}</p>
+              <p class="text-purple-600 font-bold text-base">₹${parseFloat(order.total || 0).toFixed(2)}</p>
+              <p class="text-gray-600 text-sm">Status: ${sanitizeInput(order.status)}</p>
+              <p class="text-gray-600 text-sm">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-primary text-sm py-1 px-3" onclick="data.trackOrder(${order.id})" aria-label="Track Order #${order.id}">Track</button>
+              ${order.status === 'pending' ? `<button class="btn-secondary text-sm py-1 px-3" onclick="data.openCancelOrderModal(${order.id})" aria-label="Cancel Order #${order.id}">Cancel</button>` : ''}
             </div>
           </div>
         `;
@@ -1773,16 +1787,15 @@
 
     openCancelOrderModal: (orderId) => {
       document.getElementById('cancelOrderId').value = orderId;
-      document.getElementById('cancelReason').value = '';
       ui.openModal('cancelOrderModal');
     },
 
     cancelOrder: async (e) => {
       e.preventDefault();
-      const orderId = document.getElementById('cancelOrderId').value;
-      const reason = document.getElementById('cancelReason').value.trim();
+      const orderId = parseInt(document.getElementById('cancelOrderId').value);
+      const reason = sanitizeInput(document.getElementById('cancelReason').value.trim());
       if (!reason) {
-        return utils.showToast('Please provide a cancellation reason', 'error');
+        return utils.showToast('Please provide a reason for cancellation', 'error');
       }
       try {
         await utils.fetchWithAuth(`/api/user/orders/${orderId}/cancel`, {
@@ -1790,6 +1803,7 @@
           body: JSON.stringify({ reason }),
         });
         utils.showToast('Order cancelled successfully!', 'success');
+        document.getElementById('cancelOrderForm').reset();
         ui.closeModal('cancelOrderModal');
         data.loadOrders();
       } catch (error) {
@@ -1797,70 +1811,74 @@
       }
     },
 
-    trackOrder: async (orderId) => {
+    trackOrder: async (id) => {
       try {
-        const order = state.orders.find(o => o.id === parseInt(orderId));
-        if (!order) {
-          throw new Error('Order not found');
-        }
-        document.getElementById('trackOrderId').textContent = orderId;
-        const trackingSteps = [
-          { name: 'Order Placed', active: ['Pending', 'Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
-          { name: 'Confirmed', active: ['Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
-          { name: 'In Transit', active: ['In Transit', 'Delivered'].includes(order.status) },
-          { name: 'Delivered', active: order.status === 'Delivered' },
-        ];
-        document.getElementById('trackOrderDetails').innerHTML = `
-          <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
-          <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
-          <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
+        const order = state.orders.find(o => o.id === id);
+        if (!order) throw new Error('Order not found');
+        document.getElementById('trackOrderId').textContent = id;
+        const trackDetails = document.getElementById('trackOrderDetails');
+        trackDetails.innerHTML = `
+          <p class="text-gray-600 text-sm mb-2">Items: ${sanitizeInput(order.items.map(i => i.name).join(', '))}</p>
+          <p class="text-purple-600 font-bold text-base mb-2">Total: ₹${parseFloat(order.total || 0).toFixed(2)}</p>
+          <p class="text-gray-600 text-sm mb-2">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+          <p class="text-gray-600 text-sm mb-2">Address: ${sanitizeInput(order.address)}</p>
           <div class="tracking-bar">
-            ${trackingSteps.map(step => `
-              <div class="tracking-step ${step.active ? 'active' : 'inactive'}">${step.name}</div>
-            `).join('')}
+            <div class="tracking-step ${order.status === 'pending' ? 'active' : 'inactive'}">Pending</div>
+            <div class="tracking-step ${order.status === 'confirmed' ? 'active' : 'inactive'}">Confirmed</div>
+            <div class="tracking-step ${order.status === 'preparing' ? 'active' : 'inactive'}">Preparing</div>
+            <div class="tracking-step ${order.status === 'out_for_delivery' ? 'active' : 'inactive'}">Out for Delivery</div>
+            <div class="tracking-step ${order.status === 'delivered' ? 'active' : 'inactive'}">Delivered</div>
           </div>
         `;
         ui.openModal('trackOrderModal');
       } catch (error) {
-        utils.showToast(error.message || 'Failed to load tracking details', 'error');
-      }
-    },
-
-    refreshOrders: async () => {
-      try {
-        await data.loadOrders();
-        utils.showToast('Orders refreshed!', 'success');
-      } catch (error) {
-        utils.showToast(error.message || 'Failed to refresh orders', 'error');
+        utils.showToast(error.message || 'Failed to track order', 'error');
       }
     },
 
     logout: () => {
       localStorage.removeItem('token');
+      localStorage.removeItem('darkMode');
       utils.showToast('Logged out successfully!', 'success');
       setTimeout(() => window.location.href = '/index.html', 1500);
     },
   };
 
-  const init = async () => {
+  // Cancelable debounce for search
+  const debounceSearch = utils.debounce(data.searchMenu, 300);
+
+  // Event listeners
+  const init = () => {
     if (!data.checkAuth()) {
       window.location.href = '/index.html';
       return;
     }
+
+    // Load initial data
+    data.loadProfile();
+    data.loadMenu();
+    data.loadCoupons();
+    data.loadFavorites();
+    data.loadOrders();
+    data.loadCart();
     ui.loadDarkMode();
-    await Promise.all([
-      data.loadProfile(),
-      data.loadMenu(),
-      data.loadCoupons(),
-      data.loadFavorites(),
-      data.loadOrders(),
-    ]);
+
+    // Form submissions
     document.getElementById('addressForm').addEventListener('submit', data.addOrUpdateAddress);
     document.getElementById('cancelOrderForm').addEventListener('submit', data.cancelOrder);
+
+    // Cleanup function to remove event listeners
+    const cleanup = () => {
+      document.getElementById('addressForm').removeEventListener('submit', data.addOrUpdateAddress);
+      document.getElementById('cancelOrderForm').removeEventListener('submit', data.cancelOrder);
+    };
+
+    // Attach cleanup to window unload
+    window.addEventListener('unload', cleanup);
   };
 
-  const debounceSearch = utils.debounce(data.searchMenu, 300);
+  // Initialize
   init();
   </script>
-  </body>
-  </html>
+</body>
+</html>

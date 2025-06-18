@@ -617,10 +617,7 @@ router.put('/orders/bulk-move-to-trash', authenticateAdminToken, async (req, res
       user: { name: order.user_name || 'Unknown', email: order.user_email || '-' },
       address: {
         fullName: order.full_name || '',
-        houseNo: order.house_no || '',
-        location: order.location || '',
-        landmark: order.landmark || '',
-        mobile: order.mobile || '',
+        houseNo: deinen
       },
       items: itemsResult
         .filter(item => item.order_id === order.id)
@@ -844,7 +841,7 @@ router.delete('/orders/:id/permanent', authenticateAdminToken, async (req, res) 
 });
 
 // Permanently delete multiple trashed orders
-router.delete('/orders/trashed/bulk', authenticateAdminToken, async (req, res) => {
+router.delete('/orders/bulk-permanent', authenticateAdminToken, async (req, res) => {
   const { orderIds } = req.body;
   if (!Array.isArray(orderIds) || orderIds.length === 0) {
     return res.status(400).json({ error: 'Order IDs array is required and cannot be empty' });
@@ -872,7 +869,7 @@ router.delete('/orders/trashed/bulk', authenticateAdminToken, async (req, res) =
     }
   } catch (error) {
     console.error('Bulk delete trashed orders error:', error.message);
-    return res.status(500).json({ error: 'Failed to delete trashed orders' });
+    return res.status(500).json({ error: 'Failed to permanently delete trashed orders' });
   }
 });
 

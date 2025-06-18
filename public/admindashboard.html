@@ -684,7 +684,7 @@
     <nav class="nav-container">
       <div class="flex flex-col items-start">
         <div class="logo">
-          <img src="https://i.postimg.cc/petG7m0x/Zbhz.png" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
+          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
           <span>Delicute Admin</span>
         </div>
         <p class="subtext">Craft Your Culinary Experience</p>
@@ -1318,7 +1318,7 @@
       }
       if (!confirm(`Are you sure you want to permanently delete ${selectedIds.length} selected order(s)? This action cannot be undone.`)) return;
       try {
-        await handleFetch(`${apiPrefix}/orders/trashed/bulk`, {
+        await handleFetch(`${apiPrefix}/orders/bulk-permanent`, {
           method: 'DELETE',
           body: JSON.stringify({ orderIds: selectedIds }),
         });
@@ -1326,20 +1326,27 @@
         document.getElementById('selectAllTrash').checked = false;
         document.getElementById('selectAllTrashHeader').checked = false;
         loadTrashedOrders();
-      } catch (error) {}
+        updateDeleteTrashButtonState();
+      } catch (error) {
+        showToast('Failed to delete selected orders.', 'error');
+      }
     }
 
     function toggleSelectAllOrders() {
       const selectAllCheckbox = document.getElementById('selectAllOrders');
+      const headerCheckbox = document.getElementById('selectAllOrdersHeader');
       const checkboxes = document.querySelectorAll('.order-checkbox');
       checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+      headerCheckbox.checked = selectAllCheckbox.checked;
       updateDeleteOrdersButtonState();
     }
 
     function toggleSelectAllTrash() {
       const selectAllCheckbox = document.getElementById('selectAllTrash');
+      const headerCheckbox = document.getElementById('selectAllTrashHeader');
       const checkboxes = document.querySelectorAll('.trash-checkbox');
       checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+      headerCheckbox.checked = selectAllCheckbox.checked;
       updateDeleteTrashButtonState();
     }
 
@@ -1576,7 +1583,7 @@
               <td>${totalDisplay}</td>
               <td>${order.paymentStatus || 'Pending'}</td>
               <td>
-                <select onchange="updateOrderStatus(${order.id}', this.value, this)">
+                <select onchange="updateOrderStatus(${order.id}, this.value, this)">
                   <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
                   <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
                   <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
@@ -1586,14 +1593,14 @@
               </td>
               <td>${reasonDisplay}</td>
               <td>
-                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View}</button>
+                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
               </td>
             </tr>
           `;
         }).join('');
         updateDeleteOrdersButtonState();
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="10" class="error-state">Error loading orders.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Error loading orders.</td></tr>';
       }
     }
 
@@ -1636,8 +1643,7 @@
       try {
         const response = await handleFetch(`${apiPrefix}/status`);
         updateStatusDisplay(response.status);
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     async function logout() {
