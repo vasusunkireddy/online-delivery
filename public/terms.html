@@ -3,47 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms and Conditions - Delicate Cloud Kitchen</title>
+  <title>Terms and Conditions - Delicute Cloud Kitchen</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #f0f7ff 0%, #e0f7fa 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, #e2f6f8 100%);
       font-family: 'Poppins', sans-serif;
-      color: #2d3748;
+      color: #1f2937;
+    }
+    h1, h2 {
+      font-family: 'Playfair Display', serif;
+    }
+    p, li {
+      font-size: 0.85rem;
+      line-height: 1.4rem;
+      color: #374151;
+    }
+    @media (min-width: 640px) {
+      p, li {
+        font-size: 0.95rem;
+        line-height: 1.6rem;
+      }
     }
     .hover-scale {
-      transition: transform 0.3s ease, color 0.3s ease;
+      transition: color 0.3s ease, text-decoration 0.3s ease;
     }
     .hover-scale:hover {
-      transform: scale(1.05);
-      color: #4a90e2;
+      color: #2563eb;
+      text-decoration: underline;
+    }
+    .section-divider {
+      border-top: 1px solid #e5e7eb;
+      margin: 1.5rem 0;
     }
   </style>
 </head>
-<body class="py-10 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-4xl font-semibold mb-8 text-center" style="font-family: 'Playfair Display', serif;">Terms and Conditions</h1>
-    <p class="text-lg mb-6 leading-relaxed">
-      Welcome to Delicate Cloud Kitchen! By using our services, you agree to the following terms and conditions. Please read them carefully.
+<body class="py-8 px-4 sm:px-6">
+  <div class="max-w-3xl mx-auto bg-white shadow-sm rounded-lg p-6 sm:p-8">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-6 text-center">Terms and Conditions</h1>
+    <p class="mb-6 text-center">
+      Welcome to Delicute Cloud Kitchen. By accessing or using our services, you agree to be bound by the following terms and conditions. Please review them carefully.
     </p>
-    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">1. General</h2>
-    <p class="text-lg mb-6 leading-relaxed">
-      These terms govern your use of our website and services. We reserve the right to update these terms at any time without prior notice.
-    </p>
-    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">2. Orders and Payments</h2>
-    <p class="text-lg mb-6 leading-relaxed">
-      All orders placed through our website are subject to availability. Payments must be made in full at the time of ordering.
-    </p>
-    <h2 class="text-2xl font-semibold mb-4" style="font-family: 'Playfair Display', serif;">3. Refunds and Cancellations</h2>
-    <p class="text-lg mb-6 leading-relaxed">
-      Refunds are processed within 5-7 business days for eligible cancellations. Please contact our support team for assistance.
-    </p>
-    <div class="text-center mt-10">
-      <a href="index.html#signupModal" class="text-xl text-gray-800 hover-scale mr-6">Back to Signup</a>
-      <a href="index.html#loginModal" class="text-xl text-gray-800 hover-scale">Back to Login</a>
+    <div class="section-divider"></div>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>These terms govern your use of Delicute Cloud Kitchen’s website, mobile applications, and services.</li>
+        <li>We may amend these terms at our discretion. Updated terms will be posted on our website, and continued use constitutes acceptance.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">2. Ordering and Payment</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Orders are subject to product availability and acceptance by Delicute Cloud Kitchen.</li>
+        <li>Full payment is required at the time of order placement through our secure payment gateway.</li>
+        <li>Prices are subject to change without prior notice. Taxes and delivery fees are additional, as applicable.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">3. Cancellations and Refunds</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Cancellations are permitted within 30 minutes of order placement, subject to order status.</li>
+        <li>Eligible refunds will be processed within 5-7 business days to the original payment method.</li>
+        <li>Contact our support team at support@delicutecloudkitchen.com for cancellation or refund requests.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">4. Delivery Services</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Delivery times are estimates and may vary due to traffic, weather, or operational constraints.</li>
+        <li>Customers are responsible for providing accurate delivery address and contact information.</li>
+        <li>Delicute Cloud Kitchen is not liable for delays caused by incorrect or incomplete delivery details.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">5. Food Safety and Allergens</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Our kitchen handles common allergens (e.g., nuts, dairy, gluten). Cross-contamination may occur.</li>
+        <li>Customers with allergies must notify us at the time of ordering; however, we cannot guarantee allergen-free meals.</li>
+        <li>Perishable items must be consumed promptly. We are not liable for improper storage post-delivery.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">6. User Responsibilities</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Users must provide accurate account information and safeguard their login credentials.</li>
+        <li>Unauthorized use of our services, including fraudulent transactions, may result in account termination.</li>
+        <li>Users agree not to engage in activities that disrupt or harm our platform or services.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">7. Intellectual Property</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>All content on our website, including logos, images, and text, is the property of Delicute Cloud Kitchen.</li>
+        <li>Users may not reproduce, distribute, or modify our content without prior written consent.</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">8. Limitation of Liability</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>Delicute Cloud Kitchen is not liable for indirect, incidental, or consequential damages arising from service use.</li>
+        <li>Our total liability is limited to the amount paid for the specific order in question.</li>
+        <li>We are not responsible for damages caused by force majeure events (e.g., natural disasters).</li>
+      </ul>
+    </section>
+    <section class="mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">9. Governing Law</h2>
+      <ul class="list-disc pl-5 mb-4">
+        <li>These terms are governed by the laws of the jurisdiction where Delicute Cloud Kitchen is headquartered.</li>
+        <li>Disputes arising from these terms will be resolved through arbitration or in courts within said jurisdiction.</li>
+      </ul>
+    </section>
+    <div class="text-center mt-8">
+      <a href="index.html#signupModal" class="text-sm sm:text-base font-medium text-gray-700 hover-scale mr-4">Return to Signup</a>
+      <a href="index.html#loginModal" class="text-sm sm:text-base font-medium text-gray-700 hover-scale">Return to Login</a>
     </div>
   </div>
 </body>

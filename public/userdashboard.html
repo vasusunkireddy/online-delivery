@@ -253,20 +253,19 @@
     }
 
     .btn-quantity {
-  background: rgba(255, 255, 255, 0.4);
-  color: #a855f7; /* PURPLE */
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  font-size: 1.25rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
+      background: rgba(255, 255, 255, 0.4);
+      color: #a855f7;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 1.25rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
 
     .btn-quantity:hover:not(:disabled) {
       background: rgba(168, 85, 247, 0.3);
@@ -509,14 +508,12 @@
     }
 
     .dark-mode .search-bar input {
-  /* Stuart color: #a855f7; */  /* Commented for reference if needed */
-  border: none;
-  outline: none;
-  color: var(--text-light);
-  font-size: 1rem;
-  width: 100%;
-}
-
+      border: none;
+      outline: none;
+      color: var(--text-light);
+      font-size: 1rem;
+      width: 100%;
+    }
 
     .dark-mode .search-bar input::placeholder {
       color: #9ca3af;
@@ -538,6 +535,37 @@
 
     .dark-mode .error-message {
       color: #f87171;
+    }
+
+    .tracking-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tracking-step {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      transition: background 0.3s ease;
+    }
+
+    .tracking-step.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+    }
+
+    .tracking-step.inactive {
+      background: rgba(255, 255, 255, 0.4);
+      color: #6b7280;
+    }
+
+    .dark-mode .tracking-step.inactive {
+      background: rgba(255, 255, 255, 0.1);
+      color: #9ca3af;
     }
 
     @media (max-width: 640px) {
@@ -672,8 +700,6 @@
 
       .search-bar {
         padding: 0.5rem 1rem;
-      
-
       }
 
       .search-bar input {
@@ -683,6 +709,16 @@
       .category-filter {
         padding: 0.5rem 1rem;
         font-size: 0.85rem;
+      }
+
+      .tracking-bar {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .tracking-step {
+        font-size: 0.7rem;
+        padding: 0.25rem;
       }
     }
   </style>
@@ -696,17 +732,23 @@
           <span>Delicute</span>
         </div>
         <div class="flex items-center gap-4">
-          <div class="nav-links" id="navLinks"></div>
+          <div class="nav-links" id="navLinks">
+            <div class="nav-link" onclick="utils.scrollToSection('dashboard-content')">Home</div>
+            <div class="nav-link" onclick="utils.scrollToSection('myOrders')">My Orders</div>
+            <div class="nav-link" onclick="utils.scrollToSection('orders')">Order History</div>
+            <div class="nav-link" onclick="utils.scrollToSection('menuSection')">Menu</div>
+          </div>
           <div class="profile-dropdown">
-            <img src="/Uploads/default-profile.png" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
+            <img src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg" alt="Profile Image" class="profile-img" id="profileImg" onclick="ui.toggleDropdown()">
             <div class="dropdown-menu" id="profileDropdown">
               <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')">Home</div>
-              <div class="dropdown-item" onclick="utils.scrollToSection('orders')">Orders</div>
+              <div class="dropdown-item" onclick="utils.scrollToSection('myOrders')">My Orders</div>
+              <div class="dropdown-item" onclick="utils.scrollToSection('orders')">Order History</div>
               <div class="dropdown-item" onclick="ui.openModal('profileModal')">Edit Profile</div>
               <div class="dropdown-item" onclick="ui.openModal('addressModal')">Manage Addresses</div>
               <div class="dropdown-item" onclick="ui.openModal('favoritesModal')">Favorites</div>
               <div class="dropdown-item" onclick="ui.openModal('cartModal')">Cart</div>
-              <div class="dropdown-item" onclick="ui.toggleDarkMode()">Dark Mode</div>
+              <div class="dropdown-item" onclick="ui.toggleDarkMode()">Toggle Dark Mode</div>
               <div class="dropdown-item" onclick="data.logout()">Logout</div>
             </div>
           </div>
@@ -721,8 +763,16 @@
       <div class="hero-section">
         <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-black" style="font-family: 'Playfair Display', serif;">Welcome, <span id="userName">User</span>!</h2>
         <p class="text-base md:text-lg text-black mb-2">Total Orders: <span id="totalOrders">0</span></p>
-        <p class="text-base md:text-lg text-black mb-3">"EVERY BITE TELLS A STORY!</p>
+        <p class="text-base md:text-lg text-black mb-3">"EVERY BITE TELLS A STORY!"</p>
         <button class="btn-primary" onclick="utils.scrollToSection('menuSection')">Explore Menu</button>
+      </div>
+
+      <div class="card" id="myOrders">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xl md:text-2xl font-semibold text-gray-800" style="font-family: 'Playfair Display', serif;">My Orders</h2>
+          <button class="btn-secondary text-sm py-1 px-3" onclick="data.refreshOrders()">Refresh</button>
+        </div>
+        <div id="activeOrders"></div>
       </div>
 
       <div class="card" id="menuSection">
@@ -767,7 +817,7 @@
     <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
         <span class="close-btn" onclick="ui.closeModal('profileModal')">×</span>
-        <img src="/Uploads/default-profile.png" alt="Profile Image" id="profileModalImg">
+        <img src="https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg" alt="Profile Image" id="profileModalImg">
         <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileName">Name *</label>
@@ -784,6 +834,7 @@
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="profileImage">Profile Image (JPEG/PNG, max 2MB)</label>
           <input type="file" id="profileImage" accept="image/jpeg,image/png" class="input-field">
+          <p class="error-message" id="profileImageError"></p>
         </div>
         <button class="btn-primary w-full" onclick="data.updateProfile()">Save Changes</button>
       </div>
@@ -878,6 +929,14 @@
         </form>
       </div>
     </div>
+
+    <div id="trackOrderModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="ui.closeModal('trackOrderModal')">×</span>
+        <h2 class="text-xl md:text-2xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Track Order #<span id="trackOrderId"></span></h2>
+        <div id="trackOrderDetails"></div>
+      </div>
+    </div>
   </div>
 
   <footer class="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-4 text-center">
@@ -898,13 +957,14 @@
     API_BASE_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://delicute.onrender.com',
   };
 
-  const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIu+0H0v0iRpkjQJIYTw+73v+w0TBNF6vW5Wq9U+MAyDw+E4Go3mAZhOp5vVajUHwDRNAHAcB5xzHMcFAoF4PB4Oh8P+ACGEkFIKz/N8+wDAMAy+73sUBAE3Gg0IAoFA4L0IYRiGYRiGYRg0TfM8z/O8V6/Xi8Vi3gdgmibG4/GMMIaGYdi2bdt+vV6v1+v1Wq1WK4QQQgjhcDgcDocLIdR13/c9z/Mcx3EcB0EQBEHAMAxCiO/7Pp7nOQAQQgih1Wp1Op1Op9Pp9Ho9Ho/H4/E4nU6n0+n0f38B6C0Vv8TjN54AAAAASUVORK5CYII=';
+  const placeholderImage = 'https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg';
+  const defaultProfileImage = 'https://res.cloudinary.com/do9cbfu5l/image/upload/v1750187399/delicute/profile/default.jpg';
 
   const sanitizeImageUrl = (url) => {
-    if (!url || url === 'null' || url.includes('via.placeholder.com')) {
-      return placeholderImage;
+    if (!url || url === 'null' || !url.startsWith('https://res.cloudinary.com/')) {
+      return url && url.includes('delicute/profile/') ? url : defaultProfileImage;
     }
-    return url.startsWith('http') ? url : `${state.API_BASE_URL}/Uploads/default-menu.png`;
+    return url;
   };
 
   const utils = {
@@ -927,6 +987,9 @@
     scrollToSection: (sectionId) => {
       const section = document.getElementById(sectionId);
       section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (window.innerWidth <= 640) {
+        ui.toggleNav(); // Close mobile nav after selection
+      }
     },
 
     fetchWithAuth: async (url, options = {}) => {
@@ -992,16 +1055,27 @@
     },
 
     validateImage: (file) => {
-      if (!file) return true; // Allow no file
+      if (!file) return true;
       const validTypes = ['image/jpeg', 'image/png'];
       const maxSize = 2 * 1024 * 1024; // 2MB
-      return validTypes.includes(file.type) && file.size <= maxSize;
+      if (!validTypes.includes(file.type)) {
+        document.getElementById('profileImageError').textContent = 'Only JPEG or PNG images are allowed';
+        document.getElementById('profileImageError').classList.add('show');
+        return false;
+      }
+      if (file.size > maxSize) {
+        document.getElementById('profileImageError').textContent = 'Image size must be under 2MB';
+        document.getElementById('profileImageError').classList.add('show');
+        return false;
+      }
+      document.getElementById('profileImageError').classList.remove('show');
+      return true;
     },
 
     uploadImage: async (file) => {
-      if (!file) return state.user?.image || placeholderImage;
+      if (!file) return state.user?.image || defaultProfileImage;
       if (!utils.validateImage(file)) {
-        throw new Error('Please upload a valid JPEG or PNG image (max 2MB)');
+        throw new Error('Invalid image');
       }
       const formData = new FormData();
       formData.append('image', file);
@@ -1010,13 +1084,13 @@
           method: 'POST',
           body: formData,
         });
-        if (!response.url) {
-          throw new Error('Image upload failed: No URL returned');
+        if (!response.url || !response.url.startsWith('https://res.cloudinary.com/')) {
+          throw new Error('Invalid image URL returned');
         }
         return response.url;
       } catch (error) {
         utils.showToast(error.message || 'Image upload failed', 'error');
-        return state.user?.image || placeholderImage;
+        return state.user?.image || defaultProfileImage;
       }
     },
 
@@ -1033,10 +1107,16 @@
       const hamburger = document.getElementById('hamburger');
       navLinks.classList.toggle('active');
       hamburger.classList.toggle('active');
+      document.getElementById('profileDropdown').classList.remove('show'); // Close dropdown when toggling nav
     },
 
     toggleDropdown: () => {
-      document.getElementById('profileDropdown').classList.toggle('show');
+      const dropdown = document.getElementById('profileDropdown');
+      const isOpen = dropdown.classList.contains('show');
+      dropdown.classList.toggle('show');
+      if (window.innerWidth <= 640 && !isOpen) {
+        ui.toggleNav(); // Close mobile nav when opening dropdown
+      }
     },
 
     openModal: (modalId) => {
@@ -1047,8 +1127,14 @@
         data.loadAddresses();
       } else if (modalId === 'profileModal') {
         ui.loadProfileImage();
+        document.getElementById('profileImageError').classList.remove('show');
+      } else if (modalId === 'addressModal') {
+        data.loadAddresses();
       }
-      ui.toggleDropdown();
+      document.getElementById('profileDropdown').classList.remove('show');
+      if (window.innerWidth <= 640) {
+        ui.toggleNav();
+      }
     },
 
     closeModal: (modalId) => {
@@ -1063,6 +1149,7 @@
       document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
       utils.showToast(`Switched to ${document.body.classList.contains('dark-mode') ? 'Dark' : 'Light'} Mode`, 'success');
+      document.getElementById('profileDropdown').classList.remove('show');
     },
 
     loadDarkMode: () => {
@@ -1083,7 +1170,7 @@
     },
 
     loadProfileImage: () => {
-      const imageUrl = state.user?.image ? sanitizeImageUrl(state.user.image) : placeholderImage;
+      const imageUrl = state.user?.image ? sanitizeImageUrl(state.user.image) : defaultProfileImage;
       document.getElementById('profileModalImg').src = imageUrl;
       document.getElementById('profileImg').src = imageUrl;
     },
@@ -1386,12 +1473,12 @@
               <p class="text-gray-600 text-sm mb-2">${item.description || 'No description'}</p>
               <p class="text-purple-600 font-bold text-base">₹${parseFloat(item.price * item.quantity).toFixed(2)} (₹${parseFloat(item.price).toFixed(2)} x ${item.quantity})</p>
               <div class="flex items-center gap-2 mt-2">
-                <button class="btn-quantity" ${item.quantity <= 1 || state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
                 <span class="text-sm font-medium">${item.quantity}</span>
-                <button class="btn-quantity" ${state.cartUpdating ? 'disabled' : ''} onclick="data.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                <button class="btn-quantity" onclick="data.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
               </div>
             </div>
-            <button class="btn-secondary text-sm py-1 px-3" ${state.cartUpdating ? 'disabled' : ''} onclick="data.removeFromCart(${item.id})">Remove</button>
+            <button class="btn-secondary text-sm py-1 px-3" onclick="data.removeFromCart(${item.id})">Remove</button>
           </div>
         `;
       });
@@ -1404,7 +1491,7 @@
       if (state.cart.length === 0) {
         cartItems.innerHTML = '<p class="text-center text-gray-600 text-sm">Your cart is empty.</p>';
       }
-      document.getElementById('placeOrderBtn').disabled = state.cart.length === 0 || state.cartUpdating;
+      document.getElementById('placeOrderBtn').disabled = state.cart.length === 0;
     },
 
     addToCart: async (id, name, price, image) => {
@@ -1421,7 +1508,7 @@
               itemId: id,
               name,
               price: parseFloat(price),
-              image,
+              image: sanitizeImageUrl(image),
               quantity: 1,
             }),
           });
@@ -1467,23 +1554,21 @@
         utils.showToast('Item removed from cart!', 'success');
         data.renderCart();
       } catch (error) {
-        utils.showToast(error.message || 'Failed to remove item from cart', 'error');
+        utils.showToast(error.message || 'Failed to remove item', 'error');
       } finally {
         ui.toggleCartLoading(false);
       }
     },
 
     clearCart: async () => {
-      if (state.cartUpdating) return;
+      if (state.cartUpdating || state.cart.length === 0) return;
+      if (!confirm('Are you sure you want to clear your cart?')) return;
       try {
         ui.toggleCartLoading(true);
         await utils.fetchWithAuth('/api/user/cart', { method: 'DELETE' });
         state.cart = [];
         state.appliedCoupon = null;
-        document.getElementById('couponCode').value = '';
-        document.getElementById('couponCode').classList.remove('valid', 'invalid');
-        document.getElementById('couponError').classList.remove('show');
-        utils.showToast('Cart cleared successfully!', 'success');
+        utils.showToast('Cart cleared!', 'success');
         data.renderCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to clear cart', 'error');
@@ -1493,113 +1578,93 @@
     },
 
     validateCouponInput: () => {
-      const input = document.getElementById('couponCode');
-      const error = document.getElementById('couponError');
-      const code = input.value.trim();
-      if (code && state.coupons.some(coupon => coupon.code === code)) {
-        input.classList.add('valid');
-        input.classList.remove('invalid');
-        error.classList.remove('show');
-      } else if (code) {
-        input.classList.add('invalid');
-        input.classList.remove('valid');
-        error.textContent = 'Invalid coupon code';
-        error.classList.add('show');
+      const couponInput = document.getElementById('couponCode');
+      const couponError = document.getElementById('couponError');
+      const code = couponInput.value.trim().toUpperCase();
+      if (!code) {
+        couponInput.classList.remove('valid', 'invalid');
+        couponError.classList.remove('show');
+        return;
+      }
+      const validCoupon = state.coupons.find(c => c.code === code);
+      if (validCoupon) {
+        couponInput.classList.add('valid');
+        couponInput.classList.remove('invalid');
+        couponError.classList.remove('show');
       } else {
-        input.classList.remove('valid', 'invalid');
-        error.classList.remove('show');
+        couponInput.classList.add('invalid');
+        couponInput.classList.remove('valid');
+        couponError.textContent = 'Invalid coupon code';
+        couponError.classList.add('show');
       }
     },
 
     applyCoupon: async () => {
-      if (state.cartUpdating) return;
-      const code = document.getElementById('couponCode').value.trim();
+      const code = document.getElementById('couponCode').value.trim().toUpperCase();
       if (!code) {
-        document.getElementById('couponError').textContent = 'Enter a coupon code';
-        document.getElementById('couponError').classList.add('show');
-        document.getElementById('couponCode').classList.add('invalid');
-        return;
+        return utils.showToast('Please enter a coupon code', 'error');
       }
       try {
-        ui.toggleCartLoading(true);
-        const coupon = await utils.fetchWithAuth(`/api/user/coupons/validate?code=${encodeURIComponent(code)}`);
-        state.appliedCoupon = { code: coupon.code, discount: coupon.discount };
-        document.getElementById('couponCode').value = coupon.code;
-        document.getElementById('couponCode').classList.add('valid');
-        document.getElementById('couponCode').classList.remove('invalid');
-        document.getElementById('couponError').classList.remove('show');
-        utils.showToast(`Coupon ${coupon.code} applied!`, 'success');
+        const response = await utils.fetchWithAuth(`/api/user/coupons/apply?code=${encodeURIComponent(code)}`);
+        state.appliedCoupon = { code, discount: response.discount };
+        utils.showToast(`Coupon ${code} applied! ${response.discount}% off`, 'success');
         data.renderCart();
       } catch (error) {
-        document.getElementById('couponError').textContent = error.message || 'Failed to validate coupon';
+        utils.showToast(error.message || 'Failed to apply coupon', 'error');
+        document.getElementById('couponError').textContent = error.message || 'Invalid coupon code';
         document.getElementById('couponError').classList.add('show');
-        document.getElementById('couponCode').classList.add('invalid');
-        document.getElementById('couponCode').classList.remove('valid');
-        utils.showToast(error.message || 'Failed to validate coupon', 'error');
-      } finally {
-        ui.toggleCartLoading(false);
       }
     },
 
     applyCouponFromList: async (code, discount) => {
-      if (state.cartUpdating) return;
       try {
-        ui.toggleCartLoading(true);
         state.appliedCoupon = { code, discount };
+        utils.showToast(`Coupon ${code} applied! ${discount}% off`, 'success');
+        data.renderCart();
+        ui.closeModal('cartModal');
+        ui.openModal('cartModal');
         document.getElementById('couponCode').value = code;
         document.getElementById('couponCode').classList.add('valid');
-        document.getElementById('couponCode').classList.remove('invalid');
-        document.getElementById('couponError').classList.remove('show');
-        utils.showToast(`Coupon ${code} applied!`, 'success');
-        data.renderCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to apply coupon', 'error');
-      } finally {
-        ui.toggleCartLoading(false);
       }
     },
 
-    placeOrder: async (method) => {
-      if (state.cartUpdating) return;
-      const selectedAddress = document.getElementById('cartAddressSelect').value;
-      if (!selectedAddress) {
-        utils.showToast('Please select an address', 'error');
-        document.getElementById('cartAddressSelect').classList.add('invalid');
-        return;
-      }
-      if (state.cart.length === 0) {
-        utils.showToast('Your cart is empty', 'error');
-        return;
+    placeOrder: async (paymentMethod) => {
+      if (state.cartUpdating || state.cart.length === 0) return;
+      const addressId = document.getElementById('cartAddressSelect').value;
+      if (!addressId) {
+        return utils.showToast('Please select a delivery address', 'error');
       }
       try {
         ui.toggleCartLoading(true);
         const orderData = {
-          addressId: parseInt(selectedAddress),
           items: state.cart.map(item => ({
             itemId: item.itemId,
-            name: item.name,
-            price: parseFloat(item.price),
             quantity: item.quantity,
-            image: item.image,
+            price: item.price,
+            name: item.name,
           })),
-          couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
-          paymentMethod: method,
-          deliveryCost: 0,
-          total: parseFloat(document.getElementById('cartFinalTotal').textContent),
+          addressId: parseInt(addressId),
+          couponCode: state.appliedCoupon?.code || null,
+          paymentMethod,
+          orderDate: utils.formatDateForMySQL(new Date()),
         };
-        const response = await utils.fetchWithAuth('/api/user/orders', {
+        for (const item of orderData.items) {
+          if (!item.itemId || !item.price || !item.quantity || !item.name) {
+            throw new Error('Invalid item data');
+          }
+        }
+        await utils.fetchWithAuth('/api/user/orders', {
           method: 'POST',
           body: JSON.stringify(orderData),
         });
-        utils.showToast(`Order #${response.orderId} placed successfully!`, 'success');
         state.cart = [];
         state.appliedCoupon = null;
-        document.getElementById('couponCode').value = '';
-        document.getElementById('couponCode').classList.remove('valid', 'invalid');
-        document.getElementById('couponError').classList.remove('show');
-        data.renderCart();
-        data.loadOrderHistory();
+        utils.showToast('Order placed successfully!', 'success');
         ui.closeModal('cartModal');
+        data.loadOrders();
+        data.renderCart();
       } catch (error) {
         utils.showToast(error.message || 'Failed to place order', 'error');
       } finally {
@@ -1607,33 +1672,96 @@
       }
     },
 
-    loadOrderHistory: async () => {
+    loadOrders: async () => {
       try {
         state.orders = await utils.fetchWithAuth('/api/user/orders');
-        data.renderOrderHistory();
+        document.getElementById('totalOrders').textContent = state.orders.length;
+        data.renderOrders();
+        data.renderActiveOrders();
       } catch (error) {
-        utils.showToast(error.message || 'Failed to load order history', 'error');
+        utils.showToast(error.message || 'Failed to load orders', 'error');
       }
     },
 
-    renderOrderHistory: () => {
+    renderOrders: () => {
       const orderHistory = document.getElementById('orderHistory');
       orderHistory.innerHTML = '';
       if (state.orders.length === 0) {
-        orderHistory.innerHTML = '<p class="text-center text-gray-600 text-sm">No orders found.</p>';
+        orderHistory.innerHTML = '<p class="text-center text-gray-600 text-sm">No orders yet.</p>';
         return;
       }
       state.orders.forEach(order => {
-        const canCancel = ['pending', 'confirmed'].includes(order.status.toLowerCase());
+        const itemsList = order.items.map(item => `
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm text-gray-600">${item.name} x${item.quantity}</span>
+            <span class="text-sm text-purple-600">₹${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `).join('');
+        const subtotal = order.subtotal || 0;
+        const discount = order.discount || 0;
+        const deliveryFee = order.deliveryFee || 0;
+        const total = order.total || subtotal - discount + deliveryFee;
         orderHistory.innerHTML += `
           <div class="order-card">
             <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
-            <p class="text-gray-600 text-sm">Date: ${order.date}</p>
-            <p class="text-gray-600 text-sm">Items: ${order.items.join(', ') || 'No items'}</p>
-            <p class="text-gray-600 text-sm">Total: ₹${order.total}</p>
-            <p class="text-gray-600 text-sm">Delivery: ₹${order.delivery}</p>
-            <p class="text-gray-600 text-sm">Status: ${order.status}</p>
-            ${order.cancellationReason ? `<p class="text-gray-600 text-sm">Cancellation Reason: ${order.cancellationReason}</p>` : ''}
+            <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+            <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
+            <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
+            ${itemsList}
+            <p class="text-gray-600 text-sm mb-1">Subtotal: ₹${parseFloat(subtotal).toFixed(2)}</p>
+            <p class="text-green-600 text-sm mb-1">Discount: ₹${parseFloat(discount).toFixed(2)}</p>
+            <p class="text-gray-600 text-sm mb-1">Delivery: ₹${parseFloat(deliveryFee).toFixed(2)}</p>
+            <p class="text-lg font-bold text-gray-800 mb-2">Total: ₹${parseFloat(total).toFixed(2)}</p>
+          </div>
+        `;
+      });
+    },
+
+    renderActiveOrders: () => {
+      const activeOrders = document.getElementById('activeOrders');
+      activeOrders.innerHTML = '';
+      const active = state.orders.filter(order => ['Pending', 'Confirmed', 'In Transit'].includes(order.status));
+      if (active.length === 0) {
+        activeOrders.innerHTML = '<p class="text-center text-gray-600 text-sm">No active orders.</p>';
+        return;
+      }
+      active.forEach(order => {
+        const itemsList = order.items.map(item => `
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm text-gray-600">${item.name} x${item.quantity}</span>
+            <span class="text-sm text-purple-600">₹${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `).join('');
+        const subtotal = order.subtotal || 0;
+        const discount = order.discount || 0;
+        const deliveryFee = order.deliveryFee || 0;
+        const total = order.total || subtotal - discount + deliveryFee;
+        const canCancel = ['Pending', 'Confirmed'].includes(order.status);
+        const trackingSteps = [
+          { name: 'Order Placed', active: ['Pending', 'Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
+          { name: 'Confirmed', active: ['Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
+          { name: 'In Transit', active: ['In Transit', 'Delivered'].includes(order.status) },
+          { name: 'Delivered', active: order.status === 'Delivered' },
+        ];
+        const trackingBar = `
+          <div class="tracking-bar">
+            ${trackingSteps.map(step => `
+              <div class="tracking-step ${step.active ? 'active' : 'inactive'}">${step.name}</div>
+            `).join('')}
+          </div>
+        `;
+        activeOrders.innerHTML += `
+          <div class="order-card">
+            <h3 class="text-base font-semibold text-gray-800">Order #${order.id}</h3>
+            <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+            <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
+            <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
+            ${itemsList}
+            <p class="text-gray-600 text-sm mb-1">Subtotal: ₹${parseFloat(subtotal).toFixed(2)}</p>
+            <p class="text-green-600 text-sm mb-1">Discount: ₹${parseFloat(discount).toFixed(2)}</p>
+            <p class="text-gray-600 text-sm mb-1">Delivery: ₹${parseFloat(deliveryFee).toFixed(2)}</p>
+            <p class="text-lg font-bold text-gray-800 mb-2">Total: ₹${parseFloat(total).toFixed(2)}</p>
+            ${trackingBar}
             <div class="flex gap-2 mt-2">
               <button class="btn-primary text-sm py-1 px-3" onclick="data.trackOrder(${order.id})">Track Order</button>
               ${canCancel ? `<button class="btn-secondary text-sm py-1 px-3" onclick="data.openCancelOrderModal(${order.id})">Cancel Order</button>` : ''}
@@ -1641,19 +1769,6 @@
           </div>
         `;
       });
-      document.getElementById('totalOrders').textContent = state.orders.length;
-    },
-
-    clearOrderHistory: async () => {
-      if (!confirm('Are you sure you want to clear your order history? This action cannot be undone.')) return;
-      try {
-        await utils.fetchWithAuth('/api/user/orders/clear', { method: 'DELETE' });
-        state.orders = [];
-        data.renderOrderHistory();
-        utils.showToast('Order history cleared!', 'success');
-      } catch (error) {
-        utils.showToast(error.message || 'Failed to clear order history', 'error');
-      }
     },
 
     openCancelOrderModal: (orderId) => {
@@ -1666,41 +1781,64 @@
       e.preventDefault();
       const orderId = document.getElementById('cancelOrderId').value;
       const reason = document.getElementById('cancelReason').value.trim();
-      if (!reason) return utils.showToast('Please provide a reason', 'error');
+      if (!reason) {
+        return utils.showToast('Please provide a cancellation reason', 'error');
+      }
       try {
         await utils.fetchWithAuth(`/api/user/orders/${orderId}/cancel`, {
           method: 'PUT',
           body: JSON.stringify({ reason }),
         });
         utils.showToast('Order cancelled successfully!', 'success');
-        document.getElementById('cancelOrderForm').reset();
         ui.closeModal('cancelOrderModal');
-        data.loadOrderHistory();
+        data.loadOrders();
       } catch (error) {
         utils.showToast(error.message || 'Failed to cancel order', 'error');
       }
     },
 
-    trackOrder: async (id) => {
+    trackOrder: async (orderId) => {
       try {
-        const updatedOrder = await utils.fetchWithAuth(`/api/user/orders/${id}`);
-        utils.showToast(`Order #${id} Status: ${updatedOrder.status}`, 'success');
+        const order = state.orders.find(o => o.id === parseInt(orderId));
+        if (!order) {
+          throw new Error('Order not found');
+        }
+        document.getElementById('trackOrderId').textContent = orderId;
+        const trackingSteps = [
+          { name: 'Order Placed', active: ['Pending', 'Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
+          { name: 'Confirmed', active: ['Confirmed', 'In Transit', 'Delivered'].includes(order.status) },
+          { name: 'In Transit', active: ['In Transit', 'Delivered'].includes(order.status) },
+          { name: 'Delivered', active: order.status === 'Delivered' },
+        ];
+        document.getElementById('trackOrderDetails').innerHTML = `
+          <p class="text-gray-600 text-sm mb-1">Status: <span class="${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-yellow-600'}">${order.status}</span></p>
+          <p class="text-gray-600 text-sm mb-1">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+          <p class="text-gray-600 text-sm mb-1">Address: ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}</p>
+          <div class="tracking-bar">
+            ${trackingSteps.map(step => `
+              <div class="tracking-step ${step.active ? 'active' : 'inactive'}">${step.name}</div>
+            `).join('')}
+          </div>
+        `;
+        ui.openModal('trackOrderModal');
       } catch (error) {
-        utils.showToast(error.message || 'Failed to track order', 'error');
+        utils.showToast(error.message || 'Failed to load tracking details', 'error');
       }
     },
 
-    logout: async () => {
+    refreshOrders: async () => {
       try {
-        await utils.fetchWithAuth('/api/user/logout', { method: 'POST' });
-        localStorage.removeItem('token');
-        window.location.href = '/index.html';
-        utils.showToast('Logged out successfully!', 'success');
+        await data.loadOrders();
+        utils.showToast('Orders refreshed!', 'success');
       } catch (error) {
-        utils.showToast(error.message || 'Failed to logout', 'error');
-        localStorage.removeItem('token');
-        window.location.href = '/index.html';
+        utils.showToast(error.message || 'Failed to refresh orders', 'error');
       }
+    },
+
+    logout: () => {
+      localStorage.removeItem('token');
+      utils.showToast('Logged out successfully!', 'success');
+      setTimeout(() => window.location.href = '/index.html', 1500);
     },
   };
 
@@ -1710,20 +1848,19 @@
       return;
     }
     ui.loadDarkMode();
-    document.getElementById('addressForm').addEventListener('submit', data.addOrUpdateAddress);
-    document.getElementById('cancelOrderForm').addEventListener('submit', data.cancelOrder);
     await Promise.all([
       data.loadProfile(),
-      data.loadAddresses(),
       data.loadMenu(),
       data.loadCoupons(),
       data.loadFavorites(),
-      data.loadOrderHistory(),
+      data.loadOrders(),
     ]);
+    document.getElementById('addressForm').addEventListener('submit', data.addOrUpdateAddress);
+    document.getElementById('cancelOrderForm').addEventListener('submit', data.cancelOrder);
   };
 
   const debounceSearch = utils.debounce(data.searchMenu, 300);
-  window.addEventListener('load', init);
-</script>
-</body>
-</html>
+  init();
+  </script>
+  </body>
+  </html>

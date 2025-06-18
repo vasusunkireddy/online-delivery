@@ -94,7 +94,7 @@ app.get('*', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
-  if (err.message === 'Only JPEG or PNG images are allowed') {
+  if (err.message === 'Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed') {
     return res.status(400).json({ error: err.message });
   }
   if (err.code === 'LIMIT_FILE_SIZE') {

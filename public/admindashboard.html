@@ -308,6 +308,21 @@
       box-shadow: var(--shadow-hover);
     }
 
+    .btn-restore {
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.3rem;
+      font-size: 0.8rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .btn-restore:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-hover);
+    }
+
     .input-field {
       background: rgba(255, 255, 255, 0.9);
       border: 1px solid rgba(0, 0, 0, 0.1);
@@ -322,6 +337,18 @@
       border-color: #a855f7;
       box-shadow: 0 0 5px rgba(168, 85, 247, 0.2);
       outline: none;
+    }
+
+    .search-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .search-input {
+      flex-grow: 1;
+      max-width: 300px;
     }
 
     .table-container {
@@ -532,6 +559,16 @@
       margin-top: auto;
     }
 
+    .checkbox {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+    }
+
+    .select-all-checkbox {
+      margin-right: 0.5rem;
+    }
+
     @media (max-width: 640px) {
       .hamburger {
         display: flex;
@@ -616,9 +653,18 @@
         gap: 0.5rem;
       }
 
-      .btn-primary, .btn-danger, .btn-toggle {
+      .btn-primary, .btn-danger, .btn-toggle, .btn-restore {
         padding: 0.4rem 0.8rem;
         font-size: 0.75rem;
+      }
+
+      .search-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-input {
+        max-width: 100%;
       }
     }
 
@@ -638,7 +684,7 @@
     <nav class="nav-container">
       <div class="flex flex-col items-start">
         <div class="logo">
-          <img src="https://i.postimg.cc/zv19J0xv/Zbhz-Fq-T-Imgur.jpg" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
+          <img src="https://i.postimg.cc/petG7m0x/Zbhz.png" alt="Delicute Logo" class="w-8 h-8 mr-2 rounded-full">
           <span>Delicute Admin</span>
         </div>
         <p class="subtext">Craft Your Culinary Experience</p>
@@ -679,6 +725,7 @@
           <button class="btn-primary" onclick="openModal('addCouponModal')">Add Coupon</button>
           <button class="btn-primary" onclick="scrollToSection('customerTable')">View Customers</button>
           <button class="btn-primary" onclick="scrollToSection('orderTable')">View Orders</button>
+          <button class="btn-primary" onclick="scrollToSection('trashTable')">View Trash</button>
         </div>
       </div>
     </section>
@@ -747,12 +794,28 @@
       </div>
     </section>
 
-    <section>
+    <section class="mb-8">
       <h2 class="section-title">Orders</h2>
+      <div class="search-container">
+        <input type="text" id="orderSearch" class="input-field search-input" placeholder="Search by ID, customer, or status">
+        <button class="btn-primary" onclick="searchOrders()">Search</button>
+        <button class="btn-danger" onclick="clearOrderSearch()">Clear</button>
+      </div>
+      <div class="flex justify-between mb-4">
+        <div class="flex items-center">
+          <input type="checkbox" id="selectAllOrders" class="checkbox select-all-checkbox" onclick="toggleSelectAllOrders()">
+          <label for="selectAllOrders" class="text-sm font-semibold">Select All</label>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-danger" onclick="deleteSelectedOrders()" disabled id="deleteSelectedOrdersBtn">Delete Selected</button>
+          <button class="btn-danger" onclick="clearAllOrders()">Clear All Orders</button>
+        </div>
+      </div>
       <div class="table-container">
         <table id="orderTable">
           <thead>
             <tr>
+              <th><input type="checkbox" id="selectAllOrdersHeader" class="checkbox" onclick="toggleSelectAllOrders()"></th>
               <th>ID</th>
               <th>Customer</th>
               <th>Address</th>
@@ -760,11 +823,41 @@
               <th>Total (₹)</th>
               <th>Payment Status</th>
               <th>Status</th>
+              <th>Reason</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="orderTableBody">
-            <tr><td colspan="8" class="loading-state">Loading orders...</td></tr>
+            <tr><td colspan="10" class="loading-state">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="section-title">Trash</h2>
+      <div class="flex justify-between mb-4">
+        <div class="flex items-center">
+          <input type="checkbox" id="selectAllTrash" class="checkbox select-all-checkbox" onclick="toggleSelectAllTrash()">
+          <label for="selectAllTrash" class="text-sm font-semibold">Select All</label>
+        </div>
+        <button class="btn-danger" onclick="deleteSelectedTrashedOrders()" disabled id="deleteSelectedTrashBtn">Delete Selected</button>
+      </div>
+      <div class="table-container">
+        <table id="trashTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllTrashHeader" class="checkbox" onclick="toggleSelectAllTrash()"></th>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Total (₹)</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="trashTableBody">
+            <tr><td colspan="7" class="loading-state">Loading trashed orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -800,7 +893,7 @@
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="menuImage">Image</label>
-          <input type="file" id="menuImage" class="input-field" accept="image/jpeg,image/png">
+          <input type="file" id="menuImage" class="input-field" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/svg+xml">
         </div>
         <input type="hidden" id="menuId">
         <button class="btn-primary w-full" onclick="saveMenuItem()">Save</button>
@@ -827,7 +920,7 @@
         </div>
         <div class="mb-3">
           <label class="block text-gray-700 mb-1 text-sm" for="couponImage">Image</label>
-          <input type="file" id="couponImage" class="input-field" accept="image/jpeg,image/png">
+          <input type="file" id="couponImage" class="input-field" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/svg+xml">
         </div>
         <input type="hidden" id="couponId">
         <button class="btn-primary w-full" onclick="saveCoupon()">Save</button>
@@ -850,517 +943,733 @@
   </footer>
 
   <script>
-  const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-  const apiPrefix = '/api/admin';
-  const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIu+0H0v0iRpkjQJIYTw+73v+w0TBNF6vW5Wq9U+MAyDw+E4Go3mAZhOp5vVajUHwDRNAHAcB5xzHMcFAoF4PB4Oh8P+ACGEkFIKz/N8+wDAMAy+73sUBAE3Gg0IAoFA4L0IYRiGYRiGYRg0TfM8z/O8V6/Xi8Vi3gdgmibG4/GMMIaGYdi2bdt+vV6v1+v1Wq1WK4QQQgjhcDgcDocLIdR13/c9z/Mcx3EcB0EQBEHAMAxCiO/7Pp7nOQAQQgih1Wp1Op1Op9Pp9Ho9Ho/H4/E4nU6n0+n0f38B6C0Vv8TjN54AAAAASUVORK5CYII=';
-  let sessionValid = false;
-  let sessionExpiredShown = false;
+    const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+    const apiPrefix = '/api/admin';
+    const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIu+0H0v0iRpkjQJIYTw+73v+w0TBNF6vW5Wq9U+MAyDw+E4Go3mAZhOp5vVajUHwDRNAHAcB5xzHMcFAoF4PB4Oh8P+ACGEkFIKz/N8+wDAMAy+73sUBAE3Gg0IAoFA4L0IYRiGYRiGYRg0TfM8z/O8V6/Xi8Vi3gdgmibG4/GMMIaGYdi2bdt+vV6v1+v1Wq1WK4QQQgjhcDgcDocLIdR13/c9z/Mcx3EcB0EQBEHAMAxCiO/7Pp7nOQAQQgih1Wp1Op1Op9Pp9Ho9Ho/H4/E4nU6n0+n0f38B6C0Vv8TjN54AAAAASUVORK5CYII=';
+    let sessionValid = false;
+    let sessionExpiredShown = false;
+    let orders = [];
+    let trashedOrders = [];
 
-  async function checkSession() {
-    if (sessionValid) return true;
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) throw new Error('No token found');
-      const response = await fetch(`${baseUrl}${apiPrefix}/check-session`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        if (data.error === 'Customer is blocked') {
-          showToast('Your account is blocked. Contact support.', 'error');
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminUser');
-          setTimeout(() => window.location.href = '/admin.html', 1000);
-          return false;
-        }
-        throw new Error(`Session check failed: ${data.error || response.statusText}`);
-      }
-      sessionValid = true;
-      return true;
-    } catch (error) {
-      console.error('Session check error:', error.message);
-      if (!sessionExpiredShown) {
-        showToast('Session expired. Please log in again.', 'error');
-        sessionExpiredShown = true;
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        setTimeout(() => window.location.href = '/admin.html', 1000);
-      }
-      return false;
-    }
-  }
-
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  async function handleFetch(url, options = {}) {
-    if (!(await checkSession())) throw new Error('Session check failed');
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${baseUrl}${url}`, {
-        ...options,
-        headers: {
-          ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-        signal: AbortSignal.timeout(30000),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          if (!sessionExpiredShown) {
-            showToast('Session expired. Please log in again.', 'error');
-            sessionExpiredShown = true;
+    async function checkSession() {
+      if (sessionValid) return true;
+      try {
+        const token = localStorage.getItem('adminToken');
+        if (!token) throw new Error('No token found');
+        const response = await fetch(`${baseUrl}${apiPrefix}/check-session`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          if (data.error === 'Customer is blocked') {
+            showToast('Your account is blocked. Contact support.', 'error');
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
             setTimeout(() => window.location.href = '/admin.html', 1000);
+            return false;
           }
-        } else if (response.status === 404) {
-          throw new Error(`API endpoint not found: ${url}`);
-        } else if (response.status === 413) {
-          throw new Error('File too large. Please upload an image under 5MB.');
+          throw new Error(`Session check failed: ${data.error || response.statusText}`);
         }
-        throw new Error(errorData.error || `HTTP ${response.status}: API error`);
+        sessionValid = true;
+        return true;
+      } catch (error) {
+        if (!sessionExpiredShown) {
+          showToast('Session expired. Please log in again.', 'error');
+          sessionExpiredShown = true;
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          setTimeout(() => window.location.href = '/admin.html', 1000);
+        }
+        return false;
       }
-      return await response.json();
-    } catch (error) {
-      console.error(`Fetch error for ${url}:`, error.message);
-      if (!sessionExpiredShown || error.message.includes('404') || error.message.includes('File too large')) {
-        showToast(`${error.message}.`, 'error');
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    async function handleFetch(url, options = {}) {
+      if (!(await checkSession())) throw new Error('Session check failed');
+      try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch(`${baseUrl}${url}`, {
+          ...options,
+          headers: {
+            ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+            'Authorization': `Bearer ${token}`,
+            ...options.headers,
+          },
+          signal: AbortSignal.timeout(30000),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          if (response.status === 401) {
+            if (!sessionExpiredShown) {
+              showToast('Session expired. Please log in again.', 'error');
+              sessionExpiredShown = true;
+              localStorage.removeItem('adminToken');
+              localStorage.removeItem('adminUser');
+              setTimeout(() => window.location.href = '/admin.html', 1000);
+            }
+          } else if (response.status === 404) {
+            throw new Error(`API endpoint not found: ${url}`);
+          } else if (response.status === 413) {
+            throw new Error('File too large. Please upload an image under 2MB.');
+          }
+          throw new Error(data.error || `HTTP ${response.status}: API error`);
+        }
+        return data;
+      } catch (error) {
+        if (!sessionExpiredShown || error.message.includes('404') || error.message.includes('File too large')) {
+          showToast(`${error.message}.`, 'error');
+        }
+        throw error;
       }
-      throw error;
     }
-  }
 
-  function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-  }
-
-  function toggleMobileMenu() {
-    const mobileMenu = document.querySelector('.mobile-menu');
-    const hamburger = document.querySelector('.hamburger');
-    mobileMenu.classList.toggle('active');
-    hamburger.classList.toggle('active');
-  }
-
-  function scrollToSection(tableId) {
-    const section = document.getElementById(tableId).closest('section');
-    section.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function openModal(modalId, data = {}) {
-    const modal = document.getElementById(modalId);
-    modal.style.display = 'flex';
-    if (modalId === 'addMenuModal') {
-      document.getElementById('menuModalTitle').textContent = data.id ? 'Edit Menu Item' : 'Add Menu Item';
-      document.getElementById('menuId').value = data.id || '';
-      document.getElementById('menuName').value = data.name || '';
-      document.getElementById('menuPrice').value = data.price || '';
-      document.getElementById('menuCategory').value = data.category || 'dessert';
-      document.getElementById('menuDescription').value = data.description || '';
-      document.getElementById('menuImage').value = '';
-    } else if (modalId === 'addCouponModal') {
-      document.getElementById('couponModalTitle').textContent = data.id ? 'Edit Coupon' : 'Add Coupon';
-      document.getElementById('couponId').value = data.id || '';
-      document.getElementById('couponCode').value = data.code || '';
-      document.getElementById('couponDiscount').value = data.discount || '';
-      document.getElementById('couponDescription').value = data.description || '';
-      document.getElementById('couponImage').value = '';
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
-  }
 
-  function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.classList.add('modal-closing');
-    setTimeout(() => {
-      modal.style.display = 'none';
-      modal.classList.remove('modal-closing');
+    function toggleMobileMenu() {
+      const mobileMenu = document.querySelector('.mobile-menu');
+      const hamburger = document.querySelector('.hamburger');
+      mobileMenu.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    }
+
+    function scrollToSection(tableId) {
+      const section = document.getElementById(tableId).closest('section');
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function openModal(modalId, data = {}) {
+      const modal = document.getElementById(modalId);
+      modal.style.display = 'flex';
       if (modalId === 'addMenuModal') {
-        document.getElementById('menuId').value = '';
-        document.getElementById('menuName').value = '';
-        document.getElementById('menuPrice').value = '';
-        document.getElementById('menuCategory').value = 'dessert';
-        document.getElementById('menuDescription').value = '';
+        document.getElementById('menuModalTitle').textContent = data.id ? 'Edit Menu Item' : 'Add Menu Item';
+        document.getElementById('menuId').value = data.id || '';
+        document.getElementById('menuName').value = data.name || '';
+        document.getElementById('menuPrice').value = data.price || '';
+        document.getElementById('menuCategory').value = data.category || 'dessert';
+        document.getElementById('menuDescription').value = data.description || '';
         document.getElementById('menuImage').value = '';
       } else if (modalId === 'addCouponModal') {
-        document.getElementById('couponId').value = '';
-        document.getElementById('couponCode').value = '';
-        document.getElementById('couponDiscount').value = '';
-        document.getElementById('couponDescription').value = '';
+        document.getElementById('couponModalTitle').textContent = data.id ? 'Edit Coupon' : 'Add Coupon';
+        document.getElementById('couponId').value = data.id || '';
+        document.getElementById('couponCode').value = data.code || '';
+        document.getElementById('couponDiscount').value = data.discount || '';
+        document.getElementById('couponDescription').value = data.description || '';
         document.getElementById('couponImage').value = '';
       }
-    }, 300);
-  }
-
-  async function saveMenuItem() {
-    const id = document.getElementById('menuId').value;
-    const name = document.getElementById('menuName').value;
-    const price = document.getElementById('menuPrice').value;
-    const category = document.getElementById('menuCategory').value;
-    const description = document.getElementById('menuDescription').value;
-    const image = document.getElementById('menuImage').files[0];
-
-    if (!name || !price || !category) {
-      showToast('Please fill in all required fields', 'error');
-      return;
     }
 
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.type)) {
-        showToast('Only JPEG or PNG images are allowed', 'error');
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.add('modal-closing');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('modal-closing');
+        if (modalId === 'addMenuModal') {
+          document.getElementById('menuId').value = '';
+          document.getElementById('menuName').value = '';
+          document.getElementById('menuPrice').value = '';
+          document.getElementById('menuCategory').value = 'dessert';
+          document.getElementById('menuDescription').value = '';
+          document.getElementById('menuImage').value = '';
+        } else if (modalId === 'addCouponModal') {
+          document.getElementById('couponId').value = '';
+          document.getElementById('couponCode').value = '';
+          document.getElementById('couponDiscount').value = '';
+          document.getElementById('couponDescription').value = '';
+          document.getElementById('couponImage').value = '';
+        }
+      }, 300);
+    }
+
+    async function saveMenuItem() {
+      const id = document.getElementById('menuId').value;
+      const name = document.getElementById('menuName').value;
+      const price = document.getElementById('menuPrice').value;
+      const category = document.getElementById('menuCategory').value;
+      const description = document.getElementById('menuDescription').value;
+      const image = document.getElementById('menuImage').files[0];
+
+      if (!name || !price || !category) {
+        showToast('Please fill in all required fields', 'error');
         return;
       }
-      if (image.size > 5 * 1024 * 1024) {
-        showToast('Image size must be under 5MB', 'error');
+
+      if (image) {
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml'].includes(image.type)) {
+          showToast('Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed', 'error');
+          return;
+        }
+        if (image.size > 2 * 1024 * 1024) {
+          showToast('Image size must be under 2MB', 'error');
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('price', price);
+      formData.append('category', category);
+      formData.append('description', description || '');
+      if (image) formData.append('image', image);
+
+      try {
+        const url = id ? `${apiPrefix}/menu/${id}` : `${apiPrefix}/menu`;
+        const method = id ? 'PUT' : 'POST';
+        await handleFetch(url, { method, body: formData });
+        showToast(id ? 'Menu item updated!' : 'Menu item added!', 'success');
+        closeModal('addMenuModal');
+        loadMenuItems();
+      } catch (error) {}
+    }
+
+    async function saveCoupon() {
+      const id = document.getElementById('couponId').value;
+      const code = document.getElementById('couponCode').value;
+      const discount = document.getElementById('couponDiscount').value;
+      const description = document.getElementById('couponDescription').value;
+      const image = document.getElementById('couponImage').files[0];
+
+      if (!code || !discount) {
+        showToast('Please fill in all required fields', 'error');
         return;
+      }
+
+      if (image) {
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml'].includes(image.type)) {
+          showToast('Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed', 'error');
+          return;
+        }
+        if (image.size > 2 * 1024 * 1024) {
+          showToast('Image size must be under 2MB', 'error');
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append('code', code);
+      formData.append('discount', discount);
+      formData.append('description', description || '');
+      if (image) formData.append('image', image);
+
+      try {
+        const url = id ? `${apiPrefix}/coupons/${id}` : `${apiPrefix}/coupons`;
+        const method = id ? 'PUT' : 'POST';
+        await handleFetch(url, { method, body: formData });
+        showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
+        closeModal('addCouponModal');
+        loadCoupons();
+      } catch (error) {}
+    }
+
+    async function deleteMenuItem(id) {
+      if (!confirm('Are you sure you want to delete this menu item?')) return;
+      try {
+        await handleFetch(`${apiPrefix}/menu/${id}`, { method: 'DELETE' });
+        showToast('Menu item deleted!', 'success');
+        loadMenuItems();
+      } catch (error) {}
+    }
+
+    async function deleteCoupon(id) {
+      if (!confirm('Are you sure you want to delete this coupon?')) return;
+      try {
+        await handleFetch(`${apiPrefix}/coupons/${id}`, { method: 'DELETE' });
+        showToast('Coupon deleted!', 'success');
+        loadCoupons();
+      } catch (error) {}
+    }
+
+    async function toggleCustomerStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+      try {
+        await handleFetch(`${apiPrefix}/customers/${id}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus }),
+        });
+        showToast(`Customer ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}!`, 'success');
+        loadCustomers();
+      } catch (error) {}
+    }
+
+    const debouncedToggleRestaurantStatus = debounce(async () => {
+      try {
+        const response = await handleFetch(`${apiPrefix}/status`, { method: 'PUT' });
+        updateStatusDisplay(response.status);
+        showToast(`Restaurant is now ${response.status}!`, 'success');
+      } catch (error) {}
+    }, 500);
+
+    function toggleRestaurantStatus() {
+      debouncedToggleRestaurantStatus();
+    }
+
+    function updateStatusDisplay(status) {
+      const statusText = document.getElementById('statusText');
+      const mobileStatusText = document.getElementById('mobileStatusText');
+      const statusIndicator = document.getElementById('statusIndicator');
+      const mobileStatusIndicator = document.getElementById('mobileStatusIndicator');
+      const isOpen = status === 'open';
+      statusText.textContent = isOpen ? 'Open' : 'Closed';
+      mobileStatusText.textContent = isOpen ? 'Open' : 'Closed';
+      statusIndicator.classList.toggle('open', isOpen);
+      mobileStatusIndicator.classList.toggle('open', isOpen);
+    }
+
+    async function updateOrderStatus(id, status, selectElement) {
+      try {
+        let updateData = { status };
+        if (status === 'delivered') {
+          updateData.paymentStatus = 'paid';
+        } else if (status === 'cancelled') {
+          const reason = prompt('Please provide a reason for cancellation:');
+          if (!reason || reason.trim() === '') {
+            showToast('Cancellation reason is required.', 'error');
+            selectElement.value = 'pending';
+            return;
+          }
+          updateData.reason = reason.trim();
+        }
+        await handleFetch(`${apiPrefix}/orders/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updateData),
+        });
+        showToast('Order status updated!', 'success');
+        loadOrders();
+      } catch (error) {
+        selectElement.value = 'pending';
       }
     }
 
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('price', price);
-    formData.append('category', category);
-    formData.append('description', description || '');
-    if (image) formData.append('image', image);
-
-    try {
-      const url = id ? `${apiPrefix}/menu/${id}` : `${apiPrefix}/menu`;
-      const method = id ? 'PUT' : 'POST';
-      await handleFetch(url, { method, body: formData });
-      showToast(id ? 'Menu item updated!' : 'Menu item added!', 'success');
-      closeModal('addMenuModal');
-      loadMenuItems();
-    } catch (error) {}
-  }
-
-  async function saveCoupon() {
-    const id = document.getElementById('couponId').value;
-    const code = document.getElementById('couponCode').value;
-    const discount = document.getElementById('couponDiscount').value;
-    const description = document.getElementById('couponDescription').value;
-    const image = document.getElementById('couponImage').files[0];
-
-    if (!code || !discount) {
-      showToast('Please fill in all required fields', 'error');
-      return;
+    async function clearAllOrders() {
+      if (!confirm('Are you sure you want to move all orders to trash?')) return;
+      try {
+        await handleFetch(`${apiPrefix}/orders/move-to-trash`, { method: 'PUT' });
+        showToast('All orders moved to trash!', 'success');
+        loadOrders();
+        loadTrashedOrders();
+      } catch (error) {}
     }
 
-    if (image) {
-      if (!['image/jpeg', 'image/png'].includes(image.type)) {
-        showToast('Only JPEG or PNG images are allowed', 'error');
+    async function deleteSelectedOrders() {
+      const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+        .map(checkbox => parseInt(checkbox.value));
+      if (selectedIds.length === 0) {
+        showToast('No orders selected for deletion.', 'error');
         return;
       }
-      if (image.size > 5 * 1024 * 1024) {
-        showToast('Image size must be under 5MB', 'error');
+      if (!confirm(`Are you sure you want to move ${selectedIds.length} selected order(s) to trash?`)) return;
+      try {
+        await handleFetch(`${apiPrefix}/orders/bulk-move-to-trash`, {
+          method: 'PUT',
+          body: JSON.stringify({ orderIds: selectedIds }),
+        });
+        showToast(`${selectedIds.length} order(s) moved to trash!`, 'success');
+        document.getElementById('selectAllOrders').checked = false;
+        document.getElementById('selectAllOrdersHeader').checked = false;
+        loadOrders();
+        loadTrashedOrders();
+      } catch (error) {}
+    }
+
+    async function restoreOrder(id) {
+      if (!confirm('Are you sure you want to restore this order?')) return;
+      try {
+        await handleFetch(`${apiPrefix}/orders/${id}/restore`, { method: 'PUT' });
+        showToast('Order restored!', 'success');
+        loadOrders();
+        loadTrashedOrders();
+      } catch (error) {}
+    }
+
+    async function deleteOrderPermanently(id) {
+      if (!confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) return;
+      try {
+        await handleFetch(`${apiPrefix}/orders/${id}/permanent`, { method: 'DELETE' });
+        showToast('Order permanently deleted!', 'success');
+        loadTrashedOrders();
+      } catch (error) {}
+    }
+
+    async function deleteSelectedTrashedOrders() {
+      const selectedIds = Array.from(document.querySelectorAll('.trash-checkbox:checked'))
+        .map(checkbox => parseInt(checkbox.value));
+      if (selectedIds.length === 0) {
+        showToast('No orders selected for deletion.', 'error');
         return;
+      }
+      if (!confirm(`Are you sure you want to permanently delete ${selectedIds.length} selected order(s)? This action cannot be undone.`)) return;
+      try {
+        await handleFetch(`${apiPrefix}/orders/trashed/bulk`, {
+          method: 'DELETE',
+          body: JSON.stringify({ orderIds: selectedIds }),
+        });
+        showToast(`${selectedIds.length} order(s) permanently deleted!`, 'success');
+        document.getElementById('selectAllTrash').checked = false;
+        document.getElementById('selectAllTrashHeader').checked = false;
+        loadTrashedOrders();
+      } catch (error) {}
+    }
+
+    function toggleSelectAllOrders() {
+      const selectAllCheckbox = document.getElementById('selectAllOrders');
+      const checkboxes = document.querySelectorAll('.order-checkbox');
+      checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+      updateDeleteOrdersButtonState();
+    }
+
+    function toggleSelectAllTrash() {
+      const selectAllCheckbox = document.getElementById('selectAllTrash');
+      const checkboxes = document.querySelectorAll('.trash-checkbox');
+      checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+      updateDeleteTrashButtonState();
+    }
+
+    function updateDeleteOrdersButtonState() {
+      const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
+      const deleteSelectedBtn = document.getElementById('deleteSelectedOrdersBtn');
+      deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
+    }
+
+    function updateDeleteTrashButtonState() {
+      const selectedCheckboxes = document.querySelectorAll('.trash-checkbox:checked');
+      const deleteSelectedBtn = document.getElementById('deleteSelectedTrashBtn');
+      deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
+    }
+
+    async function searchOrders() {
+      const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
+      const tbody = document.getElementById('orderTableBody');
+      tbody.innerHTML = '<tr><td colspan="10" class="loading-state">Searching...</td></tr>';
+
+      try {
+        const filteredOrders = orders.filter(order =>
+          order.id.toString().includes(searchTerm) ||
+          (order.user?.name || 'Unknown').toLowerCase().includes(searchTerm) ||
+          (order.status || '').toLowerCase().includes(searchTerm)
+        );
+
+        if (!filteredOrders.length) {
+          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = filteredOrders.map(order => {
+          const itemsDisplay = order.items?.length > 0
+            ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
+            : 'No items';
+          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
+            ? `₹${parseFloat(order.total).toFixed(2)}`
+            : '₹0.00';
+          const addressDisplay = order.address
+            ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark]
+                .filter(part => part && part.trim())
+                .join(', ')
+            : 'No address';
+          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
+          return `
+            <tr>
+              <td><input type="checkbox" class="checkbox order-checkbox" value="${order.id}" onchange="updateDeleteOrdersButtonState()"></td>
+              <td>${order.id}</td>
+              <td>${order.user?.name || 'Unknown'}</td>
+              <td>${addressDisplay}</td>
+              <td>${itemsDisplay}</td>
+              <td>${totalDisplay}</td>
+              <td>${order.paymentStatus || 'Pending'}</td>
+              <td>
+                <select onchange="updateOrderStatus(${order.id}, this.value, this)">
+                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                  <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              </td>
+              <td>${reasonDisplay}</td>
+              <td>
+                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Failed to search orders.</td></tr>';
       }
     }
 
-    const formData = new FormData();
-    formData.append('code', code);
-    formData.append('discount', discount);
-    formData.append('description', description || '');
-    if (image) formData.append('image', image);
-
-    try {
-      const url = id ? `${apiPrefix}/coupons/${id}` : `${apiPrefix}/coupons`;
-      const method = id ? 'PUT' : 'POST';
-      await handleFetch(url, { method, body: formData });
-      showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
-      closeModal('addCouponModal');
-      loadCoupons();
-    } catch (error) {}
-  }
-
-  async function deleteMenuItem(id) {
-    if (!confirm('Are you sure you want to delete this menu item?')) return;
-    try {
-      await handleFetch(`${apiPrefix}/menu/${id}`, { method: 'DELETE' });
-      showToast('Menu item deleted!', 'success');
-      loadMenuItems();
-    } catch (error) {}
-  }
-
-  async function deleteCoupon(id) {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
-    try {
-      await handleFetch(`${apiPrefix}/coupons/${id}`, { method: 'DELETE' });
-      showToast('Coupon deleted!', 'success');
-      loadCoupons();
-    } catch (error) {}
-  }
-
-  async function toggleCustomerStatus(id, currentStatus) {
-    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
-    try {
-      await handleFetch(`${apiPrefix}/customers/${id}/status`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
-      });
-      showToast(`Customer ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}!`, 'success');
-      loadCustomers();
-    } catch (error) {}
-  }
-
-  const debouncedToggleRestaurantStatus = debounce(async () => {
-    try {
-      const response = await handleFetch(`${apiPrefix}/status`, { method: 'PUT' });
-      updateStatusDisplay(response.status);
-      showToast(`Restaurant is now ${response.status}!`, 'success');
-    } catch (error) {}
-  }, 500);
-
-  function toggleRestaurantStatus() {
-    debouncedToggleRestaurantStatus();
-  }
-
-  function updateStatusDisplay(status) {
-    const statusText = document.getElementById('statusText');
-    const mobileStatusText = document.getElementById('mobileStatusText');
-    const statusIndicator = document.getElementById('statusIndicator');
-    const mobileStatusIndicator = document.getElementById('mobileStatusIndicator');
-    const isOpen = status === 'open';
-    statusText.textContent = isOpen ? 'Open' : 'Closed';
-    mobileStatusText.textContent = isOpen ? 'Open' : 'Closed';
-    statusIndicator.classList.toggle('open', isOpen);
-    mobileStatusIndicator.classList.toggle('open', isOpen);
-  }
-
-  async function updateOrderStatus(id, status) {
-    try {
-      const updateData = { status };
-      if (status === 'delivered') updateData.paymentStatus = 'paid';
-      await handleFetch(`${apiPrefix}/orders/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData),
-      });
-      showToast('Order status updated!', 'success');
+    function clearOrderSearch() {
+      document.getElementById('orderSearch').value = '';
       loadOrders();
-    } catch (error) {}
-  }
-
-  async function viewOrderDetails(id) {
-    try {
-      const order = await handleFetch(`${apiPrefix}/orders/${id}`);
-      const content = document.getElementById('orderDetailsContent');
-      const address = order.address
-        ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark, order.address.mobile]
-            .filter(part => part && part.trim())
-            .join(', ')
-        : 'No address';
-      const items = order.items?.length > 0
-        ? order.items.map(item => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`).join('')
-        : '<li>No items</li>';
-      content.innerHTML = `
-        <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Customer:</strong> ${order.user?.name || 'Unknown'} (${order.user?.email || '-'})</p>
-        <p><strong>Contact:</strong> ${order.address?.mobile || '-'}</p>
-        <p><strong>Address:</strong> ${address}</p>
-        <p><strong>Items:</strong></p>
-        <ul class="list-disc ml-5">${items}</ul>
-        <p><strong>Delivery Cost:</strong> ₹${parseFloat(order.delivery || 0).toFixed(2)}</p>
-        <p><strong>Coupon:</strong> ${order.couponCode || '-'}</p>
-        <p><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
-        <p><strong>Payment Method:</strong> ${order.paymentMethod || 'COD'}</p>
-        <p><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</p>
-        <p><strong>Status:</strong> ${order.status || 'Pending'}</p>
-        <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : '-'}</p>
-      `;
-      openModal('orderDetailsModal');
-    } catch (error) {
-      showToast('Failed to load order details.', 'error');
     }
-  }
 
-  async function loadMenuItems() {
-    const tbody = document.getElementById('menuTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
-    try {
-      const items = await handleFetch(`${apiPrefix}/menu`);
-      if (!items?.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
-        return;
-      }
-      tbody.innerHTML = items.map(item => {
-        const imageSrc = item.image || placeholderImage;
-        return `
-          <tr>
-            <td>${item.id}</td>
-            <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
-            <td>${item.name}</td>
-            <td>₹${parseFloat(item.price).toFixed(2)}</td>
-            <td>${item.category}</td>
-            <td>${item.description || '-'}</td>
-            <td>
-              <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items.</td></tr>';
-    }
-  }
-
-  async function loadCoupons() {
-    const tbody = document.getElementById('couponTableBody');
-    tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
-    try {
-      const coupons = await handleFetch(`${apiPrefix}/coupons`);
-      if (!coupons?.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
-        return;
-      }
-      tbody.innerHTML = coupons.map(coupon => {
-        const imageSrc = coupon.image || placeholderImage;
-        return `
-          <tr>
-            <td>${coupon.id}</td>
-            <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
-            <td>${coupon.code}</td>
-            <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
-            <td>${coupon.description || '-'}</td>
-            <td>
-              <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
-              <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load coupons.</td></tr>';
-    }
-  }
-
-  async function loadCustomers() {
-    const tbody = document.getElementById('customerTableBody');
-    tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
-    try {
-      const customers = await handleFetch(`${apiPrefix}/customers`);
-      if (!customers?.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = customers.map(customer => `
-        <tr>
-          <td>${customer.id}</td>
-          <td>${customer.name}</td>
-          <td>${customer.email}</td>
-          <td>${customer.phone || '-'}</td>
-          <td>${customer.status}</td>
-          <td>
-            <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
-              ${customer.status === 'active' ? 'Block' : 'Unblock'}
-            </button>
-          </td>
-        </tr>
-      `).join('');
-    } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load customers.</td></tr>';
-    }
-  }
-
-  async function loadOrders() {
-    const tbody = document.getElementById('orderTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="loading-state">Loading orders...</td></tr>';
-    try {
-      const orders = await handleFetch(`${apiPrefix}/orders`);
-      if (!orders?.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No orders found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = orders.map(order => {
-        const itemsDisplay = order.items?.length > 0
-          ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
-          : 'No items';
-        const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
-          ? `₹${parseFloat(order.total).toFixed(2)}`
-          : '₹0.00';
-        const addressDisplay = order.address
-          ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark]
+    async function viewOrderDetails(id) {
+      try {
+        const order = await handleFetch(`${apiPrefix}/orders/${id}`);
+        const content = document.getElementById('orderDetailsContent');
+        const address = order.address
+          ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark, order.address.mobile]
               .filter(part => part && part.trim())
               .join(', ')
           : 'No address';
-        return `
+        const items = order.items?.length > 0
+          ? order.items.map(item => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`).join('')
+          : '<li>No items</li>';
+        content.innerHTML = `
+          <p><strong>Order ID:</strong> ${order.id}</p>
+          <p><strong>Customer:</strong> ${order.user?.name || 'Unknown'} (${order.user?.email || '-'})</p>
+          <p><strong>Contact:</strong> ${order.address?.mobile || '-'}</p>
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Items:</strong></p>
+          <ul class="list-disc ml-5">${items}</ul>
+          <p><strong>Delivery Cost:</strong> ₹${parseFloat(order.delivery || 0).toFixed(2)}</p>
+          <p><strong>Coupon:</strong> ${order.couponCode || '-'}</p>
+          <p><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
+          <p><strong>Payment Method:</strong> ${order.paymentMethod || 'COD'}</p>
+          <p><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</p>
+          <p><strong>Status:</strong> ${order.status || 'Pending'}</p>
+          ${order.status === 'cancelled' ? `<p><strong>Cancellation Reason:</strong> ${order.reason || '-'}</p>` : ''}
+          <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : '-'}</p>
+        `;
+        openModal('orderDetailsModal');
+      } catch (error) {
+        showToast('Failed to load order details.', 'error');
+      }
+    }
+
+    async function loadMenuItems() {
+      const tbody = document.getElementById('menuTableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
+      try {
+        const items = await handleFetch(`${apiPrefix}/menu`);
+        if (!items?.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
+          return;
+        }
+        tbody.innerHTML = items.map(item => {
+          const imageSrc = item.image || placeholderImage;
+          return `
+            <tr>
+              <td>${item.id}</td>
+              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
+              <td>${item.name}</td>
+              <td>₹${parseFloat(item.price).toFixed(2)}</td>
+              <td>${item.category}</td>
+              <td>${item.description || '-'}</td>
+              <td>
+                <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
+                <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items.</td></tr>';
+      }
+    }
+
+    async function loadCoupons() {
+      const tbody = document.getElementById('couponTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
+      try {
+        const coupons = await handleFetch(`${apiPrefix}/coupons`);
+        if (!coupons?.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
+          return;
+        }
+        tbody.innerHTML = coupons.map(coupon => {
+          const imageSrc = coupon.image || placeholderImage;
+          return `
+            <tr>
+              <td>${coupon.id}</td>
+              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
+              <td>${coupon.code}</td>
+              <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
+              <td>${coupon.description || '-'}</td>
+              <td>
+                <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
+                <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading coupons.</td></tr>';
+      }
+    }
+
+    async function loadCustomers() {
+      const tbody = document.getElementById('customerTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
+      try {
+        const customers = await handleFetch(`${apiPrefix}/customers`);
+        if (!customers?.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = customers.map(customer => `
           <tr>
-            <td>${order.id}</td>
-            <td>${order.user?.name || 'Unknown'}</td>
-            <td>${addressDisplay}</td>
-            <td>${itemsDisplay}</td>
-            <td>${totalDisplay}</td>
-            <td>${order.paymentStatus || 'Pending'}</td>
+            <td>${customer.id}</td>
+            <td>${customer.name}</td>
+            <td>${customer.email}</td>
+            <td>${customer.phone || '-'}</td>
+            <td>${customer.status}</td>
             <td>
-              <select onchange="updateOrderStatus(${order.id}, this.value)">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </td>
-            <td>
-              <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
+              <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
+                ${customer.status === 'active' ? 'Block' : 'Unblock'}
+              </button>
             </td>
           </tr>
-        `;
-      }).join('');
-    } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load orders.</td></tr>';
+        `).join('');
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading customers.</td></tr>';
+      }
     }
-  }
 
-  async function loadRestaurantStatus() {
-    try {
-      const response = await handleFetch(`${apiPrefix}/status`);
-      updateStatusDisplay(response.status);
-    } catch (error) {}
-  }
-
-  async function logout() {
-    try {
-      await handleFetch(`${apiPrefix}/logout`, { method: 'POST' });
-      showToast('Logged out successfully!', 'success');
-    } catch (error) {
-      showToast('Logout failed. Redirecting...', 'error');
-    } finally {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
-      window.location.href = '/admin.html';
+    async function loadOrders() {
+      const tbody = document.getElementById('orderTableBody');
+      tbody.innerHTML = '<tr><td colspan="10" class="loading-state">Loading orders...</td></tr>';
+      try {
+        orders = await handleFetch(`${apiPrefix}/orders`);
+        if (!orders?.length) {
+          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found.</td></tr>';
+          return;
+        }
+        const activeOrders = orders.filter(order => order.status !== 'trashed');
+        tbody.innerHTML = activeOrders.map(order => {
+          const itemsDisplay = order.items?.length > 0
+            ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
+            : 'No items';
+          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
+            ? `₹${parseFloat(order.total).toFixed(2)}`
+            : '₹0.00';
+          const addressDisplay = order.address
+            ? [order.address.fullName, order.address.street, order.address.city, order.address.landmark]
+                .filter(part => part && part.trim())
+                .join(', ')
+            : 'No address';
+          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
+          return `
+            <tr>
+              <td><input type="checkbox" class="checkbox order-checkbox" value="${order.id}" onchange="updateDeleteOrdersButtonState()"></td>
+              <td>${order.id}</td>
+              <td>${order.user?.name || 'Anonymous'}</td>
+              <td>${addressDisplay}</td>
+              <td>${itemsDisplay}</td>
+              <td>${totalDisplay}</td>
+              <td>${order.paymentStatus || 'Pending'}</td>
+              <td>
+                <select onchange="updateOrderStatus(${order.id}', this.value, this)">
+                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                  <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              </td>
+              <td>${reasonDisplay}</td>
+              <td>
+                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View}</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        updateDeleteOrdersButtonState();
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="10" class="error-state">Error loading orders.</td></tr>';
+      }
     }
-  }
 
-  async function init() {
-    try {
-      if (!(await checkSession())) return;
-      await Promise.all([
-        loadMenuItems(),
-        loadCoupons(),
-        loadCustomers(),
-        loadOrders(),
-        loadRestaurantStatus(),
-      ]);
-    } catch (error) {
-      console.error('Initialization error:', error.message);
+    async function loadTrashedOrders() {
+      const tbody = document.getElementById('trashTableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading trashed orders...</td></tr>';
+      try {
+        trashedOrders = await handleFetch(`${apiPrefix}/orders/trashed`);
+        if (!trashedOrders?.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No trashed orders found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = trashedOrders.map(order => {
+          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
+            ? `₹${parseFloat(order.total).toFixed(2)}`
+            : '₹0.00';
+          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
+          return `
+            <tr>
+              <td><input type="checkbox" class="checkbox trash-checkbox" value="${order.id}" onchange="updateDeleteTrashButtonState()"></td>
+              <td>${order.id}</td>
+              <td>${order.user?.name || 'Unknown'}</td>
+              <td>${totalDisplay}</td>
+              <td>${order.status}</td>
+              <td>${reasonDisplay}</td>
+              <td>
+                <button class="btn-restore mr-1" onclick="restoreOrder(${order.id})">Restore</button>
+                <button class="btn-danger" onclick="deleteOrderPermanently(${order.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        updateDeleteTrashButtonState();
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load trashed orders.</td></tr>';
+      }
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', init);
+    async function loadRestaurantStatus() {
+      try {
+        const response = await handleFetch(`${apiPrefix}/status`);
+        updateStatusDisplay(response.status);
+      } catch (error) {
+      }
+    }
+
+    async function logout() {
+      try {
+        await handleFetch(`${apiPrefix}/logout`, { method: 'POST' });
+        showToast('Logged out successfully!', 'success');
+      } catch (error) {
+        showToast('Logout failed. Redirecting...', 'error');
+      } finally {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin.html';
+      }
+    }
+
+    async function init() {
+      try {
+        if (!(await checkSession())) return;
+        await Promise.all([
+          loadMenuItems(),
+          loadCoupons(),
+          loadCustomers(),
+          loadOrders(),
+          loadTrashedOrders(),
+          loadRestaurantStatus(),
+        ]);
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
