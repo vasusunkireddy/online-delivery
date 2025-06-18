@@ -292,6 +292,22 @@
       box-shadow: var(--shadow-hover);
     }
 
+    .btn-restore {
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .btn-restore:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-hover);
+    }
+
     .btn-toggle {
       background: var(--secondary-gradient);
       color: white;
@@ -371,6 +387,12 @@
 
     tr:hover {
       background: rgba(0, 0, 0, 0.03);
+    }
+
+    .checkbox {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
     }
 
     .menu-image, .coupon-image {
@@ -671,6 +693,7 @@
           <button class="btn-primary" onclick="openModal('addCouponModal')">Add Coupon</button>
           <button class="btn-primary" onclick="scrollToSection('customerTable')">View Customers</button>
           <button class="btn-primary" onclick="scrollToSection('orderTable')">View Orders</button>
+          <button class="btn-primary" onclick="scrollToSection('trashTable')">View Trash</button>
         </div>
       </div>
     </section>
@@ -746,12 +769,14 @@
         <div class="flex gap-2">
           <button class="btn-primary" onclick="searchOrders()">Search</button>
           <button class="btn-primary" onclick="clearOrderSearch()">Clear</button>
+          <button class="btn-danger" onclick="deleteSelectedOrders()">Delete Selected</button>
         </div>
       </div>
       <div class="table-container">
         <table id="orderTable">
           <thead>
             <tr>
+              <th><input type="checkbox" id="selectAllOrders" onclick="toggleSelectAll('orderTableBody', this.checked)"></th>
               <th>ID</th>
               <th>Customer</th>
               <th>Address</th>
@@ -764,9 +789,39 @@
             </tr>
           </thead>
           <tbody id="orderTableBody">
-            <tr><td colspan="9" class="loading-state" data-label="Status">Loading orders...</td></tr>
+            <tr><td colspan="10" class="loading-state" data-label="Status">Loading orders...</td></tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="section-title">Trash</h2>
+      <div class="table-container">
+        <table id="trashTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllTrash" onclick="toggleSelectAll('trashTableBody', this.checked)"></th>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Address</th>
+              <th>Items</th>
+              <th>Total (₹)</th>
+              <th>Payment Status</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Deleted At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="trashTableBody">
+            <tr><td colspan="11" class="loading-state" data-label="Status">Loading trashed orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button class="btn-restore" onclick="restoreSelectedOrders()">Restore Selected</button>
+        <button class="btn-danger" onclick="permanentlyDeleteSelectedOrders()">Permanently Delete Selected</button>
       </div>
     </section>
   </main>
@@ -849,596 +904,657 @@
     <p class="text-sm font-semibold">© 2025 Delicute. Crafted with Culinary Passion.</p>
   </footer>
 
-  <script>
-    const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
-    const apiPrefix = '/api/admin';
-    const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIu+0H0v0iRpkjQJIYTw+73v+w0TBNF6vW5Wq9U+MAyDw+E4Go3mAZhOp5vVajUHwDRNAHAcB5xzHMcFAoF4PB4Oh8P+ACGEkFIKz/N8+wDAMAy+73sUBAE3Gg0IAoFA4L0IYRiGYRiGYRg0TfM8z/O8V6/Xi8Vi3gdgmibG4/GMMIaGYdi2bdt+vV6v1+v1Wq1WK4QQQgjhcDgcDocLIdR13/c9z/Mcx3EcB0EQBEHAMAxCiO/7Pp7nOQAQQgih1Wp1Op1Op9Pp9Ho9Ho/H4/E4nU6n0+n0f38B6C0Vv8TjN54AAAAASUVORK5CYII=';
-    let sessionValid = false;
-    let sessionExpiredShown = false;
-    let orders = [];
+     <script>
+  const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://delicute.onrender.com';
+  const apiPrefix = '/api/admin/dashboard';
+  const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAPZJREFUWEftlkEOgjAMRN0E/gM2QZOoSVErWqFtlIIT2AZsQjYJmmSBNrC2XIDgW4cHLrwcPPAgDnyoA4P/4Q5c6AMH4sCHOnB/D3zgQh04UAcO1IEDdeBCHThQBw7UgQN14EAdOFAHDtSBA3XgQB04UAcO1IEDdeBCHThQBw7UgQN14EAdOFAHDtSBA3XgQB04UAcO1IEDdeBCHThQBw7UgQN14EAdOFAHDtSBA3XgQB04UAcO1IEDdeBCHThQBw7UgQN14EAdOFAHDtSBA3XgQB04UAcO1IEP/yX6AvC/0BNM0AAAAAElFTkSuQmCC';
 
-    async function checkSession() {
-      if (sessionValid) return true;
-      try {
-        const token = localStorage.getItem('adminToken');
-        if (!token) throw new Error('No token found');
-        const response = await fetch(`${baseUrl}${apiPrefix}/check-session`, {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          if (data.error === 'Customer is blocked') {
-            showToast('Your account is blocked. Contact support.', 'error');
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
-            setTimeout(() => window.location.href = '/admin.html', 1000);
-            return false;
-          }
-          throw new Error(`Session check failed: ${data.error || response.statusText}`);
-        }
-        sessionValid = true;
-        return true;
-      } catch (error) {
-        if (!sessionExpiredShown) {
-          showToast('Session expired. Please log in again.', 'error');
-          sessionExpiredShown = true;
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminUser');
-          setTimeout(() => window.location.href = '/admin.html', 1000);
-        }
-        return false;
-      }
-    }
+  // Token management
+  const getToken = () => localStorage.getItem('adminToken');
+  const setToken = (token) => localStorage.setItem('adminToken', token);
+  const removeToken = () => localStorage.removeItem('adminToken');
 
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
+  // Utility functions
+  const showToast = (message, type = 'success') => {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  };
 
-    async function handleFetch(url, options = {}) {
-      if (!(await checkSession())) throw new Error('Session check failed');
-      try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${baseUrl}${url}`, {
-          ...options,
-          headers: {
-            ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
-            'Authorization': `Bearer ${token}`,
-            ...options.headers,
-          },
-          signal: AbortSignal.timeout(30000),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          if (response.status === 401) {
-            if (!sessionExpiredShown) {
-              showToast('Session expired. Please log in again.', 'error');
-              sessionExpiredShown = true;
-              localStorage.removeItem('adminToken');
-              localStorage.removeItem('adminUser');
-              setTimeout(() => window.location.href = '/admin.html', 1000);
-            }
-          } else if (response.status === 404) {
-            throw new Error(`API endpoint not found: ${url}`);
-          } else if (response.status === 413) {
-            throw new Error('File too large. Please upload an image under 2MB.');
-          }
-          throw new Error(data.error || `HTTP ${response.status}: API error`);
-        }
-        return data;
-      } catch (error) {
-        if (!sessionExpiredShown || error.message.includes('404') || error.message.includes('File too large')) {
-          showToast(`${error.message}.`, 'error');
-        }
-        throw error;
-      }
-    }
+  const toggleMobileMenu = () => {
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const hamburger = document.querySelector('.hamburger');
+    mobileMenu.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  };
 
-    function showToast(message, type = 'success') {
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      toast.innerHTML = `<span>${message}</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    function toggleMobileMenu() {
-      const mobileMenu = document.querySelector('.mobile-menu');
-      const hamburger = document.querySelector('.hamburger');
-      mobileMenu.classList.toggle('active');
-      hamburger.classList.toggle('active');
-    }
-
-    function scrollToSection(tableId) {
-      const section = document.getElementById(tableId).closest('section');
+  const scrollToSection = (sectionId) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
       section.scrollIntoView({ behavior: 'smooth' });
+      if (window.innerWidth <= 640) toggleMobileMenu();
     }
+  };
 
-    function openModal(modalId, data = {}) {
-      const modal = document.getElementById(modalId);
-      modal.style.display = 'flex';
-      if (modalId === 'addMenuModal') {
-        document.getElementById('menuModalTitle').textContent = data.id ? 'Edit Menu Item' : 'Add Menu Item';
-        document.getElementById('menuId').value = data.id || '';
-        document.getElementById('menuName').value = data.name || '';
-        document.getElementById('menuPrice').value = data.price || '';
-        document.getElementById('menuCategory').value = data.category || 'dessert';
-        document.getElementById('menuDescription').value = data.description || '';
-        document.getElementById('menuImage').value = '';
-      } else if (modalId === 'addCouponModal') {
-        document.getElementById('couponModalTitle').textContent = data.id ? 'Edit Coupon' : 'Add Coupon';
-        document.getElementById('couponId').value = data.id || '';
-        document.getElementById('couponCode').value = data.code || '';
-        document.getElementById('couponDiscount').value = data.discount || '';
-        document.getElementById('couponDescription').value = data.description || '';
-        document.getElementById('couponImage').value = '';
+  const openModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    modal.querySelector('.modal-content').focus();
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    if (modalId === 'addMenuModal') {
+      document.getElementById('menuModalTitle').textContent = 'Add Menu Item';
+      document.getElementById('menuId').value = '';
+      document.getElementById('menuForm')?.reset();
+    } else if (modalId === 'addCouponModal') {
+      document.getElementById('couponModalTitle').textContent = 'Add Coupon';
+      document.getElementById('couponId').value = '';
+      document.getElementById('couponForm')?.reset();
+    }
+  };
+
+  const toggleSelectAll = (tableBodyId, checked) => {
+    const checkboxes = document.querySelectorAll(`#${tableBodyId} input[type="checkbox"]`);
+    checkboxes.forEach(checkbox => checkbox.checked = checked);
+  };
+
+  const fetchWithAuth = async (url, options = {}) => {
+    const token = getToken();
+    if (!token) {
+      showToast('No token found. Please log in.', 'error');
+      throw new Error('No token found');
+    }
+    try {
+      const response = await fetch(`${baseUrl}${apiPrefix}${url}`, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+      if (response.status === 401) {
+        removeToken();
+        window.location.href = '/admin/login.html';
+        throw new Error('Session expired');
       }
-    }
-
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      modal.classList.add('modal-closing');
-      setTimeout(() => {
-        modal.style.display = 'none';
-        modal.classList.remove('modal-closing');
-        if (modalId === 'addMenuModal') {
-          document.getElementById('menuId').value = '';
-          document.getElementById('menuName').value = '';
-          document.getElementById('menuPrice').value = '';
-          document.getElementById('menuCategory').value = 'dessert';
-          document.getElementById('menuDescription').value = '';
-          document.getElementById('menuImage').value = '';
-        } else if (modalId === 'addCouponModal') {
-          document.getElementById('couponId').value = '';
-          document.getElementById('couponCode').value = '';
-          document.getElementById('couponDiscount').value = '';
-          document.getElementById('couponDescription').value = '';
-          document.getElementById('couponImage').value = '';
-        }
-      }, 300);
-    }
-
-    async function saveMenuItem() {
-      const id = document.getElementById('menuId').value;
-      const name = document.getElementById('menuName').value;
-      const price = document.getElementById('menuPrice').value;
-      const category = document.getElementById('menuCategory').value;
-      const description = document.getElementById('menuDescription').value;
-      const image = document.getElementById('menuImage').files[0];
-
-      if (!name || !price || !category) {
-        showToast('Please fill in all required fields', 'error');
-        return;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || error.error || 'Request failed');
       }
-
-      if (image) {
-        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml'].includes(image.type)) {
-          showToast('Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed', 'error');
-          return;
-        }
-        if (image.size > 2 * 1024 * 1024) {
-          showToast('Image size must be under 2MB', 'error');
-          return;
-        }
-      }
-
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('price', price);
-      formData.append('category', category);
-      formData.append('description', description || '');
-      if (image) formData.append('image', image);
-
-      try {
-        const url = id ? `${apiPrefix}/menu/${id}` : `${apiPrefix}/menu`;
-        const method = id ? 'PUT' : 'POST';
-        await handleFetch(url, { method, body: formData });
-        showToast(id ? 'Menu item updated!' : 'Menu item added!', 'success');
-        closeModal('addMenuModal');
-        loadMenuItems();
-      } catch (error) {}
+      return response.json();
+    } catch (error) {
+      console.error(`Fetch error for ${url}:`, error.message);
+      throw error;
     }
+  };
 
-    async function saveCoupon() {
-      const id = document.getElementById('couponId').value;
-      const code = document.getElementById('couponCode').value;
-      const discount = document.getElementById('couponDiscount').value;
-      const description = document.getElementById('couponDescription').value;
-      const image = document.getElementById('couponImage').files[0];
-
-      if (!code || !discount) {
-        showToast('Please fill in all required fields', 'error');
-        return;
-      }
-
-      if (image) {
-        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml'].includes(image.type)) {
-          showToast('Only JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG images are allowed', 'error');
-          return;
-        }
-        if (image.size > 2 * 1024 * 1024) {
-          showToast('Image size must be under 2MB', 'error');
-          return;
-        }
-      }
-
-      const formData = new FormData();
-      formData.append('code', code);
-      formData.append('discount', discount);
-      formData.append('description', description || '');
-      if (image) formData.append('image', image);
-
-      try {
-        const url = id ? `${apiPrefix}/coupons/${id}` : `${apiPrefix}/coupons`;
-        const method = id ? 'PUT' : 'POST';
-        await handleFetch(url, { method, body: formData });
-        showToast(id ? 'Coupon updated!' : 'Coupon added!', 'success');
-        closeModal('addCouponModal');
-        loadCoupons();
-      } catch (error) {}
+  // Session check
+  const checkSession = async () => {
+    try {
+      await fetchWithAuth('/check-session');
+    } catch (error) {
+      console.error('Session check failed:', error.message);
+      removeToken();
+      window.location.href = '/admin/login.html';
     }
+  };
 
-    async function deleteMenuItem(id) {
-      if (!confirm('Are you sure you want to delete this menu item?')) return;
-      try {
-        await handleFetch(`${apiPrefix}/menu/${id}`, { method: 'DELETE' });
-        showToast('Menu item deleted!', 'success');
-        loadMenuItems();
-      } catch (error) {}
+  // Restaurant status
+  const updateRestaurantStatusUI = (status) => {
+    const statusText = document.getElementById('statusText');
+    const mobileStatusText = document.getElementById('mobileStatusText');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const mobileStatusIndicator = document.getElementById('mobileStatusIndicator');
+    const isOpen = status === 'open';
+    statusText.textContent = isOpen ? 'Open' : 'Closed';
+    mobileStatusText.textContent = isOpen ? 'Open' : 'Closed';
+    statusIndicator.classList.toggle('open', isOpen);
+    mobileStatusIndicator.classList.toggle('open', isOpen);
+  };
+
+  const fetchRestaurantStatus = async () => {
+    try {
+      const { status } = await fetchWithAuth('/status');
+      updateRestaurantStatusUI(status);
+    } catch (error) {
+      showToast('Failed to fetch restaurant status', 'error');
     }
+  };
 
-    async function deleteCoupon(id) {
-      if (!confirm('Are you sure you want to delete this coupon?')) return;
-      try {
-        await handleFetch(`${apiPrefix}/coupons/${id}`, { method: 'DELETE' });
-        showToast('Coupon deleted!', 'success');
-        loadCoupons();
-      } catch (error) {}
+  const toggleRestaurantStatus = async () => {
+    try {
+      const { status } = await fetchWithAuth('/status', { method: 'PUT' });
+      updateRestaurantStatusUI(status);
+      showToast(`Restaurant is now ${status}`, 'success');
+    } catch (error) {
+      showToast('Failed to toggle restaurant status', 'error');
     }
+  };
 
-    async function toggleCustomerStatus(id, currentStatus) {
-      const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
-      try {
-        await handleFetch(`${apiPrefix}/customers/${id}/status`, {
-          method: 'PUT',
-          body: JSON.stringify({ status: newStatus }),
-        });
-        showToast(`Customer ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}!`, 'success');
-        loadCustomers();
-      } catch (error) {}
-    }
-
-    const debouncedToggleRestaurantStatus = debounce(async () => {
-      try {
-        const response = await handleFetch(`${apiPrefix}/status`, { method: 'PUT' });
-        updateStatusDisplay(response.status);
-        showToast(`Restaurant is now ${response.status}!`, 'success');
-      } catch (error) {}
-    }, 500);
-
-    function toggleRestaurantStatus() {
-      debouncedToggleRestaurantStatus();
-    }
-
-    function updateStatusDisplay(status) {
-      const statusText = document.getElementById('statusText');
-      const mobileStatusText = document.getElementById('mobileStatusText');
-      const statusIndicator = document.getElementById('statusIndicator');
-      const mobileStatusIndicator = document.getElementById('mobileStatusIndicator');
-      const isOpen = status === 'open';
-      statusText.textContent = isOpen ? 'Open' : 'Closed';
-      mobileStatusText.textContent = isOpen ? 'Open' : 'Closed';
-      statusIndicator.classList.toggle('open', isOpen);
-      mobileStatusIndicator.classList.toggle('open', isOpen);
-    }
-
-    async function updateOrderStatus(id, status, selectElement) {
-      try {
-        let updateData = { status };
-        if (status === 'delivered') {
-          updateData.paymentStatus = 'paid';
-        } else if (status === 'cancelled') {
-          const reason = prompt('Please provide a reason for cancellation:');
-          if (!reason || reason.trim() === '') {
-            showToast('Cancellation reason is required.', 'error');
-            selectElement.value = 'pending';
-            return;
-          }
-          updateData.reason = reason.trim();
-        }
-        await handleFetch(`${apiPrefix}/orders/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(updateData),
-        });
-        showToast('Order status updated!', 'success');
-        loadOrders();
-      } catch (error) {
-        selectElement.value = 'pending';
-      }
-    }
-
-    async function searchOrders() {
-      const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
-      const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="9" class="loading-state" data-label="Status">Searching...</td></tr>';
-
-      try {
-        const filteredOrders = orders.filter(order =>
-          order.id.toString().includes(searchTerm) ||
-          (order.user?.name || 'Unknown').toLowerCase().includes(searchTerm) ||
-          (order.status || '').toLowerCase().includes(searchTerm)
-        );
-
-        if (!filteredOrders.length) {
-          tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">No orders found.</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = filteredOrders.map(order => {
-          const itemsDisplay = order.items?.length > 0
-            ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
-            : 'No items';
-          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
-            ? `₹${parseFloat(order.total).toFixed(2)}`
-            : '₹0.00';
-          const addressDisplay = order.address
-            ? [order.address.fullName, order.address.street, order.address.city, order.address.landmark]
-                .filter(part => part && part.trim())
-                .join(', ')
-            : 'No address';
-          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
-          return `
-            <tr>
-              <td data-label="ID">${order.id}</td>
-              <td data-label="Customer">${order.user?.name || 'Anonymous'}</td>
-              <td data-label="Address">${addressDisplay}</td>
-              <td data-label="Items">${itemsDisplay}</td>
-              <td data-label="Total">${totalDisplay}</td>
-              <td data-label="Payment Status">${order.paymentStatus || 'Pending'}</td>
-              <td data-label="Status">
-                <select onchange="updateOrderStatus(${order.id}, this.value, this)">
-                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                  <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                  <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-              </td>
-              <td data-label="Reason">${reasonDisplay}</td>
-              <td data-label="Actions">
-                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">Failed to search orders.</td></tr>';
-      }
-    }
-
-    function clearOrderSearch() {
-      document.getElementById('orderSearch').value = '';
-      loadOrders();
-    }
-
-    async function viewOrderDetails(id) {
-      try {
-        const order = await handleFetch(`${apiPrefix}/orders/${id}`);
-        const content = document.getElementById('orderDetailsContent');
-        const address = order.address
-          ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark, order.address.mobile]
-              .filter(part => part && part.trim())
-              .join(', ')
-          : 'No address';
-        const items = order.items?.length > 0
-          ? order.items.map(item => `<li>${item.name || 'Unknown'} (x${item.quantity || 1}) - ₹${parseFloat(item.price || 0).toFixed(2)}</li>`).join('')
-          : '<li>No items</li>';
-        content.innerHTML = `
-          <p><strong>Order ID:</strong> ${order.id}</p>
-          <p><strong>Customer:</strong> ${order.user?.name || 'Unknown'} (${order.user?.email || '-'})</p>
-          <p><strong>Contact:</strong> ${order.address?.mobile || '-'}</p>
-          <p><strong>Address:</strong> ${address}</p>
-          <p><strong>Items:</strong></p>
-          <ul class="list-disc ml-5">${items}</ul>
-          <p><strong>Delivery Cost:</strong> ₹${parseFloat(order.delivery || 0).toFixed(2)}</p>
-          <p><strong>Coupon:</strong> ${order.couponCode || '-'}</p>
-          <p><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
-          <p><strong>Payment Method:</strong> ${order.paymentMethod || 'COD'}</p>
-          <p><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</p>
-          <p><strong>Status:</strong> ${order.status || 'Pending'}</p>
-          ${order.status === 'cancelled' ? `<p><strong>Cancellation Reason:</strong> ${order.reason || '-'}</p>` : ''}
-          <p><strong>Date:</strong> ${order.date ? new Date(order.date).toLocaleString() : '-'}</p>
-        `;
-        openModal('orderDetailsModal');
-      } catch (error) {
-        showToast('Failed to load order details.', 'error');
-      }
-    }
-
-    async function loadMenuItems() {
+  // Menu management
+  const fetchMenuItems = async () => {
+    try {
+      const menuItems = await fetchWithAuth('/menu');
       const tbody = document.getElementById('menuTableBody');
-      tbody.innerHTML = '<tr><td colspan="7" class="loading-state" data-label="Status">Loading menu items...</td></tr>';
-      try {
-        const items = await handleFetch(`${apiPrefix}/menu`);
-        if (!items?.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state" data-label="Status">No menu items found. Add some!</td></tr>';
-          return;
-        }
-        tbody.innerHTML = items.map(item => {
-          const imageSrc = item.image || placeholderImage;
-          return `
-            <tr>
-              <td data-label="ID">${item.id}</td>
-              <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
-              <td data-label="Name">${item.name}</td>
-              <td data-label="Price">₹${parseFloat(item.price).toFixed(2)}</td>
-              <td data-label="Category">${item.category}</td>
-              <td data-label="Description">${item.description || '-'}</td>
-              <td data-label="Actions">
-                <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" data-label="Status">Failed to load menu items.</td></tr>';
+      tbody.innerHTML = '';
+      if (!menuItems.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" data-label="Status">No menu items found</td></tr>';
+        return;
       }
+      menuItems.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td data-label="ID">${item.id}</td>
+          <td data-label="Image"><img src="${item.image || placeholderImage}" alt="${item.name}" class="menu-image"></td>
+          <td data-label="Name">${item.name}</td>
+          <td data-label="Price">₹${parseFloat(item.price).toFixed(1)}</td>
+          <td data-label="Category">${item.category}</td>
+          <td data-label="Description">${item.description || '-'}</td>
+          <td data-label="Actions">
+            <button class="btn-primary mr-1 text-xs" onclick="editMenuItem(${item.id})">Edit</button>
+            <button class="btn-danger text-xs" onclick="deleteMenuItem(${item.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      showToast('Failed to fetch menu items', 'error');
+    }
+  };
+
+  const saveMenuItem = async () => {
+    const id = document.getElementById('menuId').value;
+    const name = document.getElementById('menuName').value.trim();
+    const price = document.getElementById('menuPrice').value;
+    const category = document.getElementById('menuCategory').value;
+    const description = document.getElementById('menuDescription').value.trim();
+    const image = document.getElementById('menuImage').files[0];
+
+    if (!name || !price || !category) {
+      showToast('Name, price, and category are required', 'error');
+      return;
     }
 
-    async function loadCoupons() {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('price', parseFloat(price));
+    formData.append('category', category);
+    if (description) formData.append('description', description);
+    if (image) formData.append('image', image);
+
+    try {
+      const url = id ? `/menu/${id}` : '/menu';
+      const method = id ? 'PUT' : 'POST';
+      await fetch(`${baseUrl}${apiPrefix}${url}`, {
+        method,
+ទ: method,
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+        body: formData,
+      }).then(async res => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || 'Request failed');
+        }
+        return res.json();
+      });
+      showToast(`Menu item ${id ? 'updated' : 'added'}`, 'success');
+      closeModal('addMenuModal');
+      fetchMenuItems();
+    } catch (error) {
+      showToast(`Failed to ${id ? 'update' : 'add'} menu item`, 'error');
+    }
+  };
+
+  const editMenuItem = async (id) => {
+    try {
+      const menuItems = await fetchWithAuth('/menu');
+      const item = menuItems.find(item => item.id === id);
+      if (!item) {
+        showToast('Menu item not found', 'error');
+        return;
+      }
+      document.getElementById('menuModalTitle').textContent = 'Edit Menu Item';
+      document.getElementById('menuId').value = item.id;
+      document.getElementById('menuName').value = item.name;
+      document.getElementById('menuPrice').value = item.price;
+      document.getElementById('menuCategory').value = item.category;
+      document.getElementById('menuDescription').value = item.description || '';
+      document.getElementById('menuImage').value = '';
+      openModal('addMenuModal');
+    } catch (error) {
+      showToast('Failed to fetch menu item', 'error');
+    }
+  };
+
+  const deleteMenuItem = async (id) => {
+    if (!confirm('Are you sure you want to delete this menu item?')) return;
+    try {
+      await fetchWithAuth(`/menu/${id}`, { method: 'DELETE' });
+      showToast('Menu item deleted', 'success');
+      fetchMenuItems();
+    } catch (error) {
+      showToast('Failed to delete menu item', 'error');
+    }
+  };
+
+  // Coupon management
+  const fetchCoupons = async () => {
+    try {
+      const coupons = await fetchWithAuth('/coupons');
       const tbody = document.getElementById('couponTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-state" data-label="Status">Loading coupons...</td></tr>';
-      try {
-        const coupons = await handleFetch(`${apiPrefix}/coupons`);
-        if (!coupons?.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No coupons found. Add some!</td></tr>';
-          return;
-        }
-        tbody.innerHTML = coupons.map(coupon => {
-          const imageSrc = coupon.image || placeholderImage;
-          return `
-            <tr>
-              <td data-label="ID">${coupon.id}</td>
-              <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
-              <td data-label="Code">${coupon.code}</td>
-              <td data-label="Discount">${parseFloat(coupon.discount).toFixed(2)}%</td>
-              <td data-label="Description">${coupon.description || '-'}</td>
-              <td data-label="Actions">
-                <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
-                <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">Error loading coupons.</td></tr>';
+      tbody.innerHTML = '';
+      if (!coupons.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No coupons found</td></tr>';
+        return;
       }
+      coupons.forEach(coupon => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td data-label="ID">${coupon.id}</td>
+          <td data-label="Image"><img src="${coupon.image || placeholderImage}" alt="${coupon.code}" class="coupon-image"></td>
+          <td data-label="Code">${coupon.code}</td>
+          <td data-label="Discount">${parseFloat(coupon.discount).toFixed(1)}%</td>
+          <td data-label="Description">${coupon.description || '-'}</td>
+          <td data-label="Actions">
+            <button class="btn-primary mr-1 text-xs" onclick="editCoupon(${coupon.id})">Edit</button>
+            <button class="btn-danger text-xs" onclick="deleteCoupon(${coupon.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      showToast('Failed to fetch coupons', 'error');
+    }
+  };
+
+  const saveCoupon = async () => {
+    const id = document.getElementById('couponId').value;
+    const code = document.getElementById('couponCode').value.trim();
+    const discount = document.getElementById('couponDiscount').value;
+    const description = document.getElementById('couponDescription').value.trim();
+    const image = document.getElementById('couponImage').files[0];
+
+    if (!code || !discount) {
+      showToast('Code and discount are required', 'error');
+      return;
     }
 
-    async function loadCustomers() {
+    const formData = new FormData();
+    formData.append('code', code);
+    formData.append('discount', parseFloat(discount));
+    if (description) formData.append('description', description);
+    if (image) formData.append('image', image);
+
+    try {
+      const url = id ? `/coupons/${id}` : '/coupons';
+      const method = id ? 'PUT' : 'POST';
+      await fetch(`${baseUrl}${apiPrefix}${url}`, {
+        method,
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+        body: formData,
+      }).then(async res => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || 'Request failed');
+        }
+        return res.json();
+      });
+      showToast(`Coupon ${id ? 'updated' : 'added'}`, 'success');
+      closeModal('addCouponModal');
+      fetchCoupons();
+    } catch (error) {
+      showToast(`Failed to ${id ? 'update' : 'add'} coupon`, 'error');
+    }
+  };
+
+  const editCoupon = async (id) => {
+    try {
+      const coupons = await fetchWithAuth('/coupons');
+      const coupon = coupons.find(c => c.id === id);
+      if (!coupon) {
+        showToast('Coupon not found', 'error');
+        return;
+      }
+      document.getElementById('couponModalTitle').textContent = 'Edit Coupon';
+      document.getElementById('couponId').value = coupon.id;
+      document.getElementById('couponCode').value = coupon.code;
+      document.getElementById('couponDiscount').value = coupon.discount;
+      document.getElementById('couponDescription').value = coupon.description || '';
+      document.getElementById('couponImage').value = '';
+      openModal('addCouponModal');
+    } catch (error) {
+      showToast('Failed to fetch coupon', 'error');
+    }
+  };
+
+  const deleteCoupon = async (id) => {
+    if (!confirm('Are you sure you want to delete this coupon?')) return;
+    try {
+      await fetchWithAuth(`/coupons/${id}`, { method: 'DELETE' });
+      showToast('Coupon deleted', 'success');
+      fetchCoupons();
+    } catch (error) {
+      showToast('Failed to delete coupon', 'error');
+    }
+  };
+
+  // Customer management
+  const fetchCustomers = async () => {
+    try {
+      const customers = await fetchWithAuth('/customers');
       const tbody = document.getElementById('customerTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-state" data-label="Status">Loading customers...</td></tr>';
-      try {
-        const customers = await handleFetch(`${apiPrefix}/customers`);
-        if (!customers?.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No customers found.</td></tr>';
-          return;
-        }
-        tbody.innerHTML = customers.map(customer => `
-          <tr>
-            <td data-label="ID">${customer.id}</td>
-            <td data-label="Name">${customer.name}</td>
-            <td data-label="Email">${customer.email}</td>
-            <td data-label="Phone">${customer.phone || '-'}</td>
-            <td data-label="Status">${customer.status}</td>
-            <td data-label="Actions">
-              <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
-                ${customer.status === 'active' ? 'Block' : 'Unblock'}
-              </button>
-            </td>
-          </tr>
-        `).join('');
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">Error loading customers.</td></tr>';
+      tbody.innerHTML = '';
+      if (!customers.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No customers found</td></tr>';
+        return;
       }
+      customers.forEach(customer => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td data-label="ID">${customer.id}</td>
+          <td data-label="Name">${customer.name}</td>
+          <td data-label="Email">${customer.email}</td>
+          <td data-label="Phone">${customer.phone || '-'}</td>
+          <td data-label="Status">${customer.status}</td>
+          <td data-label="Actions">
+            <button class="btn-${customer.status === 'active' ? 'danger' : 'primary'} text-xs" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
+              ${customer.status === 'active' ? 'Block' : 'Unblock'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      showToast('Failed to fetch customers', 'error');
     }
+  };
 
-    async function loadOrders() {
-      const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="9" class="loading-state" data-label="Status">Loading orders...</td></tr>';
-      try {
-        orders = await handleFetch(`${apiPrefix}/orders`);
-        if (!orders?.length) {
-          tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">No orders found.</td></tr>';
-          return;
-        }
-        tbody.innerHTML = orders.map(order => {
-          const itemsDisplay = order.items?.length > 0
-            ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
-            : 'No items';
-          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
-            ? `₹${parseFloat(order.total).toFixed(2)}`
-            : '₹0.00';
-          const addressDisplay = order.address
-            ? [order.address.fullName, order.address.street, order.address.city, order.address.landmark]
-                .filter(part => part && part.trim())
-                .join(', ')
-            : 'No address';
-          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
-          return `
-            <tr>
-              <td data-label="ID">${order.id}</td>
-              <td data-label="Customer">${order.user?.name || 'Anonymous'}</td>
-              <td data-label="Address">${addressDisplay}</td>
-              <td data-label="Items">${itemsDisplay}</td>
-              <td data-label="Total">${totalDisplay}</td>
-              <td data-label="Payment Status">${order.paymentStatus || 'Pending'}</td>
-              <td data-label="Status">
-                <select onchange="updateOrderStatus(${order.id}, this.value, this)">
-                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                  <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                  <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-              </td>
-              <td data-label="Reason">${reasonDisplay}</td>
-              <td data-label="Actions">
-                <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">Error loading orders.</td></tr>';
+  const toggleCustomerStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+    if (!confirm(`Are you sure you want to ${newStatus === 'blocked' ? 'block' : 'unblock'} this customer?`)) return;
+    try {
+      await fetchWithAuth(`/customers/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      showToast(`Customer ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}`, 'success');
+      fetchCustomers();
+    } catch (error) {
+      showToast('Failed to update customer status', 'error');
+    }
+  };
+
+  // Order management
+  let allOrders = [];
+  const fetchOrders = async () => {
+    try {
+      allOrders = await fetchWithAuth('/orders');
+      renderOrders(allOrders);
+    } catch (error) {
+      showToast('Failed to fetch orders', 'error');
+    }
+  };
+
+  const renderOrders = (orders) => {
+    const tbody = document.getElementById('orderTableBody');
+    tbody.innerHTML = '';
+    if (!orders.length) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-state" data-label="Status">No orders found</td></tr>';
+      return;
+    }
+    orders.forEach(order => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Select"><input type="checkbox" class="checkbox" value="${order.id}"></td>
+        <td data-label="ID">${order.id}</td>
+        <td data-label="Customer">${order.user.name}</td>
+        <td data-label="Address">${order.address.fullName}, ${order.address.location}</td>
+        <td data-label="Items">${order.items.map(item => `${item.name} (x${item.quantity})`).join(', ')}</td>
+        <td data-label="Total">₹${(parseFloat(order.total) + parseFloat(order.delivery)).toFixed(1)}</td>
+        <td data-label="Payment Status">${order.paymentStatus}</td>
+        <td data-label="Status">${order.status}</td>
+        <td data-label="Reason">${order.reason || '-'}</td>
+        <td data-label="Actions">
+          <button class="btn-primary text-xs" onclick="viewOrderDetails(${order.id})">View</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  };
+
+  const searchOrders = () => {
+    const searchTerm = document.getElementById('orderSearch').value.trim().toLowerCase();
+    if (!searchTerm) {
+      renderOrders(allOrders);
+      return;
+    }
+    const filteredOrders = allOrders.filter(order =>
+      order.id.toString().includes(searchTerm) ||
+      order.user.name.toLowerCase().includes(searchTerm) ||
+      order.status.toLowerCase().includes(searchTerm)
+    );
+    renderOrders(filteredOrders);
+  };
+
+  const clearOrderSearch = () => {
+    document.getElementById('orderSearch').value = '';
+    renderOrders(allOrders);
+  };
+
+  const deleteSelectedOrders = async () => {
+    const checkboxes = document.querySelectorAll('#orderTableBody input[type="checkbox"]:checked');
+    const orderIds = Array.from(checkboxes).map(cb => parseInt(cb.value)).filter(id => Number.isInteger(id) && id > 0);
+    if (!orderIds.length) {
+      showToast('Please select at least one order to delete', 'error');
+      return;
+    }
+    if (!confirm(`Are you sure you want to move ${orderIds.length} order(s) to trash?`)) return;
+    try {
+      const response = await fetchWithAuth('/orders/trash', {
+        method: 'PUT',
+        body: JSON.stringify({ orderIds }),
+      });
+      showToast(response.message || `Moved ${orderIds.length} order(s) to trash`, 'success');
+      fetchOrders();
+      fetchTrashedOrders();
+      document.getElementById('selectAllOrders').checked = false;
+    } catch (error) {
+      showToast(error.message || 'Failed to move orders to trash', 'error');
+    }
+  };
+
+  const fetchTrashedOrders = async () => {
+    try {
+      const orders = await fetchWithAuth('/orders/trashed');
+      const tbody = document.getElementById('trashTableBody');
+      tbody.innerHTML = '';
+      if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-state" data-label="Status">No trashed orders found</td></tr>';
+        return;
       }
+      orders.forEach(order => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td data-label="Select"><input type="checkbox" class="checkbox" value="${order.id}"></td>
+          <td data-label="ID">${order.id}</td>
+          <td data-label="Customer">${order.user.name}</td>
+          <td data-label="Address">${order.address.fullName}, ${order.address.location}</td>
+          <td data-label="Items">${order.items.map(item => `${item.name} (x${item.quantity})`).join(', ')}</td>
+          <td data-label="Total">₹${(parseFloat(order.total) + parseFloat(order.delivery)).toFixed(1)}</td>
+          <td data-label="Payment Status">${order.paymentStatus}</td>
+          <td data-label="Status">${order.status}</td>
+          <td data-label="Reason">${order.reason || '-'}</td>
+          <td data-label="Deleted At">${new Date(order.deleted_at).toLocaleString()}</td>
+          <td data-label="Actions">
+            <button class="btn-primary text-xs" onclick="viewOrderDetails(${order.id}, true)">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      showToast(error.message || 'Failed to fetch trashed orders', 'error');
     }
+  };
 
-    async function loadRestaurantStatus() {
-      try {
-        const response = await handleFetch(`${apiPrefix}/status`);
-        updateStatusDisplay(response.status);
-      } catch (error) {}
+  const restoreSelectedOrders = async () => {
+    const checkboxes = document.querySelectorAll('#trashTableBody input[type="checkbox"]:checked');
+    const orderIds = Array.from(checkboxes).map(cb => parseInt(cb.value)).filter(id => Number.isInteger(id) && id > 0);
+    if (!orderIds.length) {
+      showToast('Please select at least one order to restore', 'error');
+      return;
     }
-
-    async function logout() {
-      try {
-        await handleFetch(`${apiPrefix}/logout`, { method: 'POST' });
-        showToast('Logged out successfully!', 'success');
-      } catch (error) {
-        showToast('Logout failed. Redirecting...', 'error');
-      } finally {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        window.location.href = '/admin.html';
-      }
+    if (!confirm(`Are you sure you want to restore ${orderIds.length} order(s)?`)) return;
+    try {
+      const response = await fetchWithAuth('/orders/restore', {
+        method: 'PUT',
+        body: JSON.stringify({ orderIds }),
+      });
+      showToast(response.message || `Restored ${orderIds.length} order(s)`, 'success');
+      fetchOrders();
+      fetchTrashedOrders();
+      document.getElementById('selectAllTrash').checked = false;
+    } catch (error) {
+      showToast(error.message || 'Failed to restore orders', 'error');
     }
+  };
 
-    async function init() {
-      try {
-        if (!(await checkSession())) return;
-        await Promise.all([
-          loadMenuItems(),
-          loadCoupons(),
-          loadCustomers(),
-          loadOrders(),
-          loadRestaurantStatus(),
-        ]);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      }
+  const permanentlyDeleteSelectedOrders = async () => {
+    const checkboxes = document.querySelectorAll('#trashTableBody input[type="checkbox"]:checked');
+    const orderIds = Array.from(checkboxes).map(cb => parseInt(cb.value)).filter(id => Number.isInteger(id) && id > 0);
+    if (!orderIds.length) {
+      showToast('Please select at least one order to permanently delete', 'error');
+      return;
     }
+    if (!confirm(`Are you sure you want to permanently delete ${orderIds.length} order(s)? This action cannot be undone.`)) return;
+    try {
+      const response = await fetchWithAuth('/orders/permanent', {
+        method: 'DELETE',
+        body: JSON.stringify({ orderIds }),
+      });
+      showToast(response.message || `Permanently deleted ${orderIds.length} order(s)`, 'success');
+      fetchTrashedOrders();
+      document.getElementById('selectAllTrash').checked = false;
+    } catch (error) {
+      showToast(error.message || 'Failed to permanently delete orders', 'error');
+    }
+  };
 
-    document.addEventListener('DOMContentLoaded', init);
-  </script>
+  const viewOrderDetails = async (id, isTrashed = false) => {
+    try {
+      const order = await fetchWithAuth(`/orders/${id}`);
+      const content = document.getElementById('orderDetailsContent');
+      content.innerHTML = `
+        <p><strong>Order ID:</strong> ${order.id}</p>
+        <p><strong>Customer:</strong> ${order.user.name} (${order.user.email})</p>
+        <p><strong>Address:</strong> ${order.address.fullName}, ${order.address.houseNo}, ${order.address.location}${order.address.landmark ? `, ${order.address.landmark}` : ''}, ${order.address.mobile}</p>
+        <p><strong>Items:</strong></p>
+        <ul class="list-disc pl-5">
+          ${order.items.map(item => `<li>${item.name} (x${item.quantity}) - ₹${parseFloat(item.price).toFixed(1)}</li>`).join('')}
+        </ul>
+        <p><strong>Total:</strong> ₹${parseFloat(order.total).toFixed(1)}</p>
+        <p><strong>Delivery:</strong> ₹${parseFloat(order.delivery).toFixed(1)}</p>
+        ${order.couponCode ? `<p><strong>Coupon:</strong> ${order.couponCode}</p>` : ''}
+        <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+        <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+        <p><strong>Status:</strong> ${order.status}</p>
+        ${order.reason ? `<p><strong>Reason:</strong> ${order.reason}</p>` : ''}
+        <p><strong>Order Date:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+        ${order.deleted_at ? `<p><strong>Deleted At:</strong> ${new Date(order.deleted_at).toLocaleString()}</p>` : ''}
+        ${!isTrashed ? `
+          <div class="mt-4">
+            <select id="orderStatus" class="input-field mb-2">
+              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+            <select id="paymentStatus" class="input-field mb-2">
+              <option value="pending" ${order.paymentStatus === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="paid" ${order.paymentStatus === 'paid' ? 'selected' : ''}>Paid</option>
+              <option value="failed" ${order.paymentStatus === 'failed' ? 'selected' : ''}>Failed</option>
+            </select>
+            <textarea id="orderReason" class="input-field mb-2" placeholder="Enter reason (required if cancelled)" ${order.status !== 'cancelled' ? 'disabled' : ''}>${order.reason || ''}</textarea>
+            <button class="btn-primary w-full" onclick="updateOrder(${order.id})">Update Order</button>
+          </div>
+        ` : ''}
+      `;
+      document.getElementById('orderStatus')?.addEventListener('change', (e) => {
+        document.getElementById('orderReason').disabled = e.target.value !== 'cancelled';
+      });
+      openModal('orderDetailsModal');
+    } catch (error) {
+      showToast(error.message || 'Failed to fetch order details', 'error');
+    }
+  };
+
+  const updateOrder = async (id) => {
+    const status = document.getElementById('orderStatus').value;
+    const paymentStatus = document.getElementById('paymentStatus').value;
+    const reason = document.getElementById('orderReason').value.trim();
+    if (status === 'cancelled' && !reason) {
+      showToast('Reason is required for cancellation', 'error');
+      return;
+    }
+    try {
+      await fetchWithAuth(`/orders/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, paymentStatus, reason }),
+      });
+      showToast('Order updated', 'success');
+      closeModal('orderDetailsModal');
+      fetchOrders();
+    } catch (error) {
+      showToast(error.message || 'Failed to update order', 'error');
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    try {
+      await fetchWithAuth('/logout', { method: 'POST' });
+      removeToken();
+      window.location.href = '/admin/login.html';
+    } catch (error) {
+      showToast('Failed to logout', 'error');
+    }
+  };
+
+  // Initialize
+  const init = async () => {
+    await checkSession();
+    await Promise.all([
+      fetchRestaurantStatus(),
+      fetchMenuItems(),
+      fetchCoupons(),
+      fetchCustomers(),
+      fetchOrders(),
+      fetchTrashedOrders(),
+    ]);
+    document.getElementById('orderSearch').addEventListener('input', searchOrders);
+  };
+
+  window.addEventListener('load', init);
+
+  // Close modals on outside click
+  window.addEventListener('click', (e) => {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+      if (e.target === modal) closeModal(modal.id);
+    });
+  });
+
+  // Form reset for modals
+  document.getElementById('addMenuModal').addEventListener('submit', (e) => e.preventDefault());
+  document.getElementById('addCouponModal').addEventListener('submit', (e) => e.preventDefault());
+</script>
 </body>
 </html>

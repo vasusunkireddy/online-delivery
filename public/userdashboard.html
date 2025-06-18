@@ -542,6 +542,7 @@
       align-items: center;
       gap: 0.4rem;
       margin-top: 0.5rem;
+      position: relative;
     }
 
     .tracking-step {
@@ -551,6 +552,8 @@
       border-radius: 0.4rem;
       font-size: 0.75rem;
       transition: background 0.3s ease;
+      position: relative;
+      z-index: 2;
     }
 
     .tracking-step.active {
@@ -563,9 +566,24 @@
       color: #6b7280;
     }
 
+    .tracking-bar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.4);
+      z-index: 1;
+    }
+
     .dark-mode .tracking-step.inactive {
       background: rgba(255, 255, 255, 0.1);
       color: #9ca3af;
+    }
+
+    .dark-mode .tracking-bar::before {
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .btn-primary:focus, .btn-secondary:focus, .btn-quantity:focus {
@@ -763,8 +781,8 @@
           >
           <div class="dropdown-menu" id="profileDropdown" aria-expanded="false">
             <div class="dropdown-item" onclick="utils.scrollToSection('dashboard-content')" aria-label="Go to Home"><i class="fas fa-home"></i>Home</div>
-            <div class="dropdown-item" onclick="utils.scrollToSection('myOrders')" aria-label="Go to My Orders"><i class="fas fa-box"></i>My Orders</div>
-            <div class="dropdown-item" onclick="utils.scrollToSection('orders')" aria-label="Go to Order History"><i class="fas fa-history"></i>Order History</div>
+            <div class="dropdown-item" onclick="ui.openModal('myOrdersModal')" aria-label="Go to My Orders"><i class="fas fa-box"></i>My Orders</div>
+            <div class="dropdown-item" onclick="ui.openModal('orderHistoryModal')" aria-label="Go to Order History"><i class="fas fa-history"></i>Order History</div>
             <div class="dropdown-item" onclick="ui.openModal('profileModal')" aria-label="Edit Profile"><i class="fas fa-user-edit"></i>Edit Profile</div>
             <div class="dropdown-item" onclick="ui.openModal('addressModal')" aria-label="Manage Addresses"><i class="fas fa-map-marker-alt"></i>Manage Addresses</div>
             <div class="dropdown-item" onclick="ui.openModal('favoritesModal')" aria-label="View Favorites"><i class="fas fa-heart"></i>Favorites</div>
@@ -780,14 +798,6 @@
         <p class="text-sm md:text-base text-black mb-1">Total Orders: <span id="totalOrders">0</span></p>
         <p class="text-sm md:text-base text-black mb-2">"Every Bite Tells a Story!"</p>
         <button class="btn-primary" onclick="utils.scrollToSection('menuSection')" aria-label="Explore Menu">Explore Menu</button>
-      </div>
-
-      <div class="card" id="myOrders">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-lg md:text-xl font-semibold" style="font-family: 'Playfair Display', serif;">My Orders</h2>
-          <button class="btn-secondary text-xs" onclick="data.refreshOrders()" aria-label="Refresh Orders">Refresh</button>
-        </div>
-        <div id="orderHistory"></div>
       </div>
 
       <div class="card" id="menuSection">
@@ -833,7 +843,7 @@
 
     <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
-        <span class="close-btn" onclick="ui.closeModal('profileModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('profileModal')" aria-label="Close">×</span>
         <img src="https://via.placeholder.com/100x100.png?text=Profile" alt="Profile Picture" id="profileModalImg" loading="lazy">
         <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Edit Profile</h2>
         <div class="mb-3">
@@ -845,8 +855,8 @@
           <input type="email" id="profileEmail" class="input-field" placeholder="Enter Email" required aria-required="true">
         </div>
         <div class="mb-3">
-          <label class="block text-sm mb-1" for="mobile">Mobile Number</label>
-          <input type="tel" id="mobile" class="input-field bg-gray-100" readonly aria-readonly="true">
+          <label class="block text-sm mb-1" for="profileMobile">Mobile Number *</label>
+          <input type="tel" id="profileMobile" class="input-field" placeholder="Enter Mobile Number" required aria-required="true">
         </div>
         <div class="mb-3">
           <label class="block text-sm mb-1" for="profileImage">Profile Picture (JPEG/PNG, max 2MB)</label>
@@ -859,7 +869,7 @@
 
     <div id="addressModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('addressModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('addressModal')" aria-label="Close">×</span>
         <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Manage Addresses</h2>
         <div id="addressList" class="mb-3"></div>
         <h3 class="text-base font-medium mb-2" id="addressFormTitle">Add New Address</h3>
@@ -868,18 +878,22 @@
           <div class="mb-3">
             <label class="block text-sm mb-1" for="fullName">Full Name *</label>
             <input type="text" id="fullName" class="input-field" placeholder="Enter Full Name" required aria-required="true">
+            <p class="error-message" id="fullNameError"></p>
           </div>
           <div class="mb-3">
             <label class="block text-sm mb-1" for="addressMobile">Mobile Number *</label>
             <input type="tel" id="addressMobile" class="input-field" placeholder="Enter Mobile Number" required aria-required="true">
+            <p class="error-message" id="addressMobileError"></p>
           </div>
           <div class="mb-3">
             <label class="block text-sm mb-1" for="houseNo">House/Flat Number *</label>
             <input type="text" id="houseNo" class="input-field" placeholder="Enter House/Flat Number" required aria-required="true">
+            <p class="error-message" id="houseNoError"></p>
           </div>
           <div class="mb-3">
             <label class="block text-sm mb-1" for="addressLocation">Street Address *</label>
             <input type="text" id="addressLocation" class="input-field" placeholder="Enter Street Address" required aria-required="true">
+            <p class="error-message" id="addressLocationError"></p>
           </div>
           <div class="mb-3">
             <label class="block text-sm mb-1" for="landmark">Landmark</label>
@@ -892,7 +906,7 @@
 
     <div id="favoritesModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('favoritesModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('favoritesModal')" aria-label="Close">×</span>
         <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Your Favorites</h2>
         <div id="favoritesModalList" class="grid grid-cols-2 sm:grid-cols-2 gap-2 mb-2"></div>
       </div>
@@ -900,7 +914,7 @@
 
     <div id="cartModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('cartModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('cartModal')" aria-label="Close">×</span>
         <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Your Order</h2>
         <div id="cartItems" class="mb-3 cart-items"></div>
         <div class="flex justify-between items-center mb-2">
@@ -931,9 +945,31 @@
       </div>
     </div>
 
+    <div id="myOrdersModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="ui.closeModal('myOrdersModal')" aria-label="Close">×</span>
+        <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">My Orders</h2>
+        <div class="flex justify-between items-center mb-2">
+          <button class="btn-secondary text-xs" onclick="data.refreshOrders()" aria-label="Refresh Orders">Refresh</button>
+        </div>
+        <div id="myOrdersList"></div>
+      </div>
+    </div>
+
+    <div id="orderHistoryModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="ui.closeModal('orderHistoryModal')" aria-label="Close">×</span>
+        <h2 class="text-lg md:text-xl font-semibold mb-3 text-center" style="font-family: 'Playfair Display', serif;">Order History</h2>
+        <div class="flex justify-between items-center mb-2">
+          <button class="btn-secondary text-xs" onclick="data.clearOrderHistory()" aria-label="Clear Order History">Clear History</button>
+        </div>
+        <div id="orderHistoryList"></div>
+      </div>
+    </div>
+
     <div id="cancelOrderModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('cancelOrderModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('cancelOrderModal')" aria-label="Close">×</span>
         <h2 class="text-lg mb-3 font-semibold text-center" style="font-family: 'Playfair Display', serif;">Cancel Order</h2>
         <p class="text-sm mb-3">Please provide a reason for cancellation:</p>
         <div id="cancelOrderForm">
@@ -949,7 +985,7 @@
 
     <div id="trackOrderModal" class="modal">
       <div class="modal-content">
-        <span class="close-btn" onclick="ui.closeModal('trackOrderModal')" aria-label="Close">&times;</span>
+        <span class="close-btn" onclick="ui.closeModal('trackOrderModal')" aria-label="Close">×</span>
         <h2 class="text-lg mb-3 font-semibold text-center" style="font-family: 'Playfair Display', serif;">Track Order #<span id="trackOrderId"></span></h2>
         <div id="trackOrderDetails"></div>
       </div>
@@ -976,11 +1012,10 @@
   };
 
   const placeholderImage = 'https://via.placeholder.com/150x150.png?text=Image';
-  const defaultProfileImage = 'https://via.placeholder.com/40x40.png?text=Profile';
 
   const sanitizeImageUrl = (url) => {
-    if (!url || typeof url !== 'string' || url === 'null') return defaultProfileImage;
-    return url.startsWith('https://res.cloudinary.com/') ? url : defaultProfileImage;
+    if (!url || typeof url !== 'string' || url === 'null' || !url.startsWith('https://res.cloudinary.com/')) return placeholderImage;
+    return url;
   };
 
   const sanitizeInput = (input) => {
@@ -1105,7 +1140,7 @@
     },
 
     uploadImage: async (file) => {
-      if (!file) return state.user?.image || defaultProfileImage;
+      if (!file) return state.user?.image;
       if (!utils.validateImage(file)) throw new Error('Invalid image');
       const formData = new FormData();
       formData.append('image', file);
@@ -1120,7 +1155,7 @@
         return response.url;
       } catch (error) {
         utils.showToast('Image upload failed', 'error');
-        return state.user?.image || defaultProfileImage;
+        throw error;
       }
     },
 
@@ -1128,6 +1163,35 @@
       const d = new Date(date);
       const pad = (n) => n.toString().padStart(2, '0');
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    },
+
+    validateAddressFields: () => {
+      const fields = [
+        { id: 'fullName', required: true },
+        { id: 'addressMobile', required: true },
+        { id: 'houseNo', required: true },
+        { id: 'addressLocation', required: true },
+      ];
+      let isValid = true;
+      fields.forEach(field => {
+        const input = document.getElementById(field.id);
+        const error = document.getElementById(`${field.id}Error`);
+        if (field.required && !input.value.trim()) {
+          error.textContent = 'This field is required';
+          error.classList.add('show');
+          input.classList.add('invalid');
+          isValid = false;
+        } else if (field.id === 'addressMobile' && !utils.validateMobile(input.value.trim())) {
+          error.textContent = 'Invalid mobile number';
+          error.classList.add('show');
+          input.classList.add('invalid');
+          isValid = false;
+        } else {
+          error.classList.remove('show');
+          input.classList.remove('invalid');
+        }
+      });
+      return isValid;
     },
   };
 
@@ -1151,6 +1215,10 @@
         ui.loadProfile();
       } else if (modalId === 'addressModal') {
         data.loadAddresses();
+      } else if (modalId === 'myOrdersModal') {
+        data.loadOrders();
+      } else if (modalId === 'orderHistoryModal') {
+        data.loadOrders();
       }
       document.getElementById('profileDropdown').classList.remove('show');
     },
@@ -1192,7 +1260,7 @@
     loadProfile: () => {
       document.getElementById('profileName').value = state.user?.name || '';
       document.getElementById('profileEmail').value = state.user?.email || '';
-      document.getElementById('mobile').value = state.user?.mobile || '';
+      document.getElementById('profileMobile').value = state.user?.mobile || '';
       document.getElementById('profileModalImg').src = sanitizeImageUrl(state.user?.image);
       document.getElementById('profileImg').src = sanitizeImageUrl(state.user?.image);
       document.getElementById('profileImageError').classList.remove('show');
@@ -1233,15 +1301,19 @@
     updateProfile: async () => {
       const name = document.getElementById('profileName').value.trim();
       const email = document.getElementById('profileEmail').value.trim();
+      const mobile = document.getElementById('profileMobile').value.trim();
       const imageInput = document.getElementById('profileImage').files[0];
-      if (!name || !email) {
-        return utils.showToast('Name and Email are required', 'error');
+      if (!name || !email || !mobile) {
+        return utils.showToast('Name, Email, and Mobile are required', 'error');
       }
       if (!utils.validateEmail(email)) {
         return utils.showToast('Invalid email format', 'error');
       }
+      if (!utils.validateMobile(mobile)) {
+        return utils.showToast('Invalid mobile number', 'error');
+      }
       try {
-        const body = { name, email };
+        const body = { name, email, mobile };
         if (imageInput) {
           body.image = await utils.uploadImage(imageInput);
         }
@@ -1286,18 +1358,13 @@
 
     addOrUpdateAddress: async (e) => {
       e.preventDefault();
+      if (!utils.validateAddressFields()) return;
       const id = document.getElementById('addressId').value;
       const fullName = sanitizeInput(document.getElementById('fullName').value.trim());
       const mobile = sanitizeInput(document.getElementById('addressMobile').value.trim());
       const houseNo = sanitizeInput(document.getElementById('houseNo').value.trim());
       const location = sanitizeInput(document.getElementById('addressLocation').value.trim());
       const landmark = sanitizeInput(document.getElementById('landmark').value.trim());
-      if (!fullName || !mobile || !houseNo || !location) {
-        return utils.showToast('Please fill all required fields', 'error');
-      }
-      if (!utils.validateMobile(mobile)) {
-        return utils.showToast('Invalid mobile number', 'error');
-      }
       try {
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/api/user/addresses/${id}` : '/api/user/addresses';
@@ -1653,22 +1720,170 @@
         data.renderCart();
       } catch (error) {
         utils.showToast('Failed to apply coupon', 'error');
-        document.getElementById('couponError').textContent = 'Invalid coupon code';
         document.getElementById('couponError').classList.add('show');
       }
     },
 
     applyCouponFromList: async (code, discount) => {
       try {
-        state.appliedCoupon = { code: sanitizeInput(code), discount };
-        utils.showToast(`Coupon ${sanitizeInput(code)} applied! ${discount}% off`, 'success');
-        data.renderCart();
-        ui.closeModal('cartModal');
-        ui.openModal('cartModal');
+        const response = await utils.fetchWithAuth(`/api/user/coupons/apply?code=${encodeURIComponent(code)}`);
+        state.appliedCoupon = { code, discount: response.discount };
+        utils.showToast(`Coupon ${sanitizeInput(code)} applied! ${response.discount}% off`, 'success');
         document.getElementById('couponCode').value = code;
         document.getElementById('couponCode').classList.add('valid');
+        document.getElementById('couponCode').classList.remove('invalid');
+        document.getElementById('couponError').classList.remove('show');
+        data.renderCart();
       } catch (error) {
         utils.showToast('Failed to apply coupon', 'error');
+      }
+    },
+
+    loadOrders: async () => {
+      try {
+        state.orders = await utils.fetchWithCache('/api/user/orders');
+        document.getElementById('totalOrders').textContent = state.orders.length || 0;
+        data.renderActiveOrders();
+        data.renderOrderHistory();
+        data.renderMyOrders();
+      } catch (error) {
+        utils.showToast('Failed to load orders', 'error');
+      }
+    },
+
+    renderActiveOrders: () => {
+      const activeOrders = document.getElementById('activeOrders');
+      activeOrders.innerHTML = '';
+      const active = state.orders.filter(order => order.status !== 'delivered' && order.status !== 'cancelled');
+      if (!active.length) {
+        activeOrders.innerHTML = '<p class="text-center text-sm">No active orders.</p>';
+        return;
+      }
+      active.forEach(order => {
+        activeOrders.innerHTML += data.getOrderCardHTML(order);
+      });
+    },
+
+    renderMyOrders: () => {
+      const myOrdersList = document.getElementById('myOrdersList');
+      myOrdersList.innerHTML = '';
+      const active = state.orders.filter(order => order.status !== 'delivered' && order.status !== 'cancelled');
+      if (!active.length) {
+        myOrdersList.innerHTML = '<p class="text-center text-sm">No active orders.</p>';
+        return;
+      }
+      active.forEach(order => {
+        myOrdersList.innerHTML += data.getOrderCardHTML(order, true);
+      });
+    },
+
+    renderOrderHistory: () => {
+      const orderHistoryList = document.getElementById('orderHistoryList');
+      orderHistoryList.innerHTML = '';
+      if (!state.orders.length) {
+        orderHistoryList.innerHTML = '<p class="text-center text-sm">No order history.</p>';
+        return;
+      }
+      state.orders.forEach(order => {
+        orderHistoryList.innerHTML += data.getOrderCardHTML(order);
+      });
+    },
+
+    getOrderCardHTML: (order, isMyOrders = false) => {
+      const items = (order.items || []).map(item => `
+        <div class="flex justify-between text-xs">
+          <span>${sanitizeInput(item.name)} x ${item.quantity}</span>
+          <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+      `).join('');
+      const statusMap = {
+        pending: ['Pending', 1],
+        accepted: ['Accepted', 2],
+        preparing: ['Preparing', 3],
+        dispatched: ['Dispatched', 4],
+        delivered: ['Delivered', 5],
+        cancelled: ['Cancelled', 0],
+      };
+      const [statusText, step] = statusMap[order.status] || ['Unknown', 0];
+      const trackingSteps = ['Pending', 'Accepted', 'Preparing', 'Dispatched', 'Delivered'];
+      const trackingHTML = `
+        <div class="tracking-bar">
+          ${trackingSteps.map((s, i) => `
+            <div class="tracking-step ${i < step ? 'active' : 'inactive'}">${s}</div>
+          `).join('')}
+        </div>
+      `;
+      const address = getAddressString(order.address);
+      return `
+        <div class="order-card">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="text-sm font-medium">Order #${order.id}</h3>
+            <span class="text-xs ${statusText === 'Delivered' ? 'text-green-600' : statusText === 'Cancelled' ? 'text-red-600' : 'text-purple-600'}">${statusText}</span>
+          </div>
+          <p class="text-xs mb-1">Placed on: ${utils.formatDate(order.createdAt)}</p>
+          <p class="text-xs mb-1">Address: ${address}</p>
+          ${items}
+          <p class="text-sm font-bold mt-2">Total: ₹${parseFloat(order.total || 0).toFixed(2)}</p>
+          ${trackingHTML}
+          <div class="flex gap-2 mt-2">
+            <button class="btn-primary text-xs" onclick="data.trackOrder(${order.id})" aria-label="Track Order ${order.id}">Track</button>
+            ${order.status === 'pending' && !isMyOrders ? `
+              <button class="btn-secondary text-xs" onclick="data.openCancelOrderModal(${order.id})" aria-label="Cancel Order ${order.id}">Cancel</button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    },
+
+    openCancelOrderModal: (orderId) => {
+      document.getElementById('orderId').value = orderId;
+      document.getElementById('cancelReason').value = '';
+      ui.openModal('cancelOrderModal');
+    },
+
+    cancelOrder: async (e) => {
+      e.preventDefault();
+      const orderId = parseInt(document.getElementById('orderId').value);
+      const reason = sanitizeInput(document.getElementById('cancelReason').value.trim());
+      if (!reason) {
+        return utils.showToast('Please provide a cancellation reason', 'error');
+      }
+      try {
+        await utils.fetchWithAuth(`/api/user/orders/${orderId}/cancel`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        });
+        state.orders = state.orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
+        utils.showToast('Order cancelled', 'success');
+        ui.closeModal('cancelOrderModal');
+        data.renderActiveOrders();
+        data.renderOrderHistory();
+        data.renderMyOrders();
+      } catch (error) {
+        utils.showToast('Failed to cancel order', 'error');
+      }
+    },
+
+    trackOrder: async (id) => {
+      try {
+        const order = state.orders.find(o => o.id === id);
+        if (!order) throw new Error('Order not found');
+        document.getElementById('trackOrderId').textContent = id;
+        const trackDetails = document.getElementById('trackOrderDetails');
+        trackDetails.innerHTML = data.getOrderCardHTML(order);
+        ui.openModal('trackOrderModal');
+      } catch (error) {
+        utils.showToast('Failed to load tracking details', 'error');
+      }
+    },
+
+    refreshOrders: async () => {
+      try {
+        delete state.cache['/api/user/orders_GET'];
+        await data.loadOrders();
+        utils.showToast('Orders refreshed', 'success');
+      } catch (error) {
+        utils.showToast('Failed to refresh orders', 'error');
       }
     },
 
@@ -1680,170 +1895,40 @@
       }
       try {
         ui.toggleCartLoading(true);
-        const address = state.addresses.find(addr => addr.id === parseInt(addressId));
         const orderData = {
           items: state.cart.map(item => ({
             itemId: item.itemId,
             quantity: item.quantity || 1,
             price: item.price,
             name: sanitizeInput(item.name),
+            image: sanitizeImageUrl(item.image),
           })),
-          address: getAddressString(address),
           addressId: parseInt(addressId),
-          couponCode: state.appliedCoupon ? state.appliedCoupon.code : null,
           paymentMethod,
+          couponCode: state.appliedCoupon?.code || null,
         };
         const response = await utils.fetchWithAuth('/api/user/orders', {
           method: 'POST',
           body: JSON.stringify(orderData),
         });
+        state.orders.push(response);
         state.cart = [];
         state.appliedCoupon = null;
-        document.getElementById('couponCode').value = '';
         document.getElementById('cartAddressSelect').value = '';
-        utils.showToast(`Order #${response.orderId} placed successfully`, 'success');
-        data.renderCart();
-        data.loadOrders();
+        document.getElementById('couponCode').value = '';
+        document.getElementById('couponCode').classList.remove('valid', 'invalid');
+        document.getElementById('couponError').classList.remove('show');
+        document.getElementById('totalOrders').textContent = state.orders.length;
+        utils.showToast('Order placed successfully', 'success');
         ui.closeModal('cartModal');
+        data.renderCart();
+        data.renderActiveOrders();
+        data.renderOrderHistory();
+        data.renderMyOrders();
       } catch (error) {
         utils.showToast('Failed to place order', 'error');
       } finally {
         ui.toggleCartLoading(false);
-      }
-    },
-
-    loadOrders: async () => {
-      try {
-        state.orders = await utils.fetchWithCache('/api/user/orders');
-        document.getElementById('totalOrders').textContent = state.orders.length;
-        data.renderActiveOrders();
-        data.renderOrderHistory();
-      } catch (error) {
-        utils.showToast('Failed to load orders', 'error');
-      }
-    },
-
-    renderActiveOrders: () => {
-      const activeOrders = document.getElementById('activeOrders');
-      const active = state.orders.filter(order => order.status !== 'Delivered' && order.status !== 'Cancelled');
-      activeOrders.innerHTML = '';
-      if (!active.length) {
-        activeOrders.innerHTML = '<p class="text-center text-sm">No active orders.</p>';
-        return;
-      }
-      active.forEach(order => {
-        activeOrders.innerHTML += `
-          <div class="order-card">
-            <div class="flex justify-between items-center">
-              <h3 class="text-sm font-medium">Order #${order.orderId}</h3>
-              <span class="text-xs ${order.status === 'Pending' ? 'text-yellow-600' : order.status === 'Confirmed' ? 'text-blue-600' : order.status === 'Out for Delivery' ? 'text-purple-600' : 'text-green-600'}">${sanitizeInput(order.status)}</span>
-            </div>
-            <p class="text-xs mb-1">${getAddressString(order.address)}</p>
-            <p class="text-xs mb-1">Total: ₹${parseFloat(order.total || 0).toFixed(2)}</p>
-            <p class="text-xs mb-2">Placed on: ${utils.formatDate(order.createdAt)}</p>
-            <div class="tracking-bar">
-              <div class="tracking-step ${order.status === 'Pending' ? 'active' : 'inactive'}">Pending</div>
-              <div class="tracking-step ${order.status === 'Confirmed' ? 'active' : 'inactive'}">Confirmed</div>
-              <div class="tracking-step ${order.status === 'Out for Delivery' ? 'active' : 'inactive'}">Out for Delivery</div>
-              <div class="tracking-step ${order.status === 'Delivered' ? 'active' : 'inactive'}">Delivered</div>
-            </div>
-            <div class="flex gap-2 mt-2">
-              <button class="btn-primary text-xs" onclick="data.trackOrder(${order.orderId})" aria-label="Track Order #${order.orderId}">Track</button>
-              ${order.status !== 'Cancelled' && order.status !== 'Delivered' ? `<button class="btn-secondary text-xs" onclick="data.openCancelOrderModal(${order.orderId})" aria-label="Cancel Order #${order.orderId}">Cancel</button>` : ''}
-            </div>
-          </div>
-        `;
-      });
-    },
-
-    renderOrderHistory: () => {
-      const orderHistory = document.getElementById('orderHistory');
-      const history = state.orders.filter(order => order.status === 'Delivered' || order.status === 'Cancelled');
-      orderHistory.innerHTML = '';
-      if (!history.length) {
-        orderHistory.innerHTML = '<p class="text-center text-sm">No order history.</p>';
-        return;
-      }
-      history.forEach(order => {
-        orderHistory.innerHTML += `
-          <div class="order-card">
-            <div class="flex justify-between items-center">
-              <h3 class="text-sm font-medium">Order #${order.orderId}</h3>
-              <span class="text-xs ${order.status === 'Delivered' ? 'text-green-600' : 'text-red-600'}">${sanitizeInput(order.status)}</span>
-            </div>
-            <p class="text-xs mb-1">${getAddressString(order.address)}</p>
-            <p class="text-xs mb-1">Total: ₹${parseFloat(order.total || 0).toFixed(2)}</p>
-            <p class="text-xs mb-2">Date: ${utils.formatDate(order.createdAt)}</p>
-            <button class="btn-primary text-xs" onclick="data.trackOrder(${order.orderId})" aria-label="View Details of Order #${order.orderId}">View Details</button>
-          </div>
-        `;
-      });
-    },
-
-    openCancelOrderModal: (orderId) => {
-      document.getElementById('orderId').value = orderId;
-      ui.openModal('cancelOrderModal');
-    },
-
-    cancelOrder: async (e) => {
-      e.preventDefault();
-      const orderId = document.getElementById('orderId').value;
-      const reason = sanitizeInput(document.getElementById('cancelReason').value.trim());
-      if (!reason) {
-        return utils.showToast('Please provide a cancellation reason', 'error');
-      }
-      try {
-        await utils.fetchWithAuth(`/api/user/orders/${orderId}/cancel`, {
-          method: 'PUT',
-          body: JSON.stringify({ reason }),
-        });
-        state.orders = state.orders.map(order => order.orderId === parseInt(orderId) ? { ...order, status: 'Cancelled', reason } : order);
-        utils.showToast('Order cancelled successfully', 'success');
-        document.getElementById('cancelOrderForm').reset();
-        ui.closeModal('cancelOrderModal');
-        data.renderActiveOrders();
-        data.renderOrderHistory();
-      } catch (error) {
-        utils.showToast(error.message || 'Failed to cancel order', 'error');
-      }
-    },
-
-    trackOrder: async (orderId) => {
-      try {
-        const order = state.orders.find(o => o.orderId === parseInt(orderId));
-        if (!order) throw new Error('Order not found');
-        document.getElementById('trackOrderId').textContent = order.orderId;
-        const trackDetails = document.getElementById('trackOrderDetails');
-        trackDetails.innerHTML = `
-          <p class="text-sm mb-1"><strong>Status:</strong> <span class="${order.status === 'Pending' ? 'text-yellow-600' : order.status === 'Confirmed' ? 'text-blue-600' : order.status === 'Out for Delivery' ? 'text-purple-600' : order.status === 'Delivered' ? 'text-green-600' : 'text-red-600'}">${sanitizeInput(order.status)}</span></p>
-          <p class="text-sm mb-1"><strong>Address:</strong> ${getAddressString(order.address)}</p>
-          <p class="text-sm mb-1"><strong>Total:</strong> ₹${parseFloat(order.total || 0).toFixed(2)}</p>
-          <p class="text-sm mb-2"><strong>Placed on:</strong> ${utils.formatDate(order.createdAt)}</p>
-          <h3 class="text-sm font-medium mb-2">Items:</h3>
-          ${order.items.map(item => `
-            <div class="flex items-center gap-2 mb-2">
-              <img src="${sanitizeImageUrl(item.image)}" alt="${sanitizeInput(item.name)}" class="w-10 h-10 object-cover rounded-md" loading="lazy" onerror="this.src='${placeholderImage}'">
-              <div>
-                <p class="text-xs font-medium">${sanitizeInput(item.name)}</p>
-                <p class="text-xs">₹${parseFloat(item.price || 0).toFixed(2)} x ${item.quantity}</p>
-              </div>
-            </div>
-          `).join('')}
-          ${order.couponCode ? `<p class="text-sm mb-2"><strong>Coupon Applied:</strong> ${sanitizeInput(order.couponCode)}</p>` : ''}
-          ${order.reason ? `<p class="text-sm mb-2"><strong>Cancellation Reason:</strong> ${sanitizeInput(order.reason)}</p>` : ''}
-        `;
-        ui.openModal('trackOrderModal');
-      } catch (error) {
-        utils.showToast(error.message || 'Failed to load order details', 'error');
-      }
-    },
-
-    refreshOrders: async () => {
-      try {
-        await data.loadOrders();
-        utils.showToast('Orders refreshed', 'success');
-      } catch (error) {
-        utils.showToast(error.message || 'Failed to refresh orders', 'error');
       }
     },
 
@@ -1853,18 +1938,16 @@
         localStorage.removeItem('token');
         window.location.href = '/index.html';
       } catch (error) {
-        utils.showToast(error.message || 'Failed to logout', 'error');
+        utils.showToast('Logout failed', 'error');
       }
     },
-  };
 
-  const init = async () => {
-    if (!data.checkAuth()) {
-      window.location.href = '/index.html';
-      return;
-    }
-    ui.loadDarkMode();
-    try {
+    init: async () => {
+      if (!data.checkAuth()) {
+        window.location.href = '/index.html';
+        return;
+      }
+      ui.loadDarkMode();
       await Promise.all([
         data.loadProfile(),
         data.loadMenu(),
@@ -1872,28 +1955,23 @@
         data.loadFavorites(),
         data.loadCart(),
         data.loadOrders(),
-        data.loadAddresses(),
       ]);
-    } catch (error) {
-      console.error('Initialization error:', error);
-      utils.showToast('Failed to initialize dashboard', 'error');
-    }
-    document.getElementById('addressForm').addEventListener('submit', data.addOrUpdateAddress);
-    document.getElementById('cancelOrderForm').addEventListener('submit', data.cancelOrder);
+    },
   };
 
   const debounceSearch = utils.debounce(data.searchMenu, 300);
 
-  document.addEventListener('click', (e) => {
+  window.addEventListener('click', (e) => {
     const dropdown = document.getElementById('profileDropdown');
     const profileImg = document.getElementById('profileImg');
-    if (!dropdown.contains(e.target) && !profileImg.contains(e.target)) {
+    if (!dropdown || !profileImg) return;
+    if (!profileImg.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.classList.remove('show');
       dropdown.setAttribute('aria-expanded', 'false');
     }
   });
 
-  window.addEventListener('load', init);
+  window.addEventListener('load', data.init);
   </script>
 </body>
 </html>

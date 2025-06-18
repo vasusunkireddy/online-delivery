@@ -82,21 +82,24 @@ router.get('/profile', authenticateUserToken, async (req, res) => {
 
 // Update user profile
 router.put('/profile', authenticateUserToken, async (req, res) => {
-  const { name, email, image } = req.body;
-  if (!name || !email) {
-    console.warn('Profile update missing required fields:', { name: !!name, email: !!email });
-    return res.status(400).json({ error: 'Name and email are required' });
+  const { name, email, mobile, image } = req.body;
+  if (!name || !email || !mobile) {
+    console.warn('Profile update missing required fields:', { name: !!name, email: !!email, mobile: !!mobile });
+    return res.status(400).json({ error: 'Name, email, and mobile are required' });
   }
   if (image && !isValidCloudinaryUrl(image, 'profile')) {
     console.warn('Invalid profile image URL provided:', image);
     return res.status(400).json({ error: 'Invalid image URL' });
+  }
+  if (!/^\d{10}$/.test(mobile)) {
+    return res.status(400).json({ error: 'Valid mobile number is required' });
   }
   try {
     const [existingEmail] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, req.user.id]);
     if (existingEmail.length > 0) {
       return res.status(400).json({ error: 'Email already in use' });
     }
-    const updates = { name, email, image: image || null };
+    const updates = { name, email, mobile, image: image || null };
     const fields = Object.keys(updates).map((key) => `${key} = ?`).join(', ');
     const values = Object.values(updates).concat([req.user.id]);
     await pool.query(`UPDATE users SET ${fields} WHERE id = ?`, values);
@@ -204,13 +207,13 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
     }
 
     const response = orders.map((order) => ({
-      orderId: order.orderId,
+      id: order.orderId,
       total: parseFloat(order.total || 0).toFixed(2),
       subtotal: parseFloat(order.subtotal || 0).toFixed(2),
       discount: parseFloat(order.discount || 0).toFixed(2),
       delivery: parseFloat(order.delivery || 0).toFixed(2),
       status: order.status,
-      orderDate: order.orderDate,
+      createdAt: order.orderDate,
       cancelReason: order.cancelReason || null,
       paymentMethod: order.paymentMethod,
       couponCode: order.couponCode || null,
@@ -288,13 +291,13 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
     );
 
     const response = {
-      orderId: order.orderId,
+      id: order.orderId,
       total: parseFloat(order.total || 0).toFixed(2),
       subtotal: parseFloat(order.subtotal || 0).toFixed(2),
       discount: parseFloat(order.discount || 0).toFixed(2),
       delivery: parseFloat(order.delivery || 0).toFixed(2),
       status: order.status,
-      orderDate: order.orderDate,
+      createdAt: order.orderDate,
       cancelReason: order.cancelReason || null,
       paymentMethod: order.paymentMethod,
       couponCode: order.couponCode || null,
@@ -346,11 +349,15 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
     // Validate required address fields
     const missingFields = {
       fullName: !addressData.full_name,
+      mobile: !addressData.mobile,
       houseNo: !addressData.house_no,
       location: !addressData.location,
     };
     if (Object.values(missingFields).some((missing) => missing)) {
       throw new Error(`Missing required address fields: ${Object.keys(missingFields).filter((key) => missingFields[key]).join(', ')}`);
+    }
+    if (!/^\d{10}$/.test(addressData.mobile)) {
+      throw new Error('Invalid mobile number in address');
     }
 
     // Construct expected address string
@@ -439,7 +446,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
         total,
         paymentMethod,
         paymentMethod === 'cod' ? 'pending' : 'failed',
-        'Pending',
+        'pending',
         orderDate || new Date(),
       ]
     );
@@ -545,22 +552,22 @@ router.get('/addresses', authenticateUserToken, async (req, res) => {
 // Add address
 router.post('/addresses', authenticateUserToken, async (req, res) => {
   const { fullName, mobile, houseNo, location, landmark } = req.body;
-  if (!fullName || !houseNo || !location) {
-    console.warn('Missing required address fields:', { fullName: !!fullName, houseNo: !!houseNo, location: !!location });
-    return res.status(400).json({ error: 'Full name, house number, and location are required' });
+  if (!fullName || !mobile || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
+    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
-  if (mobile && !/^\d{10}$/.test(mobile)) {
+  if (!/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Valid mobile number is required' });
   }
   try {
     const [result] = await pool.query(
       'INSERT INTO addresses (user_id, full_name, mobile, house_no, location, landmark) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.user.id, fullName, mobile || null, houseNo, location, landmark || null]
+      [req.user.id, fullName, mobile, houseNo, location, landmark || null]
     );
     res.status(200).json({
       id: result.insertId,
       fullName,
-      mobile: mobile || null,
+      mobile,
       houseNo,
       location,
       landmark: landmark || null,
@@ -575,11 +582,11 @@ router.post('/addresses', authenticateUserToken, async (req, res) => {
 router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { fullName, mobile, houseNo, location, landmark } = req.body;
-  if (!fullName || !houseNo || !location) {
-    console.warn('Missing required address fields:', { fullName: !!fullName, houseNo: !!houseNo, location: !!location });
-    return res.status(400).json({ error: 'Full name, house number, and location are required' });
+  if (!fullName || !mobile || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
+    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
-  if (mobile && !/^\d{10}$/.test(mobile)) {
+  if (!/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Valid mobile number is required' });
   }
   try {
@@ -589,12 +596,12 @@ router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
     }
     await pool.query(
       'UPDATE addresses SET full_name = ?, mobile = ?, house_no = ?, location = ?, landmark = ? WHERE id = ?',
-      [fullName, mobile || null, houseNo, location, landmark || null, id]
+      [fullName, mobile, houseNo, location, landmark || null, id]
     );
     res.status(200).json({
       id: parseInt(id),
       fullName,
-      mobile: mobile || null,
+      mobile,
       houseNo,
       location,
       landmark: landmark || null,
@@ -836,17 +843,24 @@ router.put('/cart/:id', authenticateUserToken, async (req, res) => {
 router.delete('/cart/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT id FROM cart WHERE id = ? AND user_id = ?', [id, req.user.id]);
+    const [rows] = await pool.query(
+      'SELECT id FROM cart WHERE id = ? AND user_id = ?', 
+      [id, req.user.id]
+    );
+
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Cart item not found' });
     }
+
     await pool.query('DELETE FROM cart WHERE id = ?', [id]);
     res.status(200).json({ message: 'Item removed from cart' });
+
   } catch (error) {
     console.error('Remove from cart error:', error.message);
     res.status(500).json({ error: 'Failed to remove from cart' });
   }
 });
+
 
 // Clear cart
 router.delete('/cart', authenticateUserToken, async (req, res) => {
@@ -860,7 +874,7 @@ router.delete('/cart', authenticateUserToken, async (req, res) => {
 });
 
 // Cancel order
-router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
+router.post('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
   if (!reason) {
@@ -873,16 +887,16 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
     if (order.length === 0) {
       throw new Error('Order not found');
     }
-    if (!['Pending', 'Confirmed'].includes(order[0].status)) {
+    if (!['pending', 'accepted'].includes(order[0].status)) {
       throw new Error('Order cannot be cancelled');
     }
-    await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['Cancelled', reason, id]);
+    await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['cancelled', reason, id]);
     await connection.commit();
     res.status(200).json({ message: 'Order cancelled' });
   } catch (error) {
     await connection.rollback();
     console.error('Cancel order error:', error.message);
-    res.status(400).json({ error: 'Failed to cancel order' });
+    res.status(400).json({ error: error.message || 'Failed to cancel order' });
   } finally {
     connection.release();
   }
@@ -890,23 +904,32 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
 
 // Clear order history
 router.delete('/orders', authenticateUserToken, async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const [orders] = await pool.query(
-      'SELECT id, status FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
-      [req.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
+    await connection.beginTransaction();
+    const [orders] = await connection.query(
+      'SELECT id FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
+      [req.user.id, 'delivered', 'cancelled', 'failed', 'completed']
     );
     if (orders.length === 0) {
+      await connection.commit();
       return res.status(200).json({ message: 'No order history to clear' });
     }
-    await pool.query(
+    const orderIds = orders.map(o => o.id);
+    await connection.query('DELETE FROM order_items WHERE order_id IN (?)', [orderIds]);
+    await connection.query(
       'DELETE FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
-      [req.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
+      [req.user.id, 'delivered', 'cancelled', 'failed', 'completed']
     );
+    await connection.commit();
     console.log('Order history cleared for user:', req.user.id);
     res.status(200).json({ message: 'Order history cleared successfully' });
   } catch (error) {
+    await connection.rollback();
     console.error('Clear order history error:', error.message);
     res.status(500).json({ error: 'Failed to clear order history' });
+  } finally {
+    connection.release();
   }
 });
 

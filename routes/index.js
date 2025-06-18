@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail');
-
+const { OAuth2Client } = require('google-auth-library');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -110,37 +110,63 @@ router.post('/signup', async (req, res) => {
 
 // Google login
 router.post('/auth/google', async (req, res) => {
-  const { credential } = req.body;
+  const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ error: 'ID token is required' });
+  }
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    console.error('Google Client ID is not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
   try {
-    // Note: Requires google-auth-library for token verification
-    const { OAuth2Client } = require('google-auth-library');
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
-      idToken: credential,
+      idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    const { email, name } = payload;
-    let [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const { sub: googleId, email, name, picture } = payload;
+
+    // Check for existing user by googleId or email
+    let [users] = await pool.query('SELECT * FROM users WHERE google_id = ? OR email = ?', [googleId, email]);
     let user;
     if (users.length === 0) {
-      const phone = 'google_' + Math.random().toString(36).substr(2, 10); // Placeholder phone
-      const password = await bcrypt.hash(Math.random().toString(36), 10); // Random password
+      // Create new user
+      const phone = `google_${Math.random().toString(36).substr(2, 10)}`; // Placeholder phone
+      const password = await bcrypt.hash(Math.random().toString(36).slice(2), 10); // Random password
       const [result] = await pool.query(
-        'INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)',
-        [name, email, phone, password]
+        'INSERT INTO users (name, email, phone, password, google_id, picture) VALUES (?, ?, ?, ?, ?, ?)',
+        [name, email, phone, password, googleId, picture || null]
       );
-      user = { id: result.insertId, name, email, role: 'user' };
+      user = { id: result.insertId, name, email, role: 'user', picture };
     } else {
       user = users[0];
+      // Update google_id and picture if not set
+      if (!user.google_id || user.google_id !== googleId) {
+        await pool.query('UPDATE users SET google_id = ?, picture = ? WHERE id = ?', [googleId, picture || null, user.id]);
+        user.google_id = googleId;
+        user.picture = picture || null;
+      }
     }
+
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, picture: user.picture } });
   } catch (error) {
     console.error('Google auth error:', error.message);
-    res.status(500).json({ error: 'Failed to authenticate with Google' });
+    res.status(401).json({ error: 'Failed to authenticate with Google' });
+  }
+});
+
+// Logout
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    // Optionally invalidate the token on the server-side (e.g., add to a blacklist)
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error.message);
+    res.status(500).json({ error: 'Failed to logout' });
   }
 });
 
@@ -149,7 +175,6 @@ router.post('/cart/add', authenticateToken, async (req, res) => {
   const { itemId, quantity } = req.body;
   if (!itemId || !quantity) {
     return res.status(400).json({ error: 'Item ID and quantity are required' });
- $('1px, 1px, 2px, 2px) no-repeat;');
   }
   try {
     const userId = req.user.id;
