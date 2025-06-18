@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const fs = require('fs').promises;
+const { v4: uuidv4 } = require('uuid');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -56,14 +57,7 @@ const isValidCloudinaryUrl = (url, context = 'profile') => {
     console.warn(`Invalid URL type in ${context}:`, typeof url);
     return false;
   }
-  if (url === 'https://via.placeholder.com/150') {
-    return true; // Allow placeholder
-  }
-  if (url.includes('delicute/menu/default.jpg')) {
-    console.warn(`Rejected default.jpg in ${context}:`, url);
-    return false;
-  }
-  const isValid = url.startsWith('https://res.cloudinary.com/');
+  const isValid = url.startsWith('https://res.cloudinary.com/') && url.includes('delicute/');
   if (!isValid) console.warn(`Invalid Cloudinary URL in ${context}:`, url);
   return isValid;
 };
@@ -80,7 +74,7 @@ router.get('/profile', authenticateUserToken, async (req, res) => {
     console.log('Profile image from DB:', user.image);
     res.status(200).json({
       ...user,
-      image: user.image || null,
+      image: isValidCloudinaryUrl(user.image, 'profile') ? user.image : null,
     });
   } catch (error) {
     console.error('Profile fetch error:', error.message);
@@ -97,7 +91,7 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
   }
   if (image && !isValidCloudinaryUrl(image, 'profile')) {
     console.warn('Invalid profile image URL provided:', image);
-    return res.status(400).json({ error: `Invalid image URL: ${image}` });
+    return res.status(400).json({ error: 'Invalid image URL' });
   }
   try {
     const [existingEmail] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, req.user.id]);
@@ -108,13 +102,11 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
     const fields = Object.keys(updates).map((key) => `${key} = ?`).join(', ');
     const values = Object.values(updates).concat([req.user.id]);
     await pool.query(`UPDATE users SET ${fields} WHERE id = ?`, values);
-    const [updatedUser] = await pool.query('SELECT id, name, email, mobile, image FROM users WHERE id = ?', [
-      req.user.id,
-    ]);
+    const [updatedUser] = await pool.query('SELECT id, name, email, mobile, image FROM users WHERE id = ?', [req.user.id]);
     console.log('Updated profile image in DB:', updatedUser[0].image);
     res.status(200).json({
       ...updatedUser[0],
-      image: updatedUser[0].image || null,
+      image: isValidCloudinaryUrl(updatedUser[0].image, 'profile') ? updatedUser[0].image : null,
     });
   } catch (error) {
     console.error('Profile update error:', error.message);
@@ -128,13 +120,16 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
     if (!req.file) {
       console.log('No image file provided, returning current profile image');
       const [user] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
-      const currentImage = user[0].image || null;
+      const currentImage = isValidCloudinaryUrl(user[0].image, 'profile') ? user[0].image : null;
       console.log('Current profile image:', currentImage);
       return res.status(200).json({ url: currentImage });
     }
     console.log('Uploading image:', req.file.originalname, req.file.mimetype, req.file.size);
+    const uniqueId = uuidv4();
+    const publicId = `profile_${req.user.id}_${uniqueId}`;
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'delicute/profiles',
+      public_id: publicId,
       allowed_formats: ['jpg', 'png'],
       transformation: [
         { width: 200, height: 200, crop: 'fill', gravity: 'face' },
@@ -147,8 +142,8 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
     await fs.unlink(req.file.path);
     const [user] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
     if (user[0].image && isValidCloudinaryUrl(user[0].image, 'profile')) {
-      const publicId = user[0].image.split('/').pop().split('.')[0];
-      await cloudinary.uploader.destroy(`delicute/profiles/${publicId}`).catch((err) =>
+      const oldPublicId = user[0].image.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`delicute/profiles/${oldPublicId}`).catch((err) =>
         console.warn('Failed to delete old image:', err.message)
       );
     }
@@ -162,8 +157,6 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
   }
 });
 
-// [Other endpoints remain unchanged]
-
 // Get orders
 router.get('/orders', authenticateUserToken, async (req, res) => {
   try {
@@ -171,21 +164,27 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
     const [orders] = await pool.query(
       `
       SELECT 
-        o.id,
+        o.id AS orderId,
         o.total,
         o.subtotal,
         o.discount,
         o.delivery_fee AS delivery,
         o.status,
         o.created_at AS orderDate,
-        o.cancellation_reason AS cancellationReason,
+        o.cancellation_reason AS cancelReason,
+        o.payment_method AS paymentMethod,
+        o.coupon_id,
+        c.code AS couponCode,
         a.full_name AS fullName,
+        a.mobile AS mobile,
         a.house_no AS houseNo,
         a.location,
         a.landmark
       FROM orders o
       LEFT JOIN addresses a ON o.address_id = a.id
+      LEFT JOIN coupons c ON o.coupon_id = c.id
       WHERE o.user_id = ?
+      ORDER BY o.created_at DESC
       `,
       [req.user.id]
     );
@@ -196,7 +195,7 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
       return res.status(200).json([]);
     }
 
-    const orderIds = orders.map((order) => order.id);
+    const orderIds = orders.map((order) => order.orderId);
     let orderItems = [];
     if (orderIds.length > 0) {
       console.log('Fetching order items for order IDs:', orderIds);
@@ -217,22 +216,26 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
     }
 
     const response = orders.map((order) => ({
-      id: order.id,
+      orderId: order.orderId,
       total: parseFloat(order.total || 0).toFixed(2),
       subtotal: parseFloat(order.subtotal || 0).toFixed(2),
       discount: parseFloat(order.discount || 0).toFixed(2),
       delivery: parseFloat(order.delivery || 0).toFixed(2),
       status: order.status,
       orderDate: order.orderDate,
-      cancellationReason: order.cancellationReason || null,
-      address: {
+      cancelReason: order.cancelReason || null,
+      paymentMethod: order.paymentMethod,
+      couponCode: order.couponCode || null,
+      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}, Mobile: ${order.mobile || ''}`,
+      addressDetails: {
         fullName: order.fullName || null,
+        mobile: order.mobile || null,
         houseNo: order.houseNo || null,
         location: order.location || null,
         landmark: order.landmark || null,
       },
       items: orderItems
-        .filter((item) => item.orderId === order.id)
+        .filter((item) => item.orderId === order.orderId)
         .map((item) => ({
           name: item.name,
           quantity: item.quantity,
@@ -240,7 +243,7 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
         })),
     }));
 
-    console.log('Returning orders response:', JSON.stringify(response, null, 2));
+    console.log('Returning orders response:', response.length);
     res.status(200).json(response);
   } catch (error) {
     console.error('Orders fetch error:', error.message);
@@ -256,20 +259,25 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
     const [orders] = await pool.query(
       `
       SELECT 
-        o.id,
+        o.id AS orderId,
         o.total,
         o.subtotal,
         o.discount,
         o.delivery_fee AS delivery,
         o.status,
         o.created_at AS orderDate,
-        o.cancellation_reason AS cancellationReason,
+        o.cancellation_reason AS cancelReason,
+        o.payment_method AS paymentMethod,
+        o.coupon_id,
+        c.code AS couponCode,
         a.full_name AS fullName,
+        a.mobile AS mobile,
         a.house_no AS houseNo,
         a.location,
         a.landmark
       FROM orders o
       LEFT JOIN addresses a ON o.address_id = a.id
+      LEFT JOIN coupons c ON o.coupon_id = c.id
       WHERE o.id = ? AND o.user_id = ?
       `,
       [id, req.user.id]
@@ -295,16 +303,20 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
     );
 
     const response = {
-      id: order.id,
+      orderId: order.orderId,
       total: parseFloat(order.total || 0).toFixed(2),
       subtotal: parseFloat(order.subtotal || 0).toFixed(2),
       discount: parseFloat(order.discount || 0).toFixed(2),
       delivery: parseFloat(order.delivery || 0).toFixed(2),
       status: order.status,
       orderDate: order.orderDate,
-      cancellationReason: order.cancellationReason || null,
-      address: {
+      cancelReason: order.cancelReason || null,
+      paymentMethod: order.paymentMethod,
+      couponCode: order.couponCode || null,
+      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}, Mobile: ${order.mobile || ''}`,
+      addressDetails: {
         fullName: order.fullName || null,
+        mobile: order.mobile || null,
         houseNo: order.houseNo || null,
         location: order.location || null,
         landmark: order.landmark || null,
@@ -316,7 +328,7 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
       })),
     };
 
-    console.log('Returning single order response:', JSON.stringify(response, null, 2));
+    console.log('Returning single order response:', response.orderId);
     res.status(200).json(response);
   } catch (error) {
     console.error('Order fetch error:', error.message);
@@ -326,22 +338,29 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
 
 // Place order
 router.post('/orders', authenticateUserToken, async (req, res) => {
-  const { addressId, items, couponCode, paymentMethod, orderDate, subtotal, discount } = req.body;
+  const { addressId, items, couponCode, paymentMethod, orderDate, subtotal, discount, address } = req.body;
 
-  if (!addressId || !items || !Array.isArray(items) || items.length === 0 || !paymentMethod) {
-    return res.status(400).json({ error: 'Address ID, items, and payment method are required' });
+  if (!addressId || !items || !Array.isArray(items) || items.length === 0 || !paymentMethod || !address) {
+    console.warn('Missing required order fields:', { addressId: !!addressId, items: !!items, paymentMethod: !!paymentMethod, address: !!address });
+    return res.status(400).json({ error: 'Address ID, items, payment method, and address string are required' });
   }
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const [address] = await connection.query('SELECT id FROM addresses WHERE id = ? AND user_id = ?', [
-      addressId,
-      req.user.id,
-    ]);
-    if (address.length === 0) {
+    const [addressRows] = await connection.query(
+      'SELECT id, full_name, mobile, house_no, location, landmark FROM addresses WHERE id = ? AND user_id = ?',
+      [addressId, req.user.id]
+    );
+    if (addressRows.length === 0) {
       throw new Error('Invalid address');
+    }
+    const addressData = addressRows[0];
+    const expectedAddress = `${addressData.full_name}, ${addressData.house_no}, ${addressData.location}${addressData.landmark ? `, ${addressData.landmark}` : ''}, Mobile: ${addressData.mobile}`;
+    if (address !== expectedAddress) {
+      console.warn('Address mismatch:', { provided: address, expected: expectedAddress });
+      throw new Error('Provided address does not match stored address');
     }
 
     let couponId = null;
@@ -416,7 +435,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
         total,
         paymentMethod,
         paymentMethod === 'cod' ? 'pending' : 'failed',
-        'pending',
+        'Pending',
         orderDate || new Date(),
       ]
     );
@@ -431,7 +450,8 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
 
     await connection.query('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
     await connection.commit();
-    res.status(200).json({ message: 'Order placed', id: orderId });
+    console.log('Order placed successfully:', orderId);
+    res.status(200).json({ message: 'Order placed', orderId });
   } catch (error) {
     await connection.rollback();
     console.error('Place order error:', error.message);
@@ -463,9 +483,7 @@ router.get('/menu', authenticateUserToken, async (req, res) => {
 router.get('/menu/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items WHERE id = ?', [
-      id,
-    ]);
+    const [rows] = await pool.query('SELECT id, name, price, category, description, image FROM menu_items WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
@@ -481,7 +499,7 @@ router.get('/menu/:id', authenticateUserToken, async (req, res) => {
   }
 });
 
-// Other endpoints (unchanged)
+// Refresh token
 router.post('/refresh-token', authenticateUserToken, async (req, res) => {
   try {
     const newToken = jwt.sign(
@@ -496,22 +514,34 @@ router.post('/refresh-token', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Get addresses
 router.get('/addresses', authenticateUserToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
       'SELECT id, full_name AS fullName, mobile, house_no AS houseNo, location, landmark FROM addresses WHERE user_id = ?',
       [req.user.id]
     );
-    res.status(200).json(rows);
+    res.status(200).json(
+      rows.map((row) => ({
+        ...row,
+        fullName: row.fullName || null,
+        mobile: row.mobile || null,
+        houseNo: row.houseNo || null,
+        location: row.location || null,
+        landmark: row.landmark || null,
+      }))
+    );
   } catch (error) {
     console.error('Addresses fetch error:', error.message);
     res.status(500).json({ error: 'Failed to fetch addresses' });
   }
 });
 
+// Add address
 router.post('/addresses', authenticateUserToken, async (req, res) => {
   const { fullName, mobile, houseNo, location, landmark } = req.body;
   if (!fullName || !mobile || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
     return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
   if (!/^\d{10}$/.test(mobile)) {
@@ -522,17 +552,26 @@ router.post('/addresses', authenticateUserToken, async (req, res) => {
       'INSERT INTO addresses (user_id, full_name, mobile, house_no, location, landmark) VALUES (?, ?, ?, ?, ?, ?)',
       [req.user.id, fullName, mobile, houseNo, location, landmark || null]
     );
-    res.status(200).json({ message: 'Address added', id: result.insertId });
+    res.status(200).json({
+      id: result.insertId,
+      fullName,
+      mobile,
+      houseNo,
+      location,
+      landmark: landmark || null,
+    });
   } catch (error) {
     console.error('Add address error:', error.message);
     res.status(500).json({ error: 'Failed to add address' });
   }
 });
 
+// Update address
 router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { fullName, mobile, houseNo, location, landmark } = req.body;
   if (!fullName || !mobile || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
     return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
   }
   if (!/^\d{10}$/.test(mobile)) {
@@ -547,13 +586,21 @@ router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
       'UPDATE addresses SET full_name = ?, mobile = ?, house_no = ?, location = ?, landmark = ? WHERE id = ?',
       [fullName, mobile, houseNo, location, landmark || null, id]
     );
-    res.status(200).json({ message: 'Address updated' });
+    res.status(200).json({
+      id: parseInt(id),
+      fullName,
+      mobile,
+      houseNo,
+      location,
+      landmark: landmark || null,
+    });
   } catch (error) {
     console.error('Update address error:', error.message);
     res.status(500).json({ error: 'Failed to update address' });
   }
 });
 
+// Delete address
 router.delete('/addresses/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -569,6 +616,7 @@ router.delete('/addresses/:id', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Get coupons
 router.get('/coupons', authenticateUserToken, async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT id, code, discount, description, image FROM coupons');
@@ -586,7 +634,8 @@ router.get('/coupons', authenticateUserToken, async (req, res) => {
   }
 });
 
-router.get('/coupons/validate', authenticateUserToken, async (req, res) => {
+// Apply coupon
+router.get('/coupons/apply', authenticateUserToken, async (req, res) => {
   const { code } = req.query;
   if (!code) {
     return res.status(400).json({ error: 'Coupon code is required' });
@@ -601,11 +650,12 @@ router.get('/coupons/validate', authenticateUserToken, async (req, res) => {
       discount: parseFloat(rows[0].discount || 0).toFixed(2),
     });
   } catch (error) {
-    console.error('Coupon validation error:', error.message);
-    res.status(500).json({ error: 'Failed to validate coupon' });
+    console.error('Coupon apply error:', error.message);
+    res.status(500).json({ error: 'Failed to apply coupon' });
   }
 });
 
+// Get favorites
 router.get('/favorites', authenticateUserToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -625,23 +675,22 @@ router.get('/favorites', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Add favorite
 router.post('/favorites', authenticateUserToken, async (req, res) => {
   const { itemId, name, image, price } = req.body;
   if (!itemId || !name || !price) {
+    console.warn('Missing required favorite fields:', { itemId: !!itemId, name: !!name, price: !!price });
     return res.status(400).json({ error: 'Item ID, name, and price are required' });
   }
   if (image && !isValidCloudinaryUrl(image, 'favorite')) {
-    return res.status(400).json({ error: `Invalid image URL: ${image}` });
+    return res.status(400).json({ error: 'Invalid image URL' });
   }
   try {
     const [menuItem] = await pool.query('SELECT id FROM menu_items WHERE id = ?', [itemId]);
     if (menuItem.length === 0) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
-    const [existing] = await pool.query('SELECT id FROM favorites WHERE user_id = ? AND item_id = ?', [
-      req.user.id,
-      itemId,
-    ]);
+    const [existing] = await pool.query('SELECT id FROM favorites WHERE user_id = ? AND item_id = ?', [req.user.id, itemId]);
     if (existing.length > 0) {
       return res.status(400).json({ error: 'Item already in favorites' });
     }
@@ -656,6 +705,7 @@ router.post('/favorites', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Remove favorite
 router.delete('/favorites/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -671,6 +721,7 @@ router.delete('/favorites/:id', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Get cart
 router.get('/cart', authenticateUserToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -691,13 +742,15 @@ router.get('/cart', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Add to cart
 router.post('/cart', authenticateUserToken, async (req, res) => {
   const { itemId, name, price, image, quantity = 1, description } = req.body;
   if (!itemId || !name || !price || quantity < 1) {
+    console.warn('Missing required cart fields:', { itemId: !!itemId, name: !!name, price: !!price, quantity });
     return res.status(400).json({ error: 'Item ID, name, price, and valid quantity are required' });
   }
   if (image && !isValidCloudinaryUrl(image, 'cart')) {
-    return res.status(400).json({ error: `Invalid image URL: ${image}` });
+    return res.status(400).json({ error: 'Invalid image URL' });
   }
   const connection = await pool.getConnection();
   try {
@@ -709,10 +762,7 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
     if (parseFloat(price).toFixed(2) !== parseFloat(menuItem[0].price).toFixed(2)) {
       throw new Error(`Price mismatch for ${name}`);
     }
-    const [existing] = await connection.query('SELECT id, quantity FROM cart WHERE user_id = ? AND item_id = ?', [
-      req.user.id,
-      itemId,
-    ]);
+    const [existing] = await connection.query('SELECT id, quantity FROM cart WHERE user_id = ? AND item_id = ?', [req.user.id, itemId]);
     let cartId;
     if (existing.length > 0) {
       const newQuantity = existing[0].quantity + quantity;
@@ -722,7 +772,7 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
       );
       cartId = existing[0].id;
     } else {
-      const [result] = await connection.query(
+      const [result] = await pool.query(
         'INSERT INTO cart (user_id, item_id, name, price, image, quantity, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [req.user.id, itemId, name, parseFloat(price), image || null, quantity, description || menuItem[0].description || null]
       );
@@ -734,7 +784,6 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
       [cartId]
     );
     res.status(200).json({
-      message: 'Added to cart',
       id: newItem[0].id,
       itemId: newItem[0].itemId,
       name: newItem[0].name,
@@ -752,6 +801,7 @@ router.post('/cart', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Update cart item
 router.put('/cart/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body;
@@ -777,6 +827,7 @@ router.put('/cart/:id', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Remove from cart
 router.delete('/cart/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -792,6 +843,7 @@ router.delete('/cart/:id', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Clear cart
 router.delete('/cart', authenticateUserToken, async (req, res) => {
   try {
     await pool.query('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
@@ -802,6 +854,7 @@ router.delete('/cart', authenticateUserToken, async (req, res) => {
   }
 });
 
+// Cancel order
 router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
@@ -811,47 +864,53 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [
-      id,
-      req.user.id,
-    ]);
+    const [order] = await connection.query('SELECT id, status FROM orders WHERE id = ? AND user_id = ?', [id, req.user.id]);
     if (order.length === 0) {
       throw new Error('Order not found');
     }
-    if (!['pending', 'confirmed'].includes(order[0].status)) {
+    if (!['Pending', 'Confirmed'].includes(order[0].status)) {
       throw new Error('Order cannot be cancelled');
     }
-    await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', [
-      'cancelled',
-      reason,
-      id,
-    ]);
+    await connection.query('UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?', ['Cancelled', reason, id]);
     await connection.commit();
     res.status(200).json({ message: 'Order cancelled' });
   } catch (error) {
     await connection.rollback();
     console.error('Cancel order error:', error.message);
-    res.status(400).json({ error: error.message || 'Failed to cancel order' });
+    res.status(400).json({ error: 'Failed to cancel order' });
   } finally {
     connection.release();
   }
 });
 
-router.delete('/orders/clear', authenticateUserToken, async (req, res) => {
+// Clear order history
+router.delete('/orders', authenticateUserToken, async (req, res) => {
   try {
-    await pool.query(
-      'UPDATE orders SET status = ?, cancellation_reason = ? WHERE user_id = ? AND status IN (?, ?)',
-      ['cancelled', 'Cleared by user', req.user.id, 'pending', 'confirmed']
+    const [orders] = await pool.query('SELECT id, status FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
+      [req.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
     );
-    res.status(200).json({ message: 'Order history cleared' });
+    if (orders.length === 0) {
+      return res.status(200).json({ message: 'No order history to clear' });
+    }
+    await pool.query('DELETE orders FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
+      [req.user.id, user.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
+    );
+    console.log('Order cleared successfully:', 'history cleared for user:', req.user.id);
+    res.status(200).json({ message: 'Order cleared successfully' });
   } catch (error) {
     console.error('Clear order history error:', error.message);
-    res.status(500).json({ error: 'Failed to clear order history' });
+    res.status(500).json({ error: 'Failed to clear order successfully' });
   }
 });
 
+// Logout
 router.post('/logout', authenticateUserToken, async (req, res) => {
-  res.status(200).json({ message: 'Logged out successfully' });
+  try {
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error.message);
+    res.status(500).json({ error: 'Failed to logout' });
+  }
 });
 
 module.exports = router;
