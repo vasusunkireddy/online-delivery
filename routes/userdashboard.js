@@ -65,13 +65,11 @@ const isValidCloudinaryUrl = (url, context = 'profile') => {
 // Get user profile
 router.get('/profile', authenticateUserToken, async (req, res) => {
   try {
-    console.log('Fetching profile for user:', req.user.id);
     const [rows] = await pool.query('SELECT id, name, email, mobile, image FROM users WHERE id = ?', [req.user.id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
     const user = rows[0];
-    console.log('Profile image from DB:', user.image);
     res.status(200).json({
       ...user,
       image: isValidCloudinaryUrl(user.image, 'profile') ? user.image : null,
@@ -103,7 +101,6 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
     const values = Object.values(updates).concat([req.user.id]);
     await pool.query(`UPDATE users SET ${fields} WHERE id = ?`, values);
     const [updatedUser] = await pool.query('SELECT id, name, email, mobile, image FROM users WHERE id = ?', [req.user.id]);
-    console.log('Updated profile image in DB:', updatedUser[0].image);
     res.status(200).json({
       ...updatedUser[0],
       image: isValidCloudinaryUrl(updatedUser[0].image, 'profile') ? updatedUser[0].image : null,
@@ -118,13 +115,10 @@ router.put('/profile', authenticateUserToken, async (req, res) => {
 router.post('/upload', authenticateUserToken, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
-      console.log('No image file provided, returning current profile image');
       const [user] = await pool.query('SELECT image FROM users WHERE id = ?', [req.user.id]);
       const currentImage = isValidCloudinaryUrl(user[0].image, 'profile') ? user[0].image : null;
-      console.log('Current profile image:', currentImage);
       return res.status(200).json({ url: currentImage });
     }
-    console.log('Uploading image:', req.file.originalname, req.file.mimetype, req.file.size);
     const uniqueId = uuidv4();
     const publicId = `profile_${req.user.id}_${uniqueId}`;
     const result = await cloudinary.uploader.upload(req.file.path, {
@@ -148,7 +142,6 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
       );
     }
     await pool.query('UPDATE users SET image = ? WHERE id = ?', [result.secure_url, req.user.id]);
-    console.log('Updated profile image:', result.secure_url);
     res.status(200).json({ url: result.secure_url });
   } catch (error) {
     console.error('Image upload error:', error.message);
@@ -160,7 +153,6 @@ router.post('/upload', authenticateUserToken, upload.single('image'), async (req
 // Get orders
 router.get('/orders', authenticateUserToken, async (req, res) => {
   try {
-    console.log('Fetching orders for user:', req.user.id);
     const [orders] = await pool.query(
       `
       SELECT 
@@ -189,16 +181,13 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
       [req.user.id]
     );
 
-    console.log('Orders found:', orders.length);
     if (orders.length === 0) {
-      console.log('No orders found for user:', req.user.id);
       return res.status(200).json([]);
     }
 
     const orderIds = orders.map((order) => order.orderId);
     let orderItems = [];
     if (orderIds.length > 0) {
-      console.log('Fetching order items for order IDs:', orderIds);
       [orderItems] = await pool.query(
         `
         SELECT 
@@ -212,7 +201,6 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
         `,
         [orderIds]
       );
-      console.log('Order items found:', orderItems.length);
     }
 
     const response = orders.map((order) => ({
@@ -226,7 +214,7 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
       cancelReason: order.cancelReason || null,
       paymentMethod: order.paymentMethod,
       couponCode: order.couponCode || null,
-      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}, Mobile: ${order.mobile || ''}`,
+      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}${order.mobile ? `, Mobile: ${order.mobile}` : ''}`,
       addressDetails: {
         fullName: order.fullName || null,
         mobile: order.mobile || null,
@@ -243,7 +231,6 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
         })),
     }));
 
-    console.log('Returning orders response:', response.length);
     res.status(200).json(response);
   } catch (error) {
     console.error('Orders fetch error:', error.message);
@@ -255,7 +242,6 @@ router.get('/orders', authenticateUserToken, async (req, res) => {
 router.get('/orders/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   try {
-    console.log('Fetching order ID:', id, 'for user:', req.user.id);
     const [orders] = await pool.query(
       `
       SELECT 
@@ -284,7 +270,6 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
     );
 
     if (orders.length === 0) {
-      console.log('Order not found for ID:', id);
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -313,7 +298,7 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
       cancelReason: order.cancelReason || null,
       paymentMethod: order.paymentMethod,
       couponCode: order.couponCode || null,
-      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}, Mobile: ${order.mobile || ''}`,
+      address: `${order.fullName || ''}, ${order.houseNo || ''}, ${order.location || ''}${order.landmark ? `, ${order.landmark}` : ''}${order.mobile ? `, Mobile: ${order.mobile}` : ''}`,
       addressDetails: {
         fullName: order.fullName || null,
         mobile: order.mobile || null,
@@ -328,7 +313,6 @@ router.get('/orders/:id', authenticateUserToken, async (req, res) => {
       })),
     };
 
-    console.log('Returning single order response:', response.orderId);
     res.status(200).json(response);
   } catch (error) {
     console.error('Order fetch error:', error.message);
@@ -349,6 +333,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
   try {
     await connection.beginTransaction();
 
+    // Fetch stored address
     const [addressRows] = await connection.query(
       'SELECT id, full_name, mobile, house_no, location, landmark FROM addresses WHERE id = ? AND user_id = ?',
       [addressId, req.user.id]
@@ -357,12 +342,30 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       throw new Error('Invalid address');
     }
     const addressData = addressRows[0];
-    const expectedAddress = `${addressData.full_name}, ${addressData.house_no}, ${addressData.location}${addressData.landmark ? `, ${addressData.landmark}` : ''}, Mobile: ${addressData.mobile}`;
-    if (address !== expectedAddress) {
+
+    // Validate required address fields
+    const missingFields = {
+      fullName: !addressData.full_name,
+      houseNo: !addressData.house_no,
+      location: !addressData.location,
+    };
+    if (Object.values(missingFields).some((missing) => missing)) {
+      throw new Error(`Missing required address fields: ${Object.keys(missingFields).filter((key) => missingFields[key]).join(', ')}`);
+    }
+
+    // Construct expected address string
+    let expectedAddress = `${addressData.full_name}, ${addressData.house_no}, ${addressData.location}`;
+    if (addressData.landmark) expectedAddress += `, ${addressData.landmark}`;
+    if (addressData.mobile) expectedAddress += `, Mobile: ${addressData.mobile}`;
+
+    // Normalize and compare addresses
+    const normalize = (str) => str.replace(/\s+/g, ' ').trim();
+    if (normalize(address) !== normalize(expectedAddress)) {
       console.warn('Address mismatch:', { provided: address, expected: expectedAddress });
       throw new Error('Provided address does not match stored address');
     }
 
+    // Validate coupon
     let couponId = null;
     let discountPercentage = 0;
     if (couponCode) {
@@ -374,6 +377,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       discountPercentage = parseFloat(coupon[0].discount || 0);
     }
 
+    // Validate items and calculate subtotal
     let calculatedSubtotal = 0;
     for (const item of items) {
       if (!item.itemId || !item.price || !item.quantity || item.quantity < 1 || !item.name) {
@@ -388,9 +392,9 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       }
       calculatedSubtotal += item.quantity * parseFloat(item.price);
     }
-
     calculatedSubtotal = parseFloat(calculatedSubtotal.toFixed(2));
 
+    // Validate provided subtotal
     let finalSubtotal = calculatedSubtotal;
     if (subtotal !== undefined && !isNaN(subtotal)) {
       const providedSubtotal = parseFloat(subtotal).toFixed(2);
@@ -400,10 +404,9 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       } else {
         finalSubtotal = parseFloat(providedSubtotal);
       }
-    } else {
-      console.log('No subtotal provided, using calculated subtotal:', calculatedSubtotal);
     }
 
+    // Validate discount
     let finalDiscount = 0;
     if (couponCode) {
       const calculatedDiscount = parseFloat((calculatedSubtotal * discountPercentage) / 100).toFixed(2);
@@ -423,6 +426,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
     const deliveryFee = 0;
     const total = parseFloat((finalSubtotal - finalDiscount + deliveryFee).toFixed(2));
 
+    // Insert order
     const [orderResult] = await connection.query(
       'INSERT INTO orders (user_id, address_id, coupon_id, subtotal, discount, delivery_fee, total, payment_method, payment_status, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
@@ -441,6 +445,7 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
     );
     const orderId = orderResult.insertId;
 
+    // Insert order items
     for (const item of items) {
       await connection.query(
         'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES (?, ?, ?, ?)',
@@ -448,9 +453,9 @@ router.post('/orders', authenticateUserToken, async (req, res) => {
       );
     }
 
+    // Clear cart
     await connection.query('DELETE FROM cart WHERE user_id = ?', [req.user.id]);
     await connection.commit();
-    console.log('Order placed successfully:', orderId);
     res.status(200).json({ message: 'Order placed', orderId });
   } catch (error) {
     await connection.rollback();
@@ -540,22 +545,22 @@ router.get('/addresses', authenticateUserToken, async (req, res) => {
 // Add address
 router.post('/addresses', authenticateUserToken, async (req, res) => {
   const { fullName, mobile, houseNo, location, landmark } = req.body;
-  if (!fullName || !mobile || !houseNo || !location) {
-    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
-    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
+  if (!fullName || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, houseNo: !!houseNo, location: !!location });
+    return res.status(400).json({ error: 'Full name, house number, and location are required' });
   }
-  if (!/^\d{10}$/.test(mobile)) {
+  if (mobile && !/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Valid mobile number is required' });
   }
   try {
     const [result] = await pool.query(
       'INSERT INTO addresses (user_id, full_name, mobile, house_no, location, landmark) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.user.id, fullName, mobile, houseNo, location, landmark || null]
+      [req.user.id, fullName, mobile || null, houseNo, location, landmark || null]
     );
     res.status(200).json({
       id: result.insertId,
       fullName,
-      mobile,
+      mobile: mobile || null,
       houseNo,
       location,
       landmark: landmark || null,
@@ -570,11 +575,11 @@ router.post('/addresses', authenticateUserToken, async (req, res) => {
 router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
   const { id } = req.params;
   const { fullName, mobile, houseNo, location, landmark } = req.body;
-  if (!fullName || !mobile || !houseNo || !location) {
-    console.warn('Missing required address fields:', { fullName: !!fullName, mobile: !!mobile, houseNo: !!houseNo, location: !!location });
-    return res.status(400).json({ error: 'Full name, mobile, house number, and location are required' });
+  if (!fullName || !houseNo || !location) {
+    console.warn('Missing required address fields:', { fullName: !!fullName, houseNo: !!houseNo, location: !!location });
+    return res.status(400).json({ error: 'Full name, house number, and location are required' });
   }
-  if (!/^\d{10}$/.test(mobile)) {
+  if (mobile && !/^\d{10}$/.test(mobile)) {
     return res.status(400).json({ error: 'Valid mobile number is required' });
   }
   try {
@@ -584,12 +589,12 @@ router.put('/addresses/:id', authenticateUserToken, async (req, res) => {
     }
     await pool.query(
       'UPDATE addresses SET full_name = ?, mobile = ?, house_no = ?, location = ?, landmark = ? WHERE id = ?',
-      [fullName, mobile, houseNo, location, landmark || null, id]
+      [fullName, mobile || null, houseNo, location, landmark || null, id]
     );
     res.status(200).json({
       id: parseInt(id),
       fullName,
-      mobile,
+      mobile: mobile || null,
       houseNo,
       location,
       landmark: landmark || null,
@@ -886,20 +891,22 @@ router.put('/orders/:id/cancel', authenticateUserToken, async (req, res) => {
 // Clear order history
 router.delete('/orders', authenticateUserToken, async (req, res) => {
   try {
-    const [orders] = await pool.query('SELECT id, status FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
+    const [orders] = await pool.query(
+      'SELECT id, status FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
       [req.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
     );
     if (orders.length === 0) {
       return res.status(200).json({ message: 'No order history to clear' });
     }
-    await pool.query('DELETE orders FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
-      [req.user.id, user.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
+    await pool.query(
+      'DELETE FROM orders WHERE user_id = ? AND status IN (?, ?, ?, ?)',
+      [req.user.id, 'Delivered', 'Cancelled', 'Failed', 'Completed']
     );
-    console.log('Order cleared successfully:', 'history cleared for user:', req.user.id);
-    res.status(200).json({ message: 'Order cleared successfully' });
+    console.log('Order history cleared for user:', req.user.id);
+    res.status(200).json({ message: 'Order history cleared successfully' });
   } catch (error) {
     console.error('Clear order history error:', error.message);
-    res.status(500).json({ error: 'Failed to clear order successfully' });
+    res.status(500).json({ error: 'Failed to clear order history' });
   }
 });
 

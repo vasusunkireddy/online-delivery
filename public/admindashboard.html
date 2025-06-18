@@ -10,7 +10,6 @@
     :root {
       --primary-gradient: linear-gradient(to right, #a855f7, #f43f5e);
       --secondary-gradient: linear-gradient(to right, #10b981, #34d399);
-      --danger-gradient: linear-gradient(to right, #ef4444, #f87171);
       --bg-gradient: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
       --shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
       --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
@@ -90,7 +89,6 @@
       background: #ffffff;
       border-radius: 2px;
       transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      transform-origin: center;
     }
 
     .hamburger.active span:nth-child(1) {
@@ -174,15 +172,15 @@
     .hero-section {
       position: relative;
       background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-      min-height: 50vh;
+      min-height: 40vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       color: white;
-      padding: 3rem 1rem;
-      margin: 1rem;
+      padding: 2rem 1rem;
+      margin: 0.5rem;
       border-radius: 0.75rem;
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -209,14 +207,14 @@
 
     .hero-section h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.5rem;
+      font-size: 2rem;
       margin-bottom: 0.75rem;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .hero-section p {
-      font-size: 1rem;
+      font-size: 0.9rem;
       margin-bottom: 1.5rem;
       opacity: 0.9;
       animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
@@ -225,7 +223,7 @@
     .hero-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 0.5rem;
       justify-content: center;
       animation: fadeIn 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
     }
@@ -234,17 +232,17 @@
       background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(8px);
       border-radius: 0.75rem;
-      padding: 2rem;
+      padding: 1.25rem;
       box-shadow: var(--shadow);
       max-width: 1400px;
-      margin: 1rem auto;
+      margin: 0.5rem auto;
       border: 1px solid rgba(255, 255, 255, 0.2);
       flex: 1;
     }
 
     .section-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 1.5rem;
@@ -255,8 +253,8 @@
     .section-title::after {
       content: '';
       display: block;
-      width: 100px;
-      height: 4px;
+      width: 80px;
+      height: 3px;
       background: var(--primary-gradient);
       margin: 0.5rem auto;
       border-radius: 2px;
@@ -265,9 +263,9 @@
     .btn-primary {
       background: var(--primary-gradient);
       color: white;
-      padding: 0.5rem 1.25rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 0.3rem;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
@@ -279,11 +277,12 @@
     }
 
     .btn-danger {
-      background: var(--danger-gradient);
+      background: linear-gradient(to right, #ef4444, #dc2626);
       color: white;
       padding: 0.4rem 0.8rem;
       border-radius: 0.3rem;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
@@ -298,27 +297,12 @@
       color: white;
       padding: 0.4rem 0.8rem;
       border-radius: 0.3rem;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
 
     .btn-toggle:hover {
-      transform: scale(1.05);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .btn-restore {
-      background: linear-gradient(to right, #3b82f6, #60a5fa);
-      color: white;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.3rem;
-      font-size: 0.8rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
-    }
-
-    .btn-restore:hover {
       transform: scale(1.05);
       box-shadow: var(--shadow-hover);
     }
@@ -329,7 +313,7 @@
       border-radius: 0.3rem;
       padding: 0.6rem;
       width: 100%;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       transition: all 0.3s ease;
     }
 
@@ -341,23 +325,21 @@
 
     .search-container {
       display: flex;
+      flex-direction: column;
       gap: 0.5rem;
       margin-bottom: 1rem;
-      align-items: center;
     }
 
     .search-input {
-      flex-grow: 1;
-      max-width: 300px;
+      max-width: 100%;
     }
 
     .table-container {
-      max-height: 350px;
+      max-height: 300px;
       overflow-y: auto;
       border-radius: 0.5rem;
       border: 1px solid rgba(0, 0, 0, 0.05);
       background: rgba(255, 255, 255, 0.95);
-      position: relative;
       scrollbar-width: thin;
       scrollbar-color: #a855f7 #e5e7eb;
     }
@@ -368,10 +350,10 @@
     }
 
     th, td {
-      padding: 0.75rem;
+      padding: 0.5rem;
       text-align: left;
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     th {
@@ -392,8 +374,8 @@
     }
 
     .menu-image, .coupon-image {
-      width: 35px;
-      height: 35px;
+      width: 30px;
+      height: 30px;
       object-fit: cover;
       border-radius: 0.3rem;
       border: 1px solid rgba(0, 0, 0, 0.05);
@@ -420,10 +402,10 @@
 
     .modal-content {
       background: rgba(255, 255, 255, 0.98);
-      padding: 1.5rem;
+      padding: 1.25rem;
       border-radius: 0.5rem;
       width: 100%;
-      max-width: 500px;
+      max-width: 95%;
       box-shadow: var(--shadow);
       position: relative;
       animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -446,12 +428,12 @@
 
     .toast {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
-      padding: 0.6rem 1.25rem;
+      top: 0.5rem;
+      right: 0.5rem;
+      padding: 0.5rem 1rem;
       border-radius: 0.3rem;
       color: white;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       z-index: 2000;
       box-shadow: var(--shadow);
       animation: toastSlide 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -462,7 +444,7 @@
     }
 
     .toast-error {
-      background: var(--danger-gradient);
+      background: linear-gradient(to right, #ef4444, #dc2626);
     }
 
     .toast:before {
@@ -532,7 +514,7 @@
       text-align: center;
       padding: 1rem;
       color: #475569;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 500;
     }
 
@@ -540,7 +522,7 @@
       text-align: center;
       padding: 1rem;
       color: #475569;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 500;
       animation: pulse 1.5s infinite;
     }
@@ -559,16 +541,6 @@
       margin-top: auto;
     }
 
-    .checkbox {
-      width: 1rem;
-      height: 1rem;
-      cursor: pointer;
-    }
-
-    .select-all-checkbox {
-      margin-right: 0.5rem;
-    }
-
     @media (max-width: 640px) {
       .hamburger {
         display: flex;
@@ -580,34 +552,6 @@
 
       .mobile-menu {
         display: flex;
-      }
-
-      .dashboard-content {
-        padding: 1.25rem;
-        margin: 0.5rem;
-      }
-
-      .hero-section {
-        min-height: 40vh;
-        padding: 2rem 0.75rem;
-        margin: 0.5rem;
-      }
-
-      .hero-section h1 {
-        font-size: 2rem;
-      }
-
-      .hero-section p {
-        font-size: 0.9rem;
-      }
-
-      .section-title {
-        font-size: 1.75rem;
-      }
-
-      .section-title::after {
-        width: 80px;
-        height: 3px;
       }
 
       .logo {
@@ -623,48 +567,46 @@
         font-size: 0.6rem;
       }
 
-      .modal-content {
-        padding: 1.25rem;
-        max-width: 95%;
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
       }
 
-      .toast {
-        top: 0.5rem;
-        right: 0.5rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
+      thead {
+        display: none;
       }
 
-      .table-container {
-        max-height: 300px;
+      tbody, tr {
+        display: block;
       }
 
-      th, td {
+      td {
+        display: block;
+        text-align: left;
         padding: 0.5rem;
-        font-size: 0.75rem;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        display: inline-block;
+        width: 40%;
+        padding-right: 0.5rem;
+        color: #1e293b;
       }
 
       .menu-image, .coupon-image {
-        width: 30px;
-        height: 30px;
+        width: 50px;
+        height: 50px;
+        margin: 0.5rem 0;
       }
 
-      .hero-buttons {
-        gap: 0.5rem;
-      }
-
-      .btn-primary, .btn-danger, .btn-toggle, .btn-restore {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.75rem;
-      }
-
-      .search-container {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .search-input {
-        max-width: 100%;
+      .table-container {
+        overflow-x: hidden;
       }
     }
 
@@ -675,6 +617,10 @@
 
       .hamburger {
         display: none;
+      }
+
+      td:before {
+        content: none;
       }
     }
   </style>
@@ -725,7 +671,6 @@
           <button class="btn-primary" onclick="openModal('addCouponModal')">Add Coupon</button>
           <button class="btn-primary" onclick="scrollToSection('customerTable')">View Customers</button>
           <button class="btn-primary" onclick="scrollToSection('orderTable')">View Orders</button>
-          <button class="btn-primary" onclick="scrollToSection('trashTable')">View Trash</button>
         </div>
       </div>
     </section>
@@ -746,7 +691,7 @@
             </tr>
           </thead>
           <tbody id="menuTableBody">
-            <tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>
+            <tr><td colspan="7" class="loading-state" data-label="Status">Loading menu items...</td></tr>
           </tbody>
         </table>
       </div>
@@ -767,7 +712,7 @@
             </tr>
           </thead>
           <tbody id="couponTableBody">
-            <tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>
+            <tr><td colspan="6" class="loading-state" data-label="Status">Loading coupons...</td></tr>
           </tbody>
         </table>
       </div>
@@ -788,7 +733,7 @@
             </tr>
           </thead>
           <tbody id="customerTableBody">
-            <tr><td colspan="6" class="loading-state">Loading customers...</td></tr>
+            <tr><td colspan="6" class="loading-state" data-label="Status">Loading customers...</td></tr>
           </tbody>
         </table>
       </div>
@@ -798,24 +743,15 @@
       <h2 class="section-title">Orders</h2>
       <div class="search-container">
         <input type="text" id="orderSearch" class="input-field search-input" placeholder="Search by ID, customer, or status">
-        <button class="btn-primary" onclick="searchOrders()">Search</button>
-        <button class="btn-danger" onclick="clearOrderSearch()">Clear</button>
-      </div>
-      <div class="flex justify-between mb-4">
-        <div class="flex items-center">
-          <input type="checkbox" id="selectAllOrders" class="checkbox select-all-checkbox" onclick="toggleSelectAllOrders()">
-          <label for="selectAllOrders" class="text-sm font-semibold">Select All</label>
-        </div>
         <div class="flex gap-2">
-          <button class="btn-danger" onclick="deleteSelectedOrders()" disabled id="deleteSelectedOrdersBtn">Delete Selected</button>
-          <button class="btn-danger" onclick="clearAllOrders()">Clear All Orders</button>
+          <button class="btn-primary" onclick="searchOrders()">Search</button>
+          <button class="btn-primary" onclick="clearOrderSearch()">Clear</button>
         </div>
       </div>
       <div class="table-container">
         <table id="orderTable">
           <thead>
             <tr>
-              <th><input type="checkbox" id="selectAllOrdersHeader" class="checkbox" onclick="toggleSelectAllOrders()"></th>
               <th>ID</th>
               <th>Customer</th>
               <th>Address</th>
@@ -828,36 +764,7 @@
             </tr>
           </thead>
           <tbody id="orderTableBody">
-            <tr><td colspan="10" class="loading-state">Loading orders...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="mb-8">
-      <h2 class="section-title">Trash</h2>
-      <div class="flex justify-between mb-4">
-        <div class="flex items-center">
-          <input type="checkbox" id="selectAllTrash" class="checkbox select-all-checkbox" onclick="toggleSelectAllTrash()">
-          <label for="selectAllTrash" class="text-sm font-semibold">Select All</label>
-        </div>
-        <button class="btn-danger" onclick="deleteSelectedTrashedOrders()" disabled id="deleteSelectedTrashBtn">Delete Selected</button>
-      </div>
-      <div class="table-container">
-        <table id="trashTable">
-          <thead>
-            <tr>
-              <th><input type="checkbox" id="selectAllTrashHeader" class="checkbox" onclick="toggleSelectAllTrash()"></th>
-              <th>ID</th>
-              <th>Customer</th>
-              <th>Total (₹)</th>
-              <th>Status</th>
-              <th>Reason</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="trashTableBody">
-            <tr><td colspan="7" class="loading-state">Loading trashed orders...</td></tr>
+            <tr><td colspan="9" class="loading-state" data-label="Status">Loading orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -949,7 +856,6 @@
     let sessionValid = false;
     let sessionExpiredShown = false;
     let orders = [];
-    let trashedOrders = [];
 
     async function checkSession() {
       if (sessionValid) return true;
@@ -1259,113 +1165,10 @@
       }
     }
 
-    async function clearAllOrders() {
-      if (!confirm('Are you sure you want to move all orders to trash?')) return;
-      try {
-        await handleFetch(`${apiPrefix}/orders/move-to-trash`, { method: 'PUT' });
-        showToast('All orders moved to trash!', 'success');
-        loadOrders();
-        loadTrashedOrders();
-      } catch (error) {}
-    }
-
-    async function deleteSelectedOrders() {
-      const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
-        .map(checkbox => parseInt(checkbox.value));
-      if (selectedIds.length === 0) {
-        showToast('No orders selected for deletion.', 'error');
-        return;
-      }
-      if (!confirm(`Are you sure you want to move ${selectedIds.length} selected order(s) to trash?`)) return;
-      try {
-        await handleFetch(`${apiPrefix}/orders/bulk-move-to-trash`, {
-          method: 'PUT',
-          body: JSON.stringify({ orderIds: selectedIds }),
-        });
-        showToast(`${selectedIds.length} order(s) moved to trash!`, 'success');
-        document.getElementById('selectAllOrders').checked = false;
-        document.getElementById('selectAllOrdersHeader').checked = false;
-        loadOrders();
-        loadTrashedOrders();
-      } catch (error) {}
-    }
-
-    async function restoreOrder(id) {
-      if (!confirm('Are you sure you want to restore this order?')) return;
-      try {
-        await handleFetch(`${apiPrefix}/orders/${id}/restore`, { method: 'PUT' });
-        showToast('Order restored!', 'success');
-        loadOrders();
-        loadTrashedOrders();
-      } catch (error) {}
-    }
-
-    async function deleteOrderPermanently(id) {
-      if (!confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) return;
-      try {
-        await handleFetch(`${apiPrefix}/orders/${id}/permanent`, { method: 'DELETE' });
-        showToast('Order permanently deleted!', 'success');
-        loadTrashedOrders();
-      } catch (error) {}
-    }
-
-    async function deleteSelectedTrashedOrders() {
-      const selectedIds = Array.from(document.querySelectorAll('.trash-checkbox:checked'))
-        .map(checkbox => parseInt(checkbox.value));
-      if (selectedIds.length === 0) {
-        showToast('No orders selected for deletion.', 'error');
-        return;
-      }
-      if (!confirm(`Are you sure you want to permanently delete ${selectedIds.length} selected order(s)? This action cannot be undone.`)) return;
-      try {
-        await handleFetch(`${apiPrefix}/orders/bulk-permanent`, {
-          method: 'DELETE',
-          body: JSON.stringify({ orderIds: selectedIds }),
-        });
-        showToast(`${selectedIds.length} order(s) permanently deleted!`, 'success');
-        document.getElementById('selectAllTrash').checked = false;
-        document.getElementById('selectAllTrashHeader').checked = false;
-        loadTrashedOrders();
-        updateDeleteTrashButtonState();
-      } catch (error) {
-        showToast('Failed to delete selected orders.', 'error');
-      }
-    }
-
-    function toggleSelectAllOrders() {
-      const selectAllCheckbox = document.getElementById('selectAllOrders');
-      const headerCheckbox = document.getElementById('selectAllOrdersHeader');
-      const checkboxes = document.querySelectorAll('.order-checkbox');
-      checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
-      headerCheckbox.checked = selectAllCheckbox.checked;
-      updateDeleteOrdersButtonState();
-    }
-
-    function toggleSelectAllTrash() {
-      const selectAllCheckbox = document.getElementById('selectAllTrash');
-      const headerCheckbox = document.getElementById('selectAllTrashHeader');
-      const checkboxes = document.querySelectorAll('.trash-checkbox');
-      checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
-      headerCheckbox.checked = selectAllCheckbox.checked;
-      updateDeleteTrashButtonState();
-    }
-
-    function updateDeleteOrdersButtonState() {
-      const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
-      const deleteSelectedBtn = document.getElementById('deleteSelectedOrdersBtn');
-      deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
-    }
-
-    function updateDeleteTrashButtonState() {
-      const selectedCheckboxes = document.querySelectorAll('.trash-checkbox:checked');
-      const deleteSelectedBtn = document.getElementById('deleteSelectedTrashBtn');
-      deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
-    }
-
     async function searchOrders() {
       const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
       const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="10" class="loading-state">Searching...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-state" data-label="Status">Searching...</td></tr>';
 
       try {
         const filteredOrders = orders.filter(order =>
@@ -1375,7 +1178,7 @@
         );
 
         if (!filteredOrders.length) {
-          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">No orders found.</td></tr>';
           return;
         }
 
@@ -1387,21 +1190,20 @@
             ? `₹${parseFloat(order.total).toFixed(2)}`
             : '₹0.00';
           const addressDisplay = order.address
-            ? [order.address.fullName, order.address.houseNo, order.address.location, order.address.landmark]
+            ? [order.address.fullName, order.address.street, order.address.city, order.address.landmark]
                 .filter(part => part && part.trim())
                 .join(', ')
             : 'No address';
           const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
           return `
             <tr>
-              <td><input type="checkbox" class="checkbox order-checkbox" value="${order.id}" onchange="updateDeleteOrdersButtonState()"></td>
-              <td>${order.id}</td>
-              <td>${order.user?.name || 'Unknown'}</td>
-              <td>${addressDisplay}</td>
-              <td>${itemsDisplay}</td>
-              <td>${totalDisplay}</td>
-              <td>${order.paymentStatus || 'Pending'}</td>
-              <td>
+              <td data-label="ID">${order.id}</td>
+              <td data-label="Customer">${order.user?.name || 'Anonymous'}</td>
+              <td data-label="Address">${addressDisplay}</td>
+              <td data-label="Items">${itemsDisplay}</td>
+              <td data-label="Total">${totalDisplay}</td>
+              <td data-label="Payment Status">${order.paymentStatus || 'Pending'}</td>
+              <td data-label="Status">
                 <select onchange="updateOrderStatus(${order.id}, this.value, this)">
                   <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
                   <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
@@ -1410,15 +1212,15 @@
                   <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                 </select>
               </td>
-              <td>${reasonDisplay}</td>
-              <td>
+              <td data-label="Reason">${reasonDisplay}</td>
+              <td data-label="Actions">
                 <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
               </td>
             </tr>
           `;
         }).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Failed to search orders.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">Failed to search orders.</td></tr>';
       }
     }
 
@@ -1463,24 +1265,24 @@
 
     async function loadMenuItems() {
       const tbody = document.getElementById('menuTableBody');
-      tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading menu items...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="loading-state" data-label="Status">Loading menu items...</td></tr>';
       try {
         const items = await handleFetch(`${apiPrefix}/menu`);
         if (!items?.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No menu items found. Add some!</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state" data-label="Status">No menu items found. Add some!</td></tr>';
           return;
         }
         tbody.innerHTML = items.map(item => {
           const imageSrc = item.image || placeholderImage;
           return `
             <tr>
-              <td>${item.id}</td>
-              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
-              <td>${item.name}</td>
-              <td>₹${parseFloat(item.price).toFixed(2)}</td>
-              <td>${item.category}</td>
-              <td>${item.description || '-'}</td>
-              <td>
+              <td data-label="ID">${item.id}</td>
+              <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${item.name}" class="menu-image"></td>
+              <td data-label="Name">${item.name}</td>
+              <td data-label="Price">₹${parseFloat(item.price).toFixed(2)}</td>
+              <td data-label="Category">${item.category}</td>
+              <td data-label="Description">${item.description || '-'}</td>
+              <td data-label="Actions">
                 <button class="btn-primary mr-1" onclick='openModal("addMenuModal", ${JSON.stringify(item)})'>Edit</button>
                 <button class="btn-danger" onclick="deleteMenuItem(${item.id})">Delete</button>
               </td>
@@ -1488,29 +1290,29 @@
           `;
         }).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load menu items.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" data-label="Status">Failed to load menu items.</td></tr>';
       }
     }
 
     async function loadCoupons() {
       const tbody = document.getElementById('couponTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading coupons...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-state" data-label="Status">Loading coupons...</td></tr>';
       try {
         const coupons = await handleFetch(`${apiPrefix}/coupons`);
         if (!coupons?.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No coupons found. Add some!</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No coupons found. Add some!</td></tr>';
           return;
         }
         tbody.innerHTML = coupons.map(coupon => {
           const imageSrc = coupon.image || placeholderImage;
           return `
             <tr>
-              <td>${coupon.id}</td>
-              <td><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
-              <td>${coupon.code}</td>
-              <td>${parseFloat(coupon.discount).toFixed(2)}%</td>
-              <td>${coupon.description || '-'}</td>
-              <td>
+              <td data-label="ID">${coupon.id}</td>
+              <td data-label="Image"><img src="${imageSrc}" onerror="this.src='${placeholderImage}'" alt="${coupon.code}" class="coupon-image"></td>
+              <td data-label="Code">${coupon.code}</td>
+              <td data-label="Discount">${parseFloat(coupon.discount).toFixed(2)}%</td>
+              <td data-label="Description">${coupon.description || '-'}</td>
+              <td data-label="Actions">
                 <button class="btn-primary mr-1" onclick='openModal("addCouponModal", ${JSON.stringify(coupon)})'>Edit</button>
                 <button class="btn-danger" onclick="deleteCoupon(${coupon.id})">Delete</button>
               </td>
@@ -1518,27 +1320,27 @@
           `;
         }).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading coupons.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">Error loading coupons.</td></tr>';
       }
     }
 
     async function loadCustomers() {
       const tbody = document.getElementById('customerTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-state">Loading customers...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-state" data-label="Status">Loading customers...</td></tr>';
       try {
         const customers = await handleFetch(`${apiPrefix}/customers`);
         if (!customers?.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">No customers found.</td></tr>';
           return;
         }
         tbody.innerHTML = customers.map(customer => `
           <tr>
-            <td>${customer.id}</td>
-            <td>${customer.name}</td>
-            <td>${customer.email}</td>
-            <td>${customer.phone || '-'}</td>
-            <td>${customer.status}</td>
-            <td>
+            <td data-label="ID">${customer.id}</td>
+            <td data-label="Name">${customer.name}</td>
+            <td data-label="Email">${customer.email}</td>
+            <td data-label="Phone">${customer.phone || '-'}</td>
+            <td data-label="Status">${customer.status}</td>
+            <td data-label="Actions">
               <button class="btn-toggle" onclick="toggleCustomerStatus(${customer.id}, '${customer.status}')">
                 ${customer.status === 'active' ? 'Block' : 'Unblock'}
               </button>
@@ -1546,21 +1348,20 @@
           </tr>
         `).join('');
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading customers.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-label="Status">Error loading customers.</td></tr>';
       }
     }
 
     async function loadOrders() {
       const tbody = document.getElementById('orderTableBody');
-      tbody.innerHTML = '<tr><td colspan="10" class="loading-state">Loading orders...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-state" data-label="Status">Loading orders...</td></tr>';
       try {
         orders = await handleFetch(`${apiPrefix}/orders`);
         if (!orders?.length) {
-          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">No orders found.</td></tr>';
           return;
         }
-        const activeOrders = orders.filter(order => order.status !== 'trashed');
-        tbody.innerHTML = activeOrders.map(order => {
+        tbody.innerHTML = orders.map(order => {
           const itemsDisplay = order.items?.length > 0
             ? order.items.map(item => `${item.name || 'Unknown'} (x${item.quantity || 1})`).join(', ')
             : 'No items';
@@ -1575,14 +1376,13 @@
           const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
           return `
             <tr>
-              <td><input type="checkbox" class="checkbox order-checkbox" value="${order.id}" onchange="updateDeleteOrdersButtonState()"></td>
-              <td>${order.id}</td>
-              <td>${order.user?.name || 'Anonymous'}</td>
-              <td>${addressDisplay}</td>
-              <td>${itemsDisplay}</td>
-              <td>${totalDisplay}</td>
-              <td>${order.paymentStatus || 'Pending'}</td>
-              <td>
+              <td data-label="ID">${order.id}</td>
+              <td data-label="Customer">${order.user?.name || 'Anonymous'}</td>
+              <td data-label="Address">${addressDisplay}</td>
+              <td data-label="Items">${itemsDisplay}</td>
+              <td data-label="Total">${totalDisplay}</td>
+              <td data-label="Payment Status">${order.paymentStatus || 'Pending'}</td>
+              <td data-label="Status">
                 <select onchange="updateOrderStatus(${order.id}, this.value, this)">
                   <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
                   <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
@@ -1591,51 +1391,15 @@
                   <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                 </select>
               </td>
-              <td>${reasonDisplay}</td>
-              <td>
+              <td data-label="Reason">${reasonDisplay}</td>
+              <td data-label="Actions">
                 <button class="btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
               </td>
             </tr>
           `;
         }).join('');
-        updateDeleteOrdersButtonState();
       } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Error loading orders.</td></tr>';
-      }
-    }
-
-    async function loadTrashedOrders() {
-      const tbody = document.getElementById('trashTableBody');
-      tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Loading trashed orders...</td></tr>';
-      try {
-        trashedOrders = await handleFetch(`${apiPrefix}/orders/trashed`);
-        if (!trashedOrders?.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No trashed orders found.</td></tr>';
-          return;
-        }
-        tbody.innerHTML = trashedOrders.map(order => {
-          const totalDisplay = order.total != null && !isNaN(parseFloat(order.total))
-            ? `₹${parseFloat(order.total).toFixed(2)}`
-            : '₹0.00';
-          const reasonDisplay = order.status === 'cancelled' && order.reason ? order.reason : '-';
-          return `
-            <tr>
-              <td><input type="checkbox" class="checkbox trash-checkbox" value="${order.id}" onchange="updateDeleteTrashButtonState()"></td>
-              <td>${order.id}</td>
-              <td>${order.user?.name || 'Unknown'}</td>
-              <td>${totalDisplay}</td>
-              <td>${order.status}</td>
-              <td>${reasonDisplay}</td>
-              <td>
-                <button class="btn-restore mr-1" onclick="restoreOrder(${order.id})">Restore</button>
-                <button class="btn-danger" onclick="deleteOrderPermanently(${order.id})">Delete</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-        updateDeleteTrashButtonState();
-      } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load trashed orders.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state" data-label="Status">Error loading orders.</td></tr>';
       }
     }
 
@@ -1667,7 +1431,6 @@
           loadCoupons(),
           loadCustomers(),
           loadOrders(),
-          loadTrashedOrders(),
           loadRestaurantStatus(),
         ]);
       } catch (error) {
